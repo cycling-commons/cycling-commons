@@ -7,15 +7,12 @@ Commons data; your app can be another. This section explains how an external app
 Commons data, category items and the cycle-route network, on its own map, using the public
 application programming interface (API).
 
-!!! warning "Status: proof of concept"
+!!! note "Status"
 
-    The endpoints described in this section are a **proof of concept**: a small, working subset
-    of the full v1 contract drafted in the
-    [interactive API reference](https://cyclingcommons.org/developers/api). The URLs already live
-    under the `/v1` prefix because that is the namespace these endpoints graduate into; the prefix
-    names the target contract, not a stability promise. Until v1 is declared stable, expect
-    additive change and the occasional breaking change. The contract of record is
-    `docs/specs/public-api.md` in the repository.
+    Every endpoint of the v1 contract answers: reads open to anybody, and a write path for
+    registered partner apps. The [interactive API reference](https://cyclingcommons.org/developers/api)
+    has every parameter and field. Until v1 is declared stable, expect additive change and, rarely,
+    a breaking one. The contract of record is `docs/specs/public-api.md` in the repository.
 
 ## The mental model
 
@@ -44,8 +41,9 @@ tiles.
 
 ## What you need
 
-- **No API key.** The proof of concept is open and read-only. Keyed access with quotas is designed
-  and comes later; see the [API reference](https://cyclingcommons.org/developers/api).
+- **No API key to read.** Every read is open. Keyed access with quotas is designed and comes
+  later; see the [API reference](https://cyclingcommons.org/developers/api). Writing back is for
+  registered partner apps, with a key ([Contributing back](the-rest-of-the-api.md#contributing-back-partner-apps)).
 - **Rate limits.** REST endpoints are limited per client address
   ([how many requests a minute](../numbers.md)). Well-behaved map apps stay far under this; the
   limit exists to keep bulk scraping off a transport that was never meant for it. Bulk use wants the
@@ -120,8 +118,12 @@ tiles.
 
 ## In this section
 
-- [Serving map data](serving-map-data.md): the two transports in detail, both endpoints with full
-  example requests and responses, caching, errors, and the privacy boundary.
+- [Serving map data](serving-map-data.md): the two transports in detail, the bootstrap and the
+  viewport search with full example requests and responses, caching, errors, and the privacy
+  boundary.
+- [Items, regions, routes, and contributing back](the-rest-of-the-api.md): one item with its
+  photos, counts in an area, regions and their best-of lists, routes with their whole line and as
+  GPX, paging, and the write path for partner apps.
 - [Worked example: a route planner](worked-example-route-planner.md): a complete walk-through in
   which a route-planner application with a MapLibre map adds the Commons overlays, step by step.
 
@@ -130,5 +132,5 @@ tiles.
 - [Data catalog](../../data-catalog.md): what data lives in the Commons.
 - [GIS course, chapter 7: Tiles](../gis/tiles.md) and
   [chapter 8: Putting it on screen](../gis/on-screen.md): the fundamentals this section builds on.
-- [Interactive API reference](https://cyclingcommons.org/developers/api): the full drafted v1
-  surface (Redoc).
+- [Interactive API reference](https://cyclingcommons.org/developers/api): the whole v1 surface
+  (Redoc).

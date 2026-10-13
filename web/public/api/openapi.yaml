@@ -3,50 +3,56 @@
 # Machine-readable companion to docs/specs/public-api.md. That document owns
 # the rationale (transports, auth model, reference-only policy, versioning);
 # this file pins the concrete request/response shapes and is what the
-# /developers/api reference page renders. Keep the two in sync — endpoint- or
-# field-level changes land in both.
+# /developers/api reference page renders. Keep the two in sync: endpoint- or
+# field-level changes land in both. tests/Api/ContractTest.php asks every
+# path here and fails on one that does not answer.
 openapi: 3.1.0
 
 info:
   title: Cycling Commons Public API
-  version: 0.1.0-draft
-  summary: The public read API of the Cycling Commons — open cycling data, ODbL.
+  version: 1.0.0
+  summary: The public API of the Cycling Commons, open cycling data under the ODbL.
   description: |
-    **Status: in design.** This contract is published before the
-    implementation — it is what we are building. Nothing under
-    `api.cyclingcommons.org` is live yet; shapes marked *draft* may still
-    change, and the version stays `0.x` until the first endpoint ships.
-
     The API exposes the **Commons layer only**: community and curated cycling
-    knowledge — water points, bike services, places to sleep, climbs, hazards,
-    routes, region coverage. The account layer (emails, IP logs, moderation
-    internals) is never reachable through any endpoint or tile.
+    knowledge (water points, bike services, places to sleep, climbs, hazards,
+    routes, region coverage). The account layer (emails, IP logs, moderation
+    internals) is never reachable through any endpoint or tile, and neither
+    is text a person wrote: a rider's notes stay on the site.
+
+    ## Access
+
+    Every read is open: no key, `Access-Control-Allow-Origin: *`, at most
+    120 requests a minute from one address (a `429` with `Retry-After`
+    beyond that). Responses are public and cacheable, with an `ETag`. Keys
+    and monthly quotas for reads are planned, not built: nothing here asks
+    for one yet.
+
+    Writes are for **registered partner apps** only: `POST
+    /v1/contributions` and the two calls beside it need a partner key in
+    `Authorization: Bearer <key>`. A partner key belongs on a server, never
+    in a browser, so the write calls answer no cross-origin request.
 
     ## Reference-only responses
 
-    Coverage responses are **reference-only by default**: our added fields
-    plus the `osm_ref` needed to hydrate detail from OpenStreetMap directly.
-    We do not republish OSM's tags or geometry as ours. `?hydrate=osm` merges
-    the cached OSM subset we hold into the response as a convenience; every
-    OSM-derived response carries `© OpenStreetMap contributors`.
+    Item responses are **reference-only by default**: our added fields plus
+    the `osm_ref` needed to hydrate detail from OpenStreetMap directly. We do
+    not republish OpenStreetMap's tags as ours. `?hydrate=osm` merges the
+    cached OpenStreetMap subset we hold into the response as a convenience;
+    every response carries `© OpenStreetMap contributors`.
 
     ## Vector tiles (not REST)
 
     Dense ambient layers travel as **data-only vector tiles**, not through
-    these endpoints: a keyed `coverage.pmtiles` artifact read by HTTP
-    byte-range, described by a **TileJSON** document (`vector_layers` with
-    source-layers `coverage_poi` and `coverage_region` and their fields). Bind
-    them into your own MapLibre style; the TileJSON is the stable contract.
-    Tile keys are embedded in the tile URL and enforced at the CDN edge with a
-    referer allowlist. See docs/specs/public-api.md §2.1.
+    these endpoints: per-country PMTiles archives read by HTTP byte-range.
+    `/v1/map-config` names the current archives and their source-layers;
+    bind them into your own MapLibre style. See docs/specs/public-api.md §2.1.
 
-    ## Auth & metering
+    ## Paging
 
-    Keys are **self-serve** (generated in your Cycling Commons account, no
-    sales contact) and carry a free monthly quota; paid tiers add throughput
-    and always-fresh data. REST calls send the key as a `Authorization:
-    Bearer` header (or `?key=` where headers are impossible) and are metered
-    per call; responses carry `X-RateLimit-*` and `X-Quota-*` headers.
+    Collections page by an opaque `cursor`: pass the previous page's
+    `next_cursor`, which is absent on the last page. A cursor starts after
+    the last row it saw, so rows added meanwhile are neither repeated nor
+    skipped.
 
     ## Bulk export
 
@@ -56,81 +62,60 @@ info:
     manifest of sources, licences and sha256 checksums, at
     https://cyclingcommons.org/developers/export (the newest files always at
     `/developers/export/latest/places`, `/developers/export/latest/routes` and
-    `/developers/export/latest/manifest`). The export is the sanctioned self-hosting channel and is
-    always free and open (ODbL).
+    `/developers/export/latest/manifest`). The export is always free and
+    open (ODbL).
   contact:
     name: Cycling Commons
     email: info@cyclingcommons.org
     url: https://cyclingcommons.org/developers
   license:
-    name: Data licensed ODbL 1.0 (media CC BY-SA 4.0)
+    name: Data licensed ODbL 1.0 (photos under the licence named with each photo)
     url: https://opendatacommons.org/licenses/odbl/1-0/
 
 servers:
   - url: https://api.cyclingcommons.org
-    description: Planned production origin — not live yet.
+    description: The API origin.
   - url: https://cyclingcommons.org
-    description: >-
-      PoC origin: the implemented /v1 subset (map-config, search) is served
-      by the main app while the dedicated API origin is not live.
+    description: The main site answers the same /v1 paths.
 
-security:
-  - appKey: []
-  - appKeyQuery: []
+# Reads are open; the write calls name their own requirement.
+security: []
 
 tags:
   - name: Catalog
-    description: The item-type catalogue — letters, service kinds, vocabularies.
-  - name: Coverage
-    description: Search and detail over coverage POIs (reference-only by default).
+    description: What each catalogue letter is, its kinds and its fields, and the map bootstrap.
+  - name: Items
+    description: Search, one item, and counts in an area (reference-only by default).
   - name: Regions
-    description: Administrative regions, coverage stats, and the curated best-of.
+    description: The regions, what they hold, and their best-of lists.
   - name: Routes
-    description: The route domain — geometry, surfaces, ratings, GPX.
+    description: Recommended routes with their whole line, and as GPX.
   - name: Contributions
     description: |
-      **Planned, phase 2.** The write path routes a submission through the
-      same review loop as in-app contributions. The write-auth model is
-      decided: a write-scoped key issued to a registered partner app, plus an
-      app-scoped author reference, so the app's end user needs no Commons
-      account. This section is a draft of the request shape only.
+      The write path, for registered partner apps. A contribution enters the
+      same review queue as one from the site's own form, under the same
+      rules; a curator decides. The app's user needs no Cycling Commons
+      account: the app sends an opaque, stable reference for its author, and
+      optionally the name the author chose to share. Partner apps are
+      registered under a partner agreement; write to info@cyclingcommons.org.
 
 paths:
-  /v1/catalog:
-    get:
-      tags: [Catalog]
-      operationId: getCatalog
-      summary: Item-type catalogue
-      description: >
-        The catalogue letters (practical A-M, experiential N-Z), their slugs and labels, `serviceKind` vocabularies,
-        and the tier names — the rendering and labelling metadata a consumer
-        needs to present Commons data.
-      responses:
-        '200':
-          description: The catalogue.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Catalog'
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '429': { $ref: '#/components/responses/RateLimited' }
-
   /v1/map-config:
     get:
       tags: [Catalog]
       operationId: getMapConfig
       summary: Map bootstrap for external consumers
-      security: []   # PoC: open read-only; keys arrive with the v1 label
       description: >
-        **Implemented (PoC).** Everything an external map needs to wire the
-        Commons overlays in one call: the routes PMTiles archives, one per
-        country (empty when none is published, then skip the routes overlay),
-        the per-country source-layer naming contract, the route style groups,
-        the coverage (raw-OSM) PMTiles archives, one per country, with their
-        per-letter source-layer contract, the category table (practical letters A-M and experiential N-Z, with colours, glyphs and
-        the Best of flag), and the attribution string the consumer must
-        display. Cacheable for an hour; the tile URLs change when a new
-        build is published, which is why consumers read them here instead of
+        Everything an external map needs to wire the Commons overlays in one
+        call: the routes PMTiles archives, one per country (empty when none
+        is published, then skip the routes overlay), the per-country
+        source-layer naming contract, the route style groups, the coverage
+        (raw OpenStreetMap) PMTiles archives, one per country, with their
+        per-letter source-layer contract, the category table (practical
+        letters A-M and experiential N-Z, with colours, glyphs and the Best
+        of flag), and the attribution string the consumer must display.
+        Cacheable for an hour; the tile URLs change when a new build is
+        published, which is why consumers read them here instead of
         hardcoding them.
       responses:
         '200':
@@ -141,26 +126,50 @@ paths:
                 $ref: '#/components/schemas/MapConfig'
         '429': { $ref: '#/components/responses/RateLimited' }
 
+  /v1/catalog:
+    get:
+      tags: [Catalog]
+      operationId: getCatalog
+      summary: Item-type catalogue
+      description: >
+        Every catalogue letter (practical A-M, experiential N-Z): its slug,
+        name, geometry, the kinds a place of that letter can be, and every
+        field of its form, with the values a pick list allows, whether
+        `/v1/items/{id}` serves it (`served`) and whether
+        `/v1/contributions` takes it (`accepted`). The same form the site's
+        own wizard renders, so a partner app offers its users the same
+        choices a rider gets. English labels. Cacheable for an hour.
+      responses:
+        '200':
+          description: The catalogue.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Catalog'
+        '429': { $ref: '#/components/responses/RateLimited' }
+
   /v1/search:
     get:
-      tags: [Coverage]
-      operationId: searchCoverage
-      summary: Search / browse coverage
-      security: []   # PoC: open read-only; keys arrive with the v1 label
+      tags: [Items]
+      operationId: searchItems
+      summary: Search and browse items
       description: >
-        Find coverage items by bounding box, free text, catalogue letter and
-        tier. Returns a GeoJSON `FeatureCollection` of reference-only
-        features. At least one of `bbox` or `q` is required.
+        Items by bounding box, by name, or both, filtered by catalogue letter
+        and tier. Returns a GeoJSON `FeatureCollection` of reference-only
+        features. At least one of `bbox` or `q` is required; `bbox` spans at
+        most 10x10 degrees (`bbox_too_large`).
 
 
-        **Implemented (PoC subset):** `bbox` (required unless `q` is given,
-        capped at a 10x10-degree span, `bbox_too_large`), `q`, `letter`
-        (optional; absent = all item letters), `tier` (optional), `routes`
-        and `limit`. Recommended routes (letter R) come only when asked
-        for: `routes=include` adds them, `letter=R` gives routes alone. A
-        route hit is one point on the route, with its length and climb.
-        `hydrate` and `cursor` are drafted but not yet implemented. The
-        Commons map's own worldwide search asks this endpoint with `q`.
+        Recommended routes (letter R) come only when asked for:
+        `routes=include` adds them, `letter=R` gives routes alone. A route
+        hit is one point on the route, with its length and climb; its line
+        is at `/v1/routes/{id}`.
+
+
+        A browse (no `q`) pages with `cursor`: items by id first, then
+        routes. A name search answers its best matches in one page and takes
+        no cursor (`invalid_cursor`). The Commons map's own worldwide search
+        asks this endpoint with `q`.
       parameters:
         - $ref: '#/components/parameters/bbox'
         - name: q
@@ -185,77 +194,67 @@ paths:
         - $ref: '#/components/parameters/cursor'
       responses:
         '200':
-          description: >
-            Matching features. Page through with the `next_cursor` foreign
-            member; it is absent on the last page. The PoC carries the
-            attribution in the body (`licence` and `attribution` foreign
-            members); the `X-Attribution` header is the keyed v1 design.
-          headers:
-            X-RateLimit-Remaining: { $ref: '#/components/headers/X-RateLimit-Remaining' }
+          description: Matching features. Cacheable for five minutes.
           content:
             application/geo+json:
               schema:
-                $ref: '#/components/schemas/CoverageFeatureCollection'
+                $ref: '#/components/schemas/SearchCollection'
         '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/RateLimited' }
 
   /v1/items/{id}:
     get:
-      tags: [Coverage]
+      tags: [Items]
       operationId: getItem
-      summary: Single-item detail
+      summary: One item
       description: >
-        One coverage item: our enrichment, provenance and verification state.
-        Reference-only by default; `?hydrate=osm` merges the cached OSM
-        subset in.
+        One item in full: the search feature's properties, then where it
+        comes from (`source`, `osm_ref`), its kind, the attributes picked
+        from a list or measured (never free text a person wrote), and its
+        photos, each with its licence and credit. `?hydrate=osm` merges the
+        cached OpenStreetMap subset in under `osm`. An item that is not
+        served (waiting for review, rejected, retired, reported gone) is a
+        404 like one that never existed.
       parameters:
         - name: id
           in: path
           required: true
-          description: Commons item id.
-          schema: { type: string }
+          description: Commons item id (the `id` property of a search feature).
+          schema: { type: integer, minimum: 1 }
         - $ref: '#/components/parameters/hydrate'
       responses:
         '200':
-          description: The item.
-          headers:
-            X-Attribution: { $ref: '#/components/headers/X-Attribution' }
+          description: The item. Cacheable for five minutes.
           content:
             application/geo+json:
               schema:
-                $ref: '#/components/schemas/CoverageFeature'
+                $ref: '#/components/schemas/ItemDetail'
+        '400': { $ref: '#/components/responses/BadRequest' }
         '404': { $ref: '#/components/responses/NotFound' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/RateLimited' }
 
   /v1/coverage/counts:
     get:
-      tags: [Coverage]
+      tags: [Items]
       operationId: getCoverageCounts
       summary: Per-letter counts in an area
-      description: Per-letter feature counts for chips and summaries.
+      description: >
+        Per-letter counts in a box, for chips and summaries: `counts` are the
+        items `/v1/search` serves there (and `R`, the recommended routes that
+        cross it); `coverage` are the OpenStreetMap points the coverage tiles
+        draw there that no item stands for. Never added together: the two
+        are different kinds of knowledge. The box spans at most 2x2 degrees,
+        because the coverage count reads every point in it.
       parameters:
         - $ref: '#/components/parameters/bboxRequired'
       responses:
         '200':
-          description: Counts keyed by catalogue letter.
+          description: Counts keyed by catalogue letter. Cacheable for five minutes.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  bbox:
-                    type: array
-                    items: { type: number }
-                    minItems: 4
-                    maxItems: 4
-                  counts:
-                    type: object
-                    additionalProperties: { type: integer }
-                    description: 'Catalogue letter → feature count, e.g. `{"B": 41, "D": 12}`.'
+                $ref: '#/components/schemas/Counts'
         '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/RateLimited' }
 
   /v1/regions:
@@ -264,19 +263,25 @@ paths:
       operationId: listRegions
       summary: All regions
       description: >
-        Region polygons with coverage and adoption stats — the REST twin of
-        the `coverage_region` tile source-layer.
+        The regions the site lists on /regions, by slug, each drawn by its
+        coarse outline (a few hundred points; one region's own call has the
+        detailed boundary) with its `bbox` and what it holds.
       parameters:
+        - name: country
+          in: query
+          description: Only this country's regions (ISO 3166-1 alpha-2, `invalid_country` otherwise).
+          schema: { type: string, pattern: '^[A-Za-z]{2}$' }
+          example: BE
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/cursor'
       responses:
         '200':
-          description: Region features.
+          description: Region features. Cacheable for an hour.
           content:
             application/geo+json:
               schema:
-                $ref: '#/components/schemas/RegionFeatureCollection'
-        '401': { $ref: '#/components/responses/Unauthorized' }
+                $ref: '#/components/schemas/RegionCollection'
+        '400': { $ref: '#/components/responses/BadRequest' }
         '429': { $ref: '#/components/responses/RateLimited' }
 
   /v1/regions/{id}:
@@ -284,45 +289,47 @@ paths:
       tags: [Regions]
       operationId: getRegion
       summary: One region
+      description: >
+        One region, drawn by its boundary simplified to about 100 m (the
+        shape the map draws), with its counts per letter.
       parameters:
         - $ref: '#/components/parameters/regionId'
       responses:
         '200':
-          description: The region polygon + stats.
+          description: The region. Cacheable for an hour.
           content:
             application/geo+json:
               schema:
                 $ref: '#/components/schemas/RegionFeature'
         '404': { $ref: '#/components/responses/NotFound' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/RateLimited' }
 
   /v1/regions/{id}/best:
     get:
       tags: [Regions]
       operationId: getRegionBest
-      summary: Curated best-of for a region
+      summary: The region's best-of lists
       description: >
-        **Draft.** The region's curated best-of — the public face of the
-        rankings domain. The response composition (routes only, or routes
-        plus top-voted items per letter) is an open decision
-        (docs/specs/public-api.md §9); the shape below may change.
+        What riders voted best in the region, one list per votable category
+        (climbs, places to sleep, scenic views, history and culture,
+        recommended routes), for the season under way. Each list comes from
+        a ballot that has closed: riders voted in the season before. A list
+        with too few voters to rank (`ranked: false`) has no entries; it is
+        not dressed up as a ranking. While community voting is not open
+        (`voting: false`) there are no lists at all. Entries are places, not
+        tallies: their place in the list and the points the closed round
+        gave them. An entry's `id` is a route (`/v1/routes/{id}`) for letter
+        R and an item (`/v1/items/{id}`) for every other letter.
       parameters:
         - $ref: '#/components/parameters/regionId'
       responses:
         '200':
-          description: The best-of selection.
+          description: The lists. Cacheable for an hour.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  region_id: { type: string }
-                  routes:
-                    type: array
-                    items: { $ref: '#/components/schemas/RouteSummary' }
+                $ref: '#/components/schemas/BestOf'
         '404': { $ref: '#/components/responses/NotFound' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/RateLimited' }
 
   /v1/routes:
@@ -330,19 +337,25 @@ paths:
       tags: [Routes]
       operationId: listRoutes
       summary: Routes in an area
+      description: >
+        The recommended routes that cross a box (at most 10x10 degrees),
+        each with its whole line, by id.
       parameters:
         - $ref: '#/components/parameters/bboxRequired'
-        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/tier'
+        - name: limit
+          in: query
+          description: Page size; a whole line weighs more than a point, so the cap is lower than search's.
+          schema: { type: integer, minimum: 1, maximum: 100, default: 100 }
         - $ref: '#/components/parameters/cursor'
       responses:
         '200':
-          description: Route features (LineString geometry).
+          description: Route features (LineString geometry). Cacheable for five minutes.
           content:
             application/geo+json:
               schema:
-                $ref: '#/components/schemas/RouteFeatureCollection'
+                $ref: '#/components/schemas/RouteCollection'
         '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/RateLimited' }
 
   /v1/routes/{id}:
@@ -350,17 +363,20 @@ paths:
       tags: [Routes]
       operationId: getRoute
       summary: One route
+      description: >
+        One route in full: the list's properties, then a curator's ratings,
+        the measured surface mix, the elevation profile, its photos and the
+        GPX link.
       parameters:
         - $ref: '#/components/parameters/routeId'
       responses:
         '200':
-          description: Full route detail.
+          description: The route. Cacheable for five minutes.
           content:
             application/geo+json:
               schema:
-                $ref: '#/components/schemas/RouteFeature'
+                $ref: '#/components/schemas/RouteDetail'
         '404': { $ref: '#/components/responses/NotFound' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/RateLimited' }
 
   /v1/routes/{id}.gpx:
@@ -368,29 +384,42 @@ paths:
       tags: [Routes]
       operationId: getRouteGpx
       summary: Route as GPX
+      description: The route's track as a GPX 1.1 file to download, the same file the site offers.
       parameters:
         - $ref: '#/components/parameters/routeId'
       responses:
         '200':
-          description: The route as a GPX 1.1 document.
+          description: The route as a GPX 1.1 document. Cacheable for an hour.
           content:
             application/gpx+xml:
               schema:
                 type: string
         '404': { $ref: '#/components/responses/NotFound' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/RateLimited' }
 
   /v1/contributions:
     post:
       tags: [Contributions]
       operationId: createContribution
-      summary: 'Contribute an item (planned — phase 2)'
+      summary: Contribute a place or an edit
       description: >
-        **Planned — phase 2, shape is draft.** Opens a submission exactly as
-        the in-app improve form does; it enters the review queue and is
-        subject to the same moderation rules. Requires a user-scoped token
-        (model undecided), not just an app key.
+        Opens a submission exactly as the site's own form does: it enters
+        the review queue, a curator decides, and the same rules apply. A new
+        place needs `letter`, `name` and `geometry`; one taken from an
+        OpenStreetMap object also names `osm_ref`. An edit names `item_id`
+        (a served item, or the same author's own new place still waiting for
+        review, to revise it or answer a curator's question) and sends only
+        what changes: `fields`, a new `name`,
+        or a moved `geometry`; `null` clears a field. Letters and fields are
+        those `/v1/catalog` marks `contributions` and `accepted`. A second
+        edit by the same author to the same item, while the first still
+        waits, amends it rather than queueing a twin. No photos yet.
+
+
+        Limits: 600 contributions an hour per app, and 20 an hour per
+        author, the same as a rider on the site.
+      security:
+        - partnerKey: []
       requestBody:
         required: true
         content:
@@ -399,31 +428,81 @@ paths:
               $ref: '#/components/schemas/ContributionRequest'
       responses:
         '202':
-          description: Accepted into the review queue.
+          description: >
+            Accepted into the review queue. A new place's `item_id` answers
+            at `/v1/items/{id}` once a curator approves it.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  submission_id: { type: string }
-                  status:
-                    type: string
-                    const: queued_for_review
+                $ref: '#/components/schemas/ContributionAccepted'
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '413': { $ref: '#/components/responses/BadRequest' }
         '429': { $ref: '#/components/responses/RateLimited' }
+
+  /v1/contributions/{id}:
+    get:
+      tags: [Contributions]
+      operationId: getContribution
+      summary: Where a contribution stands
+      description: >
+        One of this app's contributions: waiting, approved, or turned down,
+        with what the curator wrote to its author, for the app to pass on.
+        Another app's contribution is a 404 like one that never existed.
+      security:
+        - partnerKey: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The `submission_id` the contribution was accepted with.
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: The contribution's state. Not cached by shared caches.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContributionStatus'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/authors/{ref}:
+    delete:
+      tags: [Contributions]
+      operationId: forgetAuthor
+      summary: An author deleted their account
+      description: >
+        Relay that one of your users deleted their account with you. The
+        name they shared is removed from every contribution they sent
+        through your app, so wherever it was shown it now reads anonymous.
+        The reference itself stays: it identifies nobody but to you. The
+        answer is the same whether or not the reference ever sent anything.
+      security:
+        - partnerKey: []
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          description: The author's reference, as sent in `author.ref`.
+          schema: { type: string, pattern: '^[A-Za-z0-9._:-]{1,64}$' }
+      responses:
+        '204':
+          description: Done.
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
 
 components:
   securitySchemes:
-    appKey:
+    partnerKey:
       type: http
       scheme: bearer
-      description: 'Self-serve app key, sent as `Authorization: Bearer <key>`.'
-    appKeyQuery:
-      type: apiKey
-      in: query
-      name: key
-      description: Fallback for environments that cannot set headers.
+      description: >
+        A registered partner app's key, sent as `Authorization: Bearer
+        <key>`. Issued under a partner agreement; never send it from a
+        browser, and never as a query parameter.
 
   parameters:
     bbox:
@@ -450,16 +529,16 @@ components:
     tier:
       name: tier
       in: query
-      description: Restrict to a tier.
+      description: Restrict to a tier (`invalid_tier` otherwise).
       schema:
         $ref: '#/components/schemas/Tier'
     hydrate:
       name: hydrate
       in: query
       description: >
-        `osm` merges the cached OSM subset we hold into each feature's
-        `properties.osm` object. Responses stay `© OpenStreetMap
-        contributors`-attributed either way.
+        `osm` merges the cached OpenStreetMap subset we hold into each item
+        feature's `properties.osm` (null when we hold none). Responses stay
+        `© OpenStreetMap contributors`-attributed either way.
       schema:
         type: string
         enum: [osm]
@@ -475,40 +554,35 @@ components:
     cursor:
       name: cursor
       in: query
-      description: Opaque pagination cursor from a previous page's `next_cursor`.
+      description: The opaque `next_cursor` of the previous page (`invalid_cursor` otherwise).
       schema: { type: string }
     regionId:
       name: id
       in: path
       required: true
-      description: Region id (slug).
-      schema: { type: string }
+      description: Region slug (the `region_id` of items and routes).
+      schema: { type: string, pattern: '^[a-z0-9]+(-[a-z0-9]+)*$' }
       example: wallonia
     routeId:
       name: id
       in: path
       required: true
       description: Route id.
-      schema: { type: string }
-
-  headers:
-    X-Attribution:
-      description: >
-        The required attribution string for the data in this response. Keyed
-        v1 design (public-api.md §5); the PoC does not send it.
-      schema: { type: string }
-    X-RateLimit-Remaining:
-      description: Requests remaining in the current window (with `X-RateLimit-Limit` and `X-RateLimit-Reset`; monthly quota travels in `X-Quota-*`).
-      schema: { type: integer }
+      schema: { type: integer, minimum: 1 }
 
   responses:
     BadRequest:
-      description: Malformed parameters.
+      description: Malformed parameters or body; `error` says which.
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }
     Unauthorized:
-      description: Missing or invalid app key.
+      description: No partner key, an unknown one, or a suspended app.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: The key may not do this.
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }
@@ -518,7 +592,7 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }
     RateLimited:
-      description: Rate limit or monthly quota exceeded.
+      description: Over the limit; `Retry-After` says when to try again.
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }
@@ -535,20 +609,563 @@ components:
         message:
           type: string
           example: bbox must be minLon,minLat,maxLon,maxLat
+        field:
+          type: [string, 'null']
+          description: Only on `invalid_contribution`, the field the review intake refused, when it names one.
 
     Tier:
       type: string
       enum: [community, curated]
       description: >
-        `community` is contributed knowledge; `curated` is
-        curator-verified.
+        `community` is contributed knowledge; `curated` is verified, by
+        enough riders or by a curator.
+
+    Grade:
+      type: string
+      enum: [claimed, attested, minimum, high]
+      description: >
+        The coarse trust grade, derived from the evidence ladder
+        (data-provider-hierarchy.md §6.7.7): `claimed` = somebody typed it
+        and nothing dates it; `attested` = a live source republished it,
+        or a dated witness is on record; `minimum` = verified, by the
+        threshold of riders or by a curator; `high` = verified and five or
+        more riders stood here. Derived, so the formula may move; the
+        receipt fields beside it are raw and never do.
+    Custody:
+      type: string
+      enum: [gross, specialty, ours]
+      description: >
+        Who keeps the record: `gross` = a general provider such as
+        OpenStreetMap, `specialty` = a provider registered for this kind of
+        place in this region, `ours` = this community. Says nothing about
+        quality.
+
+    Point:
+      type: object
+      required: [type, coordinates]
+      properties:
+        type: { type: string, const: Point }
+        coordinates:
+          type: array
+          items: { type: number }
+          minItems: 2
+          maxItems: 2
+          description: '[lon, lat] (WGS84)'
+
+    OsmSubset:
+      type: [object, 'null']
+      description: >
+        Only with `?hydrate=osm`: the OpenStreetMap object we hold for the
+        item, with the tags the map shows, or null when we hold none.
+      properties:
+        ref: { type: string, example: node/4207030426 }
+        name: { type: [string, 'null'] }
+        tags:
+          type: object
+          additionalProperties: { type: string }
+          example: { amenity: drinking_water, wheelchair: 'yes' }
+
+    ItemProperties:
+      type: object
+      description: >
+        A closed list, in this order; no other key appears. The trust
+        envelope (`grade` to `verified_by`) is computed by the same code
+        that colours a pin on the map, so the two never disagree.
+      required: [id, letter, name, tier, grade, custody, confirmations, last_confirmed, last_seen_upstream, verified_by, region_id]
+      properties:
+        id: { type: integer, example: 4512 }
+        letter: { type: string, example: B }
+        name: { type: string, example: 'Fountain · Spa' }
+        tier: { $ref: '#/components/schemas/Tier' }
+        grade: { $ref: '#/components/schemas/Grade' }
+        custody: { $ref: '#/components/schemas/Custody' }
+        confirmations:
+          type: integer
+          minimum: 0
+          description: How many riders have stood here and vouched for it, one per rider.
+          example: 2
+        last_confirmed:
+          type: [string, 'null']
+          format: date
+          description: The day of the newest rider confirmation, or null.
+          example: '2026-08-22'
+        last_seen_upstream:
+          type: [string, 'null']
+          format: date
+          description: The day the publisher's export last carried this record, for a record a data provider keeps; null for our own.
+          example: '2026-09-06'
+        verified_by:
+          type: [string, 'null']
+          enum: [riders, curator, null]
+          description: The receipt behind a `curated` tier, null while unverified.
+        region_id:
+          type: [string, 'null']
+          description: The slug of the region the item lies in (`/v1/regions/{id}`), or null.
+          example: brussels
+        osm: { $ref: '#/components/schemas/OsmSubset' }
+
+    ItemFeature:
+      type: object
+      required: [type, geometry, properties]
+      properties:
+        type: { type: string, const: Feature }
+        geometry: { $ref: '#/components/schemas/Point' }
+        properties: { $ref: '#/components/schemas/ItemProperties' }
+
+    RouteHitProperties:
+      type: object
+      description: >
+        A recommended route as a search hit (letter R): one point on the
+        route, its length and its climb. The line is at `/v1/routes/{id}`.
+      required: [id, letter, name, tier, distance_m, ascent_m, region_id]
+      properties:
+        id: { type: integer, example: 111 }
+        letter: { type: string, const: R }
+        name: { type: string, example: 'Liège Bastogne Liège' }
+        tier: { $ref: '#/components/schemas/Tier' }
+        distance_m: { type: integer, example: 12300 }
+        ascent_m: { type: integer, example: 210 }
+        region_id: { type: [string, 'null'], example: wallonia }
+
+    SearchCollection:
+      type: object
+      required: [type, features, licence, attribution]
+      properties:
+        type: { type: string, const: FeatureCollection }
+        features:
+          type: array
+          items:
+            type: object
+            required: [type, geometry, properties]
+            properties:
+              type: { type: string, const: Feature }
+              geometry: { $ref: '#/components/schemas/Point' }
+              properties:
+                oneOf:
+                  - $ref: '#/components/schemas/ItemProperties'
+                  - $ref: '#/components/schemas/RouteHitProperties'
+        licence: { type: string, const: ODbL-1.0 }
+        attribution:
+          type: string
+          example: '© Cycling Commons contributors (ODbL) · © OpenStreetMap contributors'
+        next_cursor:
+          type: string
+          description: Where the next page starts; absent on the last page and on a name search.
+
+    Photo:
+      type: object
+      description: >
+        One photo with its licence and credit, both to be shown with it. A
+        rider's photo is credited by link: `credit_url` is its photo page,
+        which names the photographer as they chose, at the moment it is
+        read. A Wikimedia Commons photo carries the author and links
+        Commons publishes.
+      required: [url, thumb, licence, credit, credit_url, source]
+      properties:
+        url: { type: string, format: uri }
+        thumb: { type: [string, 'null'], format: uri }
+        licence: { type: [string, 'null'], example: CC BY-SA 4.0 }
+        credit: { type: [string, 'null'], description: 'The author as Commons names them; null for a rider''s photo.' }
+        credit_url: { type: [string, 'null'], format: uri }
+        source: { type: [string, 'null'], format: uri, description: 'The file''s page on Wikimedia Commons; null for a rider''s photo.' }
+
+    ItemDetail:
+      type: object
+      required: [type, geometry, properties, licence, attribution]
+      properties:
+        type: { type: string, const: Feature }
+        geometry:
+          type: object
+          description: A Point, or a LineString for a road surface stretch (A).
+        properties:
+          allOf:
+            - $ref: '#/components/schemas/ItemProperties'
+            - type: object
+              required: [country, osm_ref, source, kind, attributes, photos]
+              properties:
+                country: { type: [string, 'null'], example: BE }
+                osm_ref:
+                  type: [string, 'null']
+                  description: The OpenStreetMap object this item stands for, or null.
+                  example: node/4207030426
+                source:
+                  type: string
+                  description: >
+                    Where the row comes from, as the bulk export names it:
+                    `cycling-commons` for our own, `osm` or `wikidata` for a
+                    mirrored copy, or a registered provider's key.
+                  example: cycling-commons
+                kind:
+                  type: [string, 'null']
+                  description: The place's kind (see `/v1/catalog`, `kinds`), for letters that have one.
+                  example: station
+                attributes:
+                  type: object
+                  description: >
+                    The served fields of the letter's form (`/v1/catalog`,
+                    `served`): values picked from a list, measured numbers,
+                    and the place's own website. Never text a person wrote.
+                  additionalProperties: true
+                  example: { potable: 'Yes (public supply)', seasonal: Year-round }
+                photos:
+                  type: array
+                  items: { $ref: '#/components/schemas/Photo' }
+        licence: { type: string, const: ODbL-1.0 }
+        attribution: { type: string }
+
+    Counts:
+      type: object
+      required: [bbox, counts, coverage, attribution]
+      properties:
+        bbox:
+          type: array
+          items: { type: number }
+          minItems: 4
+          maxItems: 4
+        counts:
+          type: object
+          additionalProperties: { type: integer }
+          description: 'Letter -> items `/v1/search` serves in the box, and `R` the routes crossing it, e.g. `{"B": 41, "R": 2}`.'
+        coverage:
+          type: object
+          additionalProperties: { type: integer }
+          description: 'Letter -> OpenStreetMap points in the coverage tiles that no item stands for.'
+        attribution: { type: string }
+
+    RegionProperties:
+      type: object
+      required: [region_id, name, names, country, area_km2, stats]
+      properties:
+        region_id: { type: string, example: wallonia }
+        name: { type: string, example: Wallonia }
+        names:
+          type: object
+          additionalProperties: { type: string }
+          description: The name per language where we hold one.
+          example: { en: Wallonia, fr: Wallonie, nl: Wallonië }
+        country: { type: string, example: BE }
+        area_km2: { type: [integer, 'null'], example: 16901 }
+        stats:
+          type: object
+          required: [items, verified, routes]
+          properties:
+            items: { type: integer, description: 'Items served in the region.' }
+            verified: { type: integer, description: 'Of those, verified.' }
+            routes: { type: integer, description: 'Recommended routes served in the region.' }
+            items_by_letter:
+              type: object
+              additionalProperties: { type: integer }
+              description: Only on one region. Letter -> items served (and `R` -> routes).
+            coverage_by_letter:
+              type: object
+              additionalProperties: { type: integer }
+              description: Only on one region. Letter -> OpenStreetMap points no item stands for.
+
+    RegionFeature:
+      type: object
+      required: [type, id, geometry, properties]
+      properties:
+        type: { type: string, const: Feature }
+        id: { type: string, example: wallonia }
+        bbox:
+          type: array
+          items: { type: number }
+          minItems: 4
+          maxItems: 4
+          description: West, south, east, north. West above east is a region across the antimeridian.
+        geometry:
+          type: [object, 'null']
+          description: A MultiPolygon.
+        properties: { $ref: '#/components/schemas/RegionProperties' }
+
+    RegionCollection:
+      type: object
+      required: [type, features, licence, attribution]
+      properties:
+        type: { type: string, const: FeatureCollection }
+        features:
+          type: array
+          items: { $ref: '#/components/schemas/RegionFeature' }
+        licence: { type: string, const: ODbL-1.0 }
+        attribution: { type: string }
+        next_cursor: { type: string }
+
+    BestOf:
+      type: object
+      required: [region_id, voting, lists]
+      properties:
+        region_id: { type: string, example: wallonia }
+        voting:
+          type: boolean
+          description: Whether community voting is open; no lists while it is not.
+        lists:
+          type: array
+          items:
+            type: object
+            required: [letter, category, season, year, ranked, entries]
+            properties:
+              letter: { type: string, example: N }
+              category: { type: string, example: climbs }
+              season: { type: string, enum: [spring, summer, autumn, winter] }
+              year: { type: string, example: '2026-27', description: 'The season''s year; a winter spans two.' }
+              ranked: { type: boolean, description: 'Whether enough riders voted for a ranking.' }
+              entries:
+                type: array
+                items:
+                  type: object
+                  required: [id, letter, name, place, shared, points, on_map]
+                  properties:
+                    id: { type: integer }
+                    letter: { type: string }
+                    name: { type: string }
+                    place: { type: [integer, 'null'], description: 'The place in the list: 1 is first.' }
+                    shared: { type: boolean, description: 'Another entry holds the same place.' }
+                    points: { type: [integer, 'null'], description: 'The points the closed round gave it.' }
+                    on_map: { type: boolean, description: 'Whether it is still on the map today.' }
+        licence: { type: string, const: ODbL-1.0 }
+        attribution: { type: string }
+
+    RouteProperties:
+      type: object
+      description: A closed list, in this order. Never who proposed the route, their note, votes or moderation state.
+      required: [id, letter, name, tier, distance_m, ascent_m, region_id, difficulty, dominant_surface, season, bike_types]
+      properties:
+        id: { type: integer, example: 23 }
+        letter: { type: string, const: R }
+        name: { type: string, example: 'Spa · Sankt Vith' }
+        tier: { $ref: '#/components/schemas/Tier' }
+        distance_m: { type: integer, example: 126076 }
+        ascent_m: { type: integer, example: 1722 }
+        region_id: { type: [string, 'null'], example: wallonia }
+        difficulty:
+          type: [object, 'null']
+          properties:
+            score: { type: integer, minimum: 1, maximum: 5 }
+            label: { type: string, enum: [Easy, Moderate, Challenging, Hard, Very hard] }
+        dominant_surface: { type: [string, 'null'], example: Asphalt }
+        season:
+          type: array
+          items: { type: string }
+          example: [Spring, Summer]
+        bike_types:
+          type: array
+          items: { type: string }
+
+    RouteFeature:
+      type: object
+      required: [type, geometry, properties]
+      properties:
+        type: { type: string, const: Feature }
+        geometry:
+          type: object
+          description: A LineString.
+        properties: { $ref: '#/components/schemas/RouteProperties' }
+
+    RouteCollection:
+      type: object
+      required: [type, features, licence, attribution]
+      properties:
+        type: { type: string, const: FeatureCollection }
+        features:
+          type: array
+          items: { $ref: '#/components/schemas/RouteFeature' }
+        licence: { type: string, const: ODbL-1.0 }
+        attribution: { type: string }
+        next_cursor: { type: string }
+
+    RouteDetail:
+      type: object
+      required: [type, geometry, properties, licence, attribution]
+      properties:
+        type: { type: string, const: Feature }
+        geometry:
+          type: object
+          description: A LineString.
+        properties:
+          allOf:
+            - $ref: '#/components/schemas/RouteProperties'
+            - type: object
+              required: [ratings, surfaces, gradient_limited, best_direction, elevation, photos, gpx]
+              properties:
+                ratings:
+                  type: object
+                  description: A curator's marks from 1 to 5, not a vote tally; null where none is given.
+                  properties:
+                    quietness: { type: [integer, 'null'] }
+                    scenic: { type: [integer, 'null'] }
+                    friendliness: { type: [integer, 'null'] }
+                surfaces:
+                  type: [object, 'null']
+                  description: The measured surface mix along the line.
+                  properties:
+                    parts:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          surface: { type: string }
+                          pct: { type: integer }
+                    covered: { type: [number, 'null'], description: 'The share of the line the mix covers, 0 to 1.' }
+                gradient_limited: { type: [string, 'null'] }
+                best_direction: { type: [string, 'null'] }
+                elevation:
+                  type: [array, 'null']
+                  items: { type: number }
+                  description: Heights in metres at even steps along the line.
+                photos:
+                  type: array
+                  items: { $ref: '#/components/schemas/Photo' }
+                gpx: { type: string, example: /v1/routes/23.gpx }
+        licence: { type: string, const: ODbL-1.0 }
+        attribution: { type: string }
+
+    ContributionRequest:
+      type: object
+      required: [author, licence]
+      additionalProperties: false
+      properties:
+        letter:
+          type: string
+          description: A letter `/v1/catalog` marks `contributions`. Required for a new place; on an edit, the item's own.
+          example: B
+        item_id:
+          type: integer
+          description: Set when editing a served item.
+        osm_ref:
+          type: string
+          description: A new place taken from this OpenStreetMap object.
+          pattern: '^(node|way)/\d{1,16}$'
+        name:
+          type: string
+          maxLength: 200
+          description: Required for a new place; on an edit, a new name.
+        geometry: { $ref: '#/components/schemas/Point' }
+        fields:
+          type: object
+          description: >
+            The letter's `accepted` fields (`/v1/catalog`): a pick list takes
+            one of its values, a multi-pick a list of them, a link an http(s)
+            address, text at most the form's length. `null` clears a field
+            on an edit.
+          additionalProperties: true
+          example: { potable: 'Yes (public supply)', note: 'Behind the church.' }
+        author:
+          type: object
+          required: [ref]
+          properties:
+            ref:
+              type: string
+              pattern: '^[A-Za-z0-9._:-]{1,64}$'
+              description: >
+                Your stable, opaque reference for the person, the same every
+                time (an HMAC of your user id, say). Never their email or
+                name: we cannot and should not be able to tell who it is.
+            name:
+              type: string
+              maxLength: 80
+              description: The name the person chose to share, shown to curators. Omit for anonymous.
+        licence:
+          type: string
+          const: ODbL-1.0
+          description: >
+            The author agrees the contribution is published under the Open
+            Database License. Your partner agreement is what makes this
+            assertion binding.
+
+    ContributionAccepted:
+      type: object
+      required: [submission_id, status, kind, letter, item_id, status_url]
+      properties:
+        submission_id: { type: integer, example: 136 }
+        status: { type: string, const: queued_for_review }
+        kind: { type: string, enum: [new, edit] }
+        letter: { type: string, example: B }
+        item_id: { type: [integer, 'null'], example: 46168 }
+        status_url: { type: string, example: /v1/contributions/136 }
+
+    ContributionStatus:
+      type: object
+      required: [submission_id, kind, letter, item_id, status, decided_at, decision_note]
+      properties:
+        submission_id: { type: integer }
+        kind: { type: string, enum: [new, edit] }
+        letter: { type: string }
+        item_id: { type: [integer, 'null'] }
+        status:
+          type: string
+          enum: [pending, needs_info, approved, rejected, withdrawn, trashed]
+          description: >
+            `needs_info`: the curator asked a question (see
+            `decision_note`); `trashed`: removed by a curator.
+        decided_at: { type: [string, 'null'], format: date-time }
+        decision_note:
+          type: [string, 'null']
+          description: What the curator wrote to the author.
+
+    Catalog:
+      type: object
+      required: [version, letters, tiers, grades, custodies, attribution]
+      properties:
+        version: { type: string, example: '1' }
+        letters:
+          type: array
+          items:
+            type: object
+            required: [letter, slug, key, name, half, geometry, kind_field, kinds, contributions, fields]
+            properties:
+              letter: { type: string, example: D }
+              slug: { type: string, example: bike-services }
+              key: { type: string, example: services }
+              name: { type: string, example: Bike services }
+              half: { type: string, enum: [practical, experiential] }
+              geometry: { type: string, enum: [point, line, surface] }
+              kind_field:
+                type: [string, 'null']
+                description: The field that holds the kind (`serviceKind` or `type`), null for letters without kinds.
+              kinds:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    key: { type: string, example: station }
+                    label: { type: string, example: Repair stand }
+              contributions: { type: boolean, description: 'Whether `/v1/contributions` takes this letter.' }
+              fields:
+                type: array
+                items:
+                  type: object
+                  required: [key, label, type, values, labels, served, accepted]
+                  properties:
+                    key: { type: string, example: pumpValve }
+                    label: { type: string, example: Pump valve }
+                    type: { type: string, enum: [select, multiselect, text, textarea, url, links, measured] }
+                    values:
+                      type: array
+                      items: { type: string }
+                      description: The values a pick list allows; empty for other types.
+                    labels:
+                      type: object
+                      additionalProperties: { type: string }
+                      description: Where a stored value is a key, its label (`station` -> Repair stand).
+                    served: { type: boolean, description: 'Whether `/v1/items/{id}` serves it.' }
+                    accepted: { type: boolean, description: 'Whether `/v1/contributions` takes it.' }
+        tiers:
+          type: array
+          items: { $ref: '#/components/schemas/Tier' }
+        grades:
+          type: array
+          items: { $ref: '#/components/schemas/Grade' }
+        custodies:
+          type: array
+          items: { $ref: '#/components/schemas/Custody' }
+        attribution: { type: string }
 
     MapConfig:
       type: object
       description: >
-        The consumer bootstrap (implemented, PoC). Rendering metadata only:
-        tiles and GeoJSON carry data, never styling, so this is where the
-        Commons look is offered for consumers that want to match it.
+        The consumer bootstrap. Rendering metadata only: tiles and GeoJSON
+        carry data, never styling, so this is where the Commons look is
+        offered for consumers that want to match it.
       required: [version, attribution, routes, categories]
       properties:
         version: { type: string, example: '0.2' }
@@ -606,7 +1223,7 @@ components:
                 badgeMinZoom: { type: integer, example: 10 }
         coverage:
           type: object
-          description: The dense raw-OSM layer as data-only vector tiles.
+          description: The dense raw-OpenStreetMap layer as data-only vector tiles.
           properties:
             tiles:
               type: object
@@ -656,261 +1273,3 @@ components:
               bestOf:
                 type: boolean
                 description: Whether the Commons map's Best of view shows this category.
-
-    Catalog:
-      type: object
-      properties:
-        letters:
-          type: array
-          items:
-            type: object
-            properties:
-              letter: { type: string, example: B }
-              slug: { type: string, example: water-food }
-              name: { type: string, example: Water & food }
-              serviceKinds:
-                type: array
-                items: { type: string }
-        tiers:
-          type: array
-          items: { $ref: '#/components/schemas/Tier' }
-
-    Grade:
-      type: string
-      enum: [claimed, attested, minimum, high]
-      description: >
-        The coarse trust grade, derived from the evidence ladder
-        (data-provider-hierarchy.md §6.7.7): `claimed` = somebody typed it
-        and nothing dates it; `attested` = a live source republished it,
-        or a dated witness is on record; `minimum` = verified, by the
-        threshold of riders or by a curator; `high` = verified and five or
-        more riders stood here. Derived, so the formula may move; the
-        receipt fields beside it are raw and never do.
-    Custody:
-      type: string
-      enum: [gross, specialty, ours]
-      description: >
-        Who keeps the record: `gross` = a general provider such as
-        OpenStreetMap, `specialty` = a provider registered for this kind of
-        place in this region, `ours` = this community. Says nothing about
-        quality.
-
-    Point:
-      type: object
-      required: [type, coordinates]
-      properties:
-        type: { type: string, const: Point }
-        coordinates:
-          type: array
-          items: { type: number }
-          minItems: 2
-          description: '[lon, lat] (WGS84)'
-
-    CoverageProperties:
-      type: object
-      description: >
-        Reference-only by default: our added fields plus the `osm_ref` to
-        hydrate against OSM. Letter-specific fields (e.g. `potable` for
-        water) appear as plain properties. With `?hydrate=osm` the cached
-        OSM subset is merged in under `osm`.
-      required: [letter, tier, grade, custody, confirmations, last_confirmed, last_seen_upstream, verified_by, region_id]
-      properties:
-        osm_ref:
-          type: string
-          description: 'OSM element reference (`node/…`, `way/…`), absent for Commons-native items.'
-          example: node/4207030426
-        letter: { type: string, example: B }
-        serviceKind: { type: string, example: fountain }
-        tier: { $ref: '#/components/schemas/Tier' }
-        name: { type: string, example: 'Fountain · Spa' }
-        grade:
-          $ref: '#/components/schemas/Grade'
-        custody:
-          $ref: '#/components/schemas/Custody'
-        confirmations:
-          type: integer
-          minimum: 0
-          description: >
-            How many riders have stood here and vouched for it, one row per
-            rider. Part of the receipt behind `grade`.
-          example: 2
-        last_confirmed:
-          type: [string, 'null']
-          format: date
-          description: The day of the newest rider confirmation, or null when nobody has stood here.
-          example: '2026-08-22'
-        last_seen_upstream:
-          type: [string, 'null']
-          format: date
-          description: >
-            The day the publisher's export last carried this record, for a
-            record a data provider keeps; null for our own records.
-          example: '2026-09-06'
-        verified_by:
-          type: [string, 'null']
-          enum: [riders, curator, null]
-          description: >
-            The receipt behind a `curated` tier: `riders` when the verify
-            threshold of independent riders stood here, `curator` when one
-            accountable curator's word settled it, null while unverified.
-        region_id:
-          type: [string, 'null']
-          description: >
-            The slug of the Commons region the item lies in (the key of
-            `/v1/regions`), or null for a place outside every region.
-          example: brussels
-        osm:
-          type: object
-          description: 'Only with `?hydrate=osm`: the cached OSM subset (name, tags).'
-      additionalProperties: true
-
-    CoverageFeature:
-      type: object
-      required: [type, geometry, properties]
-      properties:
-        type: { type: string, const: Feature }
-        id: { type: string }
-        geometry: { $ref: '#/components/schemas/Point' }
-        properties:
-          oneOf:
-            - $ref: '#/components/schemas/CoverageProperties'
-            - $ref: '#/components/schemas/RouteHitProperties'
-
-    RouteHitProperties:
-      type: object
-      description: >
-        A recommended route as a search hit (`letter` R): one point on the
-        route, its length and its climb. The line belongs to the route's own
-        endpoint. No proposer, votes or moderation state.
-      required: [id, letter, name, tier, distance_m, ascent_m, region_id]
-      properties:
-        id: { type: integer, example: 111 }
-        letter: { type: string, const: R }
-        name: { type: string, example: 'Liège Bastogne Liège' }
-        tier: { $ref: '#/components/schemas/Tier' }
-        distance_m: { type: integer, example: 12300 }
-        ascent_m: { type: integer, example: 210 }
-        region_id:
-          type: [string, 'null']
-          description: The slug of the Commons region the route lies in, or null.
-          example: wallonia
-
-    CoverageFeatureCollection:
-      type: object
-      required: [type, features]
-      description: >
-        GeoJSON `FeatureCollection` with foreign members: `licence`,
-        `attribution` and (when another page exists) `next_cursor`.
-      properties:
-        type: { type: string, const: FeatureCollection }
-        licence: { type: string, const: ODbL-1.0 }
-        attribution:
-          type: string
-          example: '© Cycling Commons contributors & © OpenStreetMap contributors'
-        next_cursor:
-          type: string
-          description: Opaque cursor for the next page; absent on the last page.
-        features:
-          type: array
-          items: { $ref: '#/components/schemas/CoverageFeature' }
-
-    RegionProperties:
-      type: object
-      properties:
-        region_id: { type: string, example: wallonia }
-        name: { type: string, example: Wallonia }
-        country: { type: string, example: BE }
-        stats:
-          type: object
-          description: Coverage / adoption statistics.
-          additionalProperties: true
-      additionalProperties: true
-
-    RegionFeature:
-      type: object
-      required: [type, geometry, properties]
-      properties:
-        type: { type: string, const: Feature }
-        id: { type: string }
-        geometry:
-          type: object
-          description: Polygon or MultiPolygon.
-        properties: { $ref: '#/components/schemas/RegionProperties' }
-
-    RegionFeatureCollection:
-      type: object
-      required: [type, features]
-      properties:
-        type: { type: string, const: FeatureCollection }
-        licence: { type: string, const: ODbL-1.0 }
-        attribution: { type: string }
-        next_cursor: { type: string }
-        features:
-          type: array
-          items: { $ref: '#/components/schemas/RegionFeature' }
-
-    RouteSummary:
-      type: object
-      properties:
-        route_id: { type: string }
-        name: { type: string }
-        distance_km: { type: number }
-        surface: { type: string }
-        rating:
-          type: object
-          additionalProperties: true
-      additionalProperties: true
-
-    RouteProperties:
-      allOf:
-        - $ref: '#/components/schemas/RouteSummary'
-        - type: object
-          properties:
-            season:
-              type: array
-              items: { type: string }
-            difficulty: { type: string }
-
-    RouteFeature:
-      type: object
-      required: [type, geometry, properties]
-      properties:
-        type: { type: string, const: Feature }
-        id: { type: string }
-        geometry:
-          type: object
-          description: LineString or MultiLineString.
-        properties: { $ref: '#/components/schemas/RouteProperties' }
-
-    RouteFeatureCollection:
-      type: object
-      required: [type, features]
-      properties:
-        type: { type: string, const: FeatureCollection }
-        licence: { type: string, const: ODbL-1.0 }
-        attribution: { type: string }
-        next_cursor: { type: string }
-        features:
-          type: array
-          items: { $ref: '#/components/schemas/RouteFeature' }
-
-    ContributionRequest:
-      type: object
-      description: '**Draft** — phase-2 shape, subject to change.'
-      required: [letter]
-      properties:
-        letter: { type: string, example: B }
-        item_id:
-          type: string
-          description: Set when editing an existing Commons item.
-        osm_ref:
-          type: string
-          description: Set when the contribution concerns an OSM element.
-        geometry: { $ref: '#/components/schemas/Point' }
-        fields:
-          type: object
-          description: Letter-specific fields, as in the in-app improve form.
-          additionalProperties: true
-        note:
-          type: string
-          description: Free-text note for the reviewer.

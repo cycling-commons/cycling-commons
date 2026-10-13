@@ -123,7 +123,7 @@ Field by field:
 - **`categories`**: the full category table (letters A-M are the practical categories, N-Z the experiential ones): machine key, English label,
   colour, glyph, kind (`point`, `line`, or `surface`), and `bestOf` (whether the Commons map's
   Best of view shows this category). Use it to colour markers, build a legend, and reproduce the
-  view modes below. Labels are English in the proof of concept; localised labels are a v1 concern.
+  view modes below. Labels are English.
   Two things the table does not say outright. The `glyph` is an emoji **fallback**, not the mark
   the Commons map draws: that is a drawn SVG per type, and an app that ships the emoji will not look
   like the Commons. And `kind` describes the category, not what `/v1/search` will hand you: that
@@ -148,7 +148,9 @@ GET https://cyclingcommons.org/v1/search?q=spa&limit=30
 | `letter` | no | One catalogue letter (A-M practical, N-Z experiential; see `categories` in the map config). Absent = all item letters in one response. `R` gives recommended routes alone. |
 | `routes` | no | `include` adds recommended routes (letter `R`) to the hits. Absent keeps them out, so a request that never asked for routes gets none. |
 | `tier` | no | `community` or `curated`. Absent = both. `curated` means a human vouched for the item: a curator verified it or a rider confirmed it on the spot. |
+| `hydrate` | no | `osm` adds `osm` to each item: the OpenStreetMap object it stands for, with the tags the map shows, or `null`. |
 | `limit` | no | Maximum features returned. Default 100, maximum 500. |
+| `cursor` | no | The `next_cursor` of the page before, to page a browse (no `q`). A name search answers in one page. |
 
 <!-- CODE-ILLUSTRATIVE example response, abridged to one feature -->
 ```json
@@ -222,6 +224,8 @@ country through this endpoint; that is what the exports are for.
 | 400 | `bbox_too_large` | Span over 10 by 10 degrees. |
 | 400 | `invalid_letter` | `letter` given but not one of the catalogue letters in `categories`. |
 | 400 | `invalid_tier` | `tier` given but not `community` or `curated`. |
+| 400 | `invalid_hydrate` | `hydrate` given but not `osm`. |
+| 400 | `invalid_cursor` | A cursor that is not a `next_cursor`, or a cursor on a name search. |
 | 429 | `rate_limited` | Over 120 requests per minute from one address. Back off and retry. |
 
 ## Mirroring the Commons view modes
@@ -303,7 +307,7 @@ The Commons map offers three views, and the config carries everything needed to 
     large the box. They are the surface and quality-rides categories, whose geometry is lines, and
     `search` serves points. If your app needs those, it reads the tile archive.
 
-    Finally, meet two of the four errors, so your client handles them before a user does:
+    Finally, meet two of the errors, so your client handles them before a user does:
 
     <!-- CODE-ILLUSTRATIVE shell commands that both fail on purpose -->
     ```sh
@@ -314,11 +318,11 @@ The Commons map offers three views, and the config carries everything needed to 
     <!-- CODE-ILLUSTRATIVE SAMPLE-FROM any-install; sample output, both are HTTP 400 -->
     ```json
     {"error":"bbox_too_large","message":"bbox may span at most 10x10 degrees"}
-    {"error":"invalid_letter","message":"letter must be one catalogue letter (see /v1/map-config categories: practical A-M, experiential N-Z), or absent for all"}
+    {"error":"invalid_letter","message":"letter must be one catalogue letter (see /v1/catalog: practical A-M, experiential N-Z), or absent for all"}
     ```
 
-    Both carry a machine-readable `error` beside the sentence, which is what you branch on. The
-    fifth response worth rehearsing is the `429`: it carries `Retry-After` in seconds, and honouring
+    Both carry a machine-readable `error` beside the sentence, which is what you branch on. One
+    more response is worth rehearsing, the `429`: it carries `Retry-After` in seconds, and honouring
     it is the difference between a well-behaved client and one that gets noticed.
 
     The behaviour above is pinned by `web/tests/Api/PublicApiV1Test.php`, and the
@@ -335,11 +339,8 @@ records, so nothing can leak by accident. The full enforcement stack is specifie
 `docs/specs/public-api-personal-data-boundary.md`; the platform-wide picture is on
 [Location & privacy](../../location-privacy.md).
 
-## What comes later
+## The rest of the API
 
-The proof of concept is the thin end of a drafted v1 surface: single-item detail
-with OpenStreetMap hydration, per-letter counts, regions and best-of endpoints, route detail with
-GPS Exchange Format (GPX) downloads, and self-serve API keys with quotas. The drafted contract,
-including the parts not yet built, lives in the
-[interactive API reference](https://cyclingcommons.org/developers/api). When your integration needs
-one of those pieces, that reference is the place to check whether it has landed.
+One item with its photos and OpenStreetMap hydration, per-letter counts, regions and their best-of
+lists, routes with their whole line and as GPS Exchange Format (GPX), paging, and the write path
+for partner apps: [Items, regions, routes, and contributing back](the-rest-of-the-api.md).

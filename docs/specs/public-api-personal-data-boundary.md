@@ -3,9 +3,10 @@
 # Personal-data boundary — how the public API is kept away from account data
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
-· the data API is live: `/v1/map-config` and `/v1/search` answer today
+· the data API is live: every `/v1` endpoint answers
 ([public-api.md §2.2](public-api.md)). Of the enforcement stack, only the
-response half is built: closed-property DTOs pinned by exact-key tests (§5.2).
+response half is built: closed-property DTOs pinned by exact-key tests and
+the denylist walk over every readable endpoint (§5.2).
 The Postgres role and its grants (§2), the dedicated connection and its
 wrapper (§3), deptrac (§4) and the grant-drift test (§5.1) are deferred: there
 is no `cc_api_read` role, no `api_read` connection, no `PublicReadConnection`,
@@ -111,7 +112,7 @@ public. **Not built until an endpoint needs it.**
 `github_contributor`, `blog_post`, `coverage_run`, `coverage_run_step`,
 `moderation_seen`, `job_run`, `country`, `country_extract`,
 `country_plan_region`, `town_place`, `season_result`, `traffic_pool`,
-`traffic_seen`, `traffic_total`.
+`traffic_seen`, `traffic_total`, `api_app`.
 
 The class also holds site internals with no place in the dataset, whether
 or not they carry personal data: the default-deny grant (§2) means an
@@ -150,7 +151,11 @@ unlisted table is simply out of reach. Notes on the less obvious rows:
   text belongs to. No person, but site internals rather than dataset.
 - **`season_result`** holds the stored results of the season ballot per
   region. It names no voter; the site publishes the results through the
-  website, and no API endpoint serves them.
+  website, and `/v1/regions/{id}/best` serves the places it ranks, never a
+  vote or voter count (§1.4).
+- **`api_app`** is the partner-app registry of the write path
+  ([public-api.md §8](public-api.md)): a contact address and the hash of
+  each app's key. Read only to check a key; never served.
 - **`traffic_pool`**, **`traffic_seen`** and **`traffic_total`** are the radar
   traffic tables ([traffic-measurements.md §4.3](traffic-measurements.md)):
   sealed lines waiting under a random id, HMAC dedupe codes, and the plain
@@ -204,12 +209,15 @@ API queries ([public-api.md §1](public-api.md)). Postgres row-level security
 remains available if an editorial state ever needs a hard guarantee, but it is
 not part of this design.
 
-### 1.4 What the live search reads today
+### 1.4 What the live endpoints read today
 
-`/v1/search` (`App\Api\V1\PublicItemsProvider`) reads `item`, `region`,
-`recommended_route`, `change_history` and `data_provider`, all §1.1. It also
-reads two tables outside §1.1, which the grants of §2 must cover without a
-base-table grant when they land:
+The item, region and route endpoints (`App\Api\V1\PublicItemsProvider`,
+`PublicRegionsProvider`, `PublicRoutesProvider`, `OsmSubsets`) read `item`,
+`region`, `recommended_route`, `change_history`, `data_provider`,
+`world_country`, `coverage_poi` and `coverage_count`, all §1.1, and never a
+column that names a person: `recommended_route.proposed_by` and
+`trashed_by` are not selected. They also read tables outside §1.1, which
+the grants of §2 must cover without a base-table grant when they land:
 
 - **`item_confirmation`** (§1.2), through the trust envelope
   (`App\Catalog\ItemEvidenceResolver::selectSql()`): it counts the vouching
@@ -222,8 +230,18 @@ base-table grant when they land:
   whether any confirmation, submission or `change_history` row touches the
   item. That needs a retirement view or a stored "untouched OSM row" flag on
   `item`, never a grant on either base table.
+- **`season_vote`** (§1.2) and **`season_result`** (§1.3), through
+  `App\Vote\BestOfResults::standings()` for `/v1/regions/{id}/best`: the
+  ranked places of a closed round. The response carries places and points,
+  never a voter, a vote or a voter count. That fits an
+  `api_season_standings` view.
 
-Until then the endpoint reads them through the default connection (§3.2).
+The write path (`/v1/contributions`, `/v1/authors/{ref}`) reads and writes
+`submission` and reads `api_app` through the application's own services on
+the default connection, as §2.2 says third-party writes must. Its status
+call reads the calling app's own `submission` rows only.
+
+Until then every endpoint reads through the default connection (§3.2).
 
 ### 1.5 What the bulk export reads
 
@@ -367,13 +385,20 @@ The namespace holds today:
   promised endpoints for the reference page;
 - `App\Api\V1\CategoryTable`: the rendering metadata `/v1/map-config` serves;
 - `App\Api\V1\PublicItemsProvider`: the `/v1/search` read path;
-- `App\Api\V1\Dto\ItemFeature` and `App\Api\V1\Dto\RouteFeature`: the
-  closed-property response DTOs (§5.2).
+- `App\Api\V1\Dto\ItemFeature`, `ItemDetail`, `RouteFeature`, `RouteLine`
+  and `PhotoEntry`: the closed-property response DTOs (§5.2);
+- `App\Api\V1\PublicItemsProvider`, `PublicRegionsProvider`,
+  `PublicRoutesProvider`, `PublicCatalog`, `PublicFields`, `OsmSubsets`,
+  `ContributionRequest` and `ApiResponder`: the read paths, the field
+  allowlist, the write request check and the shared conventions;
+- `App\Api\Partner\ApiApps`: the partner-app registry of the write path.
 
-**Known gap.** The controller that serves both endpoints,
-`App\Controller\Api\V1\PublicApiController`
-(web/src/Controller/Api/V1/PublicApiController.php), sits outside
-`App\Api\`, against this rule. `App\Controller\ApiController` holds only the `/health` probe, which is not
+**Known gap.** The controllers that serve the endpoints
+(`App\Controller\Api\V1\PublicApiController`, `RegionApiController`,
+`RouteApiController`, `ContributionApiController`) sit outside `App\Api\`,
+against this rule, and two read paths live in other namespaces:
+`App\Vote\BestOfResults` (the best-of lists) and `App\Catalog\RouteTrack`
+(the GPX, shared with the site). `App\Controller\ApiController` holds only the `/health` probe, which is not
 data-API code.
 
 ---
@@ -483,17 +508,33 @@ ordered list of `properties` keys, so any added key fails:
 - **Routes** (`App\Api\V1\Dto\RouteFeature`): `id`, `letter`, `name`,
   `tier`, `distance_m`, `ascent_m`, `region_id`. Asserted in
   `tests/Api/PublicApiV1Test.php`.
+- **One item** (`ItemDetail`): the item keys, then `country`, `osm_ref`,
+  `source`, `kind`, `attributes`, `photos`; `attributes` holds only the
+  fields `App\Api\V1\PublicFields` allows. Asserted in
+  `tests/Api/ItemsApiTest.php`, with a seeded note and a photo's stored
+  credit, alt text and distance that must not appear.
+- **Route lines** (`RouteLine`): the route keys plus `difficulty`,
+  `dominant_surface`, `season`, `bike_types`; one route adds `ratings`,
+  `surfaces`, `gradient_limited`, `best_direction`, `elevation`, `photos`,
+  `gpx`. Asserted in `tests/Api/RegionsRoutesApiTest.php`, with a seeded
+  note, uploader, start label and proposer that must not appear.
 
 An allowlist is stricter than a denylist: a key nobody thought to forbid
 still fails.
 
-**Not built: the denylist walk.** The design also calls for a data-driven
-test over every route under `/v1` that recursively walks each JSON response
-and fails on any key matching a denylist pattern (`email`, `password`,
-`totp`, `secret`, `token`, `ip`, `locale`, `base_point`, `base_place`,
-`deletion`, …), kept in one test constant and extended whenever a new
-personal column is added to any entity. No such test exists yet; it would
-also cover `/v1/map-config`, which has no DTO.
+**Built: the denylist walk** (`tests/Api/PersonalDataWalkTest.php`). Every
+readable `api_v1_*` route, found from the router so a new one is walked
+without editing the test, is asked about rows a seeded person touched (a
+submission, a proposed route, a note naming them). Each JSON response is
+walked recursively and fails on any key holding a denylisted word
+(`email`, `password`, `totp`, `secret`, `token`, `ip`, `locale`,
+`base_point`, `base_place`, `deletion`, `proposed_by`, `user_id`,
+`uploader`, `pseudonym`, `display_name`, `author`, `contact`, …), read
+as words so a place kind such as "worship" is not taken for "ip"; and
+every body, the GPX included, fails if it holds the person's address or
+name. It covers `/v1/map-config` and `/v1/catalog`, which have no DTO.
+The partner app's own `/v1/contributions/{id}` is behind its key and
+tested in `ContributionApiTest`.
 
 ---
 

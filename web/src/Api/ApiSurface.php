@@ -80,8 +80,7 @@ final readonly class ApiSurface
     public function describes(string $method, string $path): bool
     {
         foreach ($this->paths() as $template => $operations) {
-            $pattern = '~^'.preg_replace('~\\\\\{[^/}]+\\\\\}~', '[^/]+', preg_quote($template, '~')).'$~';
-            if (1 === preg_match($pattern, $path)
+            if (self::matches((string) $template, $path)
                 && \is_array($operations)
                 && \array_key_exists(strtolower($method), $operations)) {
                 return true;
@@ -89,6 +88,32 @@ final readonly class ApiSurface
         }
 
         return false;
+    }
+
+    /**
+     * Is there a built endpoint at this path's shape, whatever its
+     * parameter holds? `/v1/items/abc` has one (`/v1/items/{id}`) even
+     * though `abc` is no id: that is a wrong id, not a planned endpoint.
+     */
+    public function isLiveShape(string $method, string $path): bool
+    {
+        foreach ($this->router->getRouteCollection()->all() as $name => $route) {
+            if (str_starts_with($name, self::ROUTE_PREFIX)
+                && \in_array($method, $route->getMethods(), true)
+                && self::matches($route->getPath(), $path)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** `{name}` matches one path segment, everything else literally. */
+    private static function matches(string $template, string $path): bool
+    {
+        $pattern = '~^'.preg_replace('~\\\\\{[^/}]+\\\\\}~', '[^/]+', preg_quote($template, '~')).'$~';
+
+        return 1 === preg_match($pattern, $path);
     }
 
     /** @return array<string, mixed> */

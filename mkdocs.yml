@@ -121,6 +121,7 @@ nav:
       - Public API:
           - Start here: developers/api/index.md
           - Serving map data: developers/api/serving-map-data.md
+          - Items, regions, routes, and contributing back: developers/api/the-rest-of-the-api.md
           - Worked example, a route planner: developers/api/worked-example-route-planner.md
           - The OpenStreetMap data we use: developers/api/openstreetmap-data.md
       - The numbers these courses quote: developers/numbers.md

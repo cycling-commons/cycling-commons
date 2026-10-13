@@ -103,15 +103,16 @@ non-scraping; scraping the site/tiles/endpoints outside these remains prohibited
 (osm-data-architecture.md §7).
 
 **Status today.** The bulk export (§3.1) is built. The metered API (§3.2) is
-not; what is live is a free, unkeyed, read-only proof of concept of the API
-([public-api.md §2.2](public-api.md)): `/v1/map-config` and `/v1/search`,
-declared `security: []` in `web/public/api/openapi.yaml`, open to anonymous
-callers (`^/v1/` is `PUBLIC_ACCESS` in `web/config/packages/security.yaml`)
-and throttled per IP address to 120 requests a minute (the `public_api_read`
-limiter in `web/config/packages/rate_limiter.yaml`). `/v1/search` already
-answers a worldwide name search (`q`), adds routes on request
-(`routes=include`) and gives each hit its region's public slug
-(`region_id`). API keys and quota tiers (§3.2, §4) remain proposed.
+not: the live API is free and unkeyed ([public-api.md §2.2](public-api.md)).
+Every read endpoint of the contract answers (catalogue, search, one item,
+counts, regions and their best-of, routes and their GPX), declared
+`security: []` in `web/public/api/openapi.yaml`, open to anonymous callers
+(`^/v1/` is `PUBLIC_ACCESS` in `web/config/packages/security.yaml`) and
+throttled per IP address to 120 requests a minute (the `public_api_read`
+limiter in `web/config/packages/rate_limiter.yaml`). The write path (§6)
+answers registered partner apps only, by partner key
+([public-api.md §8](public-api.md)). Read keys and quota tiers (§3.2, §4)
+remain proposed.
 
 ### 3.1 Periodic bulk export: free, open, ODbL *(built 2026-10-09)*
 
@@ -320,7 +321,7 @@ osm-data-architecture.md §7; this doc owns the **quota tiers and pricing**
 (§4). Freshness is backed by materialize-on-edit
 ([osm-data-architecture.md §6](osm-data-architecture.md)). Coverage tiles ride
 existing PMTiles/CDN infra. *Proposed*: the live API has no keys or quotas
-yet, only the per-IP limit of the proof of concept (§3).
+yet, only the per-IP limit (§3).
 
 ## 4. Pricing model: metered quota tiers *(proposed)*
 
@@ -349,8 +350,8 @@ data itself (the periodic dump is always free and open, §3.1).
 
 We do **not** court big platforms. No outbound BD, no design-partner program, no
 sales team. Publish the free dump, ship a self-serve keyed API with quota tiers,
-and let consumers find it. (Today the dump is published weekly and only the
-unkeyed proof of concept of the API is live, §3.) This matches a small team and is the owner's stated
+and let consumers find it. (Today the dump is published weekly and the whole
+API answers unkeyed, §3.) This matches a small team and is the owner's stated
 intention. Inbound commercial use is welcome on the standard tiers; it is not
 solicited.
 
@@ -358,8 +359,9 @@ solicited.
 
 The write/contribution API (routing user submissions back through the existing
 contribution → moderation loop,
-[moderation-and-contribution.md](moderation-and-contribution.md)) should be
-built and made **as frictionless as possible**. But the business case must stand
+[moderation-and-contribution.md](moderation-and-contribution.md)) is built for
+registered partner apps ([public-api.md §8](public-api.md)) and should stay
+**as frictionless as possible**. But the business case must stand
 up **without assuming competitors use it**:
 
 - **Direct competitors will not** wire "contribute to Cycling Commons" into

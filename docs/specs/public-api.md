@@ -3,8 +3,9 @@
 # Public API: endpoint contract and integration guide
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons,
-and third-party developers integrating the API · some numbers and the write-auth
-model are marked *proposed* pending owner decisions (§9).
+and third-party developers integrating the API · every REST endpoint of §2.2
+answers, reads open and writes for registered partner apps (built 2026-10-12);
+read keys, quotas and the keyed tiles stay *proposed* (§3, §9).
 
 This document owns the **technical shape** of the public read API: the data we
 serve, the two transports (data-only vector tiles and JSON/GeoJSON REST), the
@@ -26,8 +27,8 @@ It **consumes unchanged** and does not restate:
   [account-and-auth.md](account-and-auth.md).
 
 Write/contribution (routing third-party edits back through moderation) is
-**designed here but scoped phase-2**. The read API ships first; consumer apps
-bringing new information in comes later.
+built for registered partner apps (§8): a contribution enters the same
+review queue as one from the site's own form.
 
 ---
 
@@ -146,47 +147,97 @@ convenience; it is never part of the data contract.
 
 All REST lives under a `/v1` prefix. Spatial collections are GeoJSON
 `FeatureCollection`s; metadata is plain JSON. Endpoints re-expose existing
-internal behaviour (`/map/coverage/*`, the catalog region slices) behind the public
-contract.
+internal behaviour (`/map/coverage/*`, the catalog region slices, the
+best-of results, the site's GPX) behind the public contract.
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| GET | `/v1/map-config` | **implemented (PoC)**, the consumer bootstrap: per-country tile archives for routes and coverage (`tiles: {cc\|'*': {tiles, bounds, stamp}}`) + source-layer contract, route style groups, category table (letters A–M practical, N–Z experiential), attribution string. Add a country's source when its `bounds` meet your viewport; `*` is one archive for every country |
-| GET | `/v1/catalog` | item-type catalogue (letters A–M practical, N–Z experiential; `serviceKind`, vocabularies, tiers): the labels and rendering metadata a consumer needs |
-| GET | `/v1/search?bbox=&q=&letter=&tier=&limit=&cursor=` | search / browse coverage → GeoJSON `FeatureCollection` (reference-only) |
-| GET | `/v1/items/{id}` (`?hydrate=osm`) | single-item detail: our enrichment, provenance, verification state |
-| GET | `/v1/coverage/counts?bbox=` | per-letter counts for chips and summaries |
-| GET | `/v1/regions` · `/v1/regions/{id}` | coverage polygons + stats (the REST twin of the `coverage_region` tile layer) |
-| GET | `/v1/regions/{id}/best` | the curated best-of for a region, the public face of the rankings domain ([route-domain.md](route-domain.md)); response composition is an open decision (§9) |
-| GET | `/v1/routes?bbox=` · `/v1/routes/{id}` · `/v1/routes/{id}.gpx` | the K route domain + GPX download |
-| POST | `/v1/contributions` **(phase-2, §8)** | write path → the existing submission / moderation loop |
+| GET | `/v1/map-config` | the consumer bootstrap: per-country tile archives for routes and coverage (`tiles: {cc\|'*': {tiles, bounds, stamp}}`) + source-layer contract, route style groups, category table (letters A–M practical, N–Z experiential), attribution string. Add a country's source when its `bounds` meet your viewport; `*` is one archive for every country |
+| GET | `/v1/catalog` | every letter: slug, name, geometry, its kinds, and every field of its form with the allowed values, `served` (in `/v1/items/{id}`) and `accepted` (by `/v1/contributions`) |
+| GET | `/v1/search?bbox=&q=&letter=&tier=&routes=&hydrate=&limit=&cursor=` | search / browse items → GeoJSON `FeatureCollection` (reference-only) |
+| GET | `/v1/items/{id}` (`?hydrate=osm`) | one item: the search properties, then `country`, `osm_ref`, `source`, `kind`, the served `attributes` and `photos` |
+| GET | `/v1/coverage/counts?bbox=` | per-letter counts in a box of at most 2x2 degrees: `counts` (items `/v1/search` serves, `R` routes) and `coverage` (OpenStreetMap points no item stands for), never added together |
+| GET | `/v1/regions` (`?country=&limit=&cursor=`) · `/v1/regions/{id}` | the regions /regions lists, by slug: the list drawn by the stored coarse outline, one region by its boundary simplified to 0.001 degrees, with its counts per letter |
+| GET | `/v1/regions/{id}/best` | the region's current best-of list per votable category, from the closed ballot (§9 records the composition) |
+| GET | `/v1/routes?bbox=&tier=&limit=&cursor=` · `/v1/routes/{id}` · `/v1/routes/{id}.gpx` | recommended routes with their whole line; one route adds ratings, surfaces, elevation, photos and the GPX link; the GPX is the site's |
+| POST | `/v1/contributions` | write path for registered partner apps → the existing submission / moderation loop (§8) |
+| GET | `/v1/contributions/{id}` | where one of the calling app's contributions stands |
+| DELETE | `/v1/authors/{ref}` | the app relays an account deletion: the author's shared name is blanked (§8) |
 
-**What answers today (the PoC).** Two endpoints are implemented and live in
-the app: `/v1/map-config` (routes tiles, coverage tiles, category table with the
-Best of flag, attribution) and the `/v1/search` subset `bbox` and/or `q` +
-optional `letter` + optional `tier` + `limit` (`hydrate`/`cursor` stay draft;
-`bbox` spans at most 10x10 degrees and is required unless `q` is given; `q` is
-3 to 100 characters matched anywhere in the name, lower-cased and
-accent-folded (`PublicItemsProvider::foldSql()`, trigram indexes
-`item_name_fold_trgm_idx` and `recommended_route_name_fold_trgm_idx`; three
-letters because a trigram is three, and shorter words would read every row),
-names that start with it first; every feature
-carries `region_id`, the region's public slug or null; recommended routes
-(letter R) join only when asked for, `routes=include` beside the items or
-`letter=R` alone, each as one point on the route with `distance_m` and
-`ascent_m` (`RouteFeature`), so a consumer that never asked keeps the answer
-it had; `letter` accepts any catalogue letter (A–M practical, N–Z experiential; e.g. `letter=B` for water);
-absent letter = all letters in one response). The config carries enough for a
-consumer to reproduce the map's three view modes (Best of / Confirmed /
-Everything, §2.1 tiles + the tier filter + the `bestOf` category flag). Both are open read-only (no
-keys yet, `security: []` in the OpenAPI), CORS `Access-Control-Allow-Origin: *`
+**As built.** Every read is open (no key, `security: []` in the OpenAPI),
+CORS `Access-Control-Allow-Origin: *` with `GET` only
 (`PublicApiCorsSubscriber`), per-IP `public_api_read` limiter (120/min, own
-pool), ETag + `public` caching with the explicit `^/v1/` PUBLIC_ACCESS entry in
-security.yaml. Responses are built by `Api\V1\PublicItemsProvider` through the
-`ItemFeature` DTO, each feature carrying the trust envelope of §1: the DTO half of the
-[personal-data boundary](public-api-personal-data-boundary.md) is enforced, the
-dedicated Postgres role half stays deferred. The consumer-facing explanation
-lives at `wiki/developers/api/`.
+pool), ETag + `public` caching with the explicit `^/v1/` PUBLIC_ACCESS entry
+in security.yaml. The conventions every endpoint shares (limiter, JSON
+errors, cache headers, bbox, limit, cursor) live in one class,
+`App\Api\V1\ApiResponder`. Controllers: `PublicApiController` (map-config,
+catalog, search, items, counts), `RegionApiController`, `RouteApiController`
+and `ContributionApiController`, all in `App\Controller\Api\V1`.
+
+- **Search** (`PublicItemsProvider::search()`): `bbox` and/or `q` +
+  optional `letter`, `tier`, `routes`, `hydrate`, `limit`, `cursor`. `bbox`
+  spans at most 10x10 degrees and is required unless `q` is given; `q` is
+  3 to 100 characters matched anywhere in the name, lower-cased and
+  accent-folded (`PublicItemsProvider::foldSql()`, trigram indexes
+  `item_name_fold_trgm_idx` and `recommended_route_name_fold_trgm_idx`;
+  three letters because a trigram is three, and shorter words would read
+  every row), names that start with it first. Every feature carries
+  `region_id`, the region's public slug or null. Recommended routes (letter
+  R) join only when asked for, `routes=include` beside the items or
+  `letter=R` alone, each as one point on the route with `distance_m` and
+  `ascent_m` (`RouteFeature`). `letter` accepts any catalogue letter;
+  absent letter = all letters. A browse without `q` pages by keyset: items
+  by id, then routes by id; the cursor holds the last item id (`i`), or the
+  last route id (`r`) once the items are done. A name search is one page of
+  its best matches and refuses a cursor (`invalid_cursor`).
+  `hydrate=osm` adds `osm` to item features only.
+- **One item** (`PublicItemsProvider::item()`, `ItemDetail`): served by the
+  same predicate as the bulk export (`BulkExportBuilder::servedItemSql()`),
+  so a submitted, rejected, retired, untouched-OSM or gone row is a 404.
+  `source` names the row as the export does (`cycling-commons`, `osm`,
+  `wikidata` or a provider key). `attributes` are the fields of the
+  letter's form whose value is picked from a list, measured, or the place's
+  own `web` address (`App\Api\V1\PublicFields`, an allowlist); text a
+  person wrote never leaves. `kind` is `serviceKind` (D) or `type` (O, G, P,
+  Q). `photos` are the photos the map shows (`PhotoValidator::sift()`),
+  each `{url, thumb, licence, credit, credit_url, source}` (§5).
+- **`?hydrate=osm`** (`App\Api\V1\OsmSubsets`): `{ref, name, tags}` from
+  `coverage_poi`, tags limited to `CoverageRepository::TAG_WHITELIST` minus
+  `description` (prose a mapper wrote: the API carries no free text, OSM's
+  included), null when we hold nothing for the ref.
+- **Counts** (`PublicItemsProvider::counts()`): live SQL in the box, because
+  the kept `coverage_count` table is per region, not per box; about half a
+  second for 2x2 degrees over the Benelux on dev.
+- **Regions** (`PublicRegionsProvider`): the regions `RegionDirectoryProvider`
+  lists (a boundary, a country in `world_country`, the finest admin level
+  of that country: `OperationalRegions`), seeded countries included, as on
+  /regions. Paged by slug. Each feature carries the GeoJSON `bbox`
+  (`region.bbox_*`; west above east across the antimeridian), `names` per
+  language from `region.labels`, and `stats` (`items`, `verified`,
+  `routes`); one region adds `items_by_letter` and `coverage_by_letter`
+  (the kept `coverage_count`).
+- **Best-of** (`BestOfResults::standings()`): for each votable letter (N, O,
+  P, Q, R) the list of the region's current round from `SeasonResults`, the
+  rows `/best` shows; a list below the ranking threshold has no entries
+  (`ranked: false`), and while `community.voting_live` is off there are no
+  lists at all, because `/best` then shows a preview with simulated tallies.
+  Entries are `{id, letter, name, place, shared, points, on_map}`: never
+  vote or voter counts.
+- **Routes** (`PublicRoutesProvider`, `RouteLine`): served routes crossing
+  the box, by id, pages of at most 100. List properties: `id`, `letter`,
+  `name`, `tier`, `distance_m`, `ascent_m`, `region_id`, `difficulty`
+  (`{score, label}`, `DifficultyVocabulary::canonical()`),
+  `dominant_surface`, `season` (a stored single word is a list of one),
+  `bike_types`. One route adds `ratings` (the curator's 1 to 5 marks),
+  `surfaces`, `gradient_limited`, `best_direction`, `elevation`, `photos`
+  and `gpx`. Never `proposed_by`, `trashed_by`, the rider's `note`, the
+  `uploader` or the typed `start`. The GPX comes from `App\Catalog\RouteTrack`,
+  the same lookup the site's `/routes/{id}.gpx` uses.
+
+Responses are built through closed-property DTOs or fixed arrays: the DTO
+half of the [personal-data boundary](public-api-personal-data-boundary.md)
+is enforced, the dedicated Postgres role half stays deferred. The
+consumer-facing explanation lives at `wiki/developers/api/`.
 
 **Bulk use has its own channel.** A consumer that wants everything takes the
 weekly bulk export instead of paging the API: GeoJSON files of every place
@@ -236,7 +287,11 @@ today, from the router), `reference` and `contract` (the `/developers/api`
 page and `openapi.yaml`, on the main site from `DEFAULT_URI`, because the api
 host serves `/v1` alone). A consumer can tell "planned" from "wrong URL"
 without reading the site's HTML 404 page. Pinned by
-`tests/Api/PlannedEndpointTest.php`.
+`tests/Api/PlannedEndpointTest.php`. Since 2026-10-12 every path of the
+contract answers, so the 501 is reached only by a path added to the
+contract before its endpoint; `tests/Api/ContractTest.php` asks every
+method and path of `openapi.yaml` and fails on one no endpoint answers, and
+the other way round.
 
 The reference is in `sitemap.xml`. Its content is English only
 and its paths are localised in all five, so it is one entry with alternates
@@ -249,6 +304,15 @@ wiki.cyclingcommons.org/developers/api/). The wiki teaches; this spec and the
 OpenAPI document remain the contract of record.
 
 ## 3. Auth and metering: two mechanisms
+
+**As built (2026-10-12).** Reads need no key: per-IP limiting is the whole
+of it (§2.2). Writes need a **partner key** (§8): `Authorization: Bearer
+<key>`, never `?key=`, because a write key in a URL lands in access logs.
+Keys start `ccp_`, are shown once and stored only as their SHA-256
+(`api_app.key_hash`). The app registry is `App\Api\Partner\ApiApps`;
+operators manage it with `app:api-app register|list|rotate|suspend|resume`
+(operations.md). Everything below about read keys, quotas and keyed tiles
+remains the *proposed* keyed v1.
 
 The transport split forces two enforcement paths. A single issued key carries
 both entitlements; how the key is checked differs by transport. Keys are
@@ -296,8 +360,14 @@ miss it:
 Photos are not ODbL: each carries its own licence (CC BY-SA in one of its
 versions) and its creator. The string to reuse on `/developers` and `/licenses`
 says so: "Photos © their creators, under the licence named with each photo"
-(owner 2026-10-09). When photos reach the API, every photo travels with its
-licence and its credit, so a consumer can show both.
+(owner 2026-10-09). Photos reach the API on `/v1/items/{id}` and
+`/v1/routes/{id}`, each with its licence and its credit
+(`App\Api\V1\Dto\PhotoEntry`). A rider's photo is credited by link, never
+by a name ([photo-uploads.md §1](photo-uploads.md), item 3c): `credit` is
+null and `credit_url` is its `/photo/{uuid}` page, which names the
+photographer as they chose at the moment it is read. A Wikimedia Commons
+photo carries the author string, `creditUrl` and `source` Commons publishes.
+Never the alt text or the distance from the pin.
 
 Per [api-strategy.md §7](api-strategy.md) the reward for compliance is
 visibility and goodwill; no attribution-policing machinery is built now, and
@@ -352,13 +422,13 @@ Cycling Commons layer is additive:
    the detail.
 5. **Show attribution.** Add the required Cycling Commons + OpenStreetMap
    attribution strings to the map's attribution control (§5).
-6. **(Phase-2) Contribute back.** When a consumer's user adds or edits a spot
-   that belongs in the Commons, `POST /v1/contributions` routes it into our
-   moderation loop (§8).
+6. **Contribute back** (registered partner apps). When a consumer's user adds
+   or edits a spot that belongs in the Commons, `POST /v1/contributions`
+   routes it into our moderation loop (§8).
 
-## 8. Write / contribution API: phase-2 design
+## 8. Write / contribution API
 
-The write path (built later, "as frictionless as possible",
+The write path ("as frictionless as possible",
 [api-strategy.md §6](api-strategy.md)) routes a third-party submission through
 the **existing** contribution → moderation → retention machinery
 ([moderation-and-contribution.md](moderation-and-contribution.md)); it adds only
@@ -401,8 +471,10 @@ which the app-scoped reference below provides.
   that assertion binding.
 - **Storage: a second origin, not a second lifecycle.** `submission`, media
   and consent rows gain `api_app_id` + `external_author_ref` +
-  `external_author_name`; `user_id` becomes nullable with an
-  exactly-one-origin CHECK (Commons user XOR partner app). Same queue, same
+  `external_author_name`; `user_id` is nullable and a CHECK keeps a row
+  from ever naming both a Commons user and a partner app (owner
+  2026-10-12: "never both"; a row with neither is a deleted rider's).
+  Same queue, same
   retention, same materialize-on-edit rules; moderators see "via app X ·
   author #a1b2 (2 approved before)" plus the optional shared name. The
   external author fields sit behind the personal-data fence like the rest of
@@ -416,6 +488,70 @@ which the app-scoped reference below provides.
 - **Abuse controls, outermost first:** per-app quotas → per-`author_ref`
   limiters → the moderation queue itself → key suspension as the big hammer.
 
+### 8.1 As built (2026-10-12)
+
+- **Registry.** `api_app` (migration `Version20261012010000`): name,
+  contact address, `key_hash` (SHA-256, unique), `key_prefix` (`ccp_` and the
+  first 4 characters after it, for the listing), `scopes` (`contributions:write`),
+  `status` (`active`, `suspended`), `last_used_at`. DBAL only
+  (`App\Api\Partner\ApiApps`), outside the ORM schema like `job_run`.
+  Registered by an operator with `app:api-app register "<name>" <address>`;
+  the key is printed once. There is no self-serve page: an app writes only
+  under a partner agreement.
+- **Request.** `{letter, item_id?, osm_ref?, name?, geometry?, fields?,
+  author: {ref, name?}, licence: "ODbL-1.0"}`, checked by
+  `App\Api\V1\ContributionRequest` before anything reaches the queue: a
+  letter `/v1/catalog` marks `contributions` (B, C, D, E, F, G, O, P, Q:
+  the places a pin locates; a road surface, a climb and a route keep their
+  own editors on the site), the letter's `accepted` fields with the values
+  its form allows, an http(s) address for a link, text no longer than the
+  form's limit with control and invisible characters removed. An edit names
+  a **served** item (an app cannot edit what it cannot read), or the same
+  author's own new place still waiting for a curator, so the app can revise
+  it or answer a "needs info" question, as a rider does on the site; it
+  sends only what changes, and `null` clears a field. The body is at most
+  32 KB.
+- **Intake.** `CatalogContributionService::submitFromApp()` turns the
+  request into the form's own payload and runs the site's `submitAdd()` /
+  `submitImprove()`, with the submitter an `App\Contribution\ApiAuthor`
+  instead of a `User`: the same validation, materialize-on-edit for an
+  `osm_ref`, OSM-candidate refresh, and amend-not-twin for a second open
+  edit by the same author (matched on app and reference). Never applied at
+  once (nobody behind it is a curator), no media, no curator answers, no
+  ticks: only the keys in `APP_KEYS` pass.
+- **Storage.** `submission.api_app_id`, `external_author_ref`,
+  `external_author_name`; `user_id` stays NULL, which the moderation code
+  already reads as "nobody to message", so a decision sends no mail or
+  in-app message. Two CHECKs: never a rider and an app on one row
+  (`submission_one_origin`), and an app row always names its author
+  (`submission_app_author`). The licence assertion is stored in the
+  submission's `payload._consent`.
+- **Desk.** The queue and the history name the author as
+  `DeskRider::ofApp()`: "Sam (Example Rides)", or "#u-8f3a (Example Rides)"
+  without a shared name. Public pages show such a contribution as anonymous
+  (no rider row).
+- **Status and erasure.** `GET /v1/contributions/{id}` answers the calling
+  app's own rows only (`status`, `item_id`, `decided_at`,
+  `decision_note`, private cache). `DELETE /v1/authors/{ref}` blanks the
+  shared name on every row of that app and reference and answers 204 either
+  way.
+- **Limits.** `api_app_write` (600 an hour per app, own pool), then
+  `contribution_submit` (20 an hour) per author, keyed on the app and a hash
+  of the reference, as for a rider; Valhalla budgets the same way.
+- **Browsers.** The write calls answer no cross-origin preflight
+  (`PublicApiCorsSubscriber` allows GET only): a partner key belongs on a
+  server.
+
+**Differences from the design above, for the owner to confirm:**
+
+- Consent is the request's `licence: "ODbL-1.0"` stored in the
+  submission payload, not a `consent_record` row keyed to the app and
+  author: `consent_record` is the photo consent, and photos do not travel
+  through the API yet. Photo contributions need that record first.
+- The desk queue and history name the author and the app but not yet
+  "(2 approved before)"; the trash bin and the report resolver still name
+  an app's row as a removed rider, because they read the rider alone.
+
 ## 9. Open decisions (pending owner)
 
 - **Route tiles at v1** (§2.1): the per-country route archives exist and the
@@ -423,10 +559,11 @@ which the app-scoped reference below provides.
   v1 keys them.
 - **Key/URL scheme for tiles** (§3): key path segment vs. signed URL, and the
   referer-allowlist policy.
-- **Best-of response composition** (§2.2): what `/v1/regions/{id}/best`
-  returns (routes only, or routes + top-voted items per letter) and how it
-  relates to the in-app rankings pages. The endpoint itself is committed, and it
-  is advertised on `/developers`.
+- **Best-of response composition** (§2.2): built 2026-10-12 as one list per
+  votable category (climbs, places to sleep, scenic views, history and
+  culture, routes), the same closed rounds and places `/best` shows, no
+  rows below the ranking threshold and nothing while voting is off. Built
+  without the owner's word: confirm or change.
 - Pricing numbers, billable-unit definition, and bulk-export reconciliation are
   **inherited from [api-strategy.md §10](api-strategy.md)** and not reopened
   here.
