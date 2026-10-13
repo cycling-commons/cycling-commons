@@ -1,0 +1,161 @@
+web/src/Contribution/CatalogContributionService.php
+  s_01cb1728917566::t_d36b18587a0246 77,129
+  s_01cb1728917566::t_9256a48b9a4924 73-76,78,121-128,130-137,143,441,625,647,649,683,685,709,711,714,716,842,845,851-860,871,873,902-906,952-958,1032,1052,1054,1059-1064,1205
+web/src/Api/V1/Dto/ItemFeature.php
+  s_01cb1728917566::t_9d0a6a5863913a 23-25,36-38,45,62-76
+web/src/Vote/BestOfResults.php
+  s_01cb1728917566::t_6bcbea6d768669 166-195
+  s_5f932505c6b489::t_79ae0bdadb32d9 165
+web/src/Api/V1/Dto/RouteLine.php
+  s_01cb1728917566::t_5f699c241fd5d8 21,34
+  s_01cb1728917566::t_c1da7cec91f4f6 1-18,25-33,35-65
+  s_01cb1728917566::t_8e44dbcbc703ca 19-20,22-24
+web/config/packages/rate_limiter.yaml
+  s_01cb1728917566::t_37ead662c0d7bc 72-73,343-351,470
+  s_5f932505c6b489::t_bec82d62d3709e 471
+web/src/Moderation/DeskRider.php
+  s_01cb1728917566::t_79b32642252db6 51-67
+  s_5f932505c6b489::t_99ebcc846c1272 50
+web/migrations/Version20261012010000.php
+  s_01cb1728917566::t_e1d1cc8da97d80 1-70
+web/src/Api/V1/PublicFields.php
+  s_01cb1728917566::t_7a98d41a229d81 1-39,43-55,58-94,109-123,125-163
+  s_01cb1728917566::t_4ce24980af1570 124
+  s_01cb1728917566::t_54fb46501ab3b6 95-108
+  s_01cb1728917566::t_76aa27f35eafab 56-57
+  s_01cb1728917566::t_dbd528444b5371 40-42
+web/src/Api/Partner/ApiApp.php
+  s_01cb1728917566::t_c266d57df4f482 1-28
+web/src/Vote/BallotRegions.php
+  s_01cb1728917566::t_6bcbea6d768669 44-48
+  s_01cb1728917566::t_0ded470c886c85 39-43
+web/src/Api/V1/ApiResponder.php
+  s_01cb1728917566::t_840094c549e387 1-51,55-197
+  s_01cb1728917566::t_abc23c605d4807 52-54
+web/src/Api/V1/PublicCatalog.php
+  s_01cb1728917566::t_c76aa39a1f2085 69
+  s_01cb1728917566::t_56574cb749b60e 9,78
+  s_01cb1728917566::t_ec3e9507fc298d 1-8,10-67,70-77,79-82
+  s_01cb1728917566::t_d5927f09e5f415 68
+web/src/Controller/Api/V1/RouteApiController.php
+  s_01cb1728917566::t_7928e57d5950eb 1-111
+web/tests/Api/ContributionApiTest.php
+  s_01cb1728917566::t_3c36e8b668b749 127-147,164-166
+  s_01cb1728917566::t_2fea9dc4fca003 117
+  s_01cb1728917566::t_0af0195bdbffa0 1-116,118-126,148-163,167-277
+web/src/Api/V1/ContributionRequest.php
+  s_01cb1728917566::t_79c870d33c05a8 67-68,72
+  s_01cb1728917566::t_d36b18587a0246 86,180,190,211-215,217-219,222-223,225
+  s_01cb1728917566::t_17083b06ced797 1-66,69-71,73-85,87-177,179,181-189,191-210,216,220-221,224,226-227
+  s_01cb1728917566::t_54fb46501ab3b6 178
+web/src/Catalog/Entity/Submission.php
+  s_01cb1728917566::t_878d8074026d18 48-62,213-237,240
+  s_5f932505c6b489::t_6b28970fb49c4e 238-239,241
+web/tests/Api/ItemsApiTest.php
+  s_01cb1728917566::t_a1299171bc3943 1-52,57-91,94-181,185-205
+  s_01cb1728917566::t_f6804fdfa1fe0a 53-56
+  s_01cb1728917566::t_3c36e8b668b749 92-93,182-184
+docs/specs/moderation-and-contribution.md
+  s_01cb1728917566::t_f2bacd8d4cd116 682
+web/tests/Api/ApiSeeding.php
+  s_01cb1728917566::t_e0852d6060e2f6 1-66,71-90
+  s_01cb1728917566::t_81f67625d0f423 67-70
+tools/wiki-numbers.py
+  s_01cb1728917566::t_076eea2ae2e1ab 98-100,102-104,106,108-115,117-124
+web/src/Controller/RouteGpxController.php
+  s_01cb1728917566::t_06fe9f55051425 9,26,28-29,33,35
+web/config/table_comments.yaml
+  s_c9fe6820060980::t_6567258fd8f02a 101-104
+web/config/packages/doctrine.yaml
+  s_01cb1728917566::t_d78240f091a7b0 12
+wiki/developers/numbers.md
+  s_01cb1728917566::t_076eea2ae2e1ab 32-38
+web/tests/Api/PlannedEndpointTest.php
+  s_01cb1728917566::t_3c36e8b668b749 58-59,62-66
+  s_01cb1728917566::t_6af13445f629cc 9-10,13-14,17-20,22-23,35,38,40,42-44,49,52-55,69,71-74,76-88
+web/src/Contribution/ApiAuthor.php
+  s_01cb1728917566::t_608241abaff085 1-34
+web/src/Api/V1/Dto/ItemDetail.php
+  s_01cb1728917566::t_8e44dbcbc703ca 19,21
+  s_01cb1728917566::t_cf9b4151b81c76 1-18,20,22-55
+web/tests/Api/PersonalDataWalkTest.php
+  s_01cb1728917566::t_e3efaeb4bd5ae8 26-30,87-90
+  s_01cb1728917566::t_c9ff2073c6b8e1 1-25,31-86,91-111
+web/src/Api/Partner/ApiApps.php
+  s_01cb1728917566::t_824bbe8de638a8 1-52,54-70,72-87,92-95,98-131
+  s_01cb1728917566::t_281723f8180fd2 88-91,96-97
+  s_01cb1728917566::t_54fb46501ab3b6 53,71
+web/src/Controller/Api/V1/PublicApiController.php
+  s_01cb1728917566::t_47d1e3a4538905 9,11,21,37-38,41-47,52,54,85-98,105,107,119,124,131-136,144,148-149,154-157,162,164,166-168,172,175,179-181,183,187,189-190,192-193,195-197,200-203,205-208,211-215,217-222,225,227-232,236,238,240,242-244
+  s_01cb1728917566::t_54fb46501ab3b6 150-153
+  s_01cb1728917566::t_dd842dc7163808 39-40
+web/tests/Api/RegionsRoutesApiTest.php
+  s_01cb1728917566::t_fca9c4617a7561 10,87,89,94
+  s_01cb1728917566::t_3c36e8b668b749 73-77
+  s_01cb1728917566::t_aa52888ccebe51 1-9,11-72,78-86,88,90-93,95-198
+web/src/Controller/Api/V1/RegionApiController.php
+  s_01cb1728917566::t_e9bd1082032ac6 1-133
+web/src/Api/V1/PublicItemsProvider.php
+  s_01cb1728917566::t_b662ad43855810 9,11,13,19-21,24,27-29,59-65,71-74,85-89,92,94-143,145,147-164,166-173,175-265,267,269,271-285,293,297,309-312,360,364,385-387
+  s_5f932505c6b489::t_bec82d62d3709e 266,268,270,388
+  s_01cb1728917566::t_8e44dbcbc703ca 18,356-359
+web/src/Api/V1/PublicRoutesProvider.php
+  s_01cb1728917566::t_b56ba2fa0a6694 144-148,151-154
+  s_01cb1728917566::t_62ca6aafc005e2 1-143,149-150,155-199
+web/src/Catalog/RouteTrack.php
+  s_01cb1728917566::t_4a9f964d654466 1-58
+web/src/Controller/Api/V1/PlannedApiController.php
+  s_01cb1728917566::t_54fb46501ab3b6 48-51
+web/src/Api/Partner/Command/ApiAppCommand.php
+  s_01cb1728917566::t_a78e9b8b2d65e9 1-110
+web/src/Api/V1/OsmSubsets.php
+  s_01cb1728917566::t_d3a2ef7e841ef9 1-15,18-23,31-53,55-68
+  s_01cb1728917566::t_54fb46501ab3b6 24-30,54
+  s_01cb1728917566::t_d866c493033390 16-17
+web/src/Api/V1/PublicRegionsProvider.php
+  s_01cb1728917566::t_cfac991f70ab6b 62
+  s_01cb1728917566::t_ba39c9fe3e4ab2 1-61,63-98,100-182
+  s_01cb1728917566::t_54fb46501ab3b6 99
+web/src/Controller/Api/V1/ContributionApiController.php
+  s_01cb1728917566::t_fa42397f74e631 1-62,69-79,84,86,95-106,113-126,128-133,135-195,200-201,205-225
+  s_01cb1728917566::t_d866c493033390 80-83,85,87,90-94
+  s_01cb1728917566::t_54fb46501ab3b6 63-68,107-112,196-199,202-204
+  s_01cb1728917566::t_5e87d8ffbd7fc4 127,134
+  s_01cb1728917566::t_40f7212809730e 88-89
+web/src/Moderation/SubmissionQueue.php
+  s_01cb1728917566::t_79b32642252db6 263,267,549-550,553,806-807,813-816
+web/src/Api/V1/Dto/PhotoEntry.php
+  s_01cb1728917566::t_34c37acb74b484 1-85
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "54a51ea870d28c280737838c334ec8696c1d6b1a",
+  "prompts": {},
+  "sessions": {
+    "s_01cb1728917566": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d239dee8-d079-47d7-90c6-f588b936928b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_5f932505c6b489": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ad210b22-8cc8-4172-9d1d-307478efbdb2",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_c9fe6820060980": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c9a9b208-7810-4642-b47c-753d55a88b29",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
