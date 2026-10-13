@@ -339,6 +339,14 @@ characters), what is missing or hard today and what the rider would like
 instead (10 to 4000 each), and who gains (optional, up to 2000). A confirmed
 address is required, five proposals a day per account (`roadmap_propose`).
 
+**What fits is said up front.** Above the questions the form says what fits
+best (ideas that help riders find, check or add places and routes, or make
+the open data easier to use) and, by example, what rarely does (leaderboards,
+training plans, buying and selling), with the reason that other apps already
+do those well, and that every idea is read all the same
+(`roadmap.propose.fits`). Votes order what goes up; the fit decides whether
+it can.
+
 **Review first.** A proposal is `pending`, seen by its rider and the curators,
 until an admin opens it for votes: a rider's text goes on a public page only after somebody read it,
 the same as every other contribution.

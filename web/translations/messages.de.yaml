@@ -4757,6 +4757,8 @@ roadmap:
   foot_contact_mid: ". Fehlt etwas, das du brauchst? Sag es uns auf der"
   foot_contact_link: "Kontaktseite"
   propose:
+    fits_h: "Was am besten passt"
+    fits: "Ideen, die Fahrenden helfen, Orte und Routen zu finden, zu prüfen oder hinzuzufügen, oder die offenen Daten leichter nutzbar und teilbar machen. Manches, etwa Ranglisten, Trainingspläne oder Kaufen und Verkaufen, machen andere Apps schon gut. Das überlassen wir ihnen, deshalb kommt es selten auf unseren Fahrplan. Wir lesen trotzdem jede Idee."
     title: "Schlag eine Idee vor."
     meta_title: "Eine Idee für den Fahrplan vorschlagen"
     lead: "Soll die Commons etwas können? Sag uns, was fehlt und was dir vorschwebt. Wir lesen jede Idee."
@@ -4908,7 +4910,7 @@ changelog:
   section_rider: "Fahrerkonto"
   section_curator: "Kuratorkonto"
   v097_karoo: "<b>Scout auf dem Hammerhead Karoo, für Tester.</b> Die Karoo-App ist in der Beta. Auf der Scout-Seite öffnet 'Tester werden' die Download-Seite, und die ZIP dort enthält die Installationsschritte."
-  v097_roadmap: "<b>Red beim Fahrplan mit.</b> Stimm für das, was dir wichtig ist, und folge einem Punkt, um zu erfahren, wenn er weiterkommt oder fertig ist. Du kannst auch einen eigenen Vorschlag schicken: Sobald wir ihn auf Missbrauch geprüft haben, steht er im neuen Reiter Vorschläge, wo alle dafür stimmen können, und die besten kommen auf den Fahrplan."
+  v097_roadmap: "<b>Red beim Fahrplan mit.</b> Stimm für das, was dir wichtig ist, und folge einem Punkt, um zu erfahren, wenn er weiterkommt oder fertig ist. Du kannst auch einen eigenen Vorschlag schicken: Sobald wir ihn auf Missbrauch geprüft haben, steht er im neuen Reiter Vorschläge, wo alle dafür stimmen können, und was die meiste Unterstützung findet und zur Commons passt, kann auf den Fahrplan kommen."
   v097_privacy: "<b>Die Datenschutzerklärung deckt den Fahrplan ab.</b> Sie sagt, was wir speichern, wenn du stimmst, folgst oder einen Vorschlag schickst, dass ein Vorschlag ohne deinen Namen erscheint und sein Bild nur, wenn du es erlaubt hast."
   v097_proposals: "<b>Deine Vorschläge an einem Ort.</b> Die Vorschlagsseite zeigt alles, was du für den Fahrplan geschickt hast, was wir entschieden haben und warum."
   v097_mail_why: "<b>Jede E-Mail sagt, warum sie kommt.</b> Die Antwort auf eine Fehlermeldung, eine Kurations-Bewerbung oder eine Änderung deiner Gebiete sagt nicht mehr, es gehe um einen Beitrag von dir."

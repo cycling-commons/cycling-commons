@@ -4784,6 +4784,8 @@ roadmap:
   foot_contact_mid: ". ¿Echas en falta algo que necesitas? Dínoslo en la"
   foot_contact_link: "página de contacto"
   propose:
+    fits_h: "Lo que mejor encaja"
+    fits: "Ideas que ayuden a los ciclistas a encontrar, comprobar o añadir lugares y rutas, o que hagan los datos abiertos más fáciles de usar y compartir. Algunas cosas, como clasificaciones, planes de entrenamiento o comprar y vender, ya las hacen bien otras aplicaciones. Se las dejamos a ellas, así que rara vez llegan a nuestra hoja de ruta. Aun así, leemos cada idea."
     title: "Propón una idea."
     meta_title: "Proponer una idea para la hoja de ruta"
     lead: "¿Te gustaría que los Commons hicieran algo? Cuéntanos qué falta y qué tienes en mente. Leemos cada idea."
@@ -4935,7 +4937,7 @@ changelog:
   section_rider: "Cuenta de ciclista"
   section_curator: "Cuenta de curador"
   v097_karoo: "<b>Scout en el Hammerhead Karoo, para probadores.</b> La app para Karoo está en beta. En la página de Scout, 'Hazte probador' abre la página de descarga, y el zip de allí trae los pasos de instalación."
-  v097_roadmap: "<b>Opina sobre la hoja de ruta.</b> Vota lo que te importa y sigue un punto para saber cuándo avanza o sale. También puedes enviar tu propia propuesta: en cuanto comprobemos que no es abusiva, aparece en la nueva pestaña Propuestas, donde todos pueden votarla, y las mejores pasan a la hoja de ruta."
+  v097_roadmap: "<b>Opina sobre la hoja de ruta.</b> Vota lo que te importa y sigue un punto para saber cuándo avanza o sale. También puedes enviar tu propia propuesta: en cuanto comprobemos que no es abusiva, aparece en la nueva pestaña Propuestas, donde todos pueden votarla, y las que reúnen más apoyo y encajan con los Commons pueden pasar a la hoja de ruta."
   v097_privacy: "<b>El aviso de privacidad cubre la hoja de ruta.</b> Dice qué guardamos cuando votas, sigues o envías una propuesta, que una propuesta aparece sin tu nombre y que su imagen solo aparece si lo permitiste."
   v097_proposals: "<b>Tus propuestas en un solo lugar.</b> La página de propuestas muestra todo lo que enviaste para la hoja de ruta, qué decidimos y por qué."
   v097_mail_why: "<b>Cada correo dice por qué llega.</b> La respuesta a un informe de error, una solicitud de curaduría o un cambio en tus zonas ya no dice que trata de una contribución tuya."

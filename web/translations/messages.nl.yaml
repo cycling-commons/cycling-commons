@@ -4756,6 +4756,8 @@ roadmap:
   foot_contact_mid: ". Mis je iets dat je nodig hebt? Laat het weten via de"
   foot_contact_link: "contactpagina"
   propose:
+    fits_h: "Wat het best past"
+    fits: "Ideeën die rijders helpen plekken en routes te vinden, te controleren of toe te voegen, of die de open data makkelijker te gebruiken en te delen maken. Sommige dingen, zoals ranglijsten, trainingsschema's of kopen en verkopen, doen andere apps al goed. Die laten we aan hen, dus ze komen zelden op onze routekaart. We lezen toch elk idee."
     title: "Stel een idee voor."
     meta_title: "Stel een idee voor de routekaart voor"
     lead: "Wil je dat de Commons iets kan? Vertel wat er ontbreekt en wat je voor ogen hebt. We lezen elk idee."
@@ -4907,7 +4909,7 @@ changelog:
   section_rider: "Fietsersaccount"
   section_curator: "Curatoraccount"
   v097_karoo: "<b>Scout op de Hammerhead Karoo, voor testers.</b> De Karoo-app is in bèta. Op de Scout-pagina opent 'Word tester' de downloadpagina, en de zip daar bevat de installatiestappen."
-  v097_roadmap: "<b>Praat mee over de routekaart.</b> Stem op wat jij belangrijk vindt, en volg een punt om te horen wanneer het verschuift of af is. Je kunt ook zelf een voorstel sturen: zodra we het op misbruik hebben gecontroleerd, komt het bij het nieuwe tabblad Voorstellen, waar iedereen erop kan stemmen, en de beste gaan naar de routekaart."
+  v097_roadmap: "<b>Praat mee over de routekaart.</b> Stem op wat jij belangrijk vindt, en volg een punt om te horen wanneer het verschuift of af is. Je kunt ook zelf een voorstel sturen: zodra we het op misbruik hebben gecontroleerd, komt het bij het nieuwe tabblad Voorstellen, waar iedereen erop kan stemmen, en wat de meeste steun krijgt en bij de Commons past, kan naar de routekaart."
   v097_privacy: "<b>De privacyverklaring gaat ook over de routekaart.</b> Ze zegt wat we bewaren als je stemt, volgt of een voorstel stuurt, dat een voorstel zonder je naam getoond wordt, en dat de afbeelding alleen getoond wordt als je dat toestond."
   v097_proposals: "<b>Je voorstellen op één plek.</b> De voorstelpagina toont alles wat je voor de routekaart stuurde, wat we besloten en waarom."
   v097_mail_why: "<b>Elke e-mail zegt waarom je hem krijgt.</b> Het antwoord op een probleemmelding, een aanmelding als regiobeheerder of een wijziging van je gebieden zegt niet meer dat het over een bijdrage van jou gaat."

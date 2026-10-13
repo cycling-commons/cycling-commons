@@ -89,3 +89,4 @@
 .rpic:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
 .rprop .cfield label.rprop-check{display:flex;gap:.5rem;align-items:flex-start;margin:.6rem 0 0;font-family:inherit;font-size:.92rem;letter-spacing:0;text-transform:none;color:#3a3d30;line-height:1.5}
 .rprop .cfield label.rprop-check input{margin-top:.25rem}
+.rprop-fits{margin:0 0 1.2rem}

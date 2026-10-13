@@ -4774,6 +4774,8 @@ roadmap:
   foot_contact_mid: ". Something missing that you need? Tell us on the"
   foot_contact_link: "contact page"
   propose:
+    fits_h: "What fits best"
+    fits: "Ideas that help riders find, check or add places and routes, or that make the open data easier to use and share. Some things, such as leaderboards, training plans or buying and selling, other apps already do well. We leave those to them, so they rarely make it onto our roadmap. We read every idea all the same."
     title: "Propose an idea."
     meta_title: "Propose a roadmap idea"
     lead: "Something you would like the Commons to do? Tell us what is missing and what you have in mind. We read every idea."
@@ -4925,7 +4927,7 @@ changelog:
   section_rider: "Rider account"
   section_curator: "Curator account"
   v097_karoo: "<b>Scout on the Hammerhead Karoo, for testers.</b> The Karoo app is in beta. On the Scout page, 'Join as tester' opens the download page, and the zip there holds the install steps."
-  v097_roadmap: "<b>Have your say on the roadmap.</b> Vote for the items that matter to you, and follow one to hear when it moves or ships. You can also send a proposal of your own: once we have checked it for abuse, it shows on the new Proposals tab, where everyone can vote for it, and the best ones move onto the roadmap."
+  v097_roadmap: "<b>Have your say on the roadmap.</b> Vote for the items that matter to you, and follow one to hear when it moves or ships. You can also send a proposal of your own: once we have checked it for abuse, it shows on the new Proposals tab, where everyone can vote for it, and the ones with the most support that fit the Commons can move onto the roadmap."
   v097_privacy: "<b>The privacy notice covers the roadmap.</b> It says what we keep when you vote, follow or send a proposal, that a proposal shows without your name, and that its picture shows only if you allowed it."
   v097_proposals: "<b>Your proposals in one place.</b> The proposal page lists everything you sent for the roadmap, what we decided and why."
   v097_mail_why: "<b>Every email says why it came.</b> The answer to a bug report, a curator application or a change to your areas no longer says it is about a contribution you made."

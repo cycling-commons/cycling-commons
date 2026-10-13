@@ -4752,6 +4752,8 @@ roadmap:
   foot_contact_mid: ". Il manque quelque chose dont vous avez besoin ? Dites-le sur la"
   foot_contact_link: "page de contact"
   propose:
+    fits_h: "Ce qui convient le mieux"
+    fits: "Les idées qui aident les cyclistes à trouver, vérifier ou ajouter des lieux et des itinéraires, ou qui rendent les données ouvertes plus faciles à utiliser et à partager. Certaines choses, comme les classements, les plans d'entraînement ou l'achat et la vente, d'autres applications les font déjà bien. Nous les leur laissons, elles arrivent donc rarement sur notre feuille de route. Nous lisons quand même chaque idée."
     title: "Proposer une idée."
     meta_title: "Proposer une idée pour la feuille de route"
     lead: "Vous aimeriez que les Commons fassent quelque chose ? Dites-nous ce qui manque et ce que vous avez en tête. Nous lisons chaque idée."
@@ -4903,7 +4905,7 @@ changelog:
   section_rider: "Compte cycliste"
   section_curator: "Compte curateur"
   v097_karoo: "<b>Scout sur le Hammerhead Karoo, pour les testeurs.</b> L'application Karoo est en bêta. Sur la page Scout, 'Devenir testeur' ouvre la page de téléchargement, et le zip qui s'y trouve contient les étapes d'installation."
-  v097_roadmap: "<b>Donnez votre avis sur la feuille de route.</b> Votez pour ce qui compte pour vous, et suivez un élément pour être prévenu quand il avance ou sort. Vous pouvez aussi envoyer votre propre proposition : dès que nous avons vérifié qu'elle n'est pas abusive, elle apparaît dans le nouvel onglet Propositions, où tout le monde peut voter pour elle, et les meilleures passent sur la feuille de route."
+  v097_roadmap: "<b>Donnez votre avis sur la feuille de route.</b> Votez pour ce qui compte pour vous, et suivez un élément pour être prévenu quand il avance ou sort. Vous pouvez aussi envoyer votre propre proposition : dès que nous avons vérifié qu'elle n'est pas abusive, elle apparaît dans le nouvel onglet Propositions, où tout le monde peut voter pour elle, et celles qui rassemblent le plus de soutien et conviennent aux Commons peuvent passer sur la feuille de route."
   v097_privacy: "<b>La politique de confidentialité couvre la feuille de route.</b> Elle dit ce que nous gardons quand vous votez, suivez ou envoyez une proposition, qu'une proposition apparaît sans votre nom, et que son image n'apparaît que si vous l'avez permis."
   v097_proposals: "<b>Vos propositions au même endroit.</b> La page des propositions liste tout ce que vous avez envoyé pour la feuille de route, ce que nous avons décidé et pourquoi."
   v097_mail_why: "<b>Chaque e-mail dit pourquoi il arrive.</b> La réponse à un signalement de bug, une candidature à la curation ou un changement de vos zones ne dit plus qu'elle concerne une contribution de votre part."

@@ -26,6 +26,7 @@
     {% if not email_verified %}
       <div class="rnote">{% trans %}roadmap.propose.error_unverified{% endtrans %}</div>
     {% else %}
+      <div class="rnote rprop-fits"><span class="rnote-h">{% trans %}roadmap.propose.fits_h{% endtrans %}</span>{% trans %}roadmap.propose.fits{% endtrans %}</div>
       <p class="rprop-intro">{% trans %}roadmap.propose.intro{% endtrans %}</p>
       <form method="post" action="{{ path('roadmap_propose') }}" enctype="multipart/form-data" class="rprop-form">
         <input type="hidden" name="_token" value="{{ csrf_token(csrf_id) }}">
