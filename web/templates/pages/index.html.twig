@@ -7,18 +7,20 @@
 {% block body %}
 <!-- ===================== HERO ===================== -->
 <header class="hero">
-  {# The five surface types, in one group so the band can be moved as a band.
-     The paths keep their own coordinates: `.s-band` lifts them by exactly
-     their own height (owner 2026-09-10), which is what transform-box:fill-box
-     makes translateY(-100%) mean. Move a path and the lift follows it. #}
-  <svg class="hero-contours" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <g class="s-band">
-      <path class="s-road"   d="M-50,820 C260,774 420,826 700,790 C980,754 1180,810 1500,776"/>
-      <path class="s-gravel" d="M-50,786 C260,740 420,792 700,756 C980,720 1180,776 1500,742"/>
-      <path class="s-path"   d="M-50,752 C260,706 420,758 700,722 C980,686 1180,742 1500,708"/>
-      <path class="s-track"  d="M-50,718 C260,672 420,724 700,688 C980,652 1180,708 1500,674"/>
-      <path class="s-bridle" d="M-50,684 C260,638 420,690 700,654 C980,618 1180,674 1500,640"/>
-    </g>
+  {# Five trails across the empty foot of the hero, drawn like the roads of
+     the "All pages" map and the page headers, with a few stops. They stay
+     below the text and the loop, so the busy top half keeps its room.
+     Five, in this order, on purpose: during a UCI World Championship hero.js
+     paints them as the rainbow bands, first path green, then yellow, black,
+     red and blue, so the lowest comes first and the highest last. On other
+     race days they take the race's colours (--ride-outer / --ride-inner). #}
+  <svg class="hero-contours hero-trails" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <path class="t-path" d="M280 930 C510 872 760 906 970 884 S1260 816 1480 858"/>
+    <path class="t-trail" d="M-40 868 C190 812 400 884 640 826 S1000 752 1190 792 S1392 704 1480 560"/>
+    <path class="t-road" d="M-40 812 C220 782 430 840 660 806 S1040 748 1230 774 S1410 690 1480 610"/>
+    <path class="t-track" d="M-40 760 C170 734 360 806 570 790 S900 844 1120 852 S1360 818 1480 716"/>
+    <path class="t-bridle" d="M-40 716 C200 692 400 744 620 724 S960 694 1160 722 S1380 650 1480 530"/>
+    <g class="t-stops"><circle cx="640" cy="826" r="5"/><circle cx="1190" cy="792" r="5"/><circle cx="1004" cy="879" r="5"/></g>
   </svg>
   <div class="hero-glow"></div>
   <div class="corner br">{{ 'home.corner_br'|trans }}</div>

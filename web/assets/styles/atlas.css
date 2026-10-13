@@ -248,6 +248,15 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible,select:focus-visi
    about ten pixels higher (owner, 2026-08-29). The bottom keeps its 3rem. */
 .lhero,.rhero,.chero,.ahero{background:var(--ink);color:var(--paper);padding:2.4rem 0 3rem}
 .lhero h1,.lhero h2,.rhero h1,.chero h1,.ahero h1{color:var(--paper)}
+/* Decoration on every dark page header: faint trails drawn like the roads
+   of the "All pages" map (trail, track, footpath), fading out towards the
+   title so no text sits on a line. A pseudo-element behind the content, so
+   no template carries it and nothing inside the header is clipped. */
+.lhero,.rhero,.chero,.ahero,.dhero,.phero,.shero,.uhero{position:relative;isolation:isolate}
+.lhero::before,.rhero::before,.chero::before,.ahero::before,.dhero::before,.phero::before,.shero::before,.uhero::before{content:"";position:absolute;top:0;right:0;bottom:0;width:min(88%,1100px);z-index:-1;pointer-events:none;opacity:.8;
+  background:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 600 260%27 preserveAspectRatio=%27xMaxYMid slice%27 fill=%27none%27 stroke-linecap=%27round%27 stroke-width=%271.25%27%3E%3Cpath d=%27M-10 230 Q80 200 140 215 T280 170 T420 150 T610 60%27 stroke=%27%23FF5A1F%27 stroke-opacity=%27.42%27 stroke-dasharray=%278 6%27/%3E%3Cpath d=%27M120 275 Q170 190 250 200 T380 110 T520 90 T640 20%27 stroke=%27%238FB6A8%27 stroke-opacity=%27.38%27 stroke-dasharray=%279 5 2 5%27/%3E%3Cpath d=%27M300 285 Q360 240 430 235 T560 170 T650 150%27 stroke=%27%23EFE6D4%27 stroke-opacity=%27.38%27 stroke-dasharray=%271.5 5%27/%3E%3Cg fill=%27%23101E16%27 stroke=%27%23EFE6D4%27 stroke-opacity=%27.5%27 stroke-width=%271%27%3E%3Ccircle cx=%27280%27 cy=%27170%27 r=%274%27/%3E%3Ccircle cx=%27380%27 cy=%27110%27 r=%274%27/%3E%3Ccircle cx=%27560%27 cy=%27170%27 r=%274%27/%3E%3C/g%3E%3C/svg%3E") right center/100% 100% no-repeat;
+  -webkit-mask-image:linear-gradient(to right,transparent,#000 30%);mask-image:linear-gradient(to right,transparent,#000 30%)}
+@media(max-width:700px){.lhero::before,.rhero::before,.chero::before,.ahero::before,.dhero::before,.phero::before,.shero::before,.uhero::before{width:100%;opacity:.45}}
 
 .btn{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--sans);font-weight:700;font-size:.95rem;padding:.8rem 1.4rem;border-radius:5px;border:1.5px solid transparent;cursor:pointer;transition:all .2s}
 .btn-p{background:var(--trail);color:var(--ink)}.btn-p:hover{background:#ff703d}
