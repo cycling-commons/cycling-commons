@@ -3,14 +3,14 @@
    Included by every rider page under /account, 2FA setup, and every
    moderation page under /moderate, so the logged-in area is one continuous
    environment with the same account chip used in the public nav.
-   Param: `active` = dashboard | contrib | votes | saved | scout | translate | messages | settings | moderate_dashboard | moderate | moderate_routes | moderate_data | moderate_takedowns | moderate_translations | moderate_regions | moderate_providers | moderate_room | moderate_rulebook | moderate_reports | moderate_traffic. Submission history lives under the Submissions tab as Queue/History chips, so it keeps `active: moderate`.
+   Param: `active` = dashboard | contrib | votes | saved | scout | translate | messages | settings | moderate_dashboard | moderate | moderate_routes | moderate_data | moderate_takedowns | moderate_translations | moderate_regions | moderate_providers | moderate_room | moderate_rulebook | moderate_reports | moderate_traffic | moderate_roadmap | moderate_ideas. Submission history lives under the Submissions tab as Queue/History chips, so it keeps `active: moderate`.
    The curator's area names come from moderation_scope_names() on every
    moderation page, so the label block never changes between desks.
    Moderator tabs render ONLY inside the moderator section itself (curators
    reach it via the account-chip dropdown) — user pages show user tabs only,
    and on moderator pages the labelled group makes the section unmistakable. #}
 {% set active = active|default('contrib') %}
-{% set in_moderation = active in ['moderate_dashboard', 'moderate', 'moderate_routes', 'moderate_regions', 'moderate_providers', 'moderate_data', 'moderate_takedowns', 'moderate_translations', 'moderate_room', 'moderate_rulebook', 'moderate_history', 'moderate_bugs', 'moderate_reports', 'moderate_markers', 'moderate_traffic'] %}
+{% set in_moderation = active in ['moderate_dashboard', 'moderate', 'moderate_routes', 'moderate_regions', 'moderate_providers', 'moderate_data', 'moderate_takedowns', 'moderate_translations', 'moderate_room', 'moderate_rulebook', 'moderate_history', 'moderate_bugs', 'moderate_reports', 'moderate_markers', 'moderate_traffic', 'moderate_ideas', 'moderate_roadmap'] %}
 <header class="dtop">
   <div class="brandblock">
     <a class="brand" href="{{ path('home') }}"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons"></a>
@@ -39,7 +39,8 @@
 {% set mod_room_count = curator_room_unread() %}
 {# More's badge: the sum of the badges inside it, so waiting work under it
    shows without opening the menu. Data is the only desk there that queues. #}
-{% set mod_more_count = mod_data_count %}
+{% set mod_idea_count = pending_idea_count() %}
+{% set mod_more_count = mod_data_count + mod_idea_count %}
 {% set _scope_names = moderation_scope_names() %}
 {% set _scope_line = _scope_names is empty ? 'account.mod_scope_all'|trans : _scope_names|join(' · ') %}
 {# The desks that filter by the curator's areas. On every other desk the area
@@ -49,7 +50,7 @@
    queue of their own), so the strip fits a laptop screen without a sideways
    scrollbar. More is lit when one of them
    is the page on screen. #}
-{% set _more = ['moderate_data', 'moderate_regions', 'moderate_providers', 'moderate_rulebook', 'moderate_markers', 'moderate_traffic'] %}
+{% set _more = ['moderate_data', 'moderate_roadmap', 'moderate_ideas', 'moderate_regions', 'moderate_providers', 'moderate_rulebook', 'moderate_markers', 'moderate_traffic'] %}
 <nav class="dtabs dtabs-modmode" aria-label="{{ 'account.menu_moderation'|trans }}">
   {# Two lines: the section name, then the curator's areas under it. #}
   <span class="dtabs-modlabel" aria-hidden="true"><span>{{ 'account.menu_moderation'|trans }}</span><span class="dtabs-scope{{ _scoped ? '' : ' dtabs-scope--off' }}"{% if _scoped %} title="{{ _scope_line }}"{% endif %}>{{ _scope_line }}</span></span>
@@ -91,6 +92,15 @@
     {# Data desk: machine-raised findings about catalog rows. First under
        More, and badged there, because unlike Regions this one does queue. #}
     <a href="{{ path('moderate_data') }}" class="{{ active == 'moderate_data' ? 'on' : '' }}">{{ 'nav.data'|trans }}{% if mod_data_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_data_count }}</span>{% endif %}</a>
+    {# Roadmap desk: the items and the riders' proposals (roadmap-and-changelog.md
+       §8.6). Admins run it, badged with the proposals waiting; curators read
+       the proposals. #}
+    {% if is_granted('ROLE_ADMIN') %}
+    <a href="{{ path('moderate_roadmap') }}" class="{{ active in ['moderate_roadmap', 'moderate_ideas'] ? 'on' : '' }}">{{ 'roadmap.items.desk_tab'|trans }}{% if mod_idea_count %}<span class="dtab-count" title="{{ 'roadmap.desk.waiting'|trans }}">{{ mod_idea_count }}</span>{% endif %}</a>
+    {% else %}
+    {# Curators read the riders' proposals; an admin decides them. #}
+    <a href="{{ path('moderate_ideas') }}" class="{{ active == 'moderate_ideas' ? 'on' : '' }}">{{ 'roadmap.desk.title'|trans }}</a>
+    {% endif %}
     {# Regions desk: the gated
        curated-by-default flag. No badge: nothing queues here. #}
     <a href="{{ path('moderate_regions') }}" class="{{ active == 'moderate_regions' ? 'on' : '' }}">{{ 'nav.regions'|trans }}</a>

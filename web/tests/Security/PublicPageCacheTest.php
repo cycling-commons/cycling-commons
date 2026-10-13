@@ -88,6 +88,8 @@ final class PublicPageCacheTest extends WebTestCase
         yield 'privacy' => ['/privacy'];
         yield 'regions' => ['/regions'];
         yield 'blog' => ['/blog'];
+        // Votes and follows render for signed-in riders only (roadmap-and-changelog.md §8.4).
+        yield 'roadmap' => ['/roadmap'];
         // Both orders of the coverage table, because each is its own cache entry.
         yield 'coverage' => ['/coverage'];
         yield 'coverage by total' => ['/coverage?sort=total'];

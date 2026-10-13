@@ -10,8 +10,9 @@ namespace App\Support\Message;
  * Scan one held picture and draw it again, on the worker.
  *
  * `kind` names the table: `bug` for a bug report's screenshot, `room` for a
- * curator-room image. The handler does nothing to a picture that is no longer
- * pending, so a redelivered message changes nothing.
+ * curator-room image, `roadmap` for the picture on a roadmap idea. The
+ * handler does nothing to a picture that is no longer pending, so a
+ * redelivered message changes nothing.
  *
  * @see docs/specs/contact-and-support.md §6
  *
@@ -21,6 +22,7 @@ final readonly class CheckPicture
 {
     public const string BUG = 'bug';
     public const string ROOM = 'room';
+    public const string ROADMAP = 'roadmap';
 
     public function __construct(
         public string $kind,

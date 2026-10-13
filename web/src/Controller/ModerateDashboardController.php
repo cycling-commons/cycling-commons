@@ -13,6 +13,7 @@ use App\Messaging\CuratorRoom;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\RouteQueue;
 use App\Moderation\SubmissionQueue;
+use App\Roadmap\ProposalIntake;
 use App\Routing\LocalePrefix;
 use App\Support\SupportRepository;
 use App\Translation\DecisionService;
@@ -52,6 +53,7 @@ final class ModerateDashboardController extends AbstractController
         private readonly SupportRepository $support,
         private readonly DecisionService $translations,
         private readonly CuratorRoom $room,
+        private readonly ProposalIntake $roadmapIdeas,
     ) {
     }
 
@@ -84,6 +86,10 @@ final class ModerateDashboardController extends AbstractController
             ['key' => 'translations', 'route' => 'moderate_translations', 'label' => 'nav.translations', 'count' => $this->translations->pendingCount(), 'scoped' => false],
             ['key' => 'room', 'route' => 'moderate_room', 'label' => 'nav.room', 'count' => $this->room->unreadCount($curatorId), 'scoped' => false],
         ];
+        // Riders' roadmap ideas are the project's call, so only an admin sees the desk.
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $desks[] = ['key' => 'ideas', 'route' => 'moderate_ideas', 'label' => 'roadmap.desk.title', 'count' => $this->roadmapIdeas->pendingCount(), 'scoped' => false];
+        }
 
         // Takedowns and reports run on a legal clock, so they stand apart
         // from the editorial desks (photo-uploads.md §6b, content-reports.md §9).

@@ -913,7 +913,8 @@ export:
       contributions.json  The submissions you made, and the field-level changes
                           they produced on the map once a curator accepted them.
       community.json      Confirmations, season votes, rides, correction
-                          suggestions, country requests, curator applications.
+                          suggestions, country requests, curator applications,
+                          roadmap votes and follows, and your roadmap ideas.
       messages.json       Your dashboard messages, in both directions.
       consent.json        Every photo licence you granted: which wording, which
                           version of it, and when.
@@ -2976,6 +2977,8 @@ messages:
   kind_submission_approved: 'Contribution approved. Thank you!'
   view_on_map: 'View it on the map'
   view_region_page: 'View the region page'
+  view_roadmap: "View the roadmap"
+  view_your_ideas: "View your ideas"
   kind_submission_rejected: 'Contribution not accepted'
   kind_submission_needs_info: 'A curator needs more information'
   kind_route_approved: 'Route proposal approved. Thank you!'
@@ -2987,6 +2990,8 @@ messages:
   kind_areas_changed: 'Your moderation areas'
   kind_bug_outcome: 'About the bug you reported'
   kind_country_live: "A country you asked for is on the map"
+  kind_roadmap_idea_outcome: "About your roadmap idea"
+  kind_roadmap_item_moved: "A roadmap item you follow"
   kind_statement_of_reasons: 'A decision about something you added'
   kind_curator_message: 'Message from a curator'
   kind_rider_reply: 'Reply from the rider'
@@ -3003,6 +3008,12 @@ messages:
   body:
     submission_approved: 'Your contribution ''<em>%title%</em>'' was approved and is now live on the map. Thank you for improving the Commons!'
     bug_outcome: 'A curator has looked at the problem you reported.'
+    roadmap_idea_declined: "We read your idea and are not taking it up. The reason is below."
+    roadmap_moved_now: "It moved to Now: it is being built."
+    roadmap_moved_next: "It moved to Next: decided, and waiting for its turn."
+    roadmap_moved_later: "It moved to Later: still wanted, not scheduled."
+    roadmap_moved_shipped: "It has shipped. What's new lists what changed."
+    roadmap_moved_removed: "It is no longer on the roadmap."
     statement_of_reasons: 'Here is why we decided as we did, and how to contest it.'
     areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
     submission_rejected: 'Your contribution ''<em>%title%</em>'' was not accepted.'
@@ -3022,6 +3033,10 @@ messages:
     translation_approved: 'Your translation for %key% (%locale%) was approved and is now live on the site. Thank you!'
     translation_rejected: 'Your translation for %key% (%locale%) was not accepted.'
     translation_needs_info: 'A curator needs more information about your translation for %key% (%locale%) before deciding. Update it from the translate page.'
+    roadmap_idea_open: "We opened your idea for votes. It is on the Proposals tab now, where other riders can vote for it and follow it."
+    roadmap_idea_promoted_now: "Your idea is on the roadmap, under Now: it is being built. Its votes and followers came with it."
+    roadmap_idea_promoted_next: "Your idea is on the roadmap, under Next: decided, and waiting for its turn. Its votes and followers came with it."
+    roadmap_idea_promoted_later: "Your idea is on the roadmap, under Later: wanted, not scheduled yet. Its votes and followers came with it."
   reply_label: 'Your reply'
   what_you_changed: 'What you changed'
   show_details: 'Show details'
@@ -4152,6 +4167,9 @@ admin:
       traffic_map_layer_live:
         label: 'Measured traffic: on the map'
         help: 'Set to 1 to show curators the measured-traffic layer on the map. At 0 the layer and its controls are hidden: it is not in use yet.'
+      roadmap_say_live:
+        label: "Roadmap: votes, follows and proposals"
+        help: "Set to 1 to let riders vote for and follow roadmap items, and send and vote on proposals. At 0 the roadmap shows its list only and the proposal form is closed."
       map_confirmed_default_threshold:
         label: 'Confirmed readiness: checked places'
         help: 'How many places somebody has checked a region needs before a curator may open it in Confirmed mode by default. It needs no spread over kinds of thing, only enough that the mode does not look empty.'
@@ -4712,6 +4730,7 @@ room:
     upload_failed: 'That picture could not be uploaded. Try again.'
     image_missing: 'A picture on this post is missing. Add it again.'
 roadmap:
+  picture_alt: "Picture sent with “%title%”"
   kicker: 'Roadmap'
   title: 'What we are building next.'
   lead: 'No dates, because we would only be guessing. What is being built now, what comes next, and what we want but have not scheduled. The order within each group is not fixed.'
@@ -4721,25 +4740,159 @@ roadmap:
   group_next_sub: 'Decided and waiting for a turn. Barring a surprise, these are what follows.'
   group_later: 'Later'
   group_later_sub: 'Wanted, not scheduled. Real intentions, no promises about when.'
-  item_going_live: '<b>The launch.</b> The first weeks online: finding testers, quickly fixing what they run into, and making the Commons known among riders.'
-  item_provider_refresh: '<b>More data providers, refreshing themselves.</b> Official open sources, such as a national drinking-water register, added from the curator desk and refreshed on a schedule.'
-  item_heatmap: '<b>Where riders like to go.</b> A heat layer that lifts the places many riders value, such as views and climbs. Built from anonymous points only, and a spot only shows once enough different riders are behind it, so it never points to one person.'
-  item_standing: '<b>Contributor standing.</b> Riders whose work keeps being approved earn a lighter touch, such as edits going live at once, instead of being granted it by hand.'
-  item_osm_giveback: '<b>Giving back to OpenStreetMap.</b> What riders confirm here, offered back upstream in a form OpenStreetMap can take.'
-  item_map_a11y: '<b>Make the map usable without a mouse.</b> The honest gap in our accessibility statement: keyboard and screen-reader access to the map itself, not only to the pages around it.'
-  item_route_export: '<b>Take a route with you.</b> Shape a route around what the map shows, then send it to the planner or device you already use.'
-  item_region_portrait: '<b>A portrait of each region.</b> The region page counts what is there. It should say what the riding is like: how hilly, how much is paved, the big climbs, the signed network, water and toilets per hundred kilometres, the routes riders recommend, and how fresh the data is.'
-  item_reviews: '<b>Your own words on any place.</b> A short note of your own on a tap, a climb, a stay or a route, next to the facts: what it was like when you were there. Several riders, several notes. Not a rating.'
-  item_favourites: '<b>Your favourite places.</b> Save a tap, a climb, a stay or a route to a favourites list in your profile, so you find it again before the next ride.'
-  item_roadmap_votes: '<b>Have a say in this list.</b> Vote on what matters to you, follow an item, and propose one of your own.'
-  item_more_countries: '<b>More countries and regions.</b> The Commons opening in new countries, each with curators who know the roads. Ask for yours on the join page.'
-  item_scout_devices: '<b>Scout on more devices.</b> Tag what you pass on Android first, then on Hammerhead Karoo and iPhone.'
-  item_open_api: '<b>The open data API, complete.</b> Every place, climb and route readable through one stable, documented API, plus bulk downloads of the data and the map tiles, so anyone can build on the Commons or host a copy.'
   foot_shipped_pre: 'Already shipped is on the'
   foot_shipped_link: 'changelog'
-  foot_shipped_mid: '. Something missing that you need? Tell us on the'
-  foot_contact_link: 'contact page'
-  foot_shipped_post: ' and it will be read by a person.'
+  say_lead: "Vote for what matters to you, follow an item to hear when it moves, or propose an idea of your own."
+  say_propose: "Propose an idea"
+  say_signin: "Sign in to take part"
+  idea_badge: "Idea from a rider"
+  vote_title: "Vote for this"
+  unvote_title: "Take your vote back"
+  vote_aria: "Votes: %count%. Vote for this item, or take your vote back."
+  votes_count: "Votes: %count%"
+  signin_to_vote: "Sign in to vote"
+  follow: "Follow"
+  following: "Following"
+  follow_title: "Get a message, in your inbox and by email, when this moves or ships"
+  unfollow_title: "Stop following this"
+  mark_gone: "That item is no longer on the roadmap."
+  mark_unverified: "Confirm your email address first. The link is in the email we sent when you signed up."
+  mark_too_fast: "That was a lot of clicks in a short time. Try again in a few minutes."
+  foot_shipped_mid: ". Something missing that you need? "
+  foot_propose_link: "Propose it"
+  foot_shipped_post: " and we will read it."
+  tabs_aria: "Roadmap or riders' proposals"
+  tab_roadmap: "Roadmap"
+  tab_proposals: "Proposals"
+  proposals_sub: "Ideas riders sent, open for votes. The ones that gather support and fit the Commons can move onto the roadmap. Most votes first."
+  proposals_none: "No proposals open for votes yet. Propose one of your own."
+  foot_contact_mid: ". Something missing that you need? Tell us on the"
+  foot_contact_link: "contact page"
+  propose:
+    title: "Propose an idea."
+    meta_title: "Propose a roadmap idea"
+    lead: "Something you would like the Commons to do? Tell us what is missing and what you have in mind. We read every idea."
+    intro: "Three questions, two of them required. Write in your own language."
+    field_title: "Your idea in a few words"
+    placeholder_title: "For example: drinking water on the route profile"
+    field_problem: "What is missing or hard today?"
+    placeholder_problem: "What were you trying to do, and what got in the way?"
+    field_idea: "What would you like instead?"
+    placeholder_idea: "Describe how it would work for you."
+    field_benefit: "Who gains, and how? (optional)"
+    placeholder_benefit: "Riders like you, curators, someone planning a trip..."
+    field_image: "A picture (optional)"
+    submit: "Send the idea"
+    sent: "Thank you. Your idea is in, and you will get a message when we have decided."
+    yours_title: "Your ideas"
+    yours_none: "You have not sent an idea yet."
+    state_pending: "Waiting to be read"
+    state_declined: "Not taken up"
+    sent_on: "Sent on %date%"
+    see_on_roadmap: "See it on the roadmap"
+    image_alt: "The picture you added to this idea"
+    image_pending: "Your picture is being checked. It shows here once that is done."
+    image_refused: "We could not accept the picture: the file failed our automatic check. The idea itself is in."
+    desk_note: "Our answer"
+    back: "Back to the roadmap"
+    error_unverified: "Confirm your email address first, then you can send an idea. The link is in the email we sent when you signed up."
+    error_title: "Give your idea a title of 4 to 120 characters."
+    error_problem: "Tell us what is missing or hard today, in 10 to 4000 characters."
+    error_idea: "Tell us what you would like instead, in 10 to 4000 characters."
+    error_benefit: "Keep \"who gains\" under 2000 characters."
+    error_too_many: "You have sent five ideas today. Send the next one tomorrow."
+    public_note: "Our intention is to open almost every proposal for votes, and to hold back only abuse, spam and repeats of an idea already on the list. Its title and text then show on the Proposals tab, without your name. We may shorten them."
+    state_open: "Open for votes"
+    state_promoted: "On the roadmap"
+    see_in_proposals: "See it on the Proposals tab"
+    hint_image: "One sketch or screenshot that shows what you mean. %formats%, up to %size% MB. Only you and the curators see it, unless you tick the box below and we choose to show it with your proposal."
+    image_may_show: "You may show this picture with my proposal when it is public. Only with this proposal."
+    image_public: "This picture shows with your proposal."
+    image_allowed: "You allowed us to show this picture; we have not shown it."
+    image_private: "Only you and the curators see this picture."
+  desk:
+    empty: "No ideas here."
+    waiting: "Ideas waiting to be read"
+    status_pending: "Waiting"
+    status_declined: "Declined"
+    author_gone: "Account deleted"
+    votes: "Votes"
+    followers: "%count% following"
+    decided: "Last decision"
+    open_image: "Open the picture"
+    image_refused: "The picture failed the automatic check."
+    action: "Decision"
+    action_decline: "Decline"
+    group: "Group"
+    public_body_placeholder: "Leave empty to show the rider's answer to \"What would you like instead?\". Never name the rider here."
+    note: "Message to the rider"
+    note_placeholder: "Why, in a sentence or two. Required when you decline."
+    last_note: "Last message to the rider"
+    saved: "Saved."
+    error_note_long: "Keep the message under 2000 characters."
+    error_group: "Pick a group: Now, Next or Later."
+    error_title_long: "Keep the title under 120 characters."
+    error_body_long: "Keep the text under 4000 characters."
+    error_reason: "Write the rider a reason when you decline."
+    error_decided: "This idea is already decided that way."
+    error_action: "Pick a decision."
+    title: "Proposals"
+    lede: "Ideas riders sent. Open one for votes on the Proposals tab, promote it to the roadmap, or decline it with a reason. The rider gets a message each time."
+    status_open: "Open for votes"
+    status_promoted: "Promoted"
+    action_open: "Open for votes"
+    action_reword: "Keep open (reword)"
+    action_promote: "Promote to the roadmap"
+    action_take_off: "Take off the Proposals tab"
+    group_hint: "The group is used when you promote: the new item goes at the end of it. You can translate the item afterwards."
+    see_item: "Open the roadmap item"
+    promoted: "Promoted. Add the other languages here, then save."
+    error_promoted: "This proposal is already on the roadmap as an item."
+    error_note_update: "Nothing goes to the rider when an open proposal is only reworded, so leave the message empty."
+    note_hint: "The rider reads this in their messages. Followers get a short message of their own when a proposal is promoted or taken off the Proposals tab."
+    public_title: "Title on the Proposals tab (optional)"
+    public_body: "Text on the Proposals tab (optional)"
+    admins_decide: "Curators can read proposals; an admin decides them."
+    show_picture: "Show the rider's picture with the proposal (the rider allowed it)"
+    picture_private: "The rider did not allow the picture to be shown, so it stays private."
+    picture: "Picture"
+    picture_shown: "Picture shown"
+  items:
+    desk_tab: "Roadmap"
+    title: "Roadmap items"
+    lede: "What the public roadmap shows, group by group, in the order on the page. Add an item, write it in each language, move it, and take it off as shipped or dropped. Followers get a message when an item moves group, ships or leaves."
+    new_title: "New roadmap item"
+    edit_title: "Roadmap item"
+    add: "Add an item"
+    created: "Item added."
+    saved: "Saved."
+    say_on: "Votes, follows and proposals are on for riders."
+    say_off: "Votes, follows and proposals are off: riders see the list only."
+    say_switch: "Change it in the system settings"
+    group_empty: "Nothing in this group."
+    up: "Move up"
+    down: "Move down"
+    issue: "GitHub issue (optional)"
+    text_hint: "Write the item in as many languages as you can. A language left empty shows the English text, or the first one there is."
+    field_title: "Title"
+    field_body: "Text"
+    lang_en: "English"
+    lang_nl: "Dutch"
+    lang_fr: "French"
+    lang_de: "German"
+    lang_es: "Spanish"
+    from_proposal: "From proposal"
+    ship: "Mark as shipped"
+    remove: "Remove from the roadmap"
+    close_hint: "Both take the item off the roadmap and tell its followers. Shipped: add it to the next release notes too."
+    error_title_missing: "A language with a text needs a title too."
+    error_title_long: "Keep each title under 120 characters."
+    error_body_long: "Keep each text under 4000 characters."
+    error_no_text: "Write the item in at least one language."
+    error_group: "Pick a group: Now, Next or Later."
+    error_closed: "This item has already left the roadmap."
+    error_issue: "An issue is a number, such as 123."
+    error_action: "Pick what to do."
 changelog:
   kicker: 'Changelog'
   title: 'What is new.'

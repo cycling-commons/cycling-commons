@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# The roadmap (docs/specs/roadmap-and-changelog.md §8).
+parameters:
+    # Default of the setting that turns on votes, follows and the Proposals
+    # tab (SettingsRegistry ROADMAP_SAY_LIVE): off until the owner opens them.
+    # The roadmap list itself always shows.
+    roadmap.say_live: 0

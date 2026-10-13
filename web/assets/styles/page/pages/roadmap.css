@@ -15,3 +15,77 @@
 .rissue{font-family:var(--mono);font-size:.7rem;color:var(--clay);white-space:nowrap;margin-left:.4rem}
 .rfoot{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1.1rem 1.3rem;border-radius:0 8px 8px 0;font-size:.94rem;color:#4a4d40;line-height:1.6}
 .rfoot a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+/* Each group's dots sit on one trail, a dashed line that sways a little, like a trail on the map. */
+.rroute{position:relative}
+.rroute::before{content:"";position:absolute;left:-1.5px;width:12px;top:1.4rem;bottom:1.4rem;background:var(--clay);opacity:.35;pointer-events:none;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='96' viewBox='0 0 12 96'%3E%3Cpath d='M6 0C9 16 9 32 6 48C3 64 3 80 6 96' fill='none' stroke='%23000' stroke-width='2' stroke-dasharray='8 6' stroke-linecap='round'/%3E%3C/svg%3E") repeat-y;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='96' viewBox='0 0 12 96'%3E%3Cpath d='M6 0C9 16 9 32 6 48C3 64 3 80 6 96' fill='none' stroke='%23000' stroke-width='2' stroke-dasharray='8 6' stroke-linecap='round'/%3E%3C/svg%3E") repeat-y}
+.rroute .rdot{position:relative;box-shadow:0 0 0 3px var(--paper)}
+.rroute:has(.ritem:only-child)::before{display:none}
+/* The rider's say: one line and one way in, above the list. */
+.rsay{display:flex;align-items:center;justify-content:space-between;gap:1rem 1.4rem;flex-wrap:wrap;
+  border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:1rem 1.2rem;margin:0 0 2.4rem;background:var(--paper)}
+.rsay p{margin:0;flex:1 1 22rem;font-size:.96rem;color:#3a3d30;line-height:1.55}
+.rsay-go{flex:none;font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;
+  background:var(--trail);color:var(--ink);padding:.6rem 1rem;border-radius:5px;text-decoration:none}
+.rsay-go:hover{background:#ff703d}
+.rflash{background:#fff1ec;border-left:2px solid var(--trail);padding:.8rem 1.1rem;border-radius:0 8px 8px 0;
+  font-size:.92rem;color:#5a2716;margin:0 0 1.2rem}
+.rflash--ok{background:var(--paper-deep);border-left-color:var(--ochre);color:#3a3d30}
+/* One item: dot, words, then its two buttons. */
+.ritem{scroll-margin-top:5rem}
+.rbody{flex:1;min-width:0}
+.ridea{display:inline-block;margin-top:.35rem;font-family:var(--mono);font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--clay);border:1px solid rgba(150,69,38,.35);border-radius:3px;padding:.1rem .4rem}
+.rmarks{flex:none;display:flex;align-items:flex-start}
+.rmark-form{display:flex;gap:.4rem;margin:0}
+.rvote,.rfollow{display:inline-flex;align-items:center;gap:.3rem;font-family:var(--mono);font-size:.74rem;line-height:1;
+  color:#4a4d40;background:var(--paper);border:1px solid rgba(20,22,14,.22);border-radius:5px;padding:.4rem .55rem;cursor:pointer;text-decoration:none}
+.rvote{min-width:3.4rem;justify-content:center}
+.rvote svg,.rfollow svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.rvote:hover,.rfollow:hover{border-color:var(--clay);color:var(--clay)}
+.rvote:focus-visible,.rfollow:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
+.rvote[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.rfollow[aria-pressed="true"]{background:var(--paper-deep);border-color:var(--clay);color:var(--clay)}
+.rfollow[aria-pressed="true"] svg{fill:currentColor}
+.rcount{font-variant-numeric:tabular-nums}
+@media(max-width:600px){.ritem{flex-wrap:wrap}.rmarks{width:100%;padding-left:1.4rem}.rfollow-l{display:inline}}
+/* The idea form and the rider's own ideas. */
+.rprop .cfield{margin:1.15rem 0}
+.rprop .cfield label{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin-bottom:.4rem}
+.rprop .cfield input[type="text"],.rprop .cfield input[type="file"],.rprop .cfield textarea{width:100%;font-family:inherit;font-size:.95rem;
+  padding:.6rem .7rem;color:var(--ink);border:1px solid rgba(20,22,14,.24);border-radius:5px;background:var(--paper)}
+.rprop .cfield textarea{min-height:8rem;line-height:1.6;resize:vertical}
+.rprop .cfield textarea.short{min-height:5rem}
+.rprop .req{color:var(--clay);font-weight:700}
+.rprop .chint{font-size:.9rem;color:#595c4d;margin:.35rem 0 .45rem;line-height:1.55}
+.rprop-intro{font-size:.96rem;color:#3a3d30;line-height:1.6;margin:0 0 .4rem}
+.rprop-h{font-family:var(--serif);font-weight:600;font-size:1.35rem;margin:2.6rem 0 .8rem}
+.ridea-card{border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:1rem 1.2rem;margin:0 0 1rem;background:var(--paper);scroll-margin-top:5rem}
+.ridea-card header{display:flex;align-items:baseline;justify-content:space-between;gap:.4rem 1rem;flex-wrap:wrap}
+.ridea-card h3{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin:0}
+.ridea-card dl{margin:.6rem 0 0}
+.ridea-card dt{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);margin-top:.7rem}
+.ridea-card dd{margin:.15rem 0 0;font-size:.94rem;color:#3a3d30;line-height:1.6;overflow-wrap:anywhere}
+.ridea-img{display:block;max-width:100%;height:auto;margin-top:.9rem;border-radius:5px;border:1px solid rgba(20,22,14,.14)}
+.rmeta{font-size:.84rem;color:#595c4d;margin:.3rem 0 0}
+.rmeta a,.rback a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+.rstate{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:.2rem .5rem;border-radius:3px;
+  background:var(--paper-deep);color:#4a4d40}
+.rstate--open{background:var(--ink);color:var(--paper)}
+.rstate--promoted{background:var(--spruce);color:var(--paper)}
+.rstate--declined{background:#f3e3dc;color:#5a2716}
+.rnote{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:.8rem 1.1rem;border-radius:0 8px 8px 0;
+  font-size:.92rem;color:#3a3d30;line-height:1.6;margin:.9rem 0 0}
+.rnote-h{display:block;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);margin-bottom:.25rem}
+.rback{margin-top:2rem;font-size:.92rem}
+/* The two tabs, the roadmap and the riders' proposals: chips, the tab in the URL. */
+.rtabs{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 2rem}
+.rdot--idea{background:var(--clay)}
+.rempty{font-size:.95rem;color:#595c4d;margin:.4rem 0 0}
+/* A rider's picture with a proposal, when shown: small in the row, whole on click. */
+.rpic{display:block;width:max-content;max-width:100%;margin-top:.6rem}
+.rpic img{display:block;max-width:min(100%,280px);max-height:160px;width:auto;height:auto;border-radius:5px;border:1px solid rgba(20,22,14,.14)}
+.rpic:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
+.rprop .cfield label.rprop-check{display:flex;gap:.5rem;align-items:flex-start;margin:.6rem 0 0;font-family:inherit;font-size:.92rem;letter-spacing:0;text-transform:none;color:#3a3d30;line-height:1.5}
+.rprop .cfield label.rprop-check input{margin-top:.25rem}

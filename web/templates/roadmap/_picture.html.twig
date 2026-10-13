@@ -1,0 +1,13 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  The picture a rider sent with a proposal, on the public page, when the
+  rider allowed it and the desk chose to show it (roadmap-and-changelog.md
+  §8.5). Small in the row; the link opens it whole.
+
+  item  a RoadmapItems row
+#}
+{% if item.picture %}
+  <a class="rpic" href="{{ path('roadmap_picture', {id: item.picture}) }}" target="_blank" rel="noopener">
+    <img src="{{ path('roadmap_picture', {id: item.picture}) }}" alt="{{ 'roadmap.picture_alt'|trans({'%title%': item.title}) }}" loading="lazy">
+  </a>
+{% endif %}

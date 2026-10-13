@@ -916,7 +916,8 @@ export:
                           angenommen hat.
       community.json      Bestätigungen, Saisonstimmen, Fahrten,
                           Korrekturvorschläge, Länderanfragen,
-                          Kurator-Bewerbungen.
+                          Kurator-Bewerbungen, Stimmen und Folgen auf dem
+                          Fahrplan und deine Ideen dafür.
       messages.json       Deine Dashboard-Nachrichten, in beide Richtungen.
       consent.json        Jede erteilte Fotolizenz: welcher Wortlaut, welche
                           Version, und wann.
@@ -2962,6 +2963,8 @@ messages:
   kind_submission_approved: 'Beitrag angenommen. Danke!'
   view_on_map: 'Auf der Karte ansehen'
   view_region_page: 'Regionsseite ansehen'
+  view_roadmap: "Fahrplan ansehen"
+  view_your_ideas: "Deine Ideen ansehen"
   kind_submission_rejected: 'Beitrag nicht angenommen'
   kind_submission_needs_info: 'Ein Kurator benötigt weitere Informationen'
   kind_route_approved: 'Routenvorschlag angenommen. Danke!'
@@ -2973,6 +2976,8 @@ messages:
   kind_areas_changed: 'Your moderation areas'
   kind_bug_outcome: 'Zu dem Fehler, den Sie gemeldet haben'
   kind_country_live: "Ein Land, das du dir gewünscht hast, ist auf der Karte"
+  kind_roadmap_idea_outcome: "Zu deiner Idee für den Fahrplan"
+  kind_roadmap_item_moved: "Ein Punkt auf dem Fahrplan, dem du folgst"
   kind_statement_of_reasons: 'Eine Entscheidung über etwas, das du hinzugefügt hast'
   kind_curator_message: 'Nachricht von einem Kurator'
   kind_rider_reply: 'Antwort des Fahrers'
@@ -2989,6 +2994,12 @@ messages:
   body:
     submission_approved: 'Dein Beitrag ''<em>%title%</em>'' wurde angenommen und ist jetzt live auf der Karte. Danke, dass du den Commons verbesserst!'
     bug_outcome: 'Jemand aus der Kuration hat sich das gemeldete Problem angesehen.'
+    roadmap_idea_declined: "Wir haben deine Idee gelesen und greifen sie nicht auf. Den Grund findest du unten."
+    roadmap_moved_now: "Er steht jetzt unter Jetzt: Er wird gebaut."
+    roadmap_moved_next: "Er steht jetzt unter Als Nächstes: beschlossen, er wartet auf seine Reihe."
+    roadmap_moved_later: "Er steht jetzt unter Später: weiter gewünscht, nicht eingeplant."
+    roadmap_moved_shipped: "Er ist fertig. Unter Neuerungen steht, was sich geändert hat."
+    roadmap_moved_removed: "Er steht nicht mehr auf dem Fahrplan."
     statement_of_reasons: 'Hier steht, warum wir so entschieden haben und wie du das anfechten kannst.'
     areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
     submission_rejected: 'Dein Beitrag ''<em>%title%</em>'' wurde nicht angenommen.'
@@ -3008,6 +3019,10 @@ messages:
     translation_approved: 'Deine Übersetzung für %key% (%locale%) wurde freigegeben und ist jetzt live. Danke!'
     translation_rejected: 'Deine Übersetzung für %key% (%locale%) wurde nicht angenommen.'
     translation_needs_info: 'Ein Kurator braucht mehr Informationen zu deiner Übersetzung für %key% (%locale%), bevor er entscheidet. Aktualisiere sie auf der Übersetzungsseite.'
+    roadmap_idea_open: "Wir haben deine Idee zur Abstimmung geöffnet. Sie steht jetzt unter Vorschläge, wo andere dafür stimmen und ihr folgen können."
+    roadmap_idea_promoted_now: "Deine Idee steht auf dem Fahrplan, unter Jetzt: Sie wird gebaut. Ihre Stimmen und Folgenden sind mitgekommen."
+    roadmap_idea_promoted_next: "Deine Idee steht auf dem Fahrplan, unter Als Nächstes: beschlossen, sie wartet auf ihre Reihe. Ihre Stimmen und Folgenden sind mitgekommen."
+    roadmap_idea_promoted_later: "Deine Idee steht auf dem Fahrplan, unter Später: gewünscht, noch nicht eingeplant. Ihre Stimmen und Folgenden sind mitgekommen."
   reply_label: 'Deine Antwort'
   what_you_changed: 'Was du geändert hast'
   show_details: 'Details anzeigen'
@@ -4135,6 +4150,9 @@ admin:
       traffic_map_layer_live:
         label: 'Gemessener Verkehr: auf der Karte'
         help: 'Auf 1 setzen, damit Kuratoren die Ebene mit gemessenem Verkehr auf der Karte sehen. Bei 0 sind die Ebene und ihre Bedienelemente ausgeblendet: Sie ist noch nicht in Gebrauch.'
+      roadmap_say_live:
+        label: "Fahrplan: Stimmen, Folgen und Vorschläge"
+        help: "Auf 1 setzen, damit Fahrende für Punkte auf dem Fahrplan stimmen und ihnen folgen sowie Vorschläge schicken und darüber abstimmen können. Bei 0 zeigt der Fahrplan nur seine Liste, und das Vorschlagsformular ist zu."
       map_confirmed_default_threshold:
         label: 'Reife für Bestätigt: geprüfte Orte'
         help: 'Wie viele von jemandem geprüfte Orte eine Region braucht, bevor ein Kurator sie standardmäßig im Modus Bestätigt öffnen darf. Eine Verteilung über Arten ist nicht nötig, nur genug, damit der Modus nicht leer wirkt.'
@@ -4695,6 +4713,7 @@ room:
     upload_failed: 'Dieses Bild konnte nicht hochgeladen werden. Versuch es noch einmal.'
     image_missing: 'Ein Bild zu diesem Beitrag fehlt. Füge es erneut hinzu.'
 roadmap:
+  picture_alt: "Bild zu „%title%“"
   kicker: 'Fahrplan'
   title: 'Was wir als Nächstes bauen.'
   lead: 'Keine Termine, denn wir würden nur raten. Was jetzt gebaut wird, was als Nächstes kommt und was wir wollen, aber noch nicht eingeplant haben. Die Reihenfolge innerhalb jeder Gruppe steht nicht fest.'
@@ -4704,25 +4723,159 @@ roadmap:
   group_next_sub: 'Entschieden und wartet auf einen Platz. Ohne Überraschungen folgt das hier.'
   group_later: 'Später'
   group_later_sub: 'Gewollt, nicht eingeplant. Echte Absichten, keine Zusagen zum Wann.'
-  item_going_live: '<b>Der Start.</b> Die ersten Wochen online: Tester finden, schnell beheben, worauf sie stoßen, und The Commons unter Radfahrenden bekannt machen.'
-  item_provider_refresh: '<b>Mehr Datenquellen, die sich selbst aktualisieren.</b> Offizielle offene Quellen wie ein nationales Trinkwasserregister, hinzugefügt vom Kuratoren-Desk und nach Zeitplan aufgefrischt.'
-  item_heatmap: '<b>Wo Radfahrende gern hinfahren.</b> Eine Wärmeebene, die Orte hervorhebt, die viele schätzen, etwa Aussichten und Anstiege. Nur aus anonymen Punkten, und ein Ort erscheint erst, wenn genug verschiedene Radfahrende dahinterstehen, damit er nie auf eine Person zeigt.'
-  item_standing: '<b>Ansehen als Beitragender.</b> Fahrer, deren Arbeit immer wieder angenommen wird, verdienen eine leichtere Hand, etwa Änderungen, die sofort live gehen, statt sie von Hand zu bekommen.'
-  item_osm_giveback: '<b>An OpenStreetMap zurückgeben.</b> Was Fahrer hier bestätigen, stromaufwärts angeboten in einer Form, die OpenStreetMap annehmen kann.'
-  item_map_a11y: '<b>Die Karte ohne Maus benutzbar machen.</b> Die ehrliche Lücke in unserer Barrierefreiheitserklärung: Tastatur- und Screenreader-Zugang zur Karte selbst, nicht nur zu den Seiten drumherum.'
-  item_route_export: '<b>Nimm eine Route mit.</b> Forme sie anhand dessen, was die Karte zeigt, und schick sie an den Planer oder das Gerät, das du schon nutzt.'
-  item_region_portrait: '<b>Ein Porträt jeder Region.</b> Die Regionsseite zählt, was da ist. Sie sollte sagen, wie das Radfahren dort ist: wie hügelig, wie viel asphaltiert, die großen Anstiege, das beschilderte Netz, Wasser und Toiletten pro hundert Kilometer, die Routen, die Radfahrer empfehlen, und wie frisch die Daten sind.'
-  item_reviews: '<b>Deine eigenen Worte zu jedem Ort.</b> Eine kurze eigene Notiz zu einem Brunnen, einem Anstieg, einer Unterkunft oder einer Route, neben den Fakten: wie es war, als du dort warst. Mehrere Radfahrer, mehrere Notizen. Keine Bewertung.'
-  item_favourites: '<b>Deine Lieblingsorte.</b> Speichere einen Wasserhahn, einen Anstieg, eine Unterkunft oder eine Route in einer Favoritenliste in deinem Profil, damit du sie vor der nächsten Fahrt wiederfindest.'
-  item_roadmap_votes: '<b>Bei dieser Liste mitreden.</b> Abstimmen, was dir wichtig ist, einem Punkt folgen, und selbst einen vorschlagen.'
-  item_more_countries: '<b>Mehr Länder und Regionen.</b> The Commons öffnet in neuen Ländern, jeweils mit Kuratoren, die die Straßen kennen. Fordere dein Land auf der Mitmachen-Seite an.'
-  item_scout_devices: '<b>Scout auf mehr Geräten.</b> Markiere, woran du vorbeifährst, zuerst auf Android, dann auf Hammerhead Karoo und iPhone.'
-  item_open_api: '<b>Die Open-Data-API, vollständig.</b> Jeder Ort, jeder Anstieg und jede Route über eine stabile, dokumentierte API lesbar, dazu Massendownloads der Daten und der Kartenkacheln, damit alle auf The Commons aufbauen oder eine Kopie betreiben können.'
   foot_shipped_pre: 'Was schon draußen ist, steht im'
   foot_shipped_link: 'Änderungsprotokoll'
-  foot_shipped_mid: '. Fehlt etwas, das du brauchst? Sag es uns auf der'
-  foot_contact_link: 'Kontaktseite'
-  foot_shipped_post: ', ein Mensch liest es.'
+  say_lead: "Stimme für das, was dir wichtig ist, folge einem Punkt, um zu hören, wenn er weiterkommt, oder schlag eine eigene Idee vor."
+  say_propose: "Idee vorschlagen"
+  say_signin: "Anmelden zum Mitmachen"
+  idea_badge: "Idee von einer Fahrerin oder einem Fahrer"
+  vote_title: "Dafür stimmen"
+  unvote_title: "Stimme zurücknehmen"
+  vote_aria: "Stimmen: %count%. Für diesen Punkt stimmen oder die Stimme zurücknehmen."
+  votes_count: "Stimmen: %count%"
+  signin_to_vote: "Zum Abstimmen anmelden"
+  follow: "Folgen"
+  following: "Gefolgt"
+  follow_title: "Eine Nachricht bekommen, im Postfach und per E-Mail, wenn sich das bewegt oder fertig ist"
+  unfollow_title: "Nicht mehr folgen"
+  mark_gone: "Dieser Punkt steht nicht mehr auf dem Fahrplan."
+  mark_unverified: "Bestätige zuerst deine E-Mail-Adresse. Der Link steht in der E-Mail, die wir bei der Anmeldung geschickt haben."
+  mark_too_fast: "Das waren viele Klicks in kurzer Zeit. Versuch es in ein paar Minuten noch einmal."
+  foot_shipped_mid: ". Fehlt etwas, das du brauchst? "
+  foot_propose_link: "Schlag es vor"
+  foot_shipped_post: ", wir lesen es."
+  tabs_aria: "Fahrplan oder Vorschläge von Fahrenden"
+  tab_roadmap: "Fahrplan"
+  tab_proposals: "Vorschläge"
+  proposals_sub: "Ideen, die Fahrende geschickt haben, offen zur Abstimmung. Was Unterstützung findet und zur Commons passt, kann auf den Fahrplan kommen. Die meisten Stimmen zuerst."
+  proposals_none: "Noch keine Vorschläge offen zur Abstimmung. Schlag selbst einen vor."
+  foot_contact_mid: ". Fehlt etwas, das du brauchst? Sag es uns auf der"
+  foot_contact_link: "Kontaktseite"
+  propose:
+    title: "Schlag eine Idee vor."
+    meta_title: "Eine Idee für den Fahrplan vorschlagen"
+    lead: "Soll die Commons etwas können? Sag uns, was fehlt und was dir vorschwebt. Wir lesen jede Idee."
+    intro: "Drei Fragen, zwei davon Pflicht. Schreib in deiner eigenen Sprache."
+    field_title: "Deine Idee in wenigen Worten"
+    placeholder_title: "Zum Beispiel: Trinkwasser im Routenprofil"
+    field_problem: "Was fehlt heute, oder was ist schwierig?"
+    placeholder_problem: "Was wolltest du tun, und was stand im Weg?"
+    field_idea: "Was hättest du stattdessen gern?"
+    placeholder_idea: "Beschreib, wie es für dich funktionieren würde."
+    field_benefit: "Wer hat etwas davon, und wie? (optional)"
+    placeholder_benefit: "Fahrende wie du, die Kuration, jemand, der eine Tour plant..."
+    field_image: "Ein Bild (optional)"
+    submit: "Idee senden"
+    sent: "Danke. Deine Idee ist angekommen, und du bekommst eine Nachricht, sobald wir entschieden haben."
+    yours_title: "Deine Ideen"
+    yours_none: "Du hast noch keine Idee geschickt."
+    state_pending: "Wartet darauf, gelesen zu werden"
+    state_declined: "Nicht aufgegriffen"
+    sent_on: "Gesendet am %date%"
+    see_on_roadmap: "Auf dem Fahrplan ansehen"
+    image_alt: "Das Bild, das du dieser Idee beigefügt hast"
+    image_pending: "Dein Bild wird geprüft. Es erscheint hier, sobald das erledigt ist."
+    image_refused: "Wir konnten das Bild nicht annehmen: Die Datei hat unsere automatische Prüfung nicht bestanden. Die Idee selbst ist angekommen."
+    desk_note: "Unsere Antwort"
+    back: "Zurück zum Fahrplan"
+    error_unverified: "Bestätige zuerst deine E-Mail-Adresse, dann kannst du eine Idee schicken. Der Link steht in der E-Mail, die wir bei der Anmeldung geschickt haben."
+    error_title: "Gib deiner Idee einen Titel mit 4 bis 120 Zeichen."
+    error_problem: "Sag uns, was heute fehlt oder schwierig ist, in 10 bis 4000 Zeichen."
+    error_idea: "Sag uns, was du stattdessen gern hättest, in 10 bis 4000 Zeichen."
+    error_benefit: "Halte „Wer hat etwas davon“ unter 2000 Zeichen."
+    error_too_many: "Du hast heute fünf Ideen geschickt. Schick die nächste morgen."
+    public_note: "Wir haben vor, fast jeden Vorschlag zur Abstimmung zu öffnen und nur Missbrauch, Spam und Wiederholungen einer Idee zurückzuhalten, die schon auf der Liste steht. Titel und Text stehen dann unter Vorschläge, ohne deinen Namen. Wir kürzen sie vielleicht."
+    state_open: "Offen zur Abstimmung"
+    state_promoted: "Auf dem Fahrplan"
+    see_in_proposals: "Unter Vorschläge ansehen"
+    hint_image: "Eine Skizze oder ein Screenshot, der zeigt, was du meinst. %formats%, bis %size% MB. Nur du und die Kuration sehen es, außer du setzt unten das Häkchen und wir zeigen es mit deinem Vorschlag."
+    image_may_show: "Ihr dürft dieses Bild mit meinem Vorschlag zeigen, wenn er öffentlich ist. Nur mit diesem Vorschlag."
+    image_public: "Dieses Bild steht bei deinem Vorschlag."
+    image_allowed: "Du hast erlaubt, dieses Bild zu zeigen; wir zeigen es noch nicht."
+    image_private: "Nur du und die Kuration sehen dieses Bild."
+  desk:
+    empty: "Hier sind keine Ideen."
+    waiting: "Ideen, die darauf warten, gelesen zu werden"
+    status_pending: "Wartet"
+    status_declined: "Abgelehnt"
+    author_gone: "Konto gelöscht"
+    votes: "Stimmen"
+    followers: "%count% folgen"
+    decided: "Letzte Entscheidung"
+    open_image: "Bild öffnen"
+    image_refused: "Das Bild hat die automatische Prüfung nicht bestanden."
+    action: "Entscheidung"
+    action_decline: "Ablehnen"
+    group: "Gruppe"
+    public_body_placeholder: "Leer lassen, um die Antwort auf „Was hättest du stattdessen gern?“ zu zeigen. Nenne hier nie den Namen der Person."
+    note: "Nachricht an die Person"
+    note_placeholder: "Warum, in ein oder zwei Sätzen. Pflicht beim Ablehnen."
+    last_note: "Letzte Nachricht an die Person"
+    saved: "Gespeichert."
+    error_note_long: "Halte die Nachricht unter 2000 Zeichen."
+    error_group: "Wähle eine Gruppe: Jetzt, Als Nächstes oder Später."
+    error_title_long: "Halte den Titel unter 120 Zeichen."
+    error_body_long: "Halte den Text unter 4000 Zeichen."
+    error_reason: "Schreib der Person einen Grund, wenn du ablehnst."
+    error_decided: "Über diese Idee ist schon so entschieden."
+    error_action: "Wähle eine Entscheidung."
+    title: "Vorschläge"
+    lede: "Ideen, die Fahrende geschickt haben. Öffne eine zur Abstimmung unter Vorschläge, setz sie auf den Fahrplan oder lehne sie mit einem Grund ab. Die Person bekommt jedes Mal eine Nachricht."
+    status_open: "Offen zur Abstimmung"
+    status_promoted: "Auf dem Fahrplan"
+    action_open: "Zur Abstimmung öffnen"
+    action_reword: "Offen lassen (umformulieren)"
+    action_promote: "Auf den Fahrplan setzen"
+    action_take_off: "Von Vorschläge nehmen"
+    group_hint: "Die Gruppe gilt, wenn du ihn auf den Fahrplan setzt: Der neue Punkt kommt ans Ende. Übersetzen kannst du ihn danach."
+    see_item: "Punkt auf dem Fahrplan öffnen"
+    promoted: "Auf den Fahrplan gesetzt. Ergänze hier die anderen Sprachen und speichere."
+    error_promoted: "Dieser Vorschlag steht schon als Punkt auf dem Fahrplan."
+    error_note_update: "Wird ein offener Vorschlag nur umformuliert, geht nichts an die Person, also lass die Nachricht leer."
+    note_hint: "Die Person liest das in ihren Nachrichten. Wer folgt, bekommt eine eigene kurze Nachricht, wenn ein Vorschlag auf den Fahrplan kommt oder Vorschläge verlässt."
+    public_title: "Titel unter Vorschläge (optional)"
+    public_body: "Text unter Vorschläge (optional)"
+    admins_decide: "Die Kuration kann Vorschläge lesen; ein Admin entscheidet."
+    show_picture: "Das Bild der Person mit dem Vorschlag zeigen (die Person hat es erlaubt)"
+    picture_private: "Die Person hat nicht erlaubt, das Bild zu zeigen, also bleibt es privat."
+    picture: "Bild"
+    picture_shown: "Bild gezeigt"
+  items:
+    desk_tab: "Fahrplan"
+    title: "Punkte auf dem Fahrplan"
+    lede: "Was der öffentliche Fahrplan zeigt, Gruppe für Gruppe, in der Reihenfolge der Seite. Füge einen Punkt hinzu, schreib ihn in jeder Sprache, verschieb ihn und nimm ihn als fertig oder gestrichen herunter. Wer folgt, bekommt eine Nachricht, wenn ein Punkt die Gruppe wechselt, fertig wird oder verschwindet."
+    new_title: "Neuer Punkt auf dem Fahrplan"
+    edit_title: "Punkt auf dem Fahrplan"
+    add: "Punkt hinzufügen"
+    created: "Punkt hinzugefügt."
+    saved: "Gespeichert."
+    say_on: "Stimmen, Folgen und Vorschläge sind für Fahrende an."
+    say_off: "Stimmen, Folgen und Vorschläge sind aus: Fahrende sehen nur die Liste."
+    say_switch: "In den Systemeinstellungen ändern"
+    group_empty: "Nichts in dieser Gruppe."
+    up: "Nach oben"
+    down: "Nach unten"
+    issue: "GitHub-Issue (optional)"
+    text_hint: "Schreib den Punkt in so vielen Sprachen wie möglich. Eine leere Sprache zeigt den englischen Text oder den ersten, den es gibt."
+    field_title: "Titel"
+    field_body: "Text"
+    lang_en: "Englisch"
+    lang_nl: "Niederländisch"
+    lang_fr: "Französisch"
+    lang_de: "Deutsch"
+    lang_es: "Spanisch"
+    from_proposal: "Aus Vorschlag"
+    ship: "Als fertig markieren"
+    remove: "Vom Fahrplan nehmen"
+    close_hint: "Beides nimmt den Punkt vom Fahrplan und sagt es allen, die folgen. Fertig: nimm ihn auch in die nächsten Release-Notizen auf."
+    error_title_missing: "Eine Sprache mit Text braucht auch einen Titel."
+    error_title_long: "Halte jeden Titel unter 120 Zeichen."
+    error_body_long: "Halte jeden Text unter 4000 Zeichen."
+    error_no_text: "Schreib den Punkt in mindestens einer Sprache."
+    error_group: "Wähle eine Gruppe: Jetzt, Als Nächstes oder Später."
+    error_closed: "Dieser Punkt steht schon nicht mehr auf dem Fahrplan."
+    error_issue: "Ein Issue ist eine Nummer, etwa 123."
+    error_action: "Wähle, was geschehen soll."
 changelog:
   kicker: 'Änderungsprotokoll'
   title: 'Was neu ist.'

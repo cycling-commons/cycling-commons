@@ -43,7 +43,7 @@ final class RoadmapChangelogTest extends WebTestCase
         self::bootKernel();
         $translator = static::getContainer()->get('translator');
 
-        $keys = array_column(ReleaseNotes::ROADMAP, 'key');
+        $keys = [];
         foreach (ReleaseNotes::releases() as $release) {
             foreach ($release['sections'] as $notes) {
                 $keys = array_merge($keys, $notes);
@@ -71,14 +71,21 @@ final class RoadmapChangelogTest extends WebTestCase
         self::assertSame([], $missing, "Untranslated roadmap/changelog keys:\n  ".implode("\n  ", $missing));
     }
 
-    /** Every status used by an item must have a group to appear under. */
-    public function testNoRoadmapItemHidesInAnUnknownStatus(): void
+    /**
+     * The roadmap's items live in the database now (§8). Every live item
+     * sits in a group the page shows and has at least one text, which every
+     * language without its own falls back to.
+     */
+    public function testEveryLiveRoadmapItemShowsSomewhereInEveryLanguage(): void
     {
-        $unknown = array_values(array_unique(array_diff(
-            array_column(ReleaseNotes::ROADMAP, 'status'),
-            ReleaseNotes::STATUSES,
-        )));
+        self::bootKernel();
+        $db = static::getContainer()->get(\Doctrine\DBAL\Connection::class);
 
+        $unknown = $db->fetchFirstColumn(
+            "SELECT id FROM roadmap_item WHERE state = 'live' AND status NOT IN (:s)",
+            ['s' => ReleaseNotes::STATUSES],
+            ['s' => \Doctrine\DBAL\ArrayParameterType::STRING],
+        );
         self::assertSame([], $unknown, 'An item with a status not in STATUSES renders nowhere at all.');
     }
 

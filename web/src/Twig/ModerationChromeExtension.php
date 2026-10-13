@@ -16,6 +16,7 @@ use App\Moderation\RouteQueue;
 use App\Moderation\SubmissionQueue;
 use App\Support\SupportRepository;
 use App\Translation\DecisionService;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Contracts\Service\ResetInterface;
 use Twig\Extension\AbstractExtension;
@@ -58,6 +59,7 @@ final class ModerationChromeExtension extends AbstractExtension implements Reset
         private readonly RouteQueue $routes,
         private readonly CatalogFindingRepository $findings,
         private readonly MediaTakedownService $takedowns,
+        private readonly Connection $db,
     ) {
     }
 
@@ -81,6 +83,7 @@ final class ModerationChromeExtension extends AbstractExtension implements Reset
             new TwigFunction('open_contact_count', $this->openContactCount(...)),
             new TwigFunction('open_bug_count', $this->openBugCount(...)),
             new TwigFunction('open_report_count', $this->openReportCount(...)),
+            new TwigFunction('pending_idea_count', $this->pendingIdeaCount(...)),
             new TwigFunction('moderation_scope_names', $this->moderationScopeNames(...)),
         ];
     }
@@ -118,6 +121,16 @@ final class ModerationChromeExtension extends AbstractExtension implements Reset
     public function openBugCount(): int
     {
         return $this->count('bugs', fn (): int => $this->support->openBugCount());
+    }
+
+    /** Roadmap ideas waiting on the ideas desk, admins only (roadmap-and-changelog.md §8). */
+    public function pendingIdeaCount(): int
+    {
+        if (!$this->security->isGranted('ROLE_ADMIN')) {
+            return 0;
+        }
+
+        return $this->count('ideas', fn (): int => (int) $this->db->fetchOne("SELECT COUNT(*) FROM roadmap_proposal WHERE status = 'pending'"));
     }
 
     /**

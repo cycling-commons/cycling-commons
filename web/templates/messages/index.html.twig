@@ -223,6 +223,10 @@
               {# A question about a place opens on that place's edit form. #}
               {% set target = edit_targets[m.refId] %}
               <p class="q-map"><a class="q-link msg-edit-link" href="{{ path('improve') }}?item={{ target.item }}&amp;type={{ target.type }}&amp;msg={{ m.id }}">{{ 'messages.open_in_form'|trans }} →</a></p>
+            {% elseif m.kind.value == 'roadmap_item_moved' %}
+              <p class="q-map"><a class="q-link msg-roadmap-link" href="{{ path('roadmap') }}">{{ 'messages.view_roadmap'|trans }} →</a></p>
+            {% elseif m.kind.value == 'roadmap_idea_outcome' %}
+              <p class="q-map"><a class="q-link msg-roadmap-link" href="{{ path('roadmap_propose') }}#idea-{{ m.refId }}">{{ 'messages.view_your_ideas'|trans }} →</a></p>
             {% endif %}
           </div>
           {% if m.sender == 'curator' and not mine %}

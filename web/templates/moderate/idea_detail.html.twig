@@ -1,0 +1,117 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  One roadmap proposal and the one decision form
+  (docs/specs/roadmap-and-changelog.md §8.6). The rider's words are escaped
+  in pre-wrap blocks: a string a stranger typed never becomes markup. The
+  picture is a link, not an <img>, the bug desk's rule for a stranger's file.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<link rel="stylesheet" href="{{ asset('styles/page/moderate/bug_detail.css') }}">
+{% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_ideas'} %}{% endblock %}
+
+{% block body %}
+<div class="dbody dmin" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'account.menu_moderation'|trans }} · <a href="{{ path('moderate_ideas') }}">{{ 'roadmap.desk.title'|trans }}</a></div>
+    <h1 lang="{{ idea.locale }}">{{ idea.title }}</h1>
+    <p class="lede ref-lede">#{{ idea.id }}</p>
+  </div>
+  {% include 'moderate/_roadmap_subnav.html.twig' with {on: 'proposals', pending: pending} only %}
+
+  {% for msg in app.flashes('success') %}<div class="flash-success" role="status">{{ msg|trans }}</div>{% endfor %}
+
+  <div class="bdet">
+    <dl class="facts">
+      <dt>{{ 'support.inbox.status_label'|trans }}</dt>
+      <dd>{{ ('roadmap.desk.status_' ~ idea.status.value)|trans }}{% if idea.promotedItem %} · <a href="{{ path('moderate_roadmap_item', {id: idea.promotedItem.id}) }}">{{ 'roadmap.desk.see_item'|trans }}</a>{% endif %}</dd>
+      <dt>{{ 'support.inbox.received'|trans }}</dt>
+      <dd>{{ idea.createdAt|cc_datetime }}</dd>
+      <dt>{{ 'support.inbox.language'|trans }}</dt>
+      <dd>{{ idea.locale }}</dd>
+      <dt>{{ 'roadmap.desk.votes'|trans }}</dt>
+      <dd>{{ votes }} · {{ 'roadmap.desk.followers'|trans({'%count%': followers}) }}</dd>
+      {% if idea.userId is null %}<dt>{{ 'support.inbox.from'|trans }}</dt><dd>{{ 'roadmap.desk.author_gone'|trans }}</dd>{% endif %}
+      {% if idea.decidedAt %}<dt>{{ 'roadmap.desk.decided'|trans }}</dt><dd>{{ idea.decidedAt|cc_datetime }}</dd>{% endif %}
+    </dl>
+
+    <h2 class="bsec">{{ 'roadmap.propose.field_problem'|trans }}</h2>
+    <div class="btext" lang="{{ idea.locale }}">{{ idea.problem }}</div>
+    <h2 class="bsec">{{ 'roadmap.propose.field_idea'|trans }}</h2>
+    <div class="btext" lang="{{ idea.locale }}">{{ idea.idea }}</div>
+    {% if idea.benefit %}
+      <h2 class="bsec">{{ 'roadmap.propose.field_benefit'|trans }}</h2>
+      <div class="btext" lang="{{ idea.locale }}">{{ idea.benefit }}</div>
+    {% endif %}
+    {% if image %}
+      <h2 class="bsec">{{ 'roadmap.propose.field_image'|trans }}</h2>
+      {% if image.isReady() %}
+        <p><a href="{{ path('moderate_ideas_image', {id: idea.id}) }}" target="_blank" rel="noopener">{{ 'roadmap.desk.open_image'|trans }} ({{ image.width }} × {{ image.height }})</a></p>
+      {% elseif image.isPending() %}
+        <p>{{ 'roadmap.propose.image_pending'|trans }}</p>
+      {% else %}
+        <p>{{ 'roadmap.desk.image_refused'|trans }} {{ (image.refusal ?? '')|trans({'%max%': ''}) }}</p>
+      {% endif %}
+    {% endif %}
+
+    {% if error %}<p class="ferr" role="alert">{{ error|trans }}</p>{% endif %}
+
+    {% set d = draft ?? {} %}
+    {% if not is_granted('ROLE_ADMIN') %}
+      <p><small>{{ 'roadmap.desk.admins_decide'|trans }}</small></p>
+    {% elseif idea.status.value != 'promoted' %}
+    <form class="decide" method="post" action="{{ path('moderate_ideas_decide', {id: idea.id}) }}">
+      <input type="hidden" name="_token" value="{{ csrf_token(csrf_id) }}">
+      <div class="drow">
+        <div class="dcell">
+          <label for="d-action">{{ 'roadmap.desk.action'|trans }}</label>
+          <select id="d-action" name="action">
+            {% set cur = d.action ?? (idea.isOpen() ? 'promote' : 'open') %}
+            <option value="open"{{ cur == 'open' ? ' selected' }}>{{ (idea.isOpen() ? 'roadmap.desk.action_reword' : 'roadmap.desk.action_open')|trans }}</option>
+            <option value="promote"{{ cur == 'promote' ? ' selected' }}>{{ 'roadmap.desk.action_promote'|trans }}</option>
+            {% if idea.status.value != 'declined' %}<option value="decline"{{ cur == 'decline' ? ' selected' }}>{{ (idea.isOpen() ? 'roadmap.desk.action_take_off' : 'roadmap.desk.action_decline')|trans }}</option>{% endif %}
+          </select>
+        </div>
+        <div class="dcell">
+          <label for="d-group">{{ 'roadmap.desk.group'|trans }}</label>
+          <select id="d-group" name="group">
+            {% set curg = d.group ?? 'later' %}
+            {% for g in groups %}<option value="{{ g }}"{{ curg == g ? ' selected' }}>{{ ('roadmap.group_' ~ g)|trans }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <p><small>{{ 'roadmap.desk.group_hint'|trans }}</small></p>
+
+      <label for="d-ptitle">{{ 'roadmap.desk.public_title'|trans }}</label>
+      <input type="text" id="d-ptitle" name="public_title" maxlength="120" value="{{ d.public_title ?? idea.publicTitle }}" placeholder="{{ idea.title }}">
+      <label for="d-pbody">{{ 'roadmap.desk.public_body'|trans }}</label>
+      <textarea id="d-pbody" name="public_body" maxlength="4000" rows="6" placeholder="{{ 'roadmap.desk.public_body_placeholder'|trans }}">{{ d.public_body ?? idea.publicBody }}</textarea>
+
+      {% if image and image.mayBeShown() %}
+        <input type="hidden" name="picture_offered" value="1">
+        <div class="check">
+          <input type="checkbox" id="d-picture" name="show_picture" value="1"{{ (d.show_picture is defined ? d.show_picture : image.isShown()) ? ' checked' }}>
+          <label for="d-picture">{{ 'roadmap.desk.show_picture'|trans }}</label>
+        </div>
+      {% elseif image %}
+        <p><small>{{ 'roadmap.desk.picture_private'|trans }}</small></p>
+      {% endif %}
+
+      <label for="d-note">{{ 'roadmap.desk.note'|trans }}</label>
+      <textarea id="d-note" name="note" maxlength="2000" rows="6" placeholder="{{ 'roadmap.desk.note_placeholder'|trans }}">{{ d.note ?? '' }}</textarea>
+      <p><small>{{ 'roadmap.desk.note_hint'|trans }}</small></p>
+
+      <p class="dact"><button type="submit" class="btn btn-p">{{ 'support.inbox.save'|trans }}</button></p>
+    </form>
+    {% endif %}
+    {% if idea.decisionNote %}
+      <h2 class="bsec">{{ 'roadmap.desk.last_note'|trans }}</h2>
+      <div class="btext">{{ idea.decisionNote }}</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,11 +1,17 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
 {#
-  What is coming. A flat list on purpose (owner, 2026-08-28), read out of
-  App\Content\ReleaseNotes with no database behind it: editing the roadmap is a
-  pull request, which leaves a history for free.
+  What is coming, and the rider's say in it (docs/specs/roadmap-and-changelog.md
+  §8). The items come from the database, written on the roadmap desk; an item
+  without a text in the page's language shows its English one, marked with
+  its own `lang`.
 
-  Only unfinished work appears here. What landed lives on /changelog, linked at
-  the foot, so nothing is described in two places.
+  With the rider's say switched on (`say_live`), a second tab lists the
+  riders' proposals open for votes, and every row gets a vote and a follow
+  button (roadmap/_marks.html.twig). The tab is in the URL, never in script
+  state, so both tabs stay shareable in the public cache.
+
+  Only unfinished work appears here. What landed lives on /whats-new, linked
+  at the foot, so nothing is described in two places.
 #}
 {% extends 'base.html.twig' %}
 
@@ -22,27 +28,86 @@
 
 <section class="pad"><div class="wrap">
   <div class="rwrap">
-    {% for status in statuses %}
-      {% set items = roadmap|filter(i => i.status == status) %}
-      {% if items|length %}
-        <div class="rgroup">
-          <h2>{{ ('roadmap.group_' ~ status)|trans }}</h2>
-          <p class="gsub">{{ ('roadmap.group_' ~ status ~ '_sub')|trans }}</p>
-          {% for item in items %}
-            <div class="ritem">
-              <span class="rdot rdot--{{ status }}" aria-hidden="true"></span>
-              <p>{{ item.key|trans|rich }}{% if item.issue is defined %}<a class="rissue" href="https://github.com/cycling-commons/cycling-commons/issues/{{ item.issue }}">#{{ item.issue }}</a>{% endif %}</p>
+    {% if app.user %}
+      {% for msg in app.flashes('error') %}<div class="rflash" role="alert">{{ msg|trans }}</div>{% endfor %}
+      {% for msg in app.flashes('success') %}<div class="rflash rflash--ok" role="status">{{ msg|trans }}</div>{% endfor %}
+    {% endif %}
+
+    {% if say_live %}
+      <div class="rsay">
+        <p>{% trans %}roadmap.say_lead{% endtrans %}</p>
+        {% if app.user %}
+          <a class="rsay-go" href="{{ path('roadmap_propose') }}">{% trans %}roadmap.say_propose{% endtrans %}</a>
+        {% else %}
+          <a class="rsay-go" href="{{ path('login', {_target_path: path('roadmap')}) }}">{% trans %}roadmap.say_signin{% endtrans %}</a>
+        {% endif %}
+      </div>
+      <nav class="lfilter rtabs" aria-label="{{ 'roadmap.tabs_aria'|trans }}">
+        <a class="lchip" href="{{ path('roadmap') }}"{% if tab == 'roadmap' %} aria-current="page"{% endif %}>{% trans %}roadmap.tab_roadmap{% endtrans %}</a>
+        <a class="lchip" href="{{ path('roadmap', {tab: 'proposals'}) }}"{% if tab == 'proposals' %} aria-current="page"{% endif %}>{% trans %}roadmap.tab_proposals{% endtrans %}{% if proposal_count %} <b>{{ proposal_count }}</b>{% endif %}</a>
+      </nav>
+    {% endif %}
+
+    {% if tab == 'proposals' %}
+      <div class="rgroup">
+        <p class="gsub">{% trans %}roadmap.proposals_sub{% endtrans %}</p>
+        {% if proposals is empty %}
+          <p class="rempty">{% trans %}roadmap.proposals_none{% endtrans %}</p>
+        {% else %}
+          <div class="rroute">
+          {% for item in proposals %}
+            <div class="ritem" id="{{ item.anchor }}">
+              <span class="rdot rdot--idea" aria-hidden="true"></span>
+              <div class="rbody">
+                <p lang="{{ item.lang }}"><b>{{ item.title }}</b>{{ item.title matches '/[.!?]$/' ? '' : '.' }} {{ item.body|length > 420 ? item.body|slice(0, 420) ~ '…' : item.body }}</p>
+                <span class="ridea">{% trans %}roadmap.idea_badge{% endtrans %}</span>
+                {% include 'roadmap/_picture.html.twig' with {item: item} only %}
+              </div>
+              {% include 'roadmap/_marks.html.twig' with {item: item, back: path('roadmap', {tab: 'proposals'}), csrf_id: csrf_id} only %}
             </div>
           {% endfor %}
-        </div>
-      {% endif %}
-    {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    {% else %}
+      {% for status in statuses %}
+        {% set items = roadmap|filter(i => i.status == status) %}
+        {% if items|length %}
+          <div class="rgroup">
+            <h2>{{ ('roadmap.group_' ~ status)|trans }}</h2>
+            <p class="gsub">{{ ('roadmap.group_' ~ status ~ '_sub')|trans }}</p>
+            <div class="rroute">
+            {% for item in items %}
+              <div class="ritem" id="{{ item.anchor }}">
+                <span class="rdot rdot--{{ status }}" aria-hidden="true"></span>
+                <div class="rbody">
+                  <p{% if item.lang != app.request.locale %} lang="{{ item.lang }}"{% endif %}><b>{{ item.title }}</b>{{ item.title matches '/[.!?]$/' ? '' : '.' }} {{ item.body }}{% if item.issue %}<a class="rissue" href="https://github.com/cycling-commons/cycling-commons/issues/{{ item.issue }}">#{{ item.issue }}</a>{% endif %}</p>
+                  {% if item.from_rider %}<span class="ridea">{% trans %}roadmap.idea_badge{% endtrans %}</span>{% endif %}
+                  {% include 'roadmap/_picture.html.twig' with {item: item} only %}
+                </div>
+                {% if say_live %}{% include 'roadmap/_marks.html.twig' with {item: item, back: path('roadmap'), csrf_id: csrf_id} only %}{% endif %}
+              </div>
+            {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
 
     <div class="rfoot">
       {% trans %}roadmap.foot_shipped_pre{% endtrans %}
       <a href="{{ path('changelog') }}">{% trans %}roadmap.foot_shipped_link{% endtrans %}</a>{% trans %}roadmap.foot_shipped_mid{% endtrans %}
+      {%- if say_live %}
+      <a href="{{ path('roadmap_propose') }}">{% trans %}roadmap.foot_propose_link{% endtrans %}</a>{% trans %}roadmap.foot_shipped_post{% endtrans %}
+      {%- else %}
       <a href="{{ path('contact') }}">{% trans %}roadmap.foot_contact_link{% endtrans %}</a>{% trans %}roadmap.foot_shipped_post{% endtrans %}
+      {%- endif %}
     </div>
   </div>
 </div></section>
+{% endblock %}
+
+{% block body_scripts %}
+{{ parent() }}
+{% if say_live and app.user %}<script src="{{ asset('roadmap/marks.js') }}" defer></script>{% endif %}
 {% endblock %}

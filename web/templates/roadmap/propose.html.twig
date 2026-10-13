@@ -1,0 +1,103 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  A rider's roadmap proposals (docs/specs/roadmap-and-changelog.md §8.5): the
+  form to send one, then everything they sent with what became of it. The
+  three questions are the ones a good roadmap item answers; the picture is
+  optional and only the rider and the roadmap desk ever see it.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+<link rel="stylesheet" href="{{ asset('styles/page/pages/roadmap.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="rhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{% trans %}roadmap.kicker{% endtrans %}</div>
+  <h1 class="disp">{% trans %}roadmap.propose.title{% endtrans %}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{% trans %}roadmap.propose.lead{% endtrans %}</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="rwrap rprop">
+    {% for msg in app.flashes('success') %}<div class="rflash rflash--ok" role="status">{{ msg|trans }}</div>{% endfor %}
+    {% if error %}<div class="rflash" role="alert">{{ error|trans({'%max%': max_shot_mb}) }}</div>{% endif %}
+
+    {% if not email_verified %}
+      <div class="rnote">{% trans %}roadmap.propose.error_unverified{% endtrans %}</div>
+    {% else %}
+      <p class="rprop-intro">{% trans %}roadmap.propose.intro{% endtrans %}</p>
+      <form method="post" action="{{ path('roadmap_propose') }}" enctype="multipart/form-data" class="rprop-form">
+        <input type="hidden" name="_token" value="{{ csrf_token(csrf_id) }}">
+        <div class="cfield">
+          <label for="p-title">{% trans %}roadmap.propose.field_title{% endtrans %} <span class="req" aria-hidden="true">*</span></label>
+          <input type="text" id="p-title" name="title" maxlength="{{ title_max }}" required value="{{ kept.title }}"
+                 placeholder="{{ 'roadmap.propose.placeholder_title'|trans }}">
+        </div>
+        <div class="cfield">
+          <label for="p-problem">{% trans %}roadmap.propose.field_problem{% endtrans %} <span class="req" aria-hidden="true">*</span></label>
+          <textarea id="p-problem" name="problem" maxlength="{{ text_max }}" required
+                    placeholder="{{ 'roadmap.propose.placeholder_problem'|trans }}">{{ kept.problem }}</textarea>
+        </div>
+        <div class="cfield">
+          <label for="p-idea">{% trans %}roadmap.propose.field_idea{% endtrans %} <span class="req" aria-hidden="true">*</span></label>
+          <textarea id="p-idea" name="idea" maxlength="{{ text_max }}" required
+                    placeholder="{{ 'roadmap.propose.placeholder_idea'|trans }}">{{ kept.idea }}</textarea>
+        </div>
+        <div class="cfield">
+          <label for="p-benefit">{% trans %}roadmap.propose.field_benefit{% endtrans %}</label>
+          <textarea id="p-benefit" name="benefit" maxlength="{{ benefit_max }}" class="short"
+                    placeholder="{{ 'roadmap.propose.placeholder_benefit'|trans }}">{{ kept.benefit }}</textarea>
+        </div>
+        <div class="cfield">
+          <label for="p-image">{% trans %}roadmap.propose.field_image{% endtrans %}</label>
+          <p class="chint" id="p-image-hint">{{ 'roadmap.propose.hint_image'|trans({'%size%': max_shot_mb, '%formats%': 'PNG, JPEG, GIF, WebP'}) }}</p>
+          <input type="file" id="p-image" name="image" accept="image/png,image/jpeg,image/gif,image/webp" aria-describedby="p-image-hint">
+          <label class="rprop-check"><input type="checkbox" name="image_may_show" value="1"{{ kept.image_may_show ?? false ? ' checked' }}> {% trans %}roadmap.propose.image_may_show{% endtrans %}</label>
+        </div>
+        <p class="chint">{% trans %}roadmap.propose.public_note{% endtrans %}</p>
+        <p><button type="submit" class="btn btn-p">{% trans %}roadmap.propose.submit{% endtrans %}</button></p>
+      </form>
+    {% endif %}
+
+    <h2 class="rprop-h">{% trans %}roadmap.propose.yours_title{% endtrans %}</h2>
+    {% if ideas is empty %}
+      <p class="gsub">{% trans %}roadmap.propose.yours_none{% endtrans %}</p>
+    {% else %}
+      {% for idea in ideas %}
+        <article class="ridea-card" id="idea-{{ idea.id }}">
+          <header>
+            <h3 lang="{{ idea.locale }}">{{ idea.title }}</h3>
+            <span class="rstate rstate--{{ idea.status.value }}">{{ ('roadmap.propose.state_' ~ idea.status.value)|trans }}</span>
+          </header>
+          {% set item = idea.promotedItem %}
+          <p class="rmeta">{{ 'roadmap.propose.sent_on'|trans({'%date%': idea.createdAt|cc_date}) }}
+            {%- if idea.isOpen() %} · <a href="{{ path('roadmap', {tab: 'proposals'}) }}#idea-{{ idea.id }}">{% trans %}roadmap.propose.see_in_proposals{% endtrans %}</a>
+            {%- elseif item and item.isLive() %} · <a href="{{ path('roadmap') }}#item-{{ item.id }}">{% trans %}roadmap.propose.see_on_roadmap{% endtrans %}</a>{% endif %}</p>
+          <dl lang="{{ idea.locale }}">
+            <dt>{% trans %}roadmap.propose.field_problem{% endtrans %}</dt><dd>{{ idea.problem|nl2br }}</dd>
+            <dt>{% trans %}roadmap.propose.field_idea{% endtrans %}</dt><dd>{{ idea.idea|nl2br }}</dd>
+            {% if idea.benefit %}<dt>{% trans %}roadmap.propose.field_benefit{% endtrans %}</dt><dd>{{ idea.benefit|nl2br }}</dd>{% endif %}
+          </dl>
+          {% set image = images[idea.id] ?? null %}
+          {% if image %}
+            {% if image.isReady() %}
+              <img class="ridea-img" src="{{ path('roadmap_idea_image', {id: idea.id}) }}" alt="{{ 'roadmap.propose.image_alt'|trans }}" width="{{ image.width }}" height="{{ image.height }}" loading="lazy">
+              <p class="chint">{{ (image.isPublic() ? 'roadmap.propose.image_public' : (image.mayBeShown() ? 'roadmap.propose.image_allowed' : 'roadmap.propose.image_private'))|trans }}</p>
+            {% elseif image.isPending() %}
+              <p class="chint">{% trans %}roadmap.propose.image_pending{% endtrans %}</p>
+            {% else %}
+              <p class="chint">{% trans %}roadmap.propose.image_refused{% endtrans %}</p>
+            {% endif %}
+          {% endif %}
+          {% if idea.decisionNote %}
+            <div class="rnote"><span class="rnote-h">{% trans %}roadmap.propose.desk_note{% endtrans %}</span>{{ idea.decisionNote|nl2br }}</div>
+          {% endif %}
+        </article>
+      {% endfor %}
+    {% endif %}
+
+    <p class="rback"><a href="{{ path('roadmap') }}">← {% trans %}roadmap.propose.back{% endtrans %}</a></p>
+  </div>
+</div></section>
+{% endblock %}

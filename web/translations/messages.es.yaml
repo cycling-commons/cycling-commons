@@ -918,8 +918,9 @@ export:
                           que produjeron en el mapa cuando un curador los
                           aceptó.
       community.json      Confirmaciones, votos de temporada, salidas, sugerencias
-                          de corrección, peticiones de país y solicitudes de
-                          curaduría.
+                          de corrección, peticiones de país, solicitudes de
+                          curaduría, votos y seguimientos en la hoja de ruta
+                          y tus ideas para ella.
       messages.json       Tus mensajes del panel, en ambos sentidos.
       consent.json        Cada licencia de foto que concediste: con qué texto,
                           con qué versión y cuándo.
@@ -2984,6 +2985,8 @@ messages:
   kind_submission_approved: 'Aportación aprobada. ¡Gracias!'
   view_on_map: 'Verlo en el mapa'
   view_region_page: 'Ver la página de la región'
+  view_roadmap: "Ver la hoja de ruta"
+  view_your_ideas: "Ver tus ideas"
   kind_submission_rejected: 'Aportación no aceptada'
   kind_submission_needs_info: 'Un curador necesita más información'
   kind_route_approved: 'Propuesta de ruta aprobada. ¡Gracias!'
@@ -2995,6 +2998,8 @@ messages:
   kind_areas_changed: 'Your moderation areas'
   kind_bug_outcome: 'Sobre el error que informaste'
   kind_country_live: "Un país que pediste ya está en el mapa"
+  kind_roadmap_idea_outcome: "Sobre tu idea para la hoja de ruta"
+  kind_roadmap_item_moved: "Un punto de la hoja de ruta que sigues"
   kind_statement_of_reasons: 'Una decisión sobre algo que añadiste'
   kind_curator_message: 'Mensaje de un curador'
   kind_rider_reply: 'Respuesta del ciclista'
@@ -3011,6 +3016,12 @@ messages:
   body:
     submission_approved: 'Tu aportación ''<em>%title%</em>'' se ha aprobado y ya está publicada en el mapa. ¡Gracias por mejorar el Commons!'
     bug_outcome: 'Una persona curadora ha revisado el problema que informaste.'
+    roadmap_idea_declined: "Hemos leído tu idea y no vamos a adoptarla. El motivo está abajo."
+    roadmap_moved_now: "Pasó a Ahora: se está construyendo."
+    roadmap_moved_next: "Pasó a A continuación: decidido, espera su turno."
+    roadmap_moved_later: "Pasó a Más adelante: sigue siendo deseado, sin fecha."
+    roadmap_moved_shipped: "Ya está hecho. Las novedades cuentan qué cambió."
+    roadmap_moved_removed: "Ya no está en la hoja de ruta."
     statement_of_reasons: 'Aquí tienes por qué decidimos así y cómo impugnarlo.'
     areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
     submission_rejected: 'Tu aportación ''<em>%title%</em>'' no se ha aceptado.'
@@ -3030,6 +3041,10 @@ messages:
     translation_approved: 'Tu traducción de %key% (%locale%) se ha aprobado y ya está en vivo. ¡Gracias!'
     translation_rejected: 'Tu traducción de %key% (%locale%) no se ha aceptado.'
     translation_needs_info: 'Un curador necesita más información sobre tu traducción de %key% (%locale%) antes de decidir. Actualízala desde la página de traducir.'
+    roadmap_idea_open: "Hemos abierto tu idea a votación. Ya está en Propuestas, donde otros ciclistas pueden votarla y seguirla."
+    roadmap_idea_promoted_now: "Tu idea está en la hoja de ruta, en Ahora: se está construyendo. Sus votos y seguidores vinieron con ella."
+    roadmap_idea_promoted_next: "Tu idea está en la hoja de ruta, en A continuación: decidida, espera su turno. Sus votos y seguidores vinieron con ella."
+    roadmap_idea_promoted_later: "Tu idea está en la hoja de ruta, en Más adelante: deseada, aún sin fecha. Sus votos y seguidores vinieron con ella."
   reply_label: 'Tu respuesta'
   what_you_changed: 'Lo que cambiaste'
   show_details: 'Mostrar detalles'
@@ -4161,6 +4176,9 @@ admin:
       traffic_map_layer_live:
         label: 'Tráfico medido: en el mapa'
         help: 'Ponlo en 1 para mostrar a los curadores la capa de tráfico medido en el mapa. En 0, la capa y sus controles quedan ocultos: todavía no se usa.'
+      roadmap_say_live:
+        label: "Hoja de ruta: votos, seguimientos y propuestas"
+        help: "Pon 1 para que los ciclistas voten y sigan los puntos de la hoja de ruta, y envíen y voten propuestas. Con 0 la hoja de ruta solo muestra su lista y el formulario de propuestas está cerrado."
       map_confirmed_default_threshold:
         label: 'Preparación de Confirmado: sitios comprobados'
         help: 'Cuántos sitios comprobados por alguien necesita una región antes de que un curador pueda abrirla en modo Confirmado por defecto. No hace falta repartirlos por tipos, solo que haya suficientes para que el modo no parezca vacío.'
@@ -4722,6 +4740,7 @@ room:
     upload_failed: 'No se pudo subir esa imagen. Inténtalo de nuevo.'
     image_missing: 'Falta una imagen de esta entrada. Añádela de nuevo.'
 roadmap:
+  picture_alt: "Imagen enviada con «%title%»"
   kicker: 'Hoja de ruta'
   title: 'Qué construimos a continuación.'
   lead: 'Sin fechas, porque solo estaríamos adivinando. Lo que se construye ahora, lo que viene después y lo que queremos pero aún no hemos programado. El orden dentro de cada grupo no es fijo.'
@@ -4731,25 +4750,159 @@ roadmap:
   group_next_sub: 'Decidido y esperando turno. Salvo sorpresa, esto es lo que sigue.'
   group_later: 'Más adelante'
   group_later_sub: 'Lo queremos, no está programado. Intenciones reales, ninguna promesa de cuándo.'
-  item_going_live: '<b>El lanzamiento.</b> Las primeras semanas en línea: encontrar testers, arreglar rápido lo que encuentren y dar a conocer el Commons entre los ciclistas.'
-  item_provider_refresh: '<b>Más proveedores de datos, que se actualizan solos.</b> Fuentes oficiales abiertas, como un registro nacional de agua potable, añadidas desde la mesa de curadores y actualizadas según un calendario.'
-  item_heatmap: '<b>Adónde les gusta ir a los ciclistas.</b> Una capa de calor que destaca los lugares que muchos valoran, como miradores y puertos. Solo a partir de puntos anónimos, y un lugar aparece solo cuando hay suficientes ciclistas distintos detrás, para que nunca señale a una persona.'
-  item_standing: '<b>Reputación del colaborador.</b> Los ciclistas cuyo trabajo se aprueba una y otra vez se ganan una mano más ligera, como ediciones que se publican al instante, en vez de recibirla a mano.'
-  item_osm_giveback: '<b>Devolver a OpenStreetMap.</b> Lo que los ciclistas confirman aquí, ofrecido río arriba en una forma que OpenStreetMap pueda aceptar.'
-  item_map_a11y: '<b>Hacer el mapa usable sin ratón.</b> El hueco que reconocemos en nuestra declaración de accesibilidad: acceso con teclado y lector de pantalla al mapa mismo, no solo a las páginas de alrededor.'
-  item_route_export: '<b>Llévate una ruta.</b> Dale forma según lo que muestra el mapa y envíala al planificador o dispositivo que ya usas.'
-  item_region_portrait: '<b>Un retrato de cada región.</b> La página de una región cuenta lo que hay. Debería decir cómo se rueda allí: cuánto desnivel, cuánto asfalto, los grandes puertos, la red señalizada, agua y aseos por cada cien kilómetros, las rutas que recomiendan los ciclistas y lo frescos que son los datos.'
-  item_reviews: '<b>Tus propias palabras sobre cualquier lugar.</b> Una nota breve tuya sobre una fuente, un puerto, un alojamiento o una ruta, junto a los datos: cómo era cuando estuviste. Varios ciclistas, varias notas. No es una puntuación.'
-  item_favourites: '<b>Tus lugares favoritos.</b> Guarda una fuente, una subida, un alojamiento o una ruta en una lista de favoritos de tu perfil, para encontrarlo antes de la próxima salida.'
-  item_roadmap_votes: '<b>Opinar sobre esta lista.</b> Votar lo que te importa, seguir un punto y proponer el tuyo.'
-  item_more_countries: '<b>Más países y regiones.</b> El Commons se abre en nuevos países, cada uno con curadores que conocen las carreteras. Pide el tuyo en la página de participación.'
-  item_scout_devices: '<b>Scout en más dispositivos.</b> Marca lo que encuentras, primero en Android y después en Hammerhead Karoo e iPhone.'
-  item_open_api: '<b>La API de datos abiertos, completa.</b> Cada lugar, puerto y ruta legible mediante una API estable y documentada, además de descargas masivas de los datos y de las teselas del mapa, para que cualquiera pueda construir sobre el Commons o alojar una copia.'
   foot_shipped_pre: 'Lo que ya ha salido está en el'
   foot_shipped_link: 'registro de cambios'
-  foot_shipped_mid: '. ¿Echas en falta algo que necesitas? Dínoslo en la'
-  foot_contact_link: 'página de contacto'
-  foot_shipped_post: ' y lo leerá una persona.'
+  say_lead: "Vota lo que te importa, sigue un punto para saber cuándo avanza, o propón una idea tuya."
+  say_propose: "Proponer una idea"
+  say_signin: "Inicia sesión para participar"
+  idea_badge: "Idea de un ciclista"
+  vote_title: "Votar por esto"
+  unvote_title: "Retirar tu voto"
+  vote_aria: "Votos: %count%. Vota por este punto o retira tu voto."
+  votes_count: "Votos: %count%"
+  signin_to_vote: "Inicia sesión para votar"
+  follow: "Seguir"
+  following: "Siguiendo"
+  follow_title: "Recibir un mensaje, en tu bandeja y por correo, cuando avance o salga"
+  unfollow_title: "Dejar de seguir"
+  mark_gone: "Ese punto ya no está en la hoja de ruta."
+  mark_unverified: "Confirma primero tu dirección de correo. El enlace está en el correo que te enviamos al registrarte."
+  mark_too_fast: "Muchos clics en poco tiempo. Vuelve a intentarlo en unos minutos."
+  foot_shipped_mid: ". ¿Echas en falta algo que necesitas? "
+  foot_propose_link: "Propónlo"
+  foot_shipped_post: " y lo leeremos."
+  tabs_aria: "Hoja de ruta o propuestas de ciclistas"
+  tab_roadmap: "Hoja de ruta"
+  tab_proposals: "Propuestas"
+  proposals_sub: "Ideas que enviaron los ciclistas, abiertas a votación. Las que reúnen apoyo y encajan con los Commons pueden pasar a la hoja de ruta. Las más votadas primero."
+  proposals_none: "Aún no hay propuestas abiertas a votación. Propón la tuya."
+  foot_contact_mid: ". ¿Echas en falta algo que necesitas? Dínoslo en la"
+  foot_contact_link: "página de contacto"
+  propose:
+    title: "Propón una idea."
+    meta_title: "Proponer una idea para la hoja de ruta"
+    lead: "¿Te gustaría que los Commons hicieran algo? Cuéntanos qué falta y qué tienes en mente. Leemos cada idea."
+    intro: "Tres preguntas, dos obligatorias. Escribe en tu propio idioma."
+    field_title: "Tu idea en pocas palabras"
+    placeholder_title: "Por ejemplo: agua potable en el perfil de la ruta"
+    field_problem: "¿Qué falta o qué cuesta hoy?"
+    placeholder_problem: "¿Qué intentabas hacer y qué te lo impidió?"
+    field_idea: "¿Qué te gustaría en su lugar?"
+    placeholder_idea: "Describe cómo funcionaría para ti."
+    field_benefit: "¿Quién gana y cómo? (opcional)"
+    placeholder_benefit: "Ciclistas como tú, la curaduría, alguien que planea un viaje..."
+    field_image: "Una imagen (opcional)"
+    submit: "Enviar la idea"
+    sent: "Gracias. Tu idea ha llegado, y recibirás un mensaje cuando hayamos decidido."
+    yours_title: "Tus ideas"
+    yours_none: "Aún no has enviado ninguna idea."
+    state_pending: "Pendiente de leer"
+    state_declined: "No adoptada"
+    sent_on: "Enviada el %date%"
+    see_on_roadmap: "Verla en la hoja de ruta"
+    image_alt: "La imagen que añadiste a esta idea"
+    image_pending: "Estamos revisando tu imagen. Aparecerá aquí cuando termine."
+    image_refused: "No pudimos aceptar la imagen: el archivo no pasó nuestra revisión automática. La idea en sí ha llegado."
+    desk_note: "Nuestra respuesta"
+    back: "Volver a la hoja de ruta"
+    error_unverified: "Confirma primero tu dirección de correo y luego podrás enviar una idea. El enlace está en el correo que te enviamos al registrarte."
+    error_title: "Dale a tu idea un título de 4 a 120 caracteres."
+    error_problem: "Cuéntanos qué falta o qué cuesta hoy, en 10 a 4000 caracteres."
+    error_idea: "Cuéntanos qué te gustaría en su lugar, en 10 a 4000 caracteres."
+    error_benefit: "Mantén «quién gana» por debajo de 2000 caracteres."
+    error_too_many: "Hoy ya has enviado cinco ideas. Envía la siguiente mañana."
+    public_note: "Nuestra intención es abrir a votación casi todas las propuestas, y retener solo abusos, spam y repeticiones de una idea que ya está en la lista. Su título y su texto aparecen entonces en Propuestas, sin tu nombre. Podemos acortarlos."
+    state_open: "Abierta a votación"
+    state_promoted: "En la hoja de ruta"
+    see_in_proposals: "Verla en Propuestas"
+    hint_image: "Un boceto o una captura que muestre lo que quieres decir. %formats%, hasta %size% MB. Solo la ves tú y la curaduría, salvo que marques la casilla de abajo y decidamos mostrarla con tu propuesta."
+    image_may_show: "Podéis mostrar esta imagen con mi propuesta cuando sea pública. Solo con esta propuesta."
+    image_public: "Esta imagen aparece con tu propuesta."
+    image_allowed: "Permitiste mostrar esta imagen; todavía no la mostramos."
+    image_private: "Solo la ves tú y la curaduría."
+  desk:
+    empty: "No hay ideas aquí."
+    waiting: "Ideas pendientes de leer"
+    status_pending: "Pendiente"
+    status_declined: "Rechazada"
+    author_gone: "Cuenta eliminada"
+    votes: "Votos"
+    followers: "%count% la siguen"
+    decided: "Última decisión"
+    open_image: "Abrir la imagen"
+    image_refused: "La imagen no pasó la revisión automática."
+    action: "Decisión"
+    action_decline: "Rechazar"
+    group: "Grupo"
+    public_body_placeholder: "Déjalo vacío para mostrar la respuesta del ciclista a «¿Qué te gustaría en su lugar?». Nunca nombres aquí al ciclista."
+    note: "Mensaje al ciclista"
+    note_placeholder: "Por qué, en una o dos frases. Obligatorio al rechazar."
+    last_note: "Último mensaje al ciclista"
+    saved: "Guardado."
+    error_note_long: "Mantén el mensaje por debajo de 2000 caracteres."
+    error_group: "Elige un grupo: Ahora, A continuación o Más adelante."
+    error_title_long: "Mantén el título por debajo de 120 caracteres."
+    error_body_long: "Mantén el texto por debajo de 4000 caracteres."
+    error_reason: "Escribe un motivo al ciclista cuando rechaces."
+    error_decided: "Esta idea ya tiene esa decisión."
+    error_action: "Elige una decisión."
+    title: "Propuestas"
+    lede: "Ideas que enviaron los ciclistas. Abre una a votación en Propuestas, pásala a la hoja de ruta o recházala con un motivo. El ciclista recibe un mensaje cada vez."
+    status_open: "Abierta a votación"
+    status_promoted: "En la hoja de ruta"
+    action_open: "Abrir a votación"
+    action_reword: "Mantener abierta (reformular)"
+    action_promote: "Pasar a la hoja de ruta"
+    action_take_off: "Quitar de Propuestas"
+    group_hint: "El grupo cuenta al pasarla a la hoja de ruta: el nuevo punto va al final. Puedes traducirlo después."
+    see_item: "Abrir el punto de la hoja de ruta"
+    promoted: "Pasada a la hoja de ruta. Añade aquí los otros idiomas y guarda."
+    error_promoted: "Esta propuesta ya es un punto de la hoja de ruta."
+    error_note_update: "Cuando una propuesta abierta solo se reformula no se envía nada al ciclista, así que deja el mensaje vacío."
+    note_hint: "El ciclista lo lee en sus mensajes. Quienes la siguen reciben su propio mensaje corto cuando una propuesta pasa a la hoja de ruta o sale de Propuestas."
+    public_title: "Título en Propuestas (opcional)"
+    public_body: "Texto en Propuestas (opcional)"
+    admins_decide: "La curaduría puede leer las propuestas; un admin decide."
+    show_picture: "Mostrar la imagen del ciclista con la propuesta (el ciclista lo permitió)"
+    picture_private: "El ciclista no permitió mostrar la imagen, así que sigue privada."
+    picture: "Imagen"
+    picture_shown: "Imagen mostrada"
+  items:
+    desk_tab: "Hoja de ruta"
+    title: "Puntos de la hoja de ruta"
+    lede: "Lo que muestra la hoja de ruta pública, grupo por grupo, en el orden de la página. Añade un punto, escríbelo en cada idioma, muévelo y quítalo como hecho o descartado. Quienes lo siguen reciben un mensaje cuando un punto cambia de grupo, sale o desaparece."
+    new_title: "Nuevo punto de la hoja de ruta"
+    edit_title: "Punto de la hoja de ruta"
+    add: "Añadir un punto"
+    created: "Punto añadido."
+    saved: "Guardado."
+    say_on: "Los votos, seguimientos y propuestas están abiertos a los ciclistas."
+    say_off: "Los votos, seguimientos y propuestas están cerrados: los ciclistas solo ven la lista."
+    say_switch: "Cambiarlo en los ajustes del sistema"
+    group_empty: "Nada en este grupo."
+    up: "Subir"
+    down: "Bajar"
+    issue: "Issue de GitHub (opcional)"
+    text_hint: "Escribe el punto en tantos idiomas como puedas. Un idioma vacío muestra el texto en inglés, o el primero que haya."
+    field_title: "Título"
+    field_body: "Texto"
+    lang_en: "Inglés"
+    lang_nl: "Neerlandés"
+    lang_fr: "Francés"
+    lang_de: "Alemán"
+    lang_es: "Español"
+    from_proposal: "De la propuesta"
+    ship: "Marcar como hecho"
+    remove: "Quitar de la hoja de ruta"
+    close_hint: "Ambos quitan el punto de la hoja de ruta y avisan a quienes lo siguen. Hecho: añádelo también a las notas de la próxima versión."
+    error_title_missing: "Un idioma con texto también necesita un título."
+    error_title_long: "Mantén cada título por debajo de 120 caracteres."
+    error_body_long: "Mantén cada texto por debajo de 4000 caracteres."
+    error_no_text: "Escribe el punto en al menos un idioma."
+    error_group: "Elige un grupo: Ahora, A continuación o Más adelante."
+    error_closed: "Este punto ya dejó la hoja de ruta."
+    error_issue: "Un issue es un número, como 123."
+    error_action: "Elige qué hacer."
 changelog:
   kicker: 'Registro de cambios'
   title: 'Qué hay de nuevo.'

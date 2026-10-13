@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Support\MessageHandler;
 
 use App\Messaging\Entity\CuratorPostImage;
+use App\Roadmap\Entity\RoadmapProposalImage;
 use App\Support\Entity\BugScreenshot;
 use App\Support\Message\CheckPicture;
 use App\Support\ScreenshotRejected;
@@ -51,6 +52,7 @@ final readonly class CheckPictureHandler
         [$picture, $as, $maxBytes] = match ($message->kind) {
             CheckPicture::BUG => [$this->em->find(BugScreenshot::class, $message->id), 'png', BugScreenshot::MAX_BYTES],
             CheckPicture::ROOM => [$this->em->find(CuratorPostImage::class, $message->id), 'webp', CuratorPostImage::MAX_BYTES],
+            CheckPicture::ROADMAP => [$this->em->find(RoadmapProposalImage::class, $message->id), 'webp', RoadmapProposalImage::MAX_BYTES],
             default => [null, 'png', 0],
         };
         // Gone (the report or post was deleted), or already settled.

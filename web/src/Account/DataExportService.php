@@ -167,6 +167,26 @@ final class DataExportService
                  FROM route_suggestion WHERE user_id = ? ORDER BY created_at',
                 [$userId],
             ), ['segments']),
+            // Roadmap (roadmap-and-changelog.md §8): what the rider voted for and
+            // follows (item:<id> or proposal:<id>), and the proposals they sent
+            // with the desk's answer.
+            'roadmap_votes' => $this->db->fetchAllAssociative(
+                'SELECT item_ref, created_at FROM roadmap_vote WHERE user_id = ? ORDER BY created_at, id',
+                [$userId],
+            ),
+            'roadmap_follows' => $this->db->fetchAllAssociative(
+                'SELECT item_ref, created_at FROM roadmap_follow WHERE user_id = ? ORDER BY created_at, id',
+                [$userId],
+            ),
+            'roadmap_ideas' => $this->db->fetchAllAssociative(
+                'SELECT p.id, p.title, p.problem, p.idea, p.benefit, p.locale, p.status, p.promoted_item_id,
+                        p.public_title, p.public_body, p.decision_note, p.decided_at, p.created_at,
+                        (i.id IS NOT NULL) AS has_picture
+                   FROM roadmap_proposal p
+                   LEFT JOIN roadmap_proposal_image i ON i.proposal_id = p.id
+                  WHERE p.user_id = ? ORDER BY p.created_at, p.id',
+                [$userId],
+            ),
             'country_requests' => $this->db->fetchAllAssociative(
                 'SELECT id, country_code, willing_to_curate, note, created_at, updated_at, notified_at
                  FROM country_interest WHERE user_id = ? ORDER BY created_at',

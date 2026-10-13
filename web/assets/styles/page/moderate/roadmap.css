@@ -1,0 +1,14 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* The roadmap desk: items by group, the language blocks of one item. */
+.rdesk-nav{display:flex;gap:.5rem;margin:0 0 1.4rem}
+.rdesk-live{font-size:.92rem;color:#4a4d40;margin:0 0 1rem}
+.rdesk-live a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+.rdesk-group{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin:1.8rem 0 .6rem}
+.rdesk-row{scroll-margin-top:5rem}
+.rdesk-shift{display:inline-flex;gap:.25rem;margin:0 0 0 auto}
+.rdesk-shift button{width:30px;height:28px;border:1px solid rgba(20,22,14,.25);border-radius:4px;background:var(--paper);cursor:pointer;font-size:.9rem}
+.rdesk-shift button:hover:not(:disabled){border-color:var(--clay);color:var(--clay)}
+.rdesk-shift button:disabled{opacity:.35;cursor:default}
+.rdesk-lang{border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:.6rem 1rem 1rem;margin:0 0 1rem}
+.rdesk-lang legend{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);padding:0 .3rem}
+.rdesk-close{display:flex;gap:.6rem;flex-wrap:wrap}

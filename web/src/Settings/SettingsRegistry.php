@@ -57,6 +57,8 @@ final class SettingsRegistry
     public const string TRAFFIC_GROUPING = 'traffic.grouping';
     /** 1 shows curators the measured-traffic layer on the map; 0 (the default) hides it while it is not in use. */
     public const string TRAFFIC_MAP_LAYER_LIVE = 'traffic.map_layer_live';
+    /** 1 opens votes, follows and rider proposals on the roadmap; 0 (the default) shows the list only. */
+    public const string ROADMAP_SAY_LIVE = 'roadmap.say_live';
 
     public const string GROUP_MAP = 'map';
     public const string GROUP_ROUTES = 'routes';
@@ -86,6 +88,7 @@ final class SettingsRegistry
             [self::MEDIA_URGENT_BREAKER_DAILY, 0, 2000, self::GROUP_MEDIA],
             [self::COMMUNITY_VOTING_LIVE, 0, 1, self::GROUP_COMMUNITY],
             [self::TRAFFIC_MAP_LAYER_LIVE, 0, 1, self::GROUP_MODERATION],
+            [self::ROADMAP_SAY_LIVE, 0, 1, self::GROUP_COMMUNITY],
         ];
 
         foreach ($table as [$key, $min, $max, $group]) {

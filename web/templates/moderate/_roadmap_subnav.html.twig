@@ -1,0 +1,14 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  The roadmap desk's two halves, items and proposals, as chips under the
+  heading (docs/specs/roadmap-and-changelog.md §8.6).
+
+  on       'items' or 'proposals'
+  pending  proposals waiting to be read
+#}
+<nav class="chips rdesk-nav" aria-label="{{ 'roadmap.items.desk_tab'|trans }}">
+  {% if is_granted('ROLE_ADMIN') %}
+  <a class="chip {{ on == 'items' ? 'on' }}"{% if on == 'items' %} aria-current="page"{% endif %} href="{{ path('moderate_roadmap') }}">{{ 'roadmap.items.title'|trans }}</a>
+  {% endif %}
+  <a class="chip {{ on == 'proposals' ? 'on' }}"{% if on == 'proposals' %} aria-current="page"{% endif %} href="{{ path('moderate_ideas') }}">{{ 'roadmap.desk.title'|trans }}{% if pending %}<span class="n">{{ pending }}</span>{% endif %}</a>
+</nav>

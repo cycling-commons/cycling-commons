@@ -77,6 +77,19 @@ final class LocalizedPath
         'es' => '/hoja-de-ruta',
     ];
 
+    /**
+     * Where a rider writes an idea for the roadmap, under the roadmap's own path.
+     *
+     * @var array<string, string>
+     */
+    public const array ROADMAP_PROPOSE = [
+        'en' => '/roadmap/propose',
+        'fr' => '/feuille-de-route/proposer',
+        'nl' => '/routekaart/voorstellen',
+        'de' => '/fahrplan/vorschlagen',
+        'es' => '/hoja-de-ruta/proponer',
+    ];
+
     /** @var array<string, string> */
     /**
      * "What's new" in every language, as the page and the footer call it.

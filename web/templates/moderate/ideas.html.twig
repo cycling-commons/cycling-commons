@@ -1,0 +1,54 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  The roadmap desk's proposals (docs/specs/roadmap-and-changelog.md §8.6):
+  riders' ideas, newest first, waiting ones by default. Admins only. Built on
+  the bug desk's list styles so the two desks read the same.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<link rel="stylesheet" href="{{ asset('styles/page/moderate/bugs.css') }}">
+{% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_ideas'} %}{% endblock %}
+
+{% block body %}
+<div class="dbody dmin" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'account.menu_moderation'|trans }}</div>
+    <h1>{{ 'roadmap.desk.title'|trans }}</h1>
+    <p class="lede">{{ 'roadmap.desk.lede'|trans }}</p>
+  </div>
+  {% include 'moderate/_roadmap_subnav.html.twig' with {on: 'proposals', pending: counts['pending'] ?? 0} only %}
+
+  {% set status_chips = [] %}
+  {% for st in statuses %}
+    {% set status_chips = status_chips|merge([{value: st.value, label: ('roadmap.desk.status_' ~ st.value)|trans, n: counts[st.value] ?? 0}]) %}
+  {% endfor %}
+  {% include 'moderate/_chip_row.html.twig' with {
+    row_id: 'ideas-f-status', label: 'moderate.filter.status'|trans, name: 'status',
+    current: filter_status, all_value: 'all', all_n: count_all, chips: status_chips,
+    route: 'moderate_ideas', keep: {},
+  } only %}
+
+  {% if ideas is empty %}
+    <div class="empty">{{ 'roadmap.desk.empty'|trans }}</div>
+  {% else %}
+    {% for idea in ideas %}
+      <div class="bugrow">
+        <div class="bugtop">
+          <a class="bugref" href="{{ path('moderate_ideas_detail', {id: idea.id}) }}">#{{ idea.id }}</a>
+          <a href="{{ path('moderate_ideas_detail', {id: idea.id}) }}" lang="{{ idea.locale }}">{{ idea.title }}</a>
+          <span class="tag">{{ ('roadmap.desk.status_' ~ idea.status.value)|trans }}</span>
+          {% if votes[idea.ref] ?? 0 %}<span class="tag">{{ 'roadmap.votes_count'|trans({'%count%': votes[idea.ref]}) }}</span>{% endif %}
+          <span class="tag">{{ idea.locale|upper }}</span>
+          {% if pictures[idea.id] is defined %}<span class="tag{{ pictures[idea.id] ? ' pub' }}">{{ (pictures[idea.id] ? 'roadmap.desk.picture_shown' : 'roadmap.desk.picture')|trans }}</span>{% endif %}
+        </div>
+        <p class="bugexcerpt" lang="{{ idea.locale }}">{{ idea.problem|length > 200 ? idea.problem|slice(0, 200) ~ '…' : idea.problem }}</p>
+        <p class="bugmeta">{{ idea.createdAt|cc_datetime }}{% if idea.userId is null %} · {{ 'roadmap.desk.author_gone'|trans }}{% endif %}</p>
+      </div>
+    {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}

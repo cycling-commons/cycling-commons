@@ -67,29 +67,6 @@ final class PageController extends AbstractController
     }
 
     /**
-     * What is coming. Deliberately a flat list (owner, 2026-08-28: "for now it
-     * must be a very simple list"), read straight out of {@see ReleaseNotes}
-     * with no database behind it.
-     *
-     * It shows only unfinished work. What landed is the changelog, linked from
-     * the foot of the page, so no item is described twice.
-     *
-     * @see docs/specs/roadmap-and-changelog.md
-     */
-    #[Route(LocalizedPath::ROADMAP, name: 'roadmap')]
-    public function roadmap(): Response
-    {
-        return $this->render('pages/roadmap.html.twig', [
-            'page_title' => 'meta.roadmap_title',
-            'page_description' => 'meta.roadmap_description',
-            'nav_active' => '',
-            'statuses' => ReleaseNotes::STATUSES,
-            'roadmap' => ReleaseNotes::ROADMAP,
-            'latest' => ReleaseNotes::latestRelease(),
-        ]);
-    }
-
-    /**
      * What shipped, newest first, under what is live already and waits for
      * the next release: the countries that went live since the last one.
      *

@@ -1,0 +1,60 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  The roadmap desk's items (docs/specs/roadmap-and-changelog.md §8.6): the
+  live roadmap by group, in the order the page shows it, with up and down
+  inside a group. Admins only. Built on the bug desk's list styles.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<link rel="stylesheet" href="{{ asset('styles/page/moderate/bugs.css') }}">
+<link rel="stylesheet" href="{{ asset('styles/page/moderate/roadmap.css') }}">
+{% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_roadmap'} %}{% endblock %}
+
+{% block body %}
+<div class="dbody dmin" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'account.menu_moderation'|trans }}</div>
+    <h1>{{ 'roadmap.items.title'|trans }}</h1>
+    <p class="lede">{{ 'roadmap.items.lede'|trans }}</p>
+  </div>
+  {% include 'moderate/_roadmap_subnav.html.twig' with {on: 'items', pending: pending} only %}
+
+  {% for msg in app.flashes('success') %}<div class="flash-success" role="status">{{ msg|trans }}</div>{% endfor %}
+  {% for msg in app.flashes('error') %}<p class="ferr" role="alert">{{ msg|trans }}</p>{% endfor %}
+
+  <p class="rdesk-live">
+    {{ (say_live ? 'roadmap.items.say_on' : 'roadmap.items.say_off')|trans }}
+    <a href="{{ path('admin_system_config') }}">{{ 'roadmap.items.say_switch'|trans }}</a>
+  </p>
+  <p><a class="btn btn-p" href="{{ path('moderate_roadmap_new') }}">{{ 'roadmap.items.add'|trans }}</a></p>
+
+  {% for group in groups %}
+    {% set rows = items|filter(i => i.status == group) %}
+    <h2 class="rdesk-group">{{ ('roadmap.group_' ~ group)|trans }}</h2>
+    {% if rows is empty %}
+      <div class="empty">{{ 'roadmap.items.group_empty'|trans }}</div>
+    {% endif %}
+    {% for item in rows %}
+      {% set text = item.textFor(locale) %}
+      <div class="bugrow rdesk-row" id="item-{{ item.id }}">
+        <div class="bugtop">
+          <a href="{{ path('moderate_roadmap_item', {id: item.id}) }}"{% if text and text.locale != locale %} lang="{{ text.locale }}"{% endif %}>{{ text ? text.title : '#' ~ item.id }}</a>
+          {% if votes[item.ref] ?? 0 %}<span class="tag">{{ 'roadmap.votes_count'|trans({'%count%': votes[item.ref]}) }}</span>{% endif %}
+          <span class="tag">{{ item.texts|keys|map(l => l|upper)|join(' ') }}</span>
+          {% if item.sourceProposal %}<span class="tag pub">{{ 'roadmap.idea_badge'|trans }}</span>{% endif %}
+          {% if item.issue %}<span class="tag rel">#{{ item.issue }}</span>{% endif %}
+          <form method="post" action="{{ path('moderate_roadmap_shift', {id: item.id}) }}" class="rdesk-shift">
+            <input type="hidden" name="_token" value="{{ csrf_token(csrf_id) }}">
+            <button type="submit" name="dir" value="up" title="{{ 'roadmap.items.up'|trans }}" aria-label="{{ 'roadmap.items.up'|trans }}"{% if loop.first %} disabled{% endif %}>↑</button>
+            <button type="submit" name="dir" value="down" title="{{ 'roadmap.items.down'|trans }}" aria-label="{{ 'roadmap.items.down'|trans }}"{% if loop.last %} disabled{% endif %}>↓</button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+  {% endfor %}
+</div>
+{% endblock %}

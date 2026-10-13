@@ -916,7 +916,8 @@ export:
                           accepteerde.
       community.json      Bevestigingen, seizoensstemmen, ritten,
                           correctievoorstellen, landverzoeken,
-                          regiobeheerdersaanmeldingen.
+                          regiobeheerdersaanmeldingen, stemmen en volgen op
+                          de routekaart, en je ideeën voor de routekaart.
       messages.json       Je dashboardberichten, in beide richtingen.
       consent.json        Elke fotolicentie die je verleende: welke tekst,
                           welke versie, en wanneer.
@@ -2961,6 +2962,8 @@ messages:
   kind_submission_approved: 'Bijdrage goedgekeurd. Bedankt!'
   view_on_map: 'Bekijk op de kaart'
   view_region_page: 'Bekijk de regiopagina'
+  view_roadmap: "Bekijk de routekaart"
+  view_your_ideas: "Bekijk je ideeën"
   kind_submission_rejected: 'Bijdrage niet aanvaard'
   kind_submission_needs_info: 'Een regiobeheerder heeft meer informatie nodig'
   kind_route_approved: 'Routevoorstel goedgekeurd. Bedankt!'
@@ -2972,6 +2975,8 @@ messages:
   kind_areas_changed: 'Your moderation areas'
   kind_bug_outcome: 'Over de bug die je meldde'
   kind_country_live: "Een land waar je om vroeg staat op de kaart"
+  kind_roadmap_idea_outcome: "Over je idee voor de routekaart"
+  kind_roadmap_item_moved: "Een punt op de routekaart dat je volgt"
   kind_statement_of_reasons: 'Een besluit over iets dat je hebt toegevoegd'
   kind_curator_message: 'Bericht van een regiobeheerder'
   kind_rider_reply: 'Antwoord van de fietser'
@@ -2988,6 +2993,12 @@ messages:
   body:
     submission_approved: 'Jouw bijdrage ''<em>%title%</em>'' is goedgekeurd en staat nu live op de kaart. Bedankt voor het verbeteren van de Commons!'
     bug_outcome: 'Een regiobeheerder heeft naar het probleem gekeken dat je meldde.'
+    roadmap_idea_declined: "We hebben je idee gelezen en pakken het niet op. De reden staat hieronder."
+    roadmap_moved_now: "Het staat nu onder Nu: er wordt aan gebouwd."
+    roadmap_moved_next: "Het staat nu onder Hierna: besloten, en wacht op zijn beurt."
+    roadmap_moved_later: "Het staat nu onder Later: nog steeds gewenst, niet ingepland."
+    roadmap_moved_shipped: "Het is af. Bij Wat is er nieuw staat wat er veranderde."
+    roadmap_moved_removed: "Het staat niet meer op de routekaart."
     statement_of_reasons: 'Hier lees je waarom we zo besloten, en hoe je bezwaar maakt.'
     areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
     submission_rejected: 'Jouw bijdrage ''<em>%title%</em>'' is niet aanvaard.'
@@ -3007,6 +3018,10 @@ messages:
     translation_approved: 'Je vertaling voor %key% (%locale%) is goedgekeurd en staat nu live. Bedankt!'
     translation_rejected: 'Je vertaling voor %key% (%locale%) is niet aanvaard.'
     translation_needs_info: 'Een regiobeheerder heeft meer informatie nodig over je vertaling voor %key% (%locale%) voor een beslissing. Werk die bij via de vertaalpagina.'
+    roadmap_idea_open: "We hebben je idee opengezet voor stemmen. Het staat nu bij Voorstellen, waar andere rijders erop kunnen stemmen en het volgen."
+    roadmap_idea_promoted_now: "Je idee staat op de routekaart, onder Nu: er wordt aan gebouwd. De stemmen en volgers gingen mee."
+    roadmap_idea_promoted_next: "Je idee staat op de routekaart, onder Hierna: besloten, en wacht op zijn beurt. De stemmen en volgers gingen mee."
+    roadmap_idea_promoted_later: "Je idee staat op de routekaart, onder Later: gewenst, nog niet ingepland. De stemmen en volgers gingen mee."
   reply_label: 'Jouw antwoord'
   what_you_changed: 'Wat je hebt gewijzigd'
   show_details: 'Toon details'
@@ -4134,6 +4149,9 @@ admin:
       traffic_map_layer_live:
         label: 'Gemeten verkeer: op de kaart'
         help: 'Zet op 1 om curatoren de laag met gemeten verkeer op de kaart te tonen. Bij 0 zijn de laag en haar knoppen verborgen: ze is nog niet in gebruik.'
+      roadmap_say_live:
+        label: "Routekaart: stemmen, volgen en voorstellen"
+        help: "Zet op 1 om rijders te laten stemmen op en volgen van punten op de routekaart, en voorstellen te laten sturen en erop te stemmen. Bij 0 toont de routekaart alleen de lijst en is het voorstelformulier dicht."
       map_confirmed_default_threshold:
         label: 'Klaar voor Bevestigd: gecontroleerde plekken'
         help: 'Hoeveel plekken die iemand heeft gecontroleerd een regio nodig heeft voordat een regiobeheerder hem standaard in Bevestigd-modus mag openen. Er is geen spreiding over soorten nodig, alleen genoeg om de modus niet leeg te laten lijken.'
@@ -4694,6 +4712,7 @@ room:
     upload_failed: 'Die afbeelding kon niet worden geüpload. Probeer het opnieuw.'
     image_missing: 'Een afbeelding bij dit bericht ontbreekt. Voeg hem opnieuw toe.'
 roadmap:
+  picture_alt: "Afbeelding bij “%title%”"
   kicker: 'Routekaart'
   title: 'Wat we hierna bouwen.'
   lead: 'Geen datums, want dan zouden we alleen gokken. Wat we nu bouwen, wat hierna komt, en wat we willen maar nog niet hebben ingepland. De volgorde binnen elke groep ligt niet vast.'
@@ -4703,25 +4722,159 @@ roadmap:
   group_next_sub: 'Besloten en wachtend op een beurt. Behoudens verrassingen komt dit hierna.'
   group_later: 'Later'
   group_later_sub: 'Gewenst, niet ingepland. Echte voornemens, geen beloftes over wanneer.'
-  item_going_live: '<b>De lancering.</b> De eerste weken online: testers vinden, snel oplossen waar zij tegenaan lopen, en de Commons bekend maken onder fietsers.'
-  item_provider_refresh: '<b>Meer databronnen die zichzelf bijwerken.</b> Officiële open bronnen, zoals een nationaal drinkwaterregister, toegevoegd vanaf de moderatiedesk en volgens een vast schema ververst.'
-  item_heatmap: '<b>Waar fietsers graag komen.</b> Een warmtelaag die de plekken uitlicht die veel fietsers waarderen, zoals uitzichten en beklimmingen. Alleen uit anonieme punten, en een plek verschijnt pas als genoeg verschillende fietsers erachter staan, zodat hij nooit naar één persoon wijst.'
-  item_standing: '<b>Aanzien van bijdragers.</b> Fietsers wier werk steeds wordt goedgekeurd verdienen een lichtere hand, zoals bewerkingen die meteen live gaan, in plaats van het handmatig te krijgen.'
-  item_osm_giveback: '<b>Teruggeven aan OpenStreetMap.</b> Wat fietsers hier bevestigen, stroomopwaarts aangeboden in een vorm die OpenStreetMap kan opnemen.'
-  item_map_a11y: '<b>De kaart bruikbaar maken zonder muis.</b> Het eerlijke gat in onze toegankelijkheidsverklaring: toetsenbord- en schermlezertoegang tot de kaart zelf, niet alleen tot de pagina''s eromheen.'
-  item_route_export: '<b>Neem een route mee.</b> Vorm een route rond wat de kaart laat zien en stuur hem naar de planner of het toestel dat je al gebruikt.'
-  item_region_portrait: '<b>Een portret van elke regio.</b> De regiopagina telt wat er is. Ze zou moeten zeggen hoe het fietsen er is: hoe heuvelachtig, hoeveel verhard, de grote klimmen, het bewegwijzerde netwerk, water en toiletten per honderd kilometer, de routes die fietsers aanraden, en hoe vers de gegevens zijn.'
-  item_reviews: '<b>Je eigen woorden bij elke plek.</b> Een korte notitie van jezelf bij een kraan, een klim, een overnachting of een route, naast de feiten: hoe het was toen jij er was. Meerdere fietsers, meerdere notities. Geen cijfer.'
-  item_favourites: '<b>Je favoriete plekken.</b> Bewaar een tappunt, een klim, een overnachting of een route in een favorietenlijst in je profiel, zodat je hem voor de volgende rit terugvindt.'
-  item_roadmap_votes: '<b>Meepraten over deze lijst.</b> Stemmen op wat jou uitmaakt, een punt volgen, en zelf iets voorstellen.'
-  item_more_countries: '<b>Meer landen en regio''s.</b> De Commons opent in nieuwe landen, elk met regiobeheerders die de wegen kennen. Vraag jouw land aan via de aanmeldpagina.'
-  item_scout_devices: '<b>Scout op meer toestellen.</b> Markeer wat je passeert, eerst op Android, daarna op Hammerhead Karoo en iPhone.'
-  item_open_api: '<b>De open-data-API, compleet.</b> Elke plek, beklimming en route leesbaar via één stabiele, gedocumenteerde API, plus bulkdownloads van de data en de kaarttegels, zodat iedereen op de Commons kan bouwen of er een kopie van kan hosten.'
   foot_shipped_pre: 'Wat al uit is staat in het'
   foot_shipped_link: 'wijzigingslogboek'
-  foot_shipped_mid: '. Mis je iets dat je nodig hebt? Laat het weten via de'
-  foot_contact_link: 'contactpagina'
-  foot_shipped_post: ' en een mens leest het.'
+  say_lead: "Stem op wat jij belangrijk vindt, volg een punt om te horen wanneer het verschuift, of stel zelf een idee voor."
+  say_propose: "Stel een idee voor"
+  say_signin: "Log in om mee te doen"
+  idea_badge: "Idee van een rijder"
+  vote_title: "Stem hierop"
+  unvote_title: "Trek je stem in"
+  vote_aria: "Stemmen: %count%. Stem op dit punt, of trek je stem in."
+  votes_count: "Stemmen: %count%"
+  signin_to_vote: "Log in om te stemmen"
+  follow: "Volgen"
+  following: "Gevolgd"
+  follow_title: "Krijg een bericht, in je inbox en per e-mail, als dit verschuift of af is"
+  unfollow_title: "Stop met volgen"
+  mark_gone: "Dat punt staat niet meer op de routekaart."
+  mark_unverified: "Bevestig eerst je e-mailadres. De link staat in de e-mail die we stuurden toen je je aanmeldde."
+  mark_too_fast: "Dat waren veel klikken in korte tijd. Probeer het over een paar minuten opnieuw."
+  foot_shipped_mid: ". Mis je iets dat je nodig hebt? "
+  foot_propose_link: "Stel het voor"
+  foot_shipped_post: " en we lezen het."
+  tabs_aria: "Routekaart of voorstellen van rijders"
+  tab_roadmap: "Routekaart"
+  tab_proposals: "Voorstellen"
+  proposals_sub: "Ideeën die rijders stuurden, open voor stemmen. Wat steun krijgt en bij de Commons past, kan naar de routekaart. Meeste stemmen eerst."
+  proposals_none: "Nog geen voorstellen open voor stemmen. Stel er zelf een voor."
+  foot_contact_mid: ". Mis je iets dat je nodig hebt? Laat het weten via de"
+  foot_contact_link: "contactpagina"
+  propose:
+    title: "Stel een idee voor."
+    meta_title: "Stel een idee voor de routekaart voor"
+    lead: "Wil je dat de Commons iets kan? Vertel wat er ontbreekt en wat je voor ogen hebt. We lezen elk idee."
+    intro: "Drie vragen, twee daarvan verplicht. Schrijf in je eigen taal."
+    field_title: "Je idee in een paar woorden"
+    placeholder_title: "Bijvoorbeeld: drinkwater in het routeprofiel"
+    field_problem: "Wat ontbreekt er nu, of wat is lastig?"
+    placeholder_problem: "Wat probeerde je te doen, en wat zat in de weg?"
+    field_idea: "Wat zou je in plaats daarvan willen?"
+    placeholder_idea: "Beschrijf hoe het voor jou zou werken."
+    field_benefit: "Wie heeft er wat aan, en hoe? (optioneel)"
+    placeholder_benefit: "Rijders zoals jij, regiobeheerders, iemand die een tocht plant..."
+    field_image: "Een afbeelding (optioneel)"
+    submit: "Verstuur het idee"
+    sent: "Dank je. Je idee is binnen, en je krijgt een bericht zodra we besloten hebben."
+    yours_title: "Jouw ideeën"
+    yours_none: "Je hebt nog geen idee gestuurd."
+    state_pending: "Wacht op lezen"
+    state_declined: "Niet opgepakt"
+    sent_on: "Verstuurd op %date%"
+    see_on_roadmap: "Bekijk het op de routekaart"
+    image_alt: "De afbeelding die je bij dit idee voegde"
+    image_pending: "Je afbeelding wordt gecontroleerd. Ze verschijnt hier zodra dat klaar is."
+    image_refused: "We konden de afbeelding niet aannemen: het bestand kwam niet door onze automatische controle. Het idee zelf is binnen."
+    desk_note: "Ons antwoord"
+    back: "Terug naar de routekaart"
+    error_unverified: "Bevestig eerst je e-mailadres, dan kun je een idee sturen. De link staat in de e-mail die we stuurden toen je je aanmeldde."
+    error_title: "Geef je idee een titel van 4 tot 120 tekens."
+    error_problem: "Vertel wat er nu ontbreekt of lastig is, in 10 tot 4000 tekens."
+    error_idea: "Vertel wat je in plaats daarvan wilt, in 10 tot 4000 tekens."
+    error_benefit: "Houd \"wie heeft er wat aan\" onder de 2000 tekens."
+    error_too_many: "Je hebt vandaag vijf ideeën gestuurd. Stuur het volgende morgen."
+    public_note: "Het is onze bedoeling om bijna elk voorstel open te zetten voor stemmen, en alleen misbruik, spam en herhalingen van een idee dat er al staat tegen te houden. De titel en tekst staan dan bij Voorstellen, zonder je naam. We kunnen ze inkorten."
+    state_open: "Open voor stemmen"
+    state_promoted: "Op de routekaart"
+    see_in_proposals: "Bekijk het bij Voorstellen"
+    hint_image: "Eén schets of schermafbeelding die laat zien wat je bedoelt. %formats%, tot %size% MB. Alleen jij en de regiobeheerders zien hem, tenzij je hieronder het vakje aanvinkt en wij hem bij je voorstel tonen."
+    image_may_show: "Jullie mogen deze afbeelding bij mijn voorstel tonen als het openbaar is. Alleen bij dit voorstel."
+    image_public: "Deze afbeelding staat bij je voorstel."
+    image_allowed: "Je gaf toestemming om deze afbeelding te tonen; we tonen hem nog niet."
+    image_private: "Alleen jij en de regiobeheerders zien deze afbeelding."
+  desk:
+    empty: "Geen ideeën hier."
+    waiting: "Ideeën die op lezen wachten"
+    status_pending: "Wacht"
+    status_declined: "Afgewezen"
+    author_gone: "Account verwijderd"
+    votes: "Stemmen"
+    followers: "%count% volgen"
+    decided: "Laatste besluit"
+    open_image: "Open de afbeelding"
+    image_refused: "De afbeelding kwam niet door de automatische controle."
+    action: "Besluit"
+    action_decline: "Afwijzen"
+    group: "Groep"
+    public_body_placeholder: "Laat leeg om het antwoord van de rijder op \"Wat zou je in plaats daarvan willen?\" te tonen. Noem hier nooit de rijder."
+    note: "Bericht aan de rijder"
+    note_placeholder: "Waarom, in een zin of twee. Verplicht bij afwijzen."
+    last_note: "Laatste bericht aan de rijder"
+    saved: "Opgeslagen."
+    error_note_long: "Houd het bericht onder de 2000 tekens."
+    error_group: "Kies een groep: Nu, Hierna of Later."
+    error_title_long: "Houd de titel onder de 120 tekens."
+    error_body_long: "Houd de tekst onder de 4000 tekens."
+    error_reason: "Schrijf de rijder een reden als je afwijst."
+    error_decided: "Over dit idee is al zo besloten."
+    error_action: "Kies een besluit."
+    title: "Voorstellen"
+    lede: "Ideeën die rijders stuurden. Zet er een open voor stemmen bij Voorstellen, zet het op de routekaart, of wijs het af met een reden. De rijder krijgt elke keer een bericht."
+    status_open: "Open voor stemmen"
+    status_promoted: "Op de routekaart"
+    action_open: "Open voor stemmen"
+    action_reword: "Open houden (herformuleren)"
+    action_promote: "Op de routekaart zetten"
+    action_take_off: "Van Voorstellen halen"
+    group_hint: "De groep telt als je het op de routekaart zet: het nieuwe punt komt achteraan. Je kunt het daarna vertalen."
+    see_item: "Open het punt op de routekaart"
+    promoted: "Op de routekaart gezet. Vul hier de andere talen in en sla op."
+    error_promoted: "Dit voorstel staat al als punt op de routekaart."
+    error_note_update: "Bij alleen herformuleren van een open voorstel gaat er niets naar de rijder, dus laat het bericht leeg."
+    note_hint: "De rijder leest dit bij de berichten. Volgers krijgen een eigen kort bericht als een voorstel op de routekaart komt of van Voorstellen gaat."
+    public_title: "Titel bij Voorstellen (optioneel)"
+    public_body: "Tekst bij Voorstellen (optioneel)"
+    admins_decide: "Regiobeheerders kunnen voorstellen lezen; een beheerder beslist erover."
+    show_picture: "Toon de afbeelding van de rijder bij het voorstel (de rijder gaf toestemming)"
+    picture_private: "De rijder gaf geen toestemming om de afbeelding te tonen, dus die blijft privé."
+    picture: "Afbeelding"
+    picture_shown: "Afbeelding getoond"
+  items:
+    desk_tab: "Routekaart"
+    title: "Punten op de routekaart"
+    lede: "Wat de openbare routekaart toont, per groep, in de volgorde van de pagina. Voeg een punt toe, schrijf het in elke taal, verplaats het, en haal het eraf als af of geschrapt. Volgers krijgen een bericht als een punt van groep wisselt, af is of verdwijnt."
+    new_title: "Nieuw punt op de routekaart"
+    edit_title: "Punt op de routekaart"
+    add: "Punt toevoegen"
+    created: "Punt toegevoegd."
+    saved: "Opgeslagen."
+    say_on: "Stemmen, volgen en voorstellen staan aan voor rijders."
+    say_off: "Stemmen, volgen en voorstellen staan uit: rijders zien alleen de lijst."
+    say_switch: "Wijzig het bij de systeeminstellingen"
+    group_empty: "Niets in deze groep."
+    up: "Omhoog"
+    down: "Omlaag"
+    issue: "GitHub-issue (optioneel)"
+    text_hint: "Schrijf het punt in zoveel talen als je kunt. Een lege taal toont de Engelse tekst, of de eerste die er is."
+    field_title: "Titel"
+    field_body: "Tekst"
+    lang_en: "Engels"
+    lang_nl: "Nederlands"
+    lang_fr: "Frans"
+    lang_de: "Duits"
+    lang_es: "Spaans"
+    from_proposal: "Uit voorstel"
+    ship: "Markeren als af"
+    remove: "Van de routekaart halen"
+    close_hint: "Beide halen het punt van de routekaart en laten de volgers het weten. Af: zet het ook in de volgende release-notities."
+    error_title_missing: "Een taal met tekst heeft ook een titel nodig."
+    error_title_long: "Houd elke titel onder de 120 tekens."
+    error_body_long: "Houd elke tekst onder de 4000 tekens."
+    error_no_text: "Schrijf het punt in minstens één taal."
+    error_group: "Kies een groep: Nu, Hierna of Later."
+    error_closed: "Dit punt staat al niet meer op de routekaart."
+    error_issue: "Een issue is een nummer, zoals 123."
+    error_action: "Kies wat je wilt doen."
 changelog:
   kicker: 'Wijzigingslogboek'
   title: 'Wat er nieuw is.'

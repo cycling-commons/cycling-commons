@@ -50,6 +50,10 @@ enum UserMessageKind: string
     case BugOutcome = 'bug_outcome';
     /** A country the rider asked for went live (moderation-and-contribution.md §11.1). */
     case CountryLive = 'country_live';
+    /** The ideas desk decided about a rider's roadmap idea (roadmap-and-changelog.md §8). */
+    case RoadmapIdeaOutcome = 'roadmap_idea_outcome';
+    /** A roadmap item the rider follows moved to another group, shipped, or left the roadmap. */
+    case RoadmapItemMoved = 'roadmap_item_moved';
     /**
      * A statement of reasons on its own (DSA Article 17): a contribution moved
      * to Trash as abuse, a place taken off the map, an upheld report

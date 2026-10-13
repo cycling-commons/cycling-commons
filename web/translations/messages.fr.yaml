@@ -914,7 +914,8 @@ export:
                           carte une fois acceptées par un curateur.
       community.json      Confirmations, votes de saison, sorties,
                           suggestions de correction, demandes de pays,
-                          candidatures de curateur.
+                          candidatures de curateur, votes et suivis sur la
+                          feuille de route, et vos idées pour celle-ci.
       messages.json       Vos messages de tableau de bord, dans les deux sens.
       consent.json        Chaque licence photo accordée : quel texte, quelle
                           version, et quand.
@@ -2957,6 +2958,8 @@ messages:
   kind_submission_approved: 'Contribution approuvée. Merci !'
   view_on_map: 'Voir sur la carte'
   view_region_page: 'Voir la page de la région'
+  view_roadmap: "Voir la feuille de route"
+  view_your_ideas: "Voir vos idées"
   kind_submission_rejected: 'Contribution non retenue'
   kind_submission_needs_info: 'Un curateur a besoin de précisions'
   kind_route_approved: 'Proposition d''itinéraire approuvée. Merci !'
@@ -2968,6 +2971,8 @@ messages:
   kind_areas_changed: 'Your moderation areas'
   kind_bug_outcome: 'Au sujet du bogue que vous avez signalé'
   kind_country_live: "Un pays que vous avez demandé est sur la carte"
+  kind_roadmap_idea_outcome: "À propos de votre idée pour la feuille de route"
+  kind_roadmap_item_moved: "Un élément de la feuille de route que vous suivez"
   kind_statement_of_reasons: 'Une décision sur quelque chose que vous avez ajouté'
   kind_curator_message: 'Message d''un curateur'
   kind_rider_reply: 'Réponse du cycliste'
@@ -2984,6 +2989,12 @@ messages:
   body:
     submission_approved: 'Votre contribution ''<em>%title%</em>'' a été approuvée et est désormais visible sur la carte. Merci d''améliorer le Commons !'
     bug_outcome: 'Une personne de la curation a examiné le problème que vous avez signalé.'
+    roadmap_idea_declined: "Nous avons lu votre idée et ne la retenons pas. La raison est ci-dessous."
+    roadmap_moved_now: "Il est passé sous Maintenant : en construction."
+    roadmap_moved_next: "Il est passé sous Ensuite : décidé, il attend son tour."
+    roadmap_moved_later: "Il est passé sous Plus tard : toujours voulu, pas planifié."
+    roadmap_moved_shipped: "Il est sorti. Les nouveautés disent ce qui a changé."
+    roadmap_moved_removed: "Il n'est plus sur la feuille de route."
     statement_of_reasons: 'Voici pourquoi nous avons décidé ainsi, et comment le contester.'
     areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
     submission_rejected: 'Votre contribution ''<em>%title%</em>'' n''a pas été retenue.'
@@ -3003,6 +3014,10 @@ messages:
     translation_approved: 'Votre traduction pour %key% (%locale%) a été approuvée et est maintenant en ligne. Merci !'
     translation_rejected: 'Votre traduction pour %key% (%locale%) n''a pas été retenue.'
     translation_needs_info: 'Un curateur a besoin de précisions sur votre traduction pour %key% (%locale%) avant de décider. Mettez-la à jour depuis la page Traduire.'
+    roadmap_idea_open: "Nous avons ouvert votre idée aux votes. Elle est maintenant dans les Propositions, où d'autres cyclistes peuvent voter pour elle et la suivre."
+    roadmap_idea_promoted_now: "Votre idée est sur la feuille de route, sous Maintenant : elle est en construction. Ses votes et ses abonnés l'ont suivie."
+    roadmap_idea_promoted_next: "Votre idée est sur la feuille de route, sous Ensuite : décidée, elle attend son tour. Ses votes et ses abonnés l'ont suivie."
+    roadmap_idea_promoted_later: "Votre idée est sur la feuille de route, sous Plus tard : voulue, pas encore planifiée. Ses votes et ses abonnés l'ont suivie."
   reply_label: 'Votre réponse'
   what_you_changed: 'Ce que vous avez modifié'
   show_details: 'Afficher les détails'
@@ -4130,6 +4145,9 @@ admin:
       traffic_map_layer_live:
         label: 'Trafic mesuré : sur la carte'
         help: 'Mettez 1 pour montrer aux curateurs la couche de trafic mesuré sur la carte. À 0, la couche et ses réglages sont masqués : elle n''est pas encore utilisée.'
+      roadmap_say_live:
+        label: "Feuille de route : votes, suivis et propositions"
+        help: "Mettez 1 pour que les cyclistes votent pour les éléments de la feuille de route et les suivent, et envoient des propositions et votent pour elles. À 0, la feuille de route ne montre que sa liste et le formulaire de proposition est fermé."
       map_confirmed_default_threshold:
         label: 'Éligibilité à Confirmé : lieux vérifiés'
         help: 'Nombre de lieux vérifiés par quelqu’un qu’une région doit atteindre avant qu’un curateur puisse l’ouvrir en mode Confirmé par défaut. Aucune répartition par type n’est exigée, seulement assez pour que le mode ne paraisse pas vide.'
@@ -4690,6 +4708,7 @@ room:
     upload_failed: 'Cette image n’a pas pu être envoyée. Réessayez.'
     image_missing: 'Une image de ce message manque. Ajoutez-la de nouveau.'
 roadmap:
+  picture_alt: "Image envoyée avec « %title% »"
   kicker: 'Feuille de route'
   title: 'Ce que nous construisons ensuite.'
   lead: 'Pas de dates, car nous ne ferions que deviner. Ce qui se construit maintenant, ce qui vient ensuite, et ce que nous voulons sans l''avoir planifié. L''ordre au sein de chaque groupe n''est pas figé.'
@@ -4699,25 +4718,159 @@ roadmap:
   group_next_sub: 'Décidé, en attente d''un tour. Sauf surprise, c''est ce qui suit.'
   group_later: 'Plus tard'
   group_later_sub: 'Souhaité, non planifié. De vraies intentions, aucune promesse de date.'
-  item_going_live: '<b>Le lancement.</b> Les premières semaines en ligne : trouver des testeurs, corriger vite ce qu''ils rencontrent, et faire connaître le Commons auprès des cyclistes.'
-  item_provider_refresh: '<b>Plus de sources de données, qui se mettent à jour seules.</b> Des sources officielles ouvertes, comme un registre national des points d''eau potable, ajoutées depuis le bureau des curateurs et actualisées selon un calendrier.'
-  item_heatmap: '<b>Là où les cyclistes aiment aller.</b> Une couche de chaleur qui met en avant les lieux appréciés par beaucoup, comme les panoramas et les cols. Uniquement à partir de points anonymes, et un lieu n''apparaît que lorsque assez de cyclistes différents le soutiennent, pour ne jamais désigner une seule personne.'
-  item_standing: '<b>La réputation du contributeur.</b> Les cyclistes dont le travail est régulièrement approuvé gagnent une main plus légère, comme des modifications publiées aussitôt, au lieu de l''obtenir à la main.'
-  item_osm_giveback: '<b>Rendre à OpenStreetMap.</b> Ce que les cyclistes confirment ici, proposé en amont sous une forme qu''OpenStreetMap peut accepter.'
-  item_map_a11y: '<b>Rendre la carte utilisable sans souris.</b> Le manque assumé de notre déclaration d''accessibilité : l''accès clavier et lecteur d''écran à la carte elle-même, pas seulement aux pages autour.'
-  item_route_export: '<b>Emportez un itinéraire.</b> Esquissez-le d''après ce que montre la carte, puis envoyez-le au planificateur ou à l''appareil que vous utilisez déjà.'
-  item_region_portrait: '<b>Un portrait de chaque région.</b> La page d''une région compte ce qui s''y trouve. Elle devrait dire à quoi ressemble le vélo là-bas : le relief, la part de routes revêtues, les grands cols, le réseau balisé, l''eau et les toilettes aux cent kilomètres, les itinéraires que les cyclistes recommandent, et la fraîcheur des données.'
-  item_reviews: '<b>Vos propres mots sur n''importe quel lieu.</b> Une courte note à vous sur une fontaine, un col, un hébergement ou un itinéraire, à côté des faits : ce que c''était quand vous y étiez. Plusieurs cyclistes, plusieurs notes. Pas une note chiffrée.'
-  item_favourites: '<b>Vos lieux favoris.</b> Enregistrez un point d’eau, une montée, un hébergement ou un itinéraire dans une liste de favoris de votre profil, pour le retrouver avant la prochaine sortie.'
-  item_roadmap_votes: '<b>Avoir voix au chapitre.</b> Voter pour ce qui compte pour vous, suivre un élément, et en proposer un.'
-  item_more_countries: '<b>Plus de pays et de régions.</b> Le Commons s''ouvre à de nouveaux pays, chacun avec des curateurs qui connaissent les routes. Demandez le vôtre sur la page d''inscription.'
-  item_scout_devices: '<b>Scout sur plus d''appareils.</b> Signalez ce que vous croisez, d''abord sur Android, puis sur Hammerhead Karoo et iPhone.'
-  item_open_api: '<b>L''API de données ouvertes, complète.</b> Chaque lieu, col et itinéraire lisible par une API stable et documentée, avec des téléchargements en masse des données et des tuiles de la carte, pour que chacun puisse bâtir sur le Commons ou en héberger une copie.'
   foot_shipped_pre: 'Ce qui est déjà sorti est dans le'
   foot_shipped_link: 'journal des nouveautés'
-  foot_shipped_mid: '. Il manque quelque chose dont vous avez besoin ? Dites-le sur la'
-  foot_contact_link: 'page de contact'
-  foot_shipped_post: ', une personne le lira.'
+  say_lead: "Votez pour ce qui compte pour vous, suivez un élément pour savoir quand il avance, ou proposez votre propre idée."
+  say_propose: "Proposer une idée"
+  say_signin: "Connectez-vous pour participer"
+  idea_badge: "Idée d'un cycliste"
+  vote_title: "Voter pour"
+  unvote_title: "Retirer votre vote"
+  vote_aria: "Votes : %count%. Votez pour cet élément, ou retirez votre vote."
+  votes_count: "Votes : %count%"
+  signin_to_vote: "Connectez-vous pour voter"
+  follow: "Suivre"
+  following: "Suivi"
+  follow_title: "Recevoir un message, dans votre boîte et par e-mail, quand il avance ou sort"
+  unfollow_title: "Ne plus suivre"
+  mark_gone: "Cet élément n'est plus sur la feuille de route."
+  mark_unverified: "Confirmez d'abord votre adresse e-mail. Le lien se trouve dans l'e-mail envoyé à votre inscription."
+  mark_too_fast: "Beaucoup de clics en peu de temps. Réessayez dans quelques minutes."
+  foot_shipped_mid: ". Il manque quelque chose dont vous avez besoin ? "
+  foot_propose_link: "Proposez-le"
+  foot_shipped_post: " et nous le lirons."
+  tabs_aria: "Feuille de route ou propositions des cyclistes"
+  tab_roadmap: "Feuille de route"
+  tab_proposals: "Propositions"
+  proposals_sub: "Des idées envoyées par les cyclistes, ouvertes aux votes. Celles qui rassemblent du soutien et conviennent aux Commons peuvent passer sur la feuille de route. Les plus votées d'abord."
+  proposals_none: "Aucune proposition ouverte aux votes pour l'instant. Proposez la vôtre."
+  foot_contact_mid: ". Il manque quelque chose dont vous avez besoin ? Dites-le sur la"
+  foot_contact_link: "page de contact"
+  propose:
+    title: "Proposer une idée."
+    meta_title: "Proposer une idée pour la feuille de route"
+    lead: "Vous aimeriez que les Commons fassent quelque chose ? Dites-nous ce qui manque et ce que vous avez en tête. Nous lisons chaque idée."
+    intro: "Trois questions, dont deux obligatoires. Écrivez dans votre langue."
+    field_title: "Votre idée en quelques mots"
+    placeholder_title: "Par exemple : l'eau potable sur le profil d'itinéraire"
+    field_problem: "Qu'est-ce qui manque ou est difficile aujourd'hui ?"
+    placeholder_problem: "Qu'essayiez-vous de faire, et qu'est-ce qui vous a gêné ?"
+    field_idea: "Que voudriez-vous à la place ?"
+    placeholder_idea: "Décrivez comment cela fonctionnerait pour vous."
+    field_benefit: "Qui y gagne, et comment ? (facultatif)"
+    placeholder_benefit: "Des cyclistes comme vous, la curation, quelqu'un qui prépare un voyage..."
+    field_image: "Une image (facultatif)"
+    submit: "Envoyer l'idée"
+    sent: "Merci. Votre idée est arrivée, et vous recevrez un message quand nous aurons décidé."
+    yours_title: "Vos idées"
+    yours_none: "Vous n'avez pas encore envoyé d'idée."
+    state_pending: "En attente de lecture"
+    state_declined: "Non retenue"
+    sent_on: "Envoyée le %date%"
+    see_on_roadmap: "La voir sur la feuille de route"
+    image_alt: "L'image ajoutée à cette idée"
+    image_pending: "Votre image est en cours de vérification. Elle apparaîtra ici ensuite."
+    image_refused: "Nous n'avons pas pu accepter l'image : le fichier n'a pas passé notre contrôle automatique. L'idée elle-même est bien arrivée."
+    desk_note: "Notre réponse"
+    back: "Retour à la feuille de route"
+    error_unverified: "Confirmez d'abord votre adresse e-mail, puis vous pourrez envoyer une idée. Le lien se trouve dans l'e-mail envoyé à votre inscription."
+    error_title: "Donnez à votre idée un titre de 4 à 120 caractères."
+    error_problem: "Dites-nous ce qui manque ou est difficile, en 10 à 4000 caractères."
+    error_idea: "Dites-nous ce que vous voudriez à la place, en 10 à 4000 caractères."
+    error_benefit: "Gardez « qui y gagne » sous 2000 caractères."
+    error_too_many: "Vous avez envoyé cinq idées aujourd'hui. Envoyez la suivante demain."
+    public_note: "Notre intention est d'ouvrir presque toutes les propositions aux votes, et de ne retenir que les abus, le spam et les répétitions d'une idée déjà présente. Son titre et son texte apparaissent alors dans les Propositions, sans votre nom. Nous pouvons les raccourcir."
+    state_open: "Ouverte aux votes"
+    state_promoted: "Sur la feuille de route"
+    see_in_proposals: "La voir dans les Propositions"
+    hint_image: "Un croquis ou une capture d'écran qui montre ce que vous voulez dire. %formats%, jusqu'à %size% Mo. Seuls vous et la curation la voient, sauf si vous cochez la case ci-dessous et que nous choisissons de la montrer avec votre proposition."
+    image_may_show: "Vous pouvez montrer cette image avec ma proposition quand elle est publique. Seulement avec cette proposition."
+    image_public: "Cette image apparaît avec votre proposition."
+    image_allowed: "Vous avez permis de montrer cette image ; nous ne l'avons pas montrée."
+    image_private: "Seuls vous et la curation voient cette image."
+  desk:
+    empty: "Aucune idée ici."
+    waiting: "Idées en attente de lecture"
+    status_pending: "En attente"
+    status_declined: "Refusée"
+    author_gone: "Compte supprimé"
+    votes: "Votes"
+    followers: "%count% abonnés"
+    decided: "Dernière décision"
+    open_image: "Ouvrir l'image"
+    image_refused: "L'image n'a pas passé le contrôle automatique."
+    action: "Décision"
+    action_decline: "Refuser"
+    group: "Groupe"
+    public_body_placeholder: "Laissez vide pour afficher la réponse du cycliste à « Que voudriez-vous à la place ? ». Ne nommez jamais le cycliste ici."
+    note: "Message au cycliste"
+    note_placeholder: "Pourquoi, en une phrase ou deux. Obligatoire en cas de refus."
+    last_note: "Dernier message au cycliste"
+    saved: "Enregistré."
+    error_note_long: "Gardez le message sous 2000 caractères."
+    error_group: "Choisissez un groupe : Maintenant, Ensuite ou Plus tard."
+    error_title_long: "Gardez le titre sous 120 caractères."
+    error_body_long: "Gardez le texte sous 4000 caractères."
+    error_reason: "Donnez une raison au cycliste quand vous refusez."
+    error_decided: "Cette décision a déjà été prise pour cette idée."
+    error_action: "Choisissez une décision."
+    title: "Propositions"
+    lede: "Les idées envoyées par les cyclistes. Ouvrez-en une aux votes dans les Propositions, passez-la sur la feuille de route, ou refusez-la avec une raison. Le cycliste reçoit un message à chaque fois."
+    status_open: "Ouverte aux votes"
+    status_promoted: "Sur la feuille de route"
+    action_open: "Ouvrir aux votes"
+    action_reword: "Garder ouverte (reformuler)"
+    action_promote: "Passer sur la feuille de route"
+    action_take_off: "Retirer des Propositions"
+    group_hint: "Le groupe sert au passage sur la feuille de route : le nouvel élément va à la fin. Vous pourrez le traduire ensuite."
+    see_item: "Ouvrir l'élément de la feuille de route"
+    promoted: "Passée sur la feuille de route. Ajoutez les autres langues ici, puis enregistrez."
+    error_promoted: "Cette proposition est déjà un élément de la feuille de route."
+    error_note_update: "Rien ne part vers le cycliste quand une proposition ouverte est seulement reformulée : laissez le message vide."
+    note_hint: "Le cycliste le lit dans ses messages. Les abonnés reçoivent leur propre message court quand une proposition passe sur la feuille de route ou quitte les Propositions."
+    public_title: "Titre dans les Propositions (facultatif)"
+    public_body: "Texte dans les Propositions (facultatif)"
+    admins_decide: "La curation peut lire les propositions ; un admin en décide."
+    show_picture: "Montrer l'image du cycliste avec la proposition (le cycliste l'a permis)"
+    picture_private: "Le cycliste n'a pas permis de montrer l'image, elle reste donc privée."
+    picture: "Image"
+    picture_shown: "Image montrée"
+  items:
+    desk_tab: "Feuille de route"
+    title: "Éléments de la feuille de route"
+    lede: "Ce que montre la feuille de route publique, groupe par groupe, dans l'ordre de la page. Ajoutez un élément, écrivez-le dans chaque langue, déplacez-le, et retirez-le comme sorti ou abandonné. Les abonnés reçoivent un message quand un élément change de groupe, sort ou disparaît."
+    new_title: "Nouvel élément"
+    edit_title: "Élément de la feuille de route"
+    add: "Ajouter un élément"
+    created: "Élément ajouté."
+    saved: "Enregistré."
+    say_on: "Les votes, suivis et propositions sont ouverts aux cyclistes."
+    say_off: "Les votes, suivis et propositions sont fermés : les cyclistes ne voient que la liste."
+    say_switch: "Le changer dans les réglages du système"
+    group_empty: "Rien dans ce groupe."
+    up: "Monter"
+    down: "Descendre"
+    issue: "Ticket GitHub (facultatif)"
+    text_hint: "Écrivez l'élément dans autant de langues que possible. Une langue vide affiche le texte anglais, ou le premier qui existe."
+    field_title: "Titre"
+    field_body: "Texte"
+    lang_en: "Anglais"
+    lang_nl: "Néerlandais"
+    lang_fr: "Français"
+    lang_de: "Allemand"
+    lang_es: "Espagnol"
+    from_proposal: "Issu de la proposition"
+    ship: "Marquer comme sorti"
+    remove: "Retirer de la feuille de route"
+    close_hint: "Les deux retirent l'élément de la feuille de route et préviennent ses abonnés. Sorti : ajoutez-le aussi aux notes de la prochaine version."
+    error_title_missing: "Une langue avec un texte a aussi besoin d'un titre."
+    error_title_long: "Gardez chaque titre sous 120 caractères."
+    error_body_long: "Gardez chaque texte sous 4000 caractères."
+    error_no_text: "Écrivez l'élément dans au moins une langue."
+    error_group: "Choisissez un groupe : Maintenant, Ensuite ou Plus tard."
+    error_closed: "Cet élément a déjà quitté la feuille de route."
+    error_issue: "Un ticket est un numéro, comme 123."
+    error_action: "Choisissez quoi faire."
 changelog:
   kicker: 'Nouveautés'
   title: 'Ce qui est nouveau.'

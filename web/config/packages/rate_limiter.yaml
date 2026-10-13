@@ -63,6 +63,10 @@ framework:
                 adapter: cache.app
             cache.bug_report_nojs_limiter:
                 adapter: cache.app
+            cache.roadmap_mark_limiter:
+                adapter: cache.app
+            cache.roadmap_propose_limiter:
+                adapter: cache.app
             cache.public_api_limiter:
                 adapter: cache.app
             cache.pow_challenge_limiter:
@@ -359,6 +363,20 @@ framework:
         # found one broken thing has usually found three, and the whole point
         # of the floating button is that reporting the third one costs nothing.
         # Still bounded, because the form takes an image.
+        # Votes and follows on the roadmap, per account (roadmap-and-changelog.md
+        # §8). A rider going down the list clicks a few dozen times at most;
+        # this only stops a script flipping one vote all day.
+        roadmap_mark:
+            policy: sliding_window
+            limit: 120
+            interval: '1 hour'
+            cache_pool: cache.roadmap_mark_limiter
+        # Roadmap ideas, per account. Each one is read by hand on the desk.
+        roadmap_propose:
+            policy: sliding_window
+            limit: 5
+            interval: '1 day'
+            cache_pool: cache.roadmap_propose_limiter
         bug_report:
             policy: sliding_window
             limit: 12
@@ -381,6 +399,10 @@ when@test:
         cache:
             pools:
                 cache.route_propose_limiter:
+                    adapter: cache.adapter.array
+                cache.roadmap_mark_limiter:
+                    adapter: cache.adapter.array
+                cache.roadmap_propose_limiter:
                     adapter: cache.adapter.array
                 cache.route_suggest_limiter:
                     adapter: cache.adapter.array

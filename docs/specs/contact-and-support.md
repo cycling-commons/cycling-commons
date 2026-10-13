@@ -492,6 +492,10 @@ never involve the server.
 Curator-room pictures (`curator_post_image`, moderation-and-contribution.md
 §13.3) take the same path, drawn as WebP; the board shows a pending one as
 "Picture being checked" and never serves it before it is ready.
+The one picture on a roadmap proposal (`roadmap_proposal_image`,
+roadmap-and-changelog.md section 8.5) takes it too, as WebP
+(`CheckPicture::ROADMAP`), served to its rider and the desk, and publicly
+only when the rider allowed it and the desk chose it (section 8.5 there).
 
 Then **decode it and draw it again**. Whatever the original file was (a
 polyglot, an SVG with script in it, a JPEG with a payload after the end marker),

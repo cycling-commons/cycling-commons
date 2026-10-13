@@ -1,0 +1,81 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  One roadmap item, or a new one (docs/specs/roadmap-and-changelog.md §8.6):
+  its group, its words in each language, a GitHub issue; then shipped or
+  removed. A language left empty has no text and shows the English one on
+  the page. After a refused save `draft` holds what the admin typed.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<link rel="stylesheet" href="{{ asset('styles/page/moderate/bug_detail.css') }}">
+<link rel="stylesheet" href="{{ asset('styles/page/moderate/roadmap.css') }}">
+{% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_roadmap'} %}{% endblock %}
+
+{% block body %}
+<div class="dbody dmin" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'account.menu_moderation'|trans }} · <a href="{{ path('moderate_roadmap') }}">{{ 'roadmap.items.title'|trans }}</a></div>
+    <h1>{{ (item ? 'roadmap.items.edit_title' : 'roadmap.items.new_title')|trans }}</h1>
+    {% if item %}<p class="lede ref-lede">#{{ item.id }}</p>{% endif %}
+  </div>
+
+  {% for msg in app.flashes('success') %}<div class="flash-success" role="status">{{ msg|trans }}</div>{% endfor %}
+  {% if error %}<p class="ferr" role="alert">{{ error|trans }}</p>{% endif %}
+
+  <div class="bdet">
+    {% if item %}
+      <dl class="facts">
+        <dt>{{ 'roadmap.desk.votes'|trans }}</dt>
+        <dd>{{ votes }} · {{ 'roadmap.desk.followers'|trans({'%count%': followers}) }}</dd>
+        {% if item.sourceProposal %}
+          <dt>{{ 'roadmap.items.from_proposal'|trans }}</dt>
+          <dd><a href="{{ path('moderate_ideas_detail', {id: item.sourceProposal.id}) }}">#{{ item.sourceProposal.id }}</a></dd>
+        {% endif %}
+      </dl>
+    {% endif %}
+
+    {% set d = draft ?? {} %}
+    <form class="decide" method="post" action="{{ item ? path('moderate_roadmap_item', {id: item.id}) : path('moderate_roadmap_new') }}">
+      <input type="hidden" name="_token" value="{{ csrf_token(csrf_id) }}">
+      <div class="drow">
+        <div class="dcell">
+          <label for="i-group">{{ 'roadmap.desk.group'|trans }}</label>
+          <select id="i-group" name="group">
+            {% set curg = d.group ?? (item ? item.status : 'later') %}
+            {% for g in groups %}<option value="{{ g }}"{{ curg == g ? ' selected' }}>{{ ('roadmap.group_' ~ g)|trans }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="dcell">
+          <label for="i-issue">{{ 'roadmap.items.issue'|trans }}</label>
+          <input type="text" id="i-issue" name="issue" inputmode="numeric" maxlength="9" value="{{ d.issue ?? (item and item.issue ? item.issue : '') }}" placeholder="123">
+        </div>
+      </div>
+      <p><small>{{ 'roadmap.items.text_hint'|trans }}</small></p>
+      {% for l in locales %}
+        {% set text = item ? item.textIn(l) : null %}
+        <fieldset class="rdesk-lang" lang="{{ l }}">
+          <legend>{{ ('roadmap.items.lang_' ~ l)|trans }}</legend>
+          <label for="i-{{ l }}-title">{{ 'roadmap.items.field_title'|trans }}</label>
+          <input type="text" id="i-{{ l }}-title" name="text[{{ l }}][title]" maxlength="120" value="{{ d.text[l].title ?? (text ? text.title : '') }}">
+          <label for="i-{{ l }}-body">{{ 'roadmap.items.field_body'|trans }}</label>
+          <textarea id="i-{{ l }}-body" name="text[{{ l }}][body]" maxlength="4000" rows="3">{{ d.text[l].body ?? (text ? text.body : '') }}</textarea>
+        </fieldset>
+      {% endfor %}
+      <p class="dact">
+        <button type="submit" name="do" value="save" class="btn btn-p">{{ (item ? 'support.inbox.save' : 'roadmap.items.add')|trans }}</button>
+      </p>
+      {% if item %}
+        <p class="dact rdesk-close">
+          <button type="submit" name="do" value="ship" class="btn btn-g">{{ 'roadmap.items.ship'|trans }}</button>
+          <button type="submit" name="do" value="remove" class="btn btn-g">{{ 'roadmap.items.remove'|trans }}</button>
+        </p>
+        <p><small>{{ 'roadmap.items.close_hint'|trans }}</small></p>
+      {% endif %}
+    </form>
+  </div>
+</div>
+{% endblock %}

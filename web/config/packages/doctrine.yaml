@@ -75,6 +75,11 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Blog/Entity'
                 prefix: 'App\Blog\Entity'
                 alias: Blog
+            Roadmap:
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Roadmap/Entity'
+                prefix: 'App\Roadmap\Entity'
+                alias: Roadmap
 
 when@prod:
     doctrine:

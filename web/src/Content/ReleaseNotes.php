@@ -7,24 +7,16 @@ declare(strict_types=1);
 namespace App\Content;
 
 /**
- * The roadmap and the changelog, from one list.
+ * The changelog: every release and its notes, and the three groups the
+ * roadmap uses.
  *
- * Owner's brief, 2026-08-28: "for now it must be a very simple list", and
- * "combine roadmap with github issues or something smart and simple". This is
- * the simple version, and the simplicity is the point:
- *
- * - **One file, no table, no admin screen.** Editing the roadmap is a pull
- *   request, which is the same review the rest of the site gets and leaves a
- *   history for free. A database-backed roadmap with a curator queue would
- *   be a later version, not this one.
- * - **Text lives in the catalogue like all other copy.** Every entry is a
- *   translation key, so the page reads in five languages the day it ships
- *   rather than being an English island.
- * - **The GitHub link is a number, not a sync.** An item may name an issue;
- *   the page links it. Nothing polls GitHub, nothing breaks when GitHub is
- *   down, and an item without an issue is still a valid item.
- * - **Shipped is not repeated.** The roadmap shows what is coming; what landed
- *   is the changelog, and the roadmap links to it. One fact, one place.
+ * - **One file.** A release's notes are written with the release, by pull
+ *   request, so they get the same review as the rest of the site and keep a
+ *   history for free.
+ * - **Text lives in the catalogue like all other copy.** Every note is a
+ *   translation key, so the page reads in five languages the day it ships.
+ * - **Shipped is not repeated.** The roadmap (in the database, App\Roadmap)
+ *   shows what is coming; what landed is here, and the roadmap links to it.
  *
  * @see docs/specs/roadmap-and-changelog.md
  *
@@ -32,36 +24,7 @@ namespace App\Content;
  */
 final class ReleaseNotes
 {
-    /**
-     * What is coming, in the order a reader should meet it.
-     *
-     * `now` is being worked on, `next` is decided and waiting, `later` is
-     * wanted and unscheduled. Anything finished leaves this list and appears in
-     * {@see self::RELEASES}; an item that is neither is not on the roadmap.
-     *
-     * @var list<array{key: string, status: string, issue?: int}>
-     */
-    public const array ROADMAP = [
-        // Refreshed 2026-09-25 (owner): the big things only. Smaller pieces of
-        // work are private known issues on the curator desk; the order within
-        // a group is not a promise.
-        ['key' => 'roadmap.item_going_live', 'status' => 'now'],
-        ['key' => 'roadmap.item_provider_refresh', 'status' => 'now'],
-        ['key' => 'roadmap.item_roadmap_votes', 'status' => 'next'],
-        ['key' => 'roadmap.item_more_countries', 'status' => 'next'],
-        ['key' => 'roadmap.item_scout_devices', 'status' => 'next'],
-        ['key' => 'roadmap.item_route_export', 'status' => 'next'],
-        ['key' => 'roadmap.item_open_api', 'status' => 'next'],
-        ['key' => 'roadmap.item_osm_giveback', 'status' => 'later'],
-        ['key' => 'roadmap.item_region_portrait', 'status' => 'later'],
-        ['key' => 'roadmap.item_reviews', 'status' => 'later'],
-        ['key' => 'roadmap.item_favourites', 'status' => 'later'],
-        ['key' => 'roadmap.item_heatmap', 'status' => 'later'],
-        ['key' => 'roadmap.item_standing', 'status' => 'later'],
-        ['key' => 'roadmap.item_map_a11y', 'status' => 'later'],
-    ];
-
-    /** The three groups, in display order. */
+    /** The roadmap's three groups, in display order. */
     public const array STATUSES = ['now', 'next', 'later'];
 
     /**
@@ -239,17 +202,6 @@ final class ReleaseNotes
             ],
         ],
     ];
-
-    /**
-     * @return list<array{key: string, status: string, issue?: int}>
-     */
-    public static function roadmapFor(string $status): array
-    {
-        return array_values(array_filter(
-            self::ROADMAP,
-            static fn (array $item): bool => $item['status'] === $status,
-        ));
-    }
 
     /**
      * Every release with its notes grouped, newest first. A release from
