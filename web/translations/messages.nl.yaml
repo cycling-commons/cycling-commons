@@ -2954,6 +2954,11 @@ messages:
   email_cta: 'Openen in je berichten'
   email_why: 'Je krijgt dit omdat het over een bijdrage van jou gaat. Het volledige gesprek staat op je berichtenpagina.'
   email_why_country: "Je krijgt dit omdat je ons vroeg dit land of deze regio toe te voegen. Het staat ook op je berichtenpagina."
+  email_why_bug: "Je krijgt dit omdat je dit probleem bij ons meldde. Het staat ook bij je berichten."
+  email_why_curator_app: "Je krijgt dit omdat je je aanmeldde als regiobeheerder. Het hele gesprek staat bij je berichten."
+  email_why_areas: "Je krijgt dit omdat je regiobeheerder bent en een beheerder de gebieden wijzigde waar je voor zorgt. Het staat ook bij je berichten."
+  email_why_roadmap_follow: "Je krijgt dit omdat je dit punt op de routekaart volgt. Klik op de routekaart opnieuw op Volgen en deze berichten stoppen."
+  email_why_roadmap_proposal: "Je krijgt dit omdat je dit voorstel voor de routekaart stuurde. Het staat ook bij je berichten."
   state_read: 'Gelezen'
   open: 'Bericht openen'
   open_in_form: 'Open het in het bewerkformulier'

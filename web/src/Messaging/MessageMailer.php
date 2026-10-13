@@ -111,13 +111,15 @@ final readonly class MessageMailer
                         'body' => $body,
                         'body_text' => $bodyText,
                         'note' => $message->getBodyText(),
-                        // A code a rider can quote (SUB-12); a country code is no such thing.
-                        'reference' => UserMessageKind::CountryLive === $message->getKind() ? null : $message->getRefLabel(),
+                        // A code a rider can quote (SUB-12); a country code, which a
+                        // country request and a curator application carry, is no such thing.
+                        'reference' => UserMessageKind::CountryLive === $message->getKind() || 'curator_app' === $message->getChannel() ? null : $message->getRefLabel(),
                         'messages_url' => rtrim($this->siteUrl, '/').$this->inboxPath($locale),
                         'cta' => $this->translator->trans('messages.email_cta', [], null, $locale),
                         // Why this mail came: most answer something the rider
-                        // contributed; a country going live answers a request.
-                        'why' => $this->translator->trans(UserMessageKind::CountryLive === $message->getKind() ? 'messages.email_why_country' : 'messages.email_why', [], null, $locale),
+                        // contributed; a country going live answers a request;
+                        // a roadmap mail answers a follow or a proposal.
+                        'why' => $this->translator->trans(self::whyKey($message->getKind(), $message->getChannel()), [], null, $locale),
                         'locale' => $locale,
                     ])
             );
@@ -128,6 +130,28 @@ final readonly class MessageMailer
                 'transport_error' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * The line that says why this mail came. Most messages answer something
+     * the rider contributed; the rest answer what they did instead. A curator
+     * application's decision is a curator message on its own channel.
+     */
+    private static function whyKey(UserMessageKind $kind, string $channel): string
+    {
+        if ('curator_app' === $channel) {
+            return 'messages.email_why_curator_app';
+        }
+
+        return match ($kind) {
+            UserMessageKind::CountryLive => 'messages.email_why_country',
+            UserMessageKind::BugOutcome => 'messages.email_why_bug',
+            UserMessageKind::CuratorApplicationReceived => 'messages.email_why_curator_app',
+            UserMessageKind::ModeratorAreasChanged => 'messages.email_why_areas',
+            UserMessageKind::RoadmapItemMoved => 'messages.email_why_roadmap_follow',
+            UserMessageKind::RoadmapIdeaOutcome => 'messages.email_why_roadmap_proposal',
+            default => 'messages.email_why',
+        };
     }
 
     /** `/account/messages` in the recipient's locale (no router: this runs on terminate). */

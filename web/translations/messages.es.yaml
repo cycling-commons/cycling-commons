@@ -2977,6 +2977,11 @@ messages:
   email_cta: 'Abrirlo en tus mensajes'
   email_why: 'Recibes esto porque trata sobre una aportación tuya. El intercambio completo está en tu página de mensajes.'
   email_why_country: "Recibes esto porque nos pediste añadir este país o esta región. También está en tu página de mensajes."
+  email_why_bug: "Recibes esto porque nos informaste de este problema. También está en tu página de mensajes."
+  email_why_curator_app: "Recibes esto porque te ofreciste para la curaduría. Toda la conversación está en tu página de mensajes."
+  email_why_areas: "Recibes esto porque formas parte de la curaduría y un admin cambió las zonas de las que te ocupas. También está en tu página de mensajes."
+  email_why_roadmap_follow: "Recibes esto porque sigues este punto de la hoja de ruta. Vuelve a pulsar Seguir en la hoja de ruta y estos mensajes se detienen."
+  email_why_roadmap_proposal: "Recibes esto porque enviaste esta propuesta para la hoja de ruta. También está en tu página de mensajes."
   state_read: 'Leído'
   open: 'Abrir mensaje'
   open_in_form: 'Abrirlo en el formulario de edición'

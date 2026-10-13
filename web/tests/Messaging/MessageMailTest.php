@@ -267,4 +267,45 @@ final class MessageMailTest extends KernelTestCase
         self::assertStringContainsString("'<script>alert(1)</script><b>x</b>'", (string) $mail->getTextBody(),
             'in the plain-text part the name is text, kept whole');
     }
+
+    /**
+     * Every mail ends with why it came, and the reason fits what the rider
+     * did: a contribution, a bug report, a curator application, an areas
+     * change, a country request, a roadmap follow or proposal. "About a
+     * contribution you made" under a bug report or a roadmap follow was wrong.
+     *
+     * @return iterable<string, array{UserMessageKind, string, string, string}>
+     */
+    public static function reasons(): iterable
+    {
+        yield 'contribution' => [UserMessageKind::SubmissionApproved, 'submission', 'messages.body.submission_approved', 'a contribution you made'];
+        yield 'curator message about a route' => [UserMessageKind::CuratorMessage, 'route', 'messages.body.route_approved', 'a contribution you made'];
+        yield 'bug report' => [UserMessageKind::BugOutcome, 'bug', 'messages.body.bug_outcome', 'you reported this problem'];
+        yield 'curator application received' => [UserMessageKind::CuratorApplicationReceived, 'curator_app', 'join.message.received', 'you applied to curate'];
+        yield 'curator application decided' => [UserMessageKind::CuratorMessage, 'curator_app', 'join.message.received', 'you applied to curate'];
+        yield 'areas changed' => [UserMessageKind::ModeratorAreasChanged, 'areas', 'messages.body.areas_changed', 'the areas you look after'];
+        yield 'country live' => [UserMessageKind::CountryLive, 'country', 'messages.body.country_live', 'you asked us to add this country'];
+        yield 'roadmap follow' => [UserMessageKind::RoadmapItemMoved, 'roadmap', 'messages.body.roadmap_moved_next', 'you follow this item on the roadmap'];
+        yield 'roadmap proposal' => [UserMessageKind::RoadmapIdeaOutcome, 'roadmap', 'messages.body.roadmap_idea_open', 'you sent this proposal'];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('reasons')]
+    public function testEveryMailSaysWhyItCameInWordsThatFit(UserMessageKind $kind, string $channel, string $bodyKey, string $reason): void
+    {
+        self::bootKernel();
+        $rider = $this->user('mail-why-'.$kind->value.'-'.$channel.'@test.test');
+        /** @var MessageService $svc */
+        $svc = self::getContainer()->get(MessageService::class);
+        $svc->sendSystem((int) $rider->getId(), $kind, $channel, 7, 'BE', $bodyKey, ['%title%' => 'x', '%name%' => 'x', '%areas%' => 'x', '%country%' => 'x', '%status%' => 'resolved', '%scope%' => 'x']);
+        $this->em()->flush();
+        $this->deliverQueued();
+
+        $mail = self::getMailerMessage(0);
+        self::assertInstanceOf(Email::class, $mail);
+        $text = (string) $mail->getTextBody();
+        self::assertStringContainsString($reason, $text);
+        if ('a contribution you made' !== $reason) {
+            self::assertStringNotContainsString('a contribution you made', $text);
+        }
+    }
 }

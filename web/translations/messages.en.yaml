@@ -2969,6 +2969,11 @@ messages:
   email_cta: 'Open it in your messages'
   email_why: 'You are getting this because it is about a contribution you made. The full exchange lives on your messages page.'
   email_why_country: "You are getting this because you asked us to add this country or region. It is also on your messages page."
+  email_why_bug: "You are getting this because you reported this problem to us. It is also on your messages page."
+  email_why_curator_app: "You are getting this because you applied to curate. The full exchange lives on your messages page."
+  email_why_areas: "You are getting this because you are a curator and an admin changed the areas you look after. It is also on your messages page."
+  email_why_roadmap_follow: "You are getting this because you follow this item on the roadmap. Click Follow on the roadmap again and these stop."
+  email_why_roadmap_proposal: "You are getting this because you sent this proposal for the roadmap. It is also on your messages page."
   state_read: 'Read'
   open: 'Open message'
   open_in_form: 'Open it in the edit form'

@@ -2245,6 +2245,15 @@ without them logging back in to look.
   keys the dashboard uses, in the **recipient's** locale — not the locale of the
   curator who made the decision. One wording, so an email cannot drift from the
   page describing the same decision.
+- Every mail ends with **why it came**, in words that fit what the rider did
+  (`MessageMailer::whyKey()`): a contribution (`messages.email_why`, the
+  default), a bug report (`email_why_bug`), a curator application and its
+  decision, which runs on channel `curator_app` (`email_why_curator_app`), an
+  areas change (`email_why_areas`), a country request (`email_why_country`), a
+  roadmap follow or proposal (`email_why_roadmap_follow`,
+  `email_why_roadmap_proposal`). A new message kind that is not about a
+  contribution needs its own line; `MessageMailTest::testEveryMailSaysWhyItCameInWordsThatFit`
+  lists them. A country code is never printed as a reference.
 - The place or route name in a body line is italic between single quotes
   (`'<em>%title%</em>'`, `'<em>%name%</em>'` in all five locales); every param
   value is HTML-escaped before substitution (`UserMessage::getBodyParamsHtml()`)

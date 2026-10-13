@@ -2955,6 +2955,11 @@ messages:
   email_cta: 'In deinen Nachrichten öffnen'
   email_why: 'Du bekommst das, weil es um einen deiner Beiträge geht. Der ganze Austausch steht auf deiner Nachrichtenseite.'
   email_why_country: "Du bekommst das, weil du uns gebeten hast, dieses Land oder diese Region aufzunehmen. Es steht auch auf deiner Nachrichtenseite."
+  email_why_bug: "Du bekommst das, weil du uns dieses Problem gemeldet hast. Es steht auch auf deiner Nachrichtenseite."
+  email_why_curator_app: "Du bekommst das, weil du dich für die Kuration beworben hast. Der ganze Austausch steht auf deiner Nachrichtenseite."
+  email_why_areas: "Du bekommst das, weil du in der Kuration bist und ein Admin die Gebiete geändert hat, um die du dich kümmerst. Es steht auch auf deiner Nachrichtenseite."
+  email_why_roadmap_follow: "Du bekommst das, weil du diesem Punkt auf dem Fahrplan folgst. Klick auf dem Fahrplan noch einmal auf Folgen, dann hören diese Nachrichten auf."
+  email_why_roadmap_proposal: "Du bekommst das, weil du diesen Vorschlag für den Fahrplan geschickt hast. Er steht auch auf deiner Nachrichtenseite."
   state_read: 'Gelesen'
   open: 'Nachricht öffnen'
   open_in_form: 'Im Bearbeitungsformular öffnen'
