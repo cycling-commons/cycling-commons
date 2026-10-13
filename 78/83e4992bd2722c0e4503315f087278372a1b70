@@ -1,0 +1,27 @@
+web/translations/messages.fr.yaml
+  s_5f932505c6b489::t_26ab0f5d5965e3 90
+web/translations/messages.en.yaml
+  s_5f932505c6b489::t_26ab0f5d5965e3 92
+web/translations/messages.de.yaml
+  s_5f932505c6b489::t_26ab0f5d5965e3 92
+web/translations/messages.nl.yaml
+  s_5f932505c6b489::t_26ab0f5d5965e3 92
+web/translations/messages.es.yaml
+  s_5f932505c6b489::t_26ab0f5d5965e3 93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7883e4992bd2722c0e4503315f087278372a1b70",
+  "prompts": {},
+  "sessions": {
+    "s_5f932505c6b489": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ad210b22-8cc8-4172-9d1d-307478efbdb2",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
