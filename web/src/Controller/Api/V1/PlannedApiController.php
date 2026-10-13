@@ -45,7 +45,10 @@ final class PlannedApiController extends AbstractController
     {
         $method = $request->getMethod();
         $path = $request->getPathInfo();
-        $planned = $this->surface->describes('HEAD' === $method ? 'GET' : $method, $path);
+        $asked = 'HEAD' === $method ? 'GET' : $method;
+        // A built endpoint with a parameter its route refuses (`/v1/items/abc`)
+        // is a wrong address, never "not built yet".
+        $planned = $this->surface->describes($asked, $path) && !$this->surface->isLiveShape($asked, $path);
 
         return $this->json([
             'error' => $planned ? 'not_implemented' : 'not_found',

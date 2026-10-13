@@ -48,6 +48,24 @@ final class DeskRider
     }
 
     /**
+     * The author of a partner app's contribution (public-api.md §8): the
+     * name they chose to share, or the start of the app's opaque reference
+     * for them, then the app in brackets: "Sam (Example Rides)",
+     * "#u-8f3a (Example Rides)". Never linked: there is no profile here.
+     *
+     * @return array{name:string, uuid:null}
+     */
+    public static function ofApp(mixed $authorName, mixed $authorRef, string $appName): array
+    {
+        $name = \is_string($authorName) ? trim($authorName) : '';
+        if ('' === $name) {
+            $name = '#'.mb_substr(\is_string($authorRef) ? $authorRef : '', 0, 12);
+        }
+
+        return ['name' => \sprintf('%s (%s)', $name, $appName), 'uuid' => null];
+    }
+
+    /**
      * @return array{name:?string, uuid:?string}
      */
     public static function ofUser(User $user): array

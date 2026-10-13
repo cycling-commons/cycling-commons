@@ -20,8 +20,9 @@ use App\Catalog\ItemEvidence;
 final readonly class ItemFeature
 {
     /**
-     * @param array<string, mixed>  $geometry decoded GeoJSON geometry
-     * @param 'community'|'curated' $tier
+     * @param array<string, mixed>      $geometry decoded GeoJSON geometry
+     * @param 'community'|'curated'     $tier
+     * @param array<string, mixed>|null $osm
      */
     public function __construct(
         public int $id,
@@ -32,13 +33,16 @@ final readonly class ItemFeature
         public ItemEvidence $evidence,
         // The region's public slug (/v1/regions), null for a place outside every region.
         public ?string $regionId = null,
+        // `?hydrate=osm`: the cached OpenStreetMap subset, null when the item has none.
+        public ?array $osm = null,
+        public bool $hydrated = false,
     ) {
     }
 
     /** @return array<string, mixed> */
     public function toGeoJson(): array
     {
-        return [
+        $geoJson = [
             'type' => 'Feature',
             'geometry' => $this->geometry,
             'properties' => [
@@ -55,5 +59,20 @@ final readonly class ItemFeature
                 'region_id' => $this->regionId,
             ],
         ];
+        if ($this->hydrated) {
+            $geoJson['properties']['osm'] = $this->osm;
+        }
+
+        return $geoJson;
+    }
+
+    /**
+     * The same feature with its OpenStreetMap subset merged in.
+     *
+     * @param array<string, mixed>|null $osm
+     */
+    public function withOsm(?array $osm): self
+    {
+        return new self($this->id, $this->letter, $this->name, $this->tier, $this->geometry, $this->evidence, $this->regionId, $osm, true);
     }
 }

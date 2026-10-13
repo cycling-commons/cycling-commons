@@ -70,6 +70,12 @@ final class CatalogContributionService implements ContributionStubInterface
     ) {
     }
 
+    /**
+     * The payload keys a partner app's contribution may carry: no media, no
+     * curator answers, no ticks, no channel claims.
+     */
+    private const array APP_KEYS = ['type', 'lat', 'lng', 'details', '_item_id', '_osm_ref', '_consent'];
+
     /** Payload keys this service refuses. `photoUrl` is never accepted. */
     private const array REFUSED_KEYS = ['photoUrl'];
 
@@ -113,11 +119,28 @@ final class CatalogContributionService implements ContributionStubInterface
     }
 
     /**
+     * A contribution from a registered partner app (docs/specs/public-api.md
+     * §8): the same intake as the site's form, the same queue, the same
+     * rules, filed under the app's author instead of a rider. Never applied
+     * at once (nobody behind it is a curator) and never carrying photos (the
+     * API has no photo consent yet).
+     *
+     * @param 'add'|'improve'      $kind
+     * @param array<string, mixed> $payload the form's shape: `type`, `lat`, `lng`, `details`, `_item_id`, `_osm_ref`, and `_consent`, the licence the app asserted
+     */
+    public function submitFromApp(string $kind, array $payload, ApiAuthor $author): ContributionReceipt
+    {
+        $payload = array_intersect_key($payload, array_flip(self::APP_KEYS));
+
+        return 'add' === $kind ? $this->submitAdd($payload, $author) : $this->submitImprove($payload, $author);
+    }
+
+    /**
      * Generic NewItem intake (docs/specs/moderation-and-contribution.md §1.1, §3.3).
      *
      * @param array<string, mixed> $payload
      */
-    private function submitAdd(array $payload, User $by): ContributionReceipt
+    private function submitAdd(array $payload, User|ApiAuthor $by): ContributionReceipt
     {
         $type = ItemType::tryFrom((string) ($payload['type'] ?? ''));
         if (null === $type || ItemType::QualityRides === $type) {
@@ -415,7 +438,7 @@ final class CatalogContributionService implements ContributionStubInterface
     }
 
     /** @param array<string, mixed> $payload */
-    private function submitImprove(array $payload, User $by): ContributionReceipt
+    private function submitImprove(array $payload, User|ApiAuthor $by): ContributionReceipt
     {
         $item = $this->em->find(Item::class, (int) ($payload['_item_id'] ?? 0));
         if (null === $item) {
@@ -599,7 +622,7 @@ final class CatalogContributionService implements ContributionStubInterface
      *
      * @param array<string, mixed> $payload
      */
-    private function ticksChanged(Item $item, array $payload, User $by): bool
+    private function ticksChanged(Item $item, array $payload, User|ApiAuthor $by): bool
     {
         if (!\array_key_exists('_replaces', $payload) || ItemState::Submitted !== $item->getState()) {
             return false;
@@ -621,9 +644,9 @@ final class CatalogContributionService implements ContributionStubInterface
      * here?" button writes, so a curator's tick verifies the row exactly as
      * their click would. Only rows that offer "it exists" take it.
      */
-    private function confirmNow(Item $item, User $by): bool
+    private function confirmNow(Item $item, User|ApiAuthor $by): bool
     {
-        if (!\in_array(ConfirmationStance::Exists, ItemConfirmationService::offeredFor($item), true)) {
+        if (!$by instanceof User || !\in_array(ConfirmationStance::Exists, ItemConfirmationService::offeredFor($item), true)) {
             return false;
         }
         $this->confirmations->record($item, $by, ConfirmationStance::Exists);
@@ -657,9 +680,9 @@ final class CatalogContributionService implements ContributionStubInterface
      * exists to remove, so a taken ref is simply not recorded and the place
      * queues, where a human sees the clash.
      */
-    private function answerOsmIfCurator(Submission $submission, User $by, mixed $answer): void
+    private function answerOsmIfCurator(Submission $submission, User|ApiAuthor $by, mixed $answer): void
     {
-        if (!\is_string($answer) || '' === $answer || !$this->isCurator($by)) {
+        if (!$by instanceof User || !\is_string($answer) || '' === $answer || !$this->isCurator($by)) {
             return;
         }
         $item = null !== $submission->getItemId() ? $this->em->find(Item::class, $submission->getItemId()) : null;
@@ -683,14 +706,14 @@ final class CatalogContributionService implements ContributionStubInterface
         $this->em->flush();
     }
 
-    private function isCurator(User $by): bool
+    private function isCurator(User|ApiAuthor $by): bool
     {
-        return \in_array('ROLE_CURATOR', $this->roleHierarchy->getReachableRoleNames($by->getRoles()), true);
+        return $by instanceof User && \in_array('ROLE_CURATOR', $this->roleHierarchy->getReachableRoleNames($by->getRoles()), true);
     }
 
-    private function applyIfCurator(Submission $submission, User $by): bool
+    private function applyIfCurator(Submission $submission, User|ApiAuthor $by): bool
     {
-        if (!$this->isCurator($by)) {
+        if (!$by instanceof User || !$this->isCurator($by)) {
             return false;
         }
         try {
@@ -816,18 +839,25 @@ final class CatalogContributionService implements ContributionStubInterface
         return \is_string($filed) ? new \DateTimeImmutable($filed) : null;
     }
 
-    public function openSubmissionFor(int $itemId, User $by): ?Submission
+    public function openSubmissionFor(int $itemId, User|ApiAuthor $by): ?Submission
     {
         /* QueryBuilder with scalar enum values; newest first if two open rows exist. */
-        return $this->em->createQueryBuilder()
+        $qb = $this->em->createQueryBuilder()
             ->select('s')
             ->from(Submission::class, 's')
             ->where('s.itemId = :item')
-            ->andWhere('s.userId = :uid')
             ->andWhere('s.status IN (:open)')
             ->setParameter('item', $itemId)
-            ->setParameter('uid', (int) $by->getId())
-            ->setParameter('open', [SubmissionStatus::Pending->value, SubmissionStatus::NeedsInfo->value])
+            ->setParameter('open', [SubmissionStatus::Pending->value, SubmissionStatus::NeedsInfo->value]);
+        // A partner app's author amends their own open row, never a rider's or another author's.
+        if ($by instanceof ApiAuthor) {
+            $qb->andWhere('s.apiAppId = :app')->andWhere('s.externalAuthorRef = :ref')
+                ->setParameter('app', $by->appId)->setParameter('ref', $by->ref);
+        } else {
+            $qb->andWhere('s.userId = :uid')->setParameter('uid', (int) $by->getId());
+        }
+
+        return $qb
             ->orderBy('s.id', 'DESC')
             ->setMaxResults(1)
             ->getQuery()
@@ -838,9 +868,9 @@ final class CatalogContributionService implements ContributionStubInterface
      * @param array<string, mixed>                         $rawPayload
      * @param array<string, array{was: mixed, now: mixed}> $changes    Edit was/now map (ignored for NewItem)
      */
-    public function submitDraft(SubmissionDraft $draft, SubmissionType $type, User $by, array $rawPayload = [], array $changes = []): Submission
+    public function submitDraft(SubmissionDraft $draft, SubmissionType $type, User|ApiAuthor $by, array $rawPayload = [], array $changes = []): Submission
     {
-        $limiter = $this->contributionSubmitLimiter->create('user-'.(string) $by->getId());
+        $limiter = $this->contributionSubmitLimiter->create(self::limiterKey($by));
         if (!$limiter->consume()->isAccepted()) {
             throw new TooManyRequestsHttpException(null, 'contribute.error.rate_limited');
         }
@@ -860,7 +890,6 @@ final class CatalogContributionService implements ContributionStubInterface
                 ->setType($type)
                 ->setLetter($draft->type->letter())
                 ->setItemId($draft->itemId)
-                ->setUserId((int) $by->getId())
                 ->setStatus(SubmissionStatus::Pending)
                 ->setTitle($draft->title)
                 ->setGeom($point)
@@ -870,6 +899,11 @@ final class CatalogContributionService implements ContributionStubInterface
                     ? self::newItemChanges($draft->attributes, $rawPayload['_osm_was'] ?? null)
                     : $changes /* Edit passes a ready was/now map */)
                 ->setPayload($rawPayload);
+            if ($by instanceof ApiAuthor) {
+                $submission->setApiOrigin($by->appId, $by->ref, $by->name);
+            } else {
+                $submission->setUserId((int) $by->getId());
+            }
             $this->em->persist($submission);
             $this->em->flush();
 
@@ -915,10 +949,13 @@ final class CatalogContributionService implements ContributionStubInterface
             }
 
             // Photos ride the same intake transaction (docs/specs/photo-uploads.md §4).
-            try {
-                $this->mediaClaims->claim($rawPayload['mediaIds'] ?? null, $by, $submission, $rawPayload['mediaAlts'] ?? null);
-            } catch (\InvalidArgumentException) {
-                $this->reject('contribute.error.media_invalid', 'mediaIds');
+            // A partner app sends none (submitFromApp()).
+            if ($by instanceof User) {
+                try {
+                    $this->mediaClaims->claim($rawPayload['mediaIds'] ?? null, $by, $submission, $rawPayload['mediaAlts'] ?? null);
+                } catch (\InvalidArgumentException) {
+                    $this->reject('contribute.error.media_invalid', 'mediaIds');
+                }
             }
             $this->em->flush();
 
@@ -992,7 +1029,7 @@ final class CatalogContributionService implements ContributionStubInterface
      *
      * @return array{known: bool, nearestM: ?int, withinM: int, far: bool, overruled: bool}
      */
-    private function bikeWayCheck(array $payload, User $by): array
+    private function bikeWayCheck(array $payload, User|ApiAuthor $by): array
     {
         $this->spendValhallaBudget($this->routeSnapLimiter, $by);
         $reading = $this->bikeWays->nearest((float) $payload['lat'], (float) $payload['lng']);
@@ -1012,11 +1049,17 @@ final class CatalogContributionService implements ContributionStubInterface
      *
      * @see docs/specs/security-architecture.md §7
      */
-    private function spendValhallaBudget(RateLimiterFactoryInterface $limiter, User $by): void
+    private function spendValhallaBudget(RateLimiterFactoryInterface $limiter, User|ApiAuthor $by): void
     {
-        if (!$limiter->create('user-'.(string) $by->getId())->consume()->isAccepted()) {
+        if (!$limiter->create(self::limiterKey($by))->consume()->isAccepted()) {
             throw new TooManyRequestsHttpException(null, 'contribute.error.rate_limited');
         }
+    }
+
+    /** A rider counts under their account, a partner app's author under the app and their reference. */
+    private static function limiterKey(User|ApiAuthor $by): string
+    {
+        return $by instanceof ApiAuthor ? $by->limiterKey() : 'user-'.(string) $by->getId();
     }
 
     private function reject(string $message, string $field): never
@@ -1159,7 +1202,7 @@ final class CatalogContributionService implements ContributionStubInterface
      *
      * @return array<string, mixed>
      */
-    private function deriveClimbProfile(array $attrs, User $by, ?array $current = null): array
+    private function deriveClimbProfile(array $attrs, User|ApiAuthor $by, ?array $current = null): array
     {
         /* `avg` is a transport key, never an attribute. */
         unset($attrs['avg']);

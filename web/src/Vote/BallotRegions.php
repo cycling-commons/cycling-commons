@@ -36,6 +36,16 @@ final class BallotRegions
         return $this->rows('TRUE', []);
     }
 
+    /**
+     * The operational region with this public slug, or null.
+     *
+     * @return RegionRow|null
+     */
+    public function bySlug(string $slug): ?array
+    {
+        return $this->rows('g.slug = :slug', ['slug' => $slug])[0] ?? null;
+    }
+
     /** @return list<RegionRow> */
     public function inCountry(string $countryCode): array
     {

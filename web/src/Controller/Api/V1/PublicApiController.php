@@ -6,20 +6,19 @@ declare(strict_types=1);
 
 namespace App\Controller\Api\V1;
 
+use App\Api\V1\ApiResponder;
 use App\Api\V1\CategoryTable;
+use App\Api\V1\PublicCatalog;
 use App\Api\V1\PublicItemsProvider;
 use App\Coverage\CoverageManifest;
 use App\Coverage\RoutesManifest;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\EventListener\AbstractSessionListener;
-use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * Anonymous public read API.
+ * Anonymous public read API: the catalogue and the items.
  *
  * @see docs/specs/public-api.md §2.2
  *
@@ -27,12 +26,6 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 final class PublicApiController extends AbstractController
 {
-    /** Viewport bbox cap (degrees per axis). */
-    private const float BBOX_MAX_SPAN_DEG = 10.0;
-
-    private const int LIMIT_DEFAULT = 100;
-    private const int LIMIT_MAX = 500;
-
     /**
      * Name search bounds. Three letters, because the name index is a trigram
      * index (Version20260928180000): shorter words cannot use it and would
@@ -42,12 +35,23 @@ final class PublicApiController extends AbstractController
     private const int Q_MAX = 100;
 
     /**
+     * The counts read every OpenStreetMap point in the box, so the box is
+     * smaller than a search's: two degrees is a province, about half a
+     * second over the Benelux on dev (measured 2026-10-12).
+     */
+    private const float COUNTS_MAX_SPAN_DEG = 2.0;
+
+    public function __construct(private readonly ApiResponder $api)
+    {
+    }
+
+    /**
      * @see docs/specs/public-api.md §2.2
      */
     #[Route('/v1/map-config', name: 'api_v1_map_config', methods: ['GET'])]
-    public function mapConfig(Request $request, RoutesManifest $routesManifest, CoverageManifest $coverageManifest, RateLimiterFactoryInterface $publicApiReadLimiter): Response
+    public function mapConfig(Request $request, RoutesManifest $routesManifest, CoverageManifest $coverageManifest): Response
     {
-        if (null !== ($limited = $this->rateLimited($request, $publicApiReadLimiter))) {
+        if (null !== ($limited = $this->api->rateLimited($request))) {
             return $limited;
         }
 
@@ -78,16 +82,29 @@ final class PublicApiController extends AbstractController
             'categories' => CategoryTable::categories(),
         ];
 
-        return $this->cacheable($request, $payload, 3600);
+        return $this->api->cacheable($request, $payload, 3600);
+    }
+
+    /**
+     * @see docs/specs/public-api.md §2.2
+     */
+    #[Route('/v1/catalog', name: 'api_v1_catalog', methods: ['GET'])]
+    public function catalog(Request $request, PublicCatalog $catalog): Response
+    {
+        if (null !== ($limited = $this->api->rateLimited($request))) {
+            return $limited;
+        }
+
+        return $this->api->cacheable($request, $catalog->build(), 3600);
     }
 
     /**
      * @see docs/specs/public-api.md §2.2
      */
     #[Route('/v1/search', name: 'api_v1_search', methods: ['GET'])]
-    public function search(Request $request, PublicItemsProvider $items, RateLimiterFactoryInterface $publicApiReadLimiter): Response
+    public function search(Request $request, PublicItemsProvider $items): Response
     {
-        if (null !== ($limited = $this->rateLimited($request, $publicApiReadLimiter))) {
+        if (null !== ($limited = $this->api->rateLimited($request))) {
             return $limited;
         }
 
@@ -99,19 +116,24 @@ final class PublicApiController extends AbstractController
         // 400 like any other unknown value, not an empty 200.
         $known = array_column(CategoryTable::CATEGORIES, 'letter');
         if (null !== $letter && (!\is_string($letter) || !\in_array($letter, $known, true))) {
-            return $this->badRequest('invalid_letter', 'letter must be one catalogue letter (see /v1/map-config categories: practical A-M, experiential N-Z), or absent for all');
+            return $this->api->error('invalid_letter', 'letter must be one catalogue letter (see /v1/catalog: practical A-M, experiential N-Z), or absent for all');
         }
 
         $tier = $query['tier'] ?? null;
         if (null !== $tier && (!\is_string($tier) || !\in_array($tier, ['community', 'curated'], true))) {
-            return $this->badRequest('invalid_tier', 'tier must be community or curated, or absent for both');
+            return $this->api->error('invalid_tier', 'tier must be community or curated, or absent for both');
         }
 
         // Routes join the answer only when asked for: a consumer that never
         // asked keeps the answer it had.
         $routes = $query['routes'] ?? null;
         if (null !== $routes && 'include' !== $routes) {
-            return $this->badRequest('invalid_routes', 'routes must be include, or absent for items only (letter=R gives routes only)');
+            return $this->api->error('invalid_routes', 'routes must be include, or absent for items only (letter=R gives routes only)');
+        }
+
+        $hydrate = $this->hydrate($query);
+        if (null === $hydrate) {
+            return $this->api->error('invalid_hydrate', 'hydrate must be osm, or absent');
         }
 
         $q = $query['q'] ?? null;
@@ -119,106 +141,106 @@ final class PublicApiController extends AbstractController
             $q = \is_string($q) ? trim($q) : '';
             $length = mb_strlen($q);
             if ($length < self::Q_MIN || $length > self::Q_MAX) {
-                return $this->badRequest('invalid_q', \sprintf('q must be %d to %d characters of a name', self::Q_MIN, self::Q_MAX));
+                return $this->api->error('invalid_q', \sprintf('q must be %d to %d characters of a name', self::Q_MIN, self::Q_MAX));
             }
+        }
+
+        // A name search is one page of its best matches; only a browse pages.
+        $after = ApiResponder::after($query['cursor'] ?? null);
+        // A search cursor holds `i` (the last item) or `r` (the last route), as ints.
+        if (null !== $after && ([] !== array_diff(array_keys($after), ['i', 'r']) || [] !== array_filter($after, static fn (mixed $v): bool => !\is_int($v)))) {
+            $after = [];
+        }
+        if ([] === $after || (null !== $after && null !== $q)) {
+            return $this->api->error('invalid_cursor', null !== $q ? 'a name search answers in one page; cursor pages a bbox browse' : 'cursor must be the next_cursor of a previous page');
         }
 
         // A name narrows the search enough on its own; without one, the box
         // is what keeps the answer small.
         $bbox = null;
         if (null === $q || isset($query['bbox'])) {
-            $bbox = $this->parseBbox(\is_string($query['bbox'] ?? null) ? $query['bbox'] : '');
+            $bbox = $this->api->bbox($query['bbox'] ?? null);
             if (null === $bbox) {
-                return $this->badRequest('invalid_bbox', 'bbox is required unless q is given: minLon,minLat,maxLon,maxLat in WGS84, min < max');
+                return $this->api->error('invalid_bbox', 'bbox is required unless q is given: minLon,minLat,maxLon,maxLat in WGS84, min < max');
             }
-            if ($bbox[2] - $bbox[0] > self::BBOX_MAX_SPAN_DEG || $bbox[3] - $bbox[1] > self::BBOX_MAX_SPAN_DEG) {
-                return $this->badRequest('bbox_too_large', \sprintf('bbox may span at most %.0fx%.0f degrees', self::BBOX_MAX_SPAN_DEG, self::BBOX_MAX_SPAN_DEG));
+            $max = ApiResponder::BBOX_MAX_SPAN_DEG;
+            if ($bbox[2] - $bbox[0] > $max || $bbox[3] - $bbox[1] > $max) {
+                return $this->api->error('bbox_too_large', \sprintf('bbox may span at most %.0fx%.0f degrees', $max, $max));
             }
         }
 
-        $limit = $query['limit'] ?? null;
-        $limit = (\is_string($limit) && ctype_digit($limit)) ? (int) $limit : self::LIMIT_DEFAULT;
-        $limit = min(self::LIMIT_MAX, max(1, $limit));
-
+        $result = $items->search($letter, $bbox, $q, $this->api->limit($query['limit'] ?? null), $tier, null !== $routes, $hydrate, $after);
         $payload = [
             'type' => 'FeatureCollection',
-            'features' => array_map(static fn ($f) => $f->toGeoJson(), $items->search($letter, $bbox, $q, $limit, $tier, null !== $routes)),
+            'features' => array_map(static fn ($f) => $f->toGeoJson(), $result['features']),
             'licence' => 'ODbL-1.0',
             'attribution' => CategoryTable::ATTRIBUTION,
         ];
+        if (null !== $result['next']) {
+            $payload['next_cursor'] = ApiResponder::cursor($result['next']);
+        }
 
-        return $this->cacheable($request, $payload, 300, 'application/geo+json');
+        return $this->api->cacheable($request, $payload, 300, 'application/geo+json');
     }
 
     /**
-     * @return array{0: float, 1: float, 2: float, 3: float}|null
+     * @see docs/specs/public-api.md §2.2
      */
-    private function parseBbox(string $raw): ?array
+    #[Route('/v1/items/{id}', name: 'api_v1_item', requirements: ['id' => '\d{1,18}'], methods: ['GET'])]
+    public function item(Request $request, int $id, PublicItemsProvider $items): Response
     {
-        $parts = explode(',', $raw);
-        if (4 !== \count($parts)) {
-            return null;
+        if (null !== ($limited = $this->api->rateLimited($request))) {
+            return $limited;
         }
-        $nums = [];
-        foreach ($parts as $part) {
-            $part = trim($part);
-            if (!is_numeric($part)) {
-                return null;
-            }
-            $nums[] = (float) $part;
-        }
-        [$minLon, $minLat, $maxLon, $maxLat] = $nums;
-        if (abs($minLon) > 180.0 || abs($maxLon) > 180.0 || abs($minLat) > 90.0 || abs($maxLat) > 90.0) {
-            return null;
-        }
-        if ($minLon >= $maxLon || $minLat >= $maxLat) {
-            return null;
+        $hydrate = $this->hydrate($request->query->all());
+        if (null === $hydrate) {
+            return $this->api->error('invalid_hydrate', 'hydrate must be osm, or absent');
         }
 
-        return [$minLon, $minLat, $maxLon, $maxLat];
-    }
-
-    /** @see docs/specs/public-api.md §2.2 */
-    private function badRequest(string $error, string $message): JsonResponse
-    {
-        return $this->json(['error' => $error, 'message' => $message], 400);
-    }
-
-    /** Per-IP limiter; 429 + Retry-After. */
-    private function rateLimited(Request $request, RateLimiterFactoryInterface $limiter): ?JsonResponse
-    {
-        $limit = $limiter->create('ip-'.($request->getClientIp() ?? 'unknown'))->consume();
-        if ($limit->isAccepted()) {
-            return null;
+        $item = $items->item($id, $hydrate);
+        if (null === $item) {
+            return $this->api->notFound(\sprintf('no served item %d', $id));
         }
 
-        $response = $this->json(['error' => 'rate_limited', 'message' => 'over 120 requests per minute; slow down'], 429);
-        $retryAfter = max(0, $limit->getRetryAfter()->getTimestamp() - time());
-        $response->headers->set('Retry-After', (string) $retryAfter);
-
-        return $response;
+        return $this->api->cacheable($request, $item->toGeoJson() + [
+            'licence' => 'ODbL-1.0',
+            'attribution' => CategoryTable::ATTRIBUTION,
+        ], 300, 'application/geo+json');
     }
 
     /**
-     * Public cache; do not let a session cookie downgrade it.
-     *
-     * @see docs/specs/account-and-auth.md §5
-     *
-     * @param array<string, mixed> $payload
+     * @see docs/specs/public-api.md §2.2
      */
-    private function cacheable(Request $request, array $payload, int $maxAge, ?string $contentType = null): Response
+    #[Route('/v1/coverage/counts', name: 'api_v1_coverage_counts', methods: ['GET'])]
+    public function coverageCounts(Request $request, PublicItemsProvider $items): Response
     {
-        $json = json_encode($payload, \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE | \JSON_PRESERVE_ZERO_FRACTION);
-        $response = new JsonResponse($json, Response::HTTP_OK, [], true);
-        if (null !== $contentType) {
-            $response->headers->set('Content-Type', $contentType);
+        if (null !== ($limited = $this->api->rateLimited($request))) {
+            return $limited;
         }
-        $response->setEtag(md5($json));
-        $response->setPublic();
-        $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
-        $response->setMaxAge($maxAge);
-        $response->isNotModified($request);
+        $bbox = $this->api->requiredBbox($request->query->all()['bbox'] ?? null, self::COUNTS_MAX_SPAN_DEG);
+        if (!\is_array($bbox)) {
+            return $bbox;
+        }
 
-        return $response;
+        $counts = $items->counts($bbox);
+
+        return $this->api->cacheable($request, [
+            'bbox' => $bbox,
+            'counts' => (object) $counts['items'],
+            'coverage' => (object) $counts['coverage'],
+            'attribution' => CategoryTable::ATTRIBUTION,
+        ], 300);
+    }
+
+    /**
+     * `hydrate`: true for `osm`, false when absent, null for anything else.
+     *
+     * @param array<string, mixed> $query
+     */
+    private function hydrate(array $query): ?bool
+    {
+        $hydrate = $query['hydrate'] ?? null;
+
+        return null === $hydrate ? false : ('osm' === $hydrate ? true : null);
     }
 }

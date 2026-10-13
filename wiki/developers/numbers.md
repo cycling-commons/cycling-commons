@@ -29,9 +29,13 @@ stale without the build saying so.
 | `map-js-lines` | **365** | lines in `map.js` itself, which is imports plus the boot sequence | `web/assets/map/map.js` |
 | `seeded-pins` | **30** | hand-authored pins `make course-data` seeds | `web/src/Catalog/Command/SeedManualCatalogCommand.php` |
 | `api-rate-limit-per-minute` | **120** | requests a minute per client address on the public API | `web/config/packages/rate_limiter.yaml` |
-| `api-bbox-max-degrees` | **10.0** | widest bbox `/v1/search` accepts, on either axis | `web/src/Controller/Api/V1/PublicApiController.php` |
-| `api-limit-default` | **100** | features `/v1/search` returns when `limit` is not given | `web/src/Controller/Api/V1/PublicApiController.php` |
-| `api-limit-max` | **500** | features `/v1/search` will return at most | `web/src/Controller/Api/V1/PublicApiController.php` |
+| `api-bbox-max-degrees` | **10.0** | widest bbox `/v1/search` and `/v1/routes` accept, on either axis | `web/src/Api/V1/ApiResponder.php` |
+| `api-limit-default` | **100** | rows a `/v1` collection returns when `limit` is not given | `web/src/Api/V1/ApiResponder.php` |
+| `api-limit-max` | **500** | features `/v1/search` will return at most | `web/src/Api/V1/ApiResponder.php` |
+| `api-routes-limit-max` | **100** | routes with their whole line `/v1/routes` returns at most | `web/src/Controller/Api/V1/RouteApiController.php` |
+| `api-counts-bbox-max-degrees` | **2.0** | widest bbox `/v1/coverage/counts` accepts, on either axis | `web/src/Controller/Api/V1/PublicApiController.php` |
+| `api-app-writes-per-hour` | **600** | contributions one partner app may send an hour | `web/config/packages/rate_limiter.yaml` |
+| `contributions-per-author-per-hour` | **20** | contributions one rider, or one partner app's author, may send an hour | `web/config/packages/rate_limiter.yaml` |
 | `climb-window-m` | **250** | metres in the sliding window the steepest-stretch figure is measured over | `web/src/Elevation/ClimbProfiler.php` |
 | `climb-percentile` | **0.95** | percentile of those windows that gets published, rather than the maximum | `web/src/Elevation/ClimbProfiler.php` |
 | `climb-samples` | **200** | elevation samples per climb, a fixed count, so spacing grows with length | `web/src/Elevation/ClimbProfiler.php` |

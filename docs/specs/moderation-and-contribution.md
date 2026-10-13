@@ -679,6 +679,7 @@ LATERAL join the submissions desk uses (route-domain.md §7.1).
 | `letter` | varchar(1) | effective range A–G, N–Q (R bypasses this table: a rider asks for a route change through `route_suggestion`, route-domain.md §7.1); `''` for `text`, which has no catalog kind |
 | `item_id` | bigint NULL | set for `edit` at submit; set for `new` when the item row is created in the same transaction; NULL for `text` |
 | `user_id` | bigint NULL | submitter, deliberately **no FK** (`0` is the system actor). Account deletion sets it to NULL, so the row survives as anonymous data (account-and-auth.md §6.3, `CatalogDeletionHook`) |
+| `api_app_id` / `external_author_ref` / `external_author_name` | bigint / varchar(64) / varchar(80), NULL | a contribution from a registered partner app (public-api.md §8): the app, its opaque reference for its author, the name the author chose to share. Such a row has `user_id` NULL (CHECK `submission_one_origin`) and always a reference (CHECK `submission_app_author`); the desk names it "Sam (Example Rides)" (`DeskRider::ofApp()`), and a decision messages nobody |
 | `status` | varchar(12), enum `SubmissionStatus` | `pending` \| `approved` \| `rejected` \| `needs_info` \| `withdrawn` (§3.4) \| `trashed` (§6) |
 | `title` | varchar(200) | queue/drawer display |
 | `geom` | geometry(Geometry, 4326) | pending-pin location — always a Point in practice |

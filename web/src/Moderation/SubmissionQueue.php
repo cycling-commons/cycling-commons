@@ -260,9 +260,11 @@ final class SubmissionQueue
                     CASE WHEN s.type = \'text\' THEN s.payload->>\'target\' END AS text_target,
                     s.changes, u.display_name AS decided_by_name, u.public_profile AS decided_by_public, u.uuid AS decided_by_uuid,
                     su.public_profile, su.display_name, su.uuid AS user_uuid, su.pseudonym,
+                    ap.name AS app_name, s.external_author_ref, s.external_author_name,
                     rr.body_text AS rider_reply
              FROM submission s LEFT JOIN users u ON u.id = s.decided_by
                   LEFT JOIN users su ON su.id = s.user_id
+                  LEFT JOIN api_app ap ON ap.id = s.api_app_id
                   LEFT JOIN LATERAL (
                       SELECT um.body_text
                       FROM user_message um
@@ -544,9 +546,11 @@ final class SubmissionQueue
                     it.attributes AS item_attributes, it.letter AS item_letter, it.osm_ref, it.osm_checked_at,
                     ST_Y(ST_PointOnSurface(it.geom)) AS item_lat, ST_X(ST_PointOnSurface(it.geom)) AS item_lng,
                     rr.body_text AS rider_reply,
-                    u.public_profile, u.display_name, u.uuid AS user_uuid, u.pseudonym
+                    u.public_profile, u.display_name, u.uuid AS user_uuid, u.pseudonym,
+                    ap.name AS app_name, s.external_author_ref, s.external_author_name
              FROM submission s LEFT JOIN region r ON r.id = s.region_id
                   LEFT JOIN users u ON u.id = s.user_id
+                  LEFT JOIN api_app ap ON ap.id = s.api_app_id
                   LEFT JOIN item it ON it.id = s.item_id
                   LEFT JOIN LATERAL (
                       SELECT um.body_text
@@ -799,12 +803,17 @@ final class SubmissionQueue
     /**
      * The submitter's desk name (DeskRider: display name when public, else
      * pseudonym); null when the account no longer exists, for the view to
-     * write the removed label.
+     * write the removed label. A partner app's contribution names its author
+     * and the app (DeskRider::ofApp()).
      *
      * @param array<string, mixed> $row
      */
     private static function submitterLabel(array $row): ?string
     {
+        if (\is_string($row['app_name'] ?? null)) {
+            return DeskRider::ofApp($row['external_author_name'] ?? null, $row['external_author_ref'] ?? null, $row['app_name'])['name'];
+        }
+
         return DeskRider::of($row['pseudonym'] ?? null, $row['display_name'] ?? null, $row['public_profile'] ?? null, $row['user_uuid'] ?? null)['name'];
     }
 

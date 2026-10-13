@@ -98,6 +98,10 @@ tables:
         that left the waiting room together. No rider.
     traffic_seen: >-
         HMACs of the dedupe codes already received, so no ride is counted twice.
+    api_app: >-
+        The partner apps that may send contributions through the public API: name, contact
+        address, the SHA-256 of the key (never the key), scopes and status.
+
     job_run: >-
         Last good run of each daily console job; the admin dashboard warns when one is late.
 

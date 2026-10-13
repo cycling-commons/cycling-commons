@@ -45,6 +45,21 @@ class Submission
     #[ORM\Column(type: 'bigint', nullable: true)]
     private ?int $userId = 0;
 
+    /**
+     * The partner app a submission came through (docs/specs/public-api.md §8),
+     * NULL for one from the site. Never set together with `userId`.
+     */
+    #[ORM\Column(name: 'api_app_id', type: 'bigint', nullable: true)]
+    private ?int $apiAppId = null;
+
+    /** The app's opaque, stable reference for its author: only the app can tell who it is. */
+    #[ORM\Column(name: 'external_author_ref', type: 'string', length: 64, nullable: true)]
+    private ?string $externalAuthorRef = null;
+
+    /** The name the author chose to share through the app, if any; blanked when the app relays a deletion. */
+    #[ORM\Column(name: 'external_author_name', type: 'string', length: 80, nullable: true)]
+    private ?string $externalAuthorName = null;
+
     #[ORM\Column(type: 'string', length: 12, enumType: SubmissionStatus::class)]
     private SubmissionStatus $status = SubmissionStatus::Pending;
 
@@ -191,6 +206,35 @@ class Submission
     public function setUserId(int $userId): static
     {
         $this->userId = $userId;
+
+        return $this;
+    }
+
+    public function getApiAppId(): ?int
+    {
+        return $this->apiAppId;
+    }
+
+    public function getExternalAuthorRef(): ?string
+    {
+        return $this->externalAuthorRef;
+    }
+
+    public function getExternalAuthorName(): ?string
+    {
+        return $this->externalAuthorName;
+    }
+
+    /**
+     * File the submission under a partner app's author instead of a rider
+     * (docs/specs/public-api.md §8): no rider, so nobody here to message.
+     */
+    public function setApiOrigin(int $apiAppId, string $authorRef, ?string $authorName): static
+    {
+        $this->userId = null;
+        $this->apiAppId = $apiAppId;
+        $this->externalAuthorRef = $authorRef;
+        $this->externalAuthorName = $authorName;
 
         return $this;
     }

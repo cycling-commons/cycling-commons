@@ -163,6 +163,37 @@ final class BestOfResults
     }
 
     /**
+     * One region's current list in every votable category, for the public
+     * API (public-api.md §2.2, `/v1/regions/{id}/best`). The same closed
+     * rounds and the same places `/best` shows; a list below the ranking
+     * threshold has no rows here, because "most confirmed so far" is not a
+     * ranking and the API does not dress it up as one.
+     *
+     * @param RegionRow $region
+     *
+     * @return list<array{type: ItemType, round: Round, ranked: bool, top: list<Ranked>}>
+     */
+    public function standings(array $region): array
+    {
+        $round = $this->round($region, null);
+        $out = [];
+        foreach (ItemType::cases() as $type) {
+            if (!$type->isVotable()) {
+                continue;
+            }
+            $list = $this->results->list(new ListKey($region['id'], $type, null), $round);
+            $out[] = [
+                'type' => $type,
+                'round' => $round,
+                'ranked' => $list['ranked'],
+                'top' => $list['ranked'] ? $this->group($region, $type, $round, $list, null, [], [])['top'] : [],
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
      * The regions with at least `$min` voters in their own round of this
      * list, counted or stored, with that number. Every round asked about has
      * started, so its ballot has closed: this never counts a ballot riders
