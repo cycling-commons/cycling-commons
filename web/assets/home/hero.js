@@ -44,7 +44,10 @@
         hero.style.setProperty('--ride-inner', r.inner);
       }
     };
-    applyRace(pickRace().r);
+    // Race colours only while a race is on; between races the hero keeps its
+    // own look (owner 2026-10-13: no rainbow before the Worlds have started).
+    const race=pickRace();
+    if(race.status==='on') applyRace(race.r);
   }
 
   /* The silo box's phone draft: the six apps fly into the Commons icon and
