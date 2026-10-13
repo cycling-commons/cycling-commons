@@ -1,0 +1,34 @@
+web/assets/data/races.js
+  s_5f932505c6b489::t_ef238ce59f3dee 25-28,32-47
+  s_5f932505c6b489::t_58c148e7e8a268 29-30
+  s_5f932505c6b489::t_aa543071df52c4 68-69
+  s_5f932505c6b489::t_8c5f018608f796 3-5,21
+  s_5f932505c6b489::t_27494b922ea3c4 31,48,70-76,84,89
+  s_5f932505c6b489::t_e0d7ef2716fb05 50-54,57,59,63,66-67
+  s_5f932505c6b489::t_f4600ab796bdae 49
+web/assets/home/hero.js
+  s_5f932505c6b489::t_8c5f018608f796 47-50
+web/tests/js/race-calendar.test.cjs
+  s_5f932505c6b489::t_becc6f2e9c80b9 1-47
+  s_5f932505c6b489::t_da45378936e1c1 48-64
+web/templates/account/_shell_chrome.html.twig
+  s_5f932505c6b489::t_58c148e7e8a268 17
+web/templates/partials/_nav.html.twig
+  s_5f932505c6b489::t_58c148e7e8a268 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "401b201a6d7c79b266573dc647be91127c3359ec",
+  "prompts": {},
+  "sessions": {
+    "s_5f932505c6b489": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ad210b22-8cc8-4172-9d1d-307478efbdb2",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
