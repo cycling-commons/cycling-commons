@@ -241,19 +241,24 @@ Everything above is about a route that already exists. "Find me a route from A t
 different kind of problem entirely: not a spatial query over stored geometry, but **graph search**
 over a network of road segments with a cost attached to each one (distance, surface, steepness),
 looking for the cheapest path through it. This project does not implement that search itself. It
-asks **Valhalla**, an open-source routing engine the project runs on its own tiles, from two narrow
-places in `web/src/Elevation/`: one that snaps two clicked points onto the road between them while
-somebody draws a climb, and one that reads ground height under a line for a climb profile.
+asks **Valhalla**, an open-source routing engine the project runs on its own tiles, from a few
+narrow places: `web/src/Elevation/RouteSnapper.php` snaps two points onto the road between them,
+for the climb editor and for the ride planner's legs; `web/src/Elevation/ElevationClient.php`
+reads ground height under a line, for a climb's profile and a planned leg's; and
+`web/src/Contribution/ValhallaBikeWayLocator.php` finds the nearest bike way for a scenic view.
 
-Both answer `null` rather than a guess when the engine is unreachable. Neither is a route planner.
+All of them answer `null` rather than a guess when the engine is unreachable.
 
-!!! note "Not in the Commons, yet"
-    A rider-facing route planner, "find me a route from A to B" with turn-by-turn directions, is not
-    built. Course 2's [routing chapter](../gis-beyond/routing.md) is the full account: why graph
-    search is not a spatial query, exactly what the one existing call does and does not do, and what
-    a real planner would take. It is not repeated here.
+!!! note "The ride planner"
+    The one rider-facing use is the ride planner on the map (`/map?panel=plan`): a start, a few
+    stops and an end, each leg routed for the rider's bike type through `POST /map/plan/leg`
+    (`web/src/Controller/PlanController.php`) with the heights of the leg, and what the Commons
+    has along the planned line through `POST /map/plan/along`. Course 2's
+    [routing chapter](../gis-beyond/routing.md) is the full account: why graph search is not a
+    spatial query, what the engine is asked and what it is not, and why the browser never talks to
+    it. It is not repeated here. Turn-by-turn directions are not built.
 
-<!-- UNANCHORED id=U91 type=absent concept="turn-by-turn route computation (A to B) via a routing engine" -->
+<!-- UNANCHORED id=U91 type=absent concept="turn-by-turn directions from a routing engine" -->
 
 ## What to carry into chapter 10
 

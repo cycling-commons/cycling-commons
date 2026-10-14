@@ -686,4 +686,27 @@ final class RideCheckServiceTest extends KernelTestCase
 
         self::assertSame([], $this->service()->check(self::ride(), 250)['regions']);
     }
+
+    /* A planned ride's along list (docs/specs/route-planner.md section 5): the
+       ride check's corridor arms on a GeoJSON line the planner drew, no GPX,
+       nothing stored. */
+
+    public function testAlongLineListsTheCorridorOfAPlannedLine(): void
+    {
+        $tap = $this->seedItem('B', 'Fontaine on the plan', self::point(50.40045, 5.8050), 'plan-tap');
+        $far = $this->seedItem('B', 'Fontaine far away', self::point(50.4100, 5.8050), 'plan-far');
+
+        $result = $this->service()->alongLine(self::line([[5.8000, 50.4], [5.8300, 50.4]]), 2_130.0, 250);
+
+        self::assertSame(250, $result['radiusM']);
+        self::assertSame([], $result['climbs']);
+        $water = array_values(array_filter($result['groups'], static fn (array $g): bool => 'B' === $g['letter']));
+        self::assertCount(1, $water);
+        $ids = array_column($water[0]['items'], 'id');
+        self::assertContains($tap, $ids);
+        self::assertNotContains($far, $ids);
+        // km along is the line's own distance, not a share in degrees.
+        self::assertEqualsWithDelta(0.36, $water[0]['items'][array_search($tap, $ids, true)]['alongKm'], 0.05);
+        self::assertArrayHasKey('coverage', $result);
+    }
 }

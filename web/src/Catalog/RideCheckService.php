@@ -130,15 +130,38 @@ final class RideCheckService
             return null;
         }
 
-        $lengthM = (float) $route['len_m'];
+        $along = $this->alongLine($route['geom'], (float) $route['len_m'], $radiusM);
+
+        return ['radiusM' => $radiusM, 'groups' => $along['groups'], 'coverage' => $along['coverage']];
+    }
+
+    /**
+     * What is along a line a rider planned (docs/specs/route-planner.md section
+     * 5): the ride check's corridor arms on a GeoJSON LineString, no GPX and
+     * nothing stored. The climbs the line rides are `climbs`; the climbs it
+     * only passes near are the letter N group, as on a ride and on a route.
+     * The one code path behind the ride check's along lists, the route
+     * drawer's and the planner's.
+     *
+     * @param string $geoJson a GeoJSON LineString, [lng, lat]
+     * @param float  $lengthM the line's geodesic length, so km along is true metres
+     *
+     * @return array{
+     *     radiusM: int,
+     *     climbs: list<array{id: int, name: string, alongKm: float, avgGradient: string|null, ll: array{0: float, 1: float}, distM: int}>,
+     *     groups: list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float, avgGradient?: string|null}>, truncated: bool}>,
+     *     coverage: list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float, ref: string}>, truncated: bool}>
+     * }
+     */
+    public function alongLine(string $geoJson, float $lengthM, int $radiusM = self::DEFAULT_RADIUS): array
+    {
+        $climbs = $this->climbs->climbsAlong($geoJson, $lengthM, $radiusM);
 
         return [
             'radiusM' => $radiusM,
-            'groups' => $this->withNearClimbs(
-                $this->corridorGroups($route['geom'], $radiusM, $lengthM, ['A', 'N']),
-                $this->climbs->climbsAlong($route['geom'], $lengthM, $radiusM)['near'],
-            ),
-            'coverage' => $this->corridorCoverage($route['geom'], $radiusM, (float) $route['len_m']),
+            'climbs' => $climbs['ridden'],
+            'groups' => $this->withNearClimbs($this->corridorGroups($geoJson, $radiusM, $lengthM, ['A', 'N']), $climbs['near']),
+            'coverage' => $this->corridorCoverage($geoJson, $radiusM, $lengthM),
         ];
     }
 

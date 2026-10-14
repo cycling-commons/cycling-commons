@@ -106,4 +106,83 @@ final class ElevationClientTest extends TestCase
 
         self::assertNull($client->heights($coords));
     }
+
+    /** @var array<string, mixed> what the last mock request carried, decoded */
+    private array $lastBody = [];
+
+    private function recording(MockResponse $response): ElevationClient
+    {
+        $http = new MockHttpClient(function (string $method, string $url, array $options) use ($response): MockResponse {
+            $this->lastBody = json_decode((string) $options['body'], true, 512, \JSON_THROW_ON_ERROR);
+
+            return $response;
+        });
+
+        return new ElevationClient($http, new NullLogger(), 'http://valhalla.test', 'Copernicus DEM GLO-30');
+    }
+
+    /* A planned leg's profile (docs/specs/route-planner.md section 4.2): the
+       line resampled every 30 m by the engine, each sample with its metres
+       along, so the chart draws distance, not vertex index. */
+
+    public function testAProfileAsksForResampledHeightsWithTheDistanceAlong(): void
+    {
+        $client = $this->recording(new MockResponse((string) json_encode(['range_height' => [[0, 300], [30, 305], [60, 311]]])));
+
+        $result = $client->profile([[50.1, 5.1], [50.2, 5.2]]);
+
+        self::assertSame(30, $this->lastBody['resample_distance']);
+        self::assertTrue($this->lastBody['range']);
+        self::assertSame([['lat' => 50.1, 'lon' => 5.1], ['lat' => 50.2, 'lon' => 5.2]], $this->lastBody['shape']);
+        self::assertSame([[0.0, 300.0], [30.0, 305.0], [60.0, 311.0]], $result);
+    }
+
+    public function testAProfileMostlyAtExactlyZeroIsNoProfile(): void
+    {
+        // Nine zeros and one height: the engine has no tiles here. The leg
+        // keeps its line and loses its heights, never a flat profile.
+        $zeros = array_map(static fn (int $i): array => [$i * 30, 0], range(0, 8));
+        $client = $this->recording(new MockResponse((string) json_encode(['range_height' => [...$zeros, [270, 312]]])));
+
+        self::assertNull($client->profile([[50.1, 5.1], [50.2, 5.2]]));
+    }
+
+    public function testAProfileNinetyPerCentKnownIsKept(): void
+    {
+        $known = array_map(static fn (int $i): array => [$i * 30, 100 + $i], range(0, 8));
+        $client = $this->recording(new MockResponse((string) json_encode(['range_height' => [[0, 0], ...$known]])));
+
+        self::assertCount(10, (array) $client->profile([[50.1, 5.1], [50.2, 5.2]]));
+    }
+
+    public function testALongLineIsThinnedBeforeItIsSentAndKeepsItsEnds(): void
+    {
+        $client = $this->recording(new MockResponse((string) json_encode(['range_height' => [[0, 100], [30, 101]]])));
+        $coords = [];
+        for ($i = 0; $i < 1500; ++$i) {
+            $coords[] = [50.0 + $i * 0.0001, 5.0];
+        }
+
+        self::assertNotNull($client->profile($coords));
+
+        $shape = $this->lastBody['shape'];
+        self::assertLessThanOrEqual(ElevationClient::MAX_POINTS, \count($shape));
+        self::assertSame(['lat' => 50.0, 'lon' => 5.0], $shape[0]);
+        self::assertEqualsWithDelta(50.1499, $shape[\count($shape) - 1]['lat'], 1e-9);
+        self::assertSame(5.0, $shape[\count($shape) - 1]['lon']);
+    }
+
+    public function testAnEngineThatDoesNotAnswerGivesNoProfile(): void
+    {
+        $client = $this->recording(new MockResponse('', ['error' => 'connection refused']));
+
+        self::assertNull($client->profile([[50.1, 5.1], [50.2, 5.2]]));
+    }
+
+    public function testNoEngineConfiguredGivesNoProfile(): void
+    {
+        $client = new ElevationClient(new MockHttpClient(), new NullLogger(), '', 'Copernicus DEM GLO-30');
+
+        self::assertNull($client->profile([[50.1, 5.1], [50.2, 5.2]]));
+    }
 }

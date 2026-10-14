@@ -14,6 +14,12 @@ framework:
             - elevation
             # /contribute/route road snap, the stateless sibling of 'elevation'.
             - route-snap
+            # The ride planner's JSON calls (route-planner.md section 8): the
+            # two open ones, and the signed-in save and delete of a ride.
+            - plan-leg
+            - plan-along
+            - plan-save
+            - plan-delete
             - scout-tags
             - scout-traffic
             - time-zone

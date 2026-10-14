@@ -21,6 +21,16 @@ framework:
                 adapter: cache.app
             cache.route_snap_limiter:
                 adapter: cache.app
+            cache.plan_leg_limiter:
+                adapter: cache.app
+            cache.plan_leg_anon_limiter:
+                adapter: cache.app
+            cache.plan_along_limiter:
+                adapter: cache.app
+            cache.plan_along_anon_limiter:
+                adapter: cache.app
+            cache.plan_save_limiter:
+                adapter: cache.app
             cache.coverage_read_limiter:
                 adapter: cache.app
             cache.coverage_photo_limiter:
@@ -156,6 +166,44 @@ framework:
             limit: 90
             interval: '1 minute'
             cache_pool: cache.route_snap_limiter
+        # Ride planner (docs/specs/route-planner.md section 8): one leg is one
+        # upstream Valhalla /route plus one /height, the same shared engine as
+        # route_snap. Per ten minutes: a rider re-routes a dozen legs when they
+        # switch the bike chip, and again when they drag a stop.
+        plan_leg:
+            policy: sliding_window
+            limit: 600
+            interval: '10 minutes'
+            cache_pool: cache.plan_leg_limiter
+        # The planner without an account, the ride check's pattern: its own
+        # limiter so the two cannot drain each other, keyed on a salted hash
+        # of the address, never the address.
+        plan_leg_anon:
+            policy: sliding_window
+            limit: 100
+            interval: '1 day'
+            cache_pool: cache.plan_leg_anon_limiter
+        # What is along the planned line: the ride check's corridor queries on
+        # a line the rider drew, asked once the legs settle, not on every click.
+        plan_along:
+            policy: sliding_window
+            limit: 60
+            interval: '10 minutes'
+            cache_pool: cache.plan_along_limiter
+        plan_along_anon:
+            policy: sliding_window
+            limit: 20
+            interval: '1 day'
+            cache_pool: cache.plan_along_anon_limiter
+        # Saving a planned ride (route-planner.md section 6.1): one row per
+        # save, after the body's shape is checked and before the line is
+        # measured in PostGIS. Signed in only, so no visitor limiter; a rider
+        # saves a handful of times an afternoon, a loop fills a hundred rows.
+        plan_save:
+            policy: sliding_window
+            limit: 30
+            interval: '10 minutes'
+            cache_pool: cache.plan_save_limiter
         # Coverage query plane (coverage-provider.md §5): the
         # app's first anonymous-read limiter — per-IP sliding window, generous
         # for normal map use, bounded against scraping (access-terms rule).
@@ -424,6 +472,16 @@ when@test:
                 cache.elevation_limiter:
                     adapter: cache.adapter.array
                 cache.route_snap_limiter:
+                    adapter: cache.adapter.array
+                cache.plan_leg_limiter:
+                    adapter: cache.adapter.array
+                cache.plan_leg_anon_limiter:
+                    adapter: cache.adapter.array
+                cache.plan_along_limiter:
+                    adapter: cache.adapter.array
+                cache.plan_along_anon_limiter:
+                    adapter: cache.adapter.array
+                cache.plan_save_limiter:
                     adapter: cache.adapter.array
                 cache.coverage_read_limiter:
                     adapter: cache.adapter.array

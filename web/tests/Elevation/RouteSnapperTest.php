@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Elevation;
 
+use App\Catalog\BikeType;
 use App\Elevation\RouteSnapper;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -111,5 +112,47 @@ final class RouteSnapperTest extends TestCase
         $snapper = $this->snapper(new MockResponse('never called'), '');
 
         self::assertNull($snapper->snap([50.0, 5.0], [50.1, 5.1]));
+    }
+
+    /** @var array<string, mixed> what the last mock request carried, decoded */
+    private array $lastBody = [];
+
+    /** A mock client that keeps the JSON body it was asked to send. */
+    private function recording(MockResponse $response): MockHttpClient
+    {
+        return new MockHttpClient(function (string $method, string $url, array $options) use ($response): MockResponse {
+            $this->lastBody = json_decode((string) $options['body'], true, 512, \JSON_THROW_ON_ERROR);
+
+            return $response;
+        });
+    }
+
+    public function testAPlannedLegSendsTheBikeCosting(): void
+    {
+        $shape = self::encode([[50.0, 5.0], [50.001, 5.001]]);
+        $client = $this->recording(new MockResponse(json_encode([
+            'trip' => ['legs' => [['shape' => $shape, 'summary' => ['length' => 0.1]]]],
+        ], \JSON_THROW_ON_ERROR)));
+        $snapper = new RouteSnapper($client, new NullLogger(), 'http://valhalla.test');
+
+        self::assertNotNull($snapper->snap([50.0, 5.0], [50.001, 5.001], BikeType::Gravel));
+
+        self::assertSame('bicycle', $this->lastBody['costing']);
+        self::assertSame(['bicycle' => ['bicycle_type' => 'Cross']], $this->lastBody['costing_options']);
+    }
+
+    public function testTheClimbEditorSnapSendsNoCostingOptions(): void
+    {
+        // The editor's snap stays exactly what it was: no bike, no costing
+        // block, so a climb's line does not move with this change.
+        $shape = self::encode([[50.0, 5.0], [50.001, 5.001]]);
+        $client = $this->recording(new MockResponse(json_encode([
+            'trip' => ['legs' => [['shape' => $shape, 'summary' => ['length' => 0.1]]]],
+        ], \JSON_THROW_ON_ERROR)));
+        $snapper = new RouteSnapper($client, new NullLogger(), 'http://valhalla.test');
+
+        self::assertNotNull($snapper->snap([50.0, 5.0], [50.001, 5.001]));
+
+        self::assertArrayNotHasKey('costing_options', $this->lastBody);
     }
 }

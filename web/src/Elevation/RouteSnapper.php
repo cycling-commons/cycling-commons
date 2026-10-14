@@ -6,12 +6,17 @@ declare(strict_types=1);
 
 namespace App\Elevation;
 
+use App\Catalog\BikeType;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * Snaps two points to a road line via our Valhalla (`bicycle` costing)
- * (docs/specs/climb-elevation.md §3e). Null when unset or unreachable — never a guess.
+ * (docs/specs/climb-elevation.md §3e). Null when unset or unreachable, never a guess.
+ *
+ * With a bike (docs/specs/route-planner.md section 4.2) the request carries
+ * that bike's costing block, so the planner's leg follows the roads that suit
+ * the bike; without one the request is exactly the climb editor's.
  *
  * @api
  */
@@ -32,7 +37,7 @@ final class RouteSnapper
      * @return array{coordinates: list<array{0: float, 1: float}>, distanceM: float}|null
      *                                                                                    [lng, lat] GeoJSON; null when unset or unreachable
      */
-    public function snap(array $a, array $b): ?array
+    public function snap(array $a, array $b, ?BikeType $bike = null): ?array
     {
         if ('' === $this->valhallaUrl) {
             return null;   // same master switch as elevation: unset = no routing
@@ -40,17 +45,21 @@ final class RouteSnapper
 
         $url = $this->endpoints?->forShape([$a, $b]) ?? $this->valhallaUrl;
 
+        $json = [
+            'locations' => [
+                ['lat' => $a[0], 'lon' => $a[1]],
+                ['lat' => $b[0], 'lon' => $b[1]],
+            ],
+            'costing' => 'bicycle',
+            // The editor wants the line; turn-by-turn prose is dead weight.
+            'directions_type' => 'none',
+        ];
+        if (null !== $bike) {
+            $json['costing_options'] = ['bicycle' => BikeCosting::options($bike)];
+        }
         try {
             $res = $this->http->request('POST', rtrim($url, '/').'/route', [
-                'json' => [
-                    'locations' => [
-                        ['lat' => $a[0], 'lon' => $a[1]],
-                        ['lat' => $b[0], 'lon' => $b[1]],
-                    ],
-                    'costing' => 'bicycle',
-                    // The editor wants the line; turn-by-turn prose is dead weight.
-                    'directions_type' => 'none',
-                ],
+                'json' => $json,
                 'timeout' => 8,
             ]);
             $data = $res->toArray(false);

@@ -2,11 +2,12 @@
 
 # Routing
 
-**This is mostly a "we do not do it yet" chapter**, with one narrow, already-existing exception this
-chapter is careful to describe exactly, no more and no less. Cycling Commons does not offer
-point-to-point routing to riders. There is no "get me from here to there" feature anywhere a rider
-can reach. Read on for what that would actually take, and for the one place a form of routing
-already quietly exists — inside a contribution form, for a different purpose entirely.
+**This chapter describes the routing Cycling Commons does, exactly, no more and no less.** A rider
+can plan a ride on the map: a start, a few stops and an end, routed one leg at a time over roads
+that suit the bike they ride. That is the whole of it: no turn-by-turn directions, no alternatives,
+no multi-day plans. The same engine snaps a climb's two clicked points onto the road inside a
+contribution form. Read on for what routing actually is, why it is not a spatial query, and what
+the project asks its engine and what it deliberately does not.
 
 ## The idea this field confuses most often
 
@@ -113,34 +114,48 @@ places relate to each other."
 
 ## What this project actually does
 
-!!! note "Not in the Commons, yet"
-    Turn-by-turn route computation between two points is not wired into the application anywhere a
-    rider can reach it. **Valhalla**, an open-source routing engine, is nevertheless part of this
-    project's stack: the project runs its own instances, one per continent (`tools/valhalla/` builds
-    their tiles), and two classes under `web/src/Elevation/` call them. `RouteSnapper` posts to
-    `/route` with the `bicycle` costing, and `ElevationClient` posts to `/height`. Both reach the
-    instances through `ELEVATION_URL` and the per-continent `ELEVATION_URLS`; in the dev environment
-    those point at host-run instances via `host.docker.internal` (`web/.env`). The elevation-shaped
-    name on a routing call is not a misprint: one Valhalla instance per continent answers both
-    `/route` and `/height`, and the variable was named for the job that came first. Neither call
-    plans a ride for anyone.
+!!! note "Three callers, one engine"
+    **Valhalla**, an open-source routing engine, is part of this project's stack: the project runs
+    its own instances, one per continent (`tools/valhalla/` builds their tiles), and three classes
+    call them. `web/src/Elevation/RouteSnapper.php` posts to `/route` with the `bicycle` costing,
+    for the climb editor's snap and for the ride planner's legs; `web/src/Elevation/ElevationClient.php`
+    posts to `/height`, for a climb's profile and a planned leg's; and
+    `web/src/Contribution/ValhallaBikeWayLocator.php` asks `/locate` for the nearest bike way. All
+    reach the instances through `ELEVATION_URL` and the per-continent `ELEVATION_URLS`; in the dev
+    environment those point at host-run instances via `host.docker.internal` (`web/.env`). The
+    elevation-shaped name on a routing call is not a misprint: one Valhalla instance per continent
+    answers every call, and the variable was named for the job that came first. The ride planner
+    on the map (`/map?panel=plan`) is the one place a rider asks for a route: a start, a few
+    stops and an end, one leg per call, for the bike type they ride. Turn-by-turn directions are
+    not built, and nothing the engine is asked can put a leg on a road a cyclist may not use: the
+    `bicycle` costing rides only roads open to bicycles.
 
-**What that one call actually looks like.** This is the whole request the snapper sends, quoted from
-the class rather than described:
+**What a call looks like.** This is the whole request the snapper sends, quoted from the class
+rather than described:
 
 <!-- CODE-FROM web/src/Elevation/RouteSnapper.php -->
 ```php
-                'json' => [
-                    'locations' => [
-                        ['lat' => $a[0], 'lon' => $a[1]],
-                        ['lat' => $b[0], 'lon' => $b[1]],
-                    ],
-                    'costing' => 'bicycle',
+        $json = [
+            'locations' => [
+                ['lat' => $a[0], 'lon' => $a[1]],
+                ['lat' => $b[0], 'lon' => $b[1]],
+            ],
+            'costing' => 'bicycle',
+            // The editor wants the line; turn-by-turn prose is dead weight.
+            'directions_type' => 'none',
+        ];
+        if (null !== $bike) {
+            $json['costing_options'] = ['bicycle' => BikeCosting::options($bike)];
+        }
 ```
 
-Two locations, one costing, and `directions_type: none`, because the editor wants the line and
-turn-by-turn prose would be dead weight. That is the entire vocabulary of routing this project
-speaks: no waypoints, no alternatives, no avoid-list, no preferences.
+Two locations, one costing, and `directions_type: none`, because both callers want the line and
+turn-by-turn prose would be dead weight. The planner's leg adds one thing: the bike's costing
+block, which `web/src/Elevation/BikeCosting.php` builds from the rider's bike type (a road bike
+rides the engine's road profile, a gravel bike the cyclocross one, a mountain bike the mountain
+one; an e-bike, a handbike and the wide or long bikes tune hills and rough surfaces on top). That
+is the entire vocabulary of routing this project speaks: two points and a bike, no alternatives,
+no avoid-list.
 
 The reply is a trip whose legs each carry an encoded `shape`, which the class decodes into
 coordinate pairs:
@@ -210,11 +225,10 @@ instance, through a small server-side proxy:
 What this is and is not:
 
 - The proxy (`/contribute/route` → `RouteSnapper`) asks Valhalla with its **`bicycle`** costing,
-  so it follows the cycleways and greenways some climbs actually ride. But it is still not a route
-  *planner*: it answers "which road connects these two points," nothing about cheapest, flattest,
-  or nicest.
+  so it follows the cycleways and greenways some climbs actually ride. It answers "which road
+  connects these two points," nothing about cheapest, flattest, or nicest.
 - It exists to turn **two clicked points** into a road-following line for a **single new
-  catalog entry** — it is a drawing aid inside a contribution form, not a way to ask for a ride.
+  catalog entry**: a drawing aid inside a contribution form.
 - It degrades honestly when it fails: a straight line between the two points stays on screen, and the
   contributor is told the snap did not work, rather than the tool silently pretending it succeeded.
 - It is **guarded like any other JSON endpoint here**: a signed-out caller gets a
@@ -222,13 +236,15 @@ What this is and is not:
   is a stateless CSRF token the server requires, and a per-user limiter caps how much of the shared
   routing engine one account can spend. Being a drawing aid is not a reason to be an open proxy.
 
-This is a real, working call to a real routing engine, and it would be dishonest to describe this
-chapter's "we do not do it yet" as covering the whole codebase without naming it. But it is also
-nothing like the routing feature this chapter has been describing throughout. A rider cannot ask
-this project to route them anywhere. It happens only inside the climb contribution form, and only
-for a signed-in contributor, which `/improve` and the endpoint itself both require (`ROLE_USER`).
-It answers exactly one narrow question — "what road probably connects these two points somebody
-just clicked" — and nothing broader.
+The ride planner is the same call with a bike, behind its own proxy. `web/assets/map/plan.js`
+posts each leg of the ride to `/map/plan/leg` (`web/src/Controller/PlanController.php`), which
+asks the snapper for the road between two stops under the rider's bike type and the elevation
+client for the heights along it, and posts the planned line to `/map/plan/along`, which lists what
+the Commons has within the ride check's corridor of it. The planner is open to everyone, a visitor
+spending a budget keyed on a salted hash of their address and a rider their own, and the browser
+never talks to the engine. What the engine cannot route comes back as `routed: false` with no line
+at all, so nothing that is not a road ever leaves the server. The design, the bike costing table
+and the limits are in `docs/specs/route-planner.md`.
 
 
 ## Further reading
@@ -238,9 +254,9 @@ just clicked" — and nothing broader.
 
 ## Try it
 
-!!! tip "Hands-on: nothing routes, and the honest reason this exercise cannot fake it"
-    First, check that no rider-reachable code calls a routing engine at all — not by trusting this
-    chapter's word for it, by grepping the tracked source directly:
+!!! tip "Hands-on: who talks to the engine, and the honest reason this exercise cannot fake a route"
+    First, check which code talks to a routing engine at all, not by trusting this chapter's word
+    for it, by grepping the tracked source directly:
 
     <!-- CODE-ILLUSTRATIVE shell command against this repository's own tracked source -->
     ```sh
@@ -249,13 +265,14 @@ just clicked" — and nothing broader.
 
     <!-- CODE-ILLUSTRATIVE SAMPLE-FROM any-install; sample output from this repository -->
     ```text
+    web/src/Contribution/ValhallaBikeWayLocator.php
     web/src/Elevation/ElevationClient.php
     web/src/Elevation/RouteSnapper.php
     ```
 
-    Two hits, both server-side and both already named above: the elevation client, and the
-    `RouteSnapper` behind the contribution form's `/contribute/route` proxy. No browser file calls a
-    routing engine directly, and nothing under `web/assets/map/`, the map a rider actually uses,
+    Three hits, all server-side and all named above. No browser file calls a routing engine
+    directly: the map's planner, `web/assets/map/plan.js`, posts to the project's own
+    `/map/plan/leg`, which is why nothing under `web/assets/map/`, the map a rider actually uses,
     appears in that list.
 
     Starting Valhalla to demonstrate an actual route would be dishonest here, and the compose file
