@@ -1,0 +1,42 @@
+web/translations/privacy.nl.yaml
+  s_bc1f503934afca::t_b54153d40a6ed1 37,125,182
+web/assets/styles/page/account/rides.css
+  s_bc1f503934afca::t_2fdccc180b6f6b 1-13
+web/templates/account/rides.html.twig
+  s_bc1f503934afca::t_82a2293555557f 1-58
+web/translations/privacy.es.yaml
+  s_bc1f503934afca::t_b54153d40a6ed1 37,125,182
+web/templates/pages/privacy.html.twig
+  s_bc1f503934afca::t_b54153d40a6ed1 64,264
+web/translations/privacy.en.yaml
+  s_bc1f503934afca::t_b54153d40a6ed1 37,125,182
+web/src/Content/ReleaseNotes.php
+  s_bc1f503934afca::t_58baa5bcbd74a0 64,79
+web/tests/Controller/AccountRidesControllerTest.php
+  s_bc1f503934afca::t_588b619c8013c6 1-103
+web/src/Legal/PrivacyNoticeVersions.php
+  s_bc1f503934afca::t_b54153d40a6ed1 20,26-27
+web/src/Controller/AccountRidesController.php
+  s_bc1f503934afca::t_551ce77face4b6 1-37,39-59
+  s_bc1f503934afca::t_7a81dfc445fa22 38
+web/translations/privacy.fr.yaml
+  s_bc1f503934afca::t_b54153d40a6ed1 37,125,182
+web/translations/privacy.de.yaml
+  s_bc1f503934afca::t_b54153d40a6ed1 37,125,182
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "27c5707c4fd56fa19f519595602925a31f9b0ce2",
+  "prompts": {},
+  "sessions": {
+    "s_bc1f503934afca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "81bf59e0-0d1b-42ea-8a2a-bc0c63aecbf5",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
