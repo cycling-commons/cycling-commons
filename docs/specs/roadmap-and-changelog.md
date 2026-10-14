@@ -273,6 +273,12 @@ tab" and votable before they are promoted to real items.
 | `roadmap_proposal_image` | the one picture a proposal may carry |
 | `roadmap_vote`, `roadmap_follow` | one row per rider per ref |
 
+An item can also change by migration, while the desk is not yet on
+production and the item must land with its feature's code:
+`Version20261014010000` reworded the Next item "Take a route with you" into
+"Plan a ride on your bike" and moved it to Now
+([route-planner.md](route-planner.md) section 2).
+
 A **ref** names what a vote or a follow is on: `item:<id>` or
 `proposal:<id>`. A shipped or removed item keeps its row with `closed_at`,
 so a promoted proposal still points at something.

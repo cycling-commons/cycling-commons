@@ -48,6 +48,9 @@ Revisit when there is a separate infrastructure repository to hold it.
 - `catalog-data-model.md`: the running catalog schema and data contracts.
 - `moderation-and-contribution.md`: the contribution-to-decision lifecycle.
 - `route-domain.md`: the R route domain in depth.
+- `route-planner.md`: the one-day ride planner on the map: stops, the bike
+  costing, the profile, what is along the ride, saved rides and the GPX.
+  Specified, pending implementation.
 - `climb-elevation.md`: how a climb's length, gain, gradients and profile are
   MEASURED (elevation source chain, binning, the steepest-ramp window) and how
   the profile chart is drawn. Nobody types a gradient.

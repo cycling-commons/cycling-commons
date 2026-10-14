@@ -271,6 +271,8 @@ map module opens `#drawer` behind its back.
 - **The rail** is 48px on the left edge, at every screen width. Top: the brand
   mark. Then one icon per rider section, in this order: **Search & region**
   (magnifier), **Layers & filters** (layer stack), **Ride tools** (bicycle).
+  A fourth, **Plan a ride**, is specified in
+  [route-planner.md](route-planner.md) section 3 and pending.
   After a spring and a hairline: the **theme** sun/moon (§4.6), a **≡** button
   whose flyout carries the site nav and the language menu, and the **account
   avatar**, which keeps its unread bulb visible on the rail rather than hiding
@@ -3263,12 +3265,15 @@ heatmap back is uncommenting two blocks and nothing else.
   real anonymized-ingest heatmap (map-match-then-discard, k-anonymity) is
   unbuilt; its privacy contract lives in the public wiki data catalog and gets
   its own spec when built.
-- **No route planner on the map** (owner 2026-08-02). A planner that only
-  picks the nearest sample loop is a control that looks like a planner and is
-  not one. The real planner, and starting it from the rider's position, are
-  deferred; Locate me (§4.0) only centres the map. The frozen pre-Symfony demo
-  at `atlas/demo/map.html` keeps its own faked planner, which is what a frozen
-  snapshot is for.
+- **A route planner on the map: reversed 2026-10-14.** The rule of
+  2026-08-02 was "no route planner on the map": a planner that only picks the
+  nearest sample loop is a control that looks like a planner and is not one.
+  Riders asked for a planner, so one is specified in
+  [route-planner.md](route-planner.md), and the old reason still binds it:
+  the line comes from the routing engine or there is no planner. Starting it
+  from the rider's position stays deferred; Locate me (§4.0) only centres the
+  map. The frozen pre-Symfony demo at `atlas/demo/map.html` keeps its own
+  faked planner, which is what a frozen snapshot is for.
 - **Ride privacy:** route/heat fixture tracks have their first and last
   ~350–750 m trimmed (`trimEnds()`, **seeded by route id** so the trim is
   deterministic per route — located-correction fractions are stored relative

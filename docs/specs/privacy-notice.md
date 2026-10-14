@@ -294,6 +294,13 @@ which version each account has seen is kept.
   `privacy.change.v4_roadmap`; roadmap-and-changelog.md section 8.8). Not
   significant because the processing is optional and only happens when a
   rider uses it; nothing changes for data already given.
+  Version 5 (14 October 2026, not significant) adds the rides a rider plans
+  on the map and saves: what is kept (name, bike type, stops, line, figures),
+  that nobody but the rider sees one, that an unsaved ride stays in the
+  browser and its leg requests reach only our own routing engine, and that a
+  saved ride stays until deleted on the Rides page or with the account and is
+  in the export (`privacy.collect_rides`, `privacy.retention_rides`,
+  `privacy.change.v5_rides`; [route-planner.md](route-planner.md) section 7).
   Version 1 is the page as committed on 4 October 2026. Version 2 (7 October
   2026) adds traffic summaries and Scout tags, the stored time zone, the base
   location stored as a random point up to 2.5 km away instead of rounded to
