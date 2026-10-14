@@ -1,0 +1,51 @@
+web/src/Planner/RideRefused.php
+  s_bc1f503934afca::t_70c5ef5bf4b3e3 29,31
+  s_bc1f503934afca::t_48deb6e7d02de4 1-28,30,32-33
+web/src/Planner/PlannedRides.php
+  s_bc1f503934afca::t_48deb6e7d02de4 1-118
+web/src/Account/DataExportService.php
+  s_bc1f503934afca::t_bf02d8ab4b4764 65,254-280
+  s_bc1f503934afca::t_b8491ee7995e1e 281-282
+web/tests/Account/DataExportTest.php
+  s_bc1f503934afca::t_5acce3f9f0ad45 22-23,41-42,316-352
+  s_bc1f503934afca::t_41a02387971ce2 353-354
+web/src/Controller/PlanRideController.php
+  s_bc1f503934afca::t_70c5ef5bf4b3e3 52
+  s_bc1f503934afca::t_58cbb75b1c8f17 1-51,53-127
+web/tests/Planner/RideInputTest.php
+  s_bc1f503934afca::t_b6aeaeb6c452ed 1-121
+web/src/Planner/RideInput.php
+  s_bc1f503934afca::t_48deb6e7d02de4 1-189
+web/src/Planner/Entity/PlannedRide.php
+  s_bc1f503934afca::t_48deb6e7d02de4 1-157
+web/tests/Planner/PlannedRidesTest.php
+  s_bc1f503934afca::t_b6aeaeb6c452ed 1-72,74-167
+  s_bc1f503934afca::t_70c5ef5bf4b3e3 73
+web/tests/Planner/RideFixtures.php
+  s_bc1f503934afca::t_cb12d144a5928d 1-62,71-73,75-100
+  s_bc1f503934afca::t_0a71cb9d0ba866 63-70,74
+web/tests/Controller/PlanRideControllerTest.php
+  s_bc1f503934afca::t_9cfefdeecb65ff 80-91
+  s_bc1f503934afca::t_18f3cbb7b870f2 1-79,92-173,175-177,179-357
+  s_bc1f503934afca::t_0a71cb9d0ba866 174,178
+web/tests/Planner/PlannedRideDeletionTest.php
+  s_bc1f503934afca::t_b6aeaeb6c452ed 1-55
+web/migrations/Version20261014020000.php
+  s_bc1f503934afca::t_e99da641a4b9be 1-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8376b261f39932b2ffa1a383bbf632160e9f680a",
+  "prompts": {},
+  "sessions": {
+    "s_bc1f503934afca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "81bf59e0-0d1b-42ea-8a2a-bc0c63aecbf5",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
