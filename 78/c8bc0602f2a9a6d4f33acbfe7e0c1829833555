@@ -1,0 +1,41 @@
+docs/specs/route-planner.md
+  s_bc1f503934afca::t_564a578db45bd4 186-198,392
+  s_bc1f503934afca::t_c21e614c8b3abe 393,398-401
+  s_bc1f503934afca::t_d41f8106fa4d5c 236-247,257-260
+  s_bc1f503934afca::t_5764785ab28c4a 142-147,222-223,341-347
+  s_bc1f503934afca::t_3ad2f3868cb3aa 1-4,8-102,119-141,148-185,199-221,224-235,248-256,261-276,284-305,311,333-340,348-391,394-397,402-446,448-449,451-468
+  s_bc1f503934afca::t_b93f0dcdaaf6f0 5-7,103-118,277-283,306-310,447,450
+  s_bc1f503934afca::t_bc1f90e3054cbb 312-332
+docs/specs/map-and-search.md
+  s_bc1f503934afca::t_3ad2f3868cb3aa 274-275,3268-3276
+docs/specs/privacy-notice.md
+  s_bc1f503934afca::t_b54153d40a6ed1 297-303
+docs/specs/account-and-auth.md
+  s_bc1f503934afca::t_3ad2f3868cb3aa 1231-1232
+  s_bc1f503934afca::t_014dcffa82cebd 1233
+docs/specs/README.md
+  s_bc1f503934afca::t_3ad2f3868cb3aa 51-53
+web/migrations/Version20261014010000.php
+  s_bc1f503934afca::t_a7cc9f67c02f7f 1-67
+docs/specs/security-architecture.md
+  s_bc1f503934afca::t_bc1f90e3054cbb 614
+  s_bc1f503934afca::t_c21e614c8b3abe 588-589,610-613
+docs/specs/roadmap-and-changelog.md
+  s_bc1f503934afca::t_3ad2f3868cb3aa 276-281
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "78c8bc0602f2a9a6d4f33acbfe7e0c1829833555",
+  "prompts": {},
+  "sessions": {
+    "s_bc1f503934afca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "81bf59e0-0d1b-42ea-8a2a-bc0c63aecbf5",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
