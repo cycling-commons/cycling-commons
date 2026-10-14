@@ -1,0 +1,108 @@
+web/translations/messages.nl.yaml
+  s_bc1f503934afca::t_d41f8106fa4d5c 1304-1312,2921-2929
+  s_bc1f503934afca::t_58baa5bcbd74a0 4985
+  s_bc1f503934afca::t_8402138d61ebad 1266-1303,1313-1329
+web/src/Controller/MapController.php
+  s_bc1f503934afca::t_d41f8106fa4d5c 713-719
+  s_bc1f503934afca::t_499b3525e4e22a 439,670-712,720
+web/assets/map/drawer.js
+  s_bc1f503934afca::t_ae56e5b082a137 773-781,783-784
+web/tests/js/rail-shell.test.cjs
+  s_bc1f503934afca::t_ee1af8a7d67eb2 38,50,53-54,87-90
+  s_b2c8f26fe7dab2::t_6c3639ba939e14 91
+web/assets/map/plan.js
+  s_bc1f503934afca::t_67d85bec67f6ba 30
+  s_bc1f503934afca::t_74cfb866b8abbe 161-162
+  s_bc1f503934afca::t_dce1523fb605f1 98-101
+  s_bc1f503934afca::t_eb1e20835ebd46 348-350,354-356
+  s_bc1f503934afca::t_7bf92268a6aa62 438-440
+  s_bc1f503934afca::t_57ce225b9e5ffd 18
+  s_bc1f503934afca::t_62adefef269994 62,64-70
+  s_bc1f503934afca::t_812912bd9cde55 19-21
+  s_bc1f503934afca::t_c345ed5ea2313a 9
+  s_bc1f503934afca::t_ee6b59d5a7c599 1-8,10-17,22-29,31-61,63,71-75,77-79,82-91,94-97,102-160,163-185,191-196,200,202-204,207,221-229,231-318,320-347,351-353,357-437,441-463,472-478
+  s_bc1f503934afca::t_3c2b6a1b1cd4f3 464-471
+  s_bc1f503934afca::t_9236b44b2a7c7e 186-190
+  s_bc1f503934afca::t_040815bf121d47 230
+  s_bc1f503934afca::t_a99deaccf2d433 197-199,201,205-206,208-220
+  s_bc1f503934afca::t_db5229fb4b1c22 76,80-81
+  s_bc1f503934afca::t_889343750ec477 319
+  s_bc1f503934afca::t_d9dd8b96ebd928 92-93
+web/assets/map/shell.js
+  s_bc1f503934afca::t_bb251c4dfe188a 77,86
+  s_bc1f503934afca::t_e4f55c9601ab4d 16,19-24
+web/translations/messages.en.yaml
+  s_bc1f503934afca::t_8402138d61ebad 1882-1919,1929-1945
+  s_bc1f503934afca::t_58baa5bcbd74a0 5003
+  s_bc1f503934afca::t_d41f8106fa4d5c 1920-1928,2936-2944
+web/templates/map/index.html.twig
+  s_bc1f503934afca::t_b10745d3d45b63 481
+  s_bc1f503934afca::t_ea3f6395c6911f 673-675
+  s_bc1f503934afca::t_589ce6d022a93c 489
+  s_bc1f503934afca::t_993192ff763b9a 497
+  s_b2c8f26fe7dab2::t_e1cbb005cbc81c 82-85,467-480,482-488,490-496,498-518,671-672,676,979-995
+web/translations/messages.fr.yaml
+  s_bc1f503934afca::t_d41f8106fa4d5c 1302-1310,2917-2925
+  s_bc1f503934afca::t_58baa5bcbd74a0 4981
+  s_bc1f503934afca::t_8402138d61ebad 1264-1301,1311-1327
+web/assets/styles/map.css
+  s_bc1f503934afca::t_8b03ed5c3618f0 1472-1474,1477,1885-1897,1899,1901-1902,1904-1907,1909-1914,1916-1938
+  s_bc1f503934afca::t_213f08143ce0b7 1898,1900,1903,1908,1915
+  s_bc1f503934afca::t_a2af79d17ab4aa 725-728,1939
+  s_b2c8f26fe7dab2::t_f6a23247e4a71d 1940-1951
+web/assets/map/plan-model.js
+  s_bc1f503934afca::t_d41f8106fa4d5c 165-179
+  s_bc1f503934afca::t_a2af79d17ab4aa 155-164
+  s_bc1f503934afca::t_61fd3c3a42dbb8 180-188
+  s_bc1f503934afca::t_e30f772815b18c 1-154
+web/tests/js/plan-model.test.mjs
+  s_bc1f503934afca::t_6cb191b7f8800b 121-145
+  s_bc1f503934afca::t_1031ba69dddcfa 54-110
+  s_bc1f503934afca::t_ebb1b3c7794b1e 146-165
+  s_bc1f503934afca::t_b3e51c4b68b2f8 9,28,34,41,46,50,111,116,166-178
+  s_bc1f503934afca::t_60328744f009a3 1-8,10-27,29-33,35-40,42-45,47-49,51-53,112-115,117-120
+web/tests/js/plan-wiring.test.cjs
+  s_bc1f503934afca::t_565b2f2ea163c3 63-69
+  s_bc1f503934afca::t_9bec6c29bd6bdb 53-62
+  s_bc1f503934afca::t_ebb1b3c7794b1e 70-76
+  s_bc1f503934afca::t_4cde971781421e 1-52,77-83
+web/translations/messages.es.yaml
+  s_bc1f503934afca::t_8402138d61ebad 1889-1926,1936-1952
+  s_bc1f503934afca::t_d41f8106fa4d5c 1927-1935,2944-2952
+  s_bc1f503934afca::t_58baa5bcbd74a0 5013
+web/translations/messages.de.yaml
+  s_bc1f503934afca::t_8402138d61ebad 1269-1306,1316-1332
+  s_bc1f503934afca::t_d41f8106fa4d5c 1307-1315,2922-2930
+  s_bc1f503934afca::t_58baa5bcbd74a0 4986
+web/assets/map/map.js
+  s_bc1f503934afca::t_10b75d6e70bc0f 10
+  s_bc1f503934afca::t_3cfccd85ae16f3 323
+web/assets/map/plan-state.js
+  s_bc1f503934afca::t_f98d831ab45e09 1-8
+web/assets/map/scope-ui.js
+  s_b2c8f26fe7dab2::t_5d9e917ca56298 17,563-564
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7b21b4a37b725333a6cb5f7b96cbbe21be891ac4",
+  "prompts": {},
+  "sessions": {
+    "s_b2c8f26fe7dab2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "545a0a9a-1b9b-4235-987a-ca83c8f90d4d",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_bc1f503934afca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "81bf59e0-0d1b-42ea-8a2a-bc0c63aecbf5",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
