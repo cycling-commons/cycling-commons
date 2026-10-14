@@ -87,8 +87,11 @@ function addClassifiedLayers(srcLayer, src, under) {
     if (map.getLayer(id)) return;
     const paint = {
       'line-color': st.color,
-      // Thinner than curated A: this is background; full weight at country zoom is a smear.
-      'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.6, 11, 1.4, 14, 3],
+      // Thinner than curated A at country zoom, where full weight is a smear;
+      // past the build's last zoom (13) the band keeps growing so at street
+      // zoom it covers the basemap's own road and the colour reads
+      // (owner 2026-10-14: a 3 px line beside a wider yellow road said nothing).
+      'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.6, 11, 1.4, 14, 3, 16, 6, 18, 12],
       'line-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.5, 12, 0.85],
     };
     if (st.dash) paint['line-dasharray'] = st.dash;
