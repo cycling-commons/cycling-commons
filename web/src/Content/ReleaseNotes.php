@@ -61,6 +61,7 @@ final class ReleaseNotes
             'date' => '2026-10-13',
             'sections' => [
                 'public' => [
+                    'changelog.v097_planner',
                     'changelog.v097_roadmap',
                     'changelog.v097_karoo',
                     'changelog.v097_privacy',
@@ -75,6 +76,7 @@ final class ReleaseNotes
                 ],
             ],
             'kinds' => [
+                'changelog.v097_planner' => 'new',
                 'changelog.v097_roadmap' => 'new',
                 'changelog.v097_karoo' => 'new',
                 'changelog.v097_privacy' => 'improved',

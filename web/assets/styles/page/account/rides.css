@@ -1,0 +1,13 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* The account's Rides page (docs/specs/route-planner.md section 6.2): one row per saved ride. */
+.ride-row{border-bottom:1px solid rgba(20,22,14,.12);padding:.9rem 0}
+.ride-row:last-of-type{border-bottom:0}
+.ride-top{display:flex;gap:.55rem;align-items:baseline;flex-wrap:wrap}
+.ride-top h2{font-family:var(--serif);font-size:1.05rem;font-weight:600;margin:0;color:var(--ink)}
+.tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;background:var(--spruce);color:var(--paper);border-radius:4px;padding:.15rem .45rem}
+.ride-meta{margin:.3rem 0 .5rem;font-size:.88rem;color:#4f5a52}
+.ride-acts{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.ride-acts form{margin:0}
+.ride-go,.ride-del{font-family:var(--mono);font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;border:1px solid #a9b2a7;border-radius:6px;padding:.4rem .7rem;background:#fff;color:var(--ink);text-decoration:none;cursor:pointer}
+.ride-go:hover{border-color:var(--trail);color:var(--trail)}
+.ride-del:hover{border-color:#B4231A;color:#B4231A}
