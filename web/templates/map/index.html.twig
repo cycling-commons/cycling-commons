@@ -79,6 +79,10 @@
     <button class="ib" id="ib-tools" type="button" data-panel="tools" data-tip="{{ 'map.rail_tools'|trans }}" aria-label="{{ 'map.rail_tools'|trans }}" aria-controls="dwr" aria-expanded="false">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c4 0 3-9 7-9m0 0c4 0 3 9 7 9M12 10V5"/><circle cx="12" cy="4" r="1.4"/><circle cx="5" cy="19" r="2.6"/><circle cx="19" cy="19" r="2.6"/></svg>
     </button>
+    {# The ride planner (docs/specs/route-planner.md section 3): two pins joined by a line. #}
+    <button class="ib" id="ib-plan" type="button" data-panel="plan" data-tip="{{ 'map.rail_plan'|trans }}" aria-label="{{ 'map.rail_plan'|trans }}" aria-controls="dwr" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2.6"/><circle cx="18" cy="18" r="2.6"/><path d="M8 7.5c4 2 4 7.5 8 9" stroke-dasharray="2.2 2.2"/></svg>
+    </button>
     <button class="ib" id="ib-key" type="button" data-panel="key" data-tip="{{ 'map.rail_key'|trans }}" aria-label="{{ 'map.rail_key'|trans }}" aria-controls="dwr" aria-expanded="false">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2"/><path d="M11.5 6H20"/><circle cx="6" cy="12" r="2"/><path d="M11.5 12H20"/><circle cx="6" cy="18" r="2"/><path d="M11.5 18H20"/></svg>
     </button>
@@ -460,6 +464,58 @@
 
       </section>
 
+      {# The ride planner (docs/specs/route-planner.md sections 3 to 6). The
+         chrome is here; plan.js writes the stops, the figures, the profile,
+         the along list and the statuses. The bike chips are the rider's own
+         bike types (account-and-auth.md section 9); with none set, and for a
+         visitor, the four general ones with Road selected. Save needs an
+         account; drawing does not. #}
+      <section class="panel" id="p-plan">
+      {% set plan_general = ['Road', 'Gravel', 'MTB', 'E-bike'] %}
+      {% set plan_bikes = app.user and app.user.bikeTypes is not empty ? app.user.bikeTypes|map(b => b.value) : plan_general %}
+      <div class="grp cc-plan">
+        <h3>{{ 'map.plan_bike_h'|trans }}</h3>
+        <div class="chips" id="planBikes" role="group" aria-label="{{ 'map.plan_bike_h'|trans }}">
+          {% for bike in plan_bikes %}<button type="button" class="chip{{ loop.first ? ' on' : '' }}" data-bike="{{ bike }}" aria-pressed="{{ loop.first ? 'true' : 'false' }}">{{ ('map.bike_' ~ (bike|lower|replace({'-': ''})))|trans }}</button>{% endfor %}
+        </div>
+        <div class="hint" id="planBikeHint">{% if app.user and app.user.bikeTypes is empty %}<a href="{{ path('settings') }}">{{ 'map.plan_bike_set'|trans }}</a>{% else %}{% if app.user %}{{ 'map.plan_bike_settings'|trans }} {% endif %}<a href="#" id="planBikesAll">{{ 'map.plan_bike_all'|trans }}</a>{% endif %}</div>
+        <div class="hint cc-plan-why" id="planWhy"></div>
+      </div>
+      <div class="grp cc-plan">
+        <h3>{{ 'map.plan_stops_h'|trans }}</h3>
+        <div class="hint" id="planInstr" style="margin-top:0">{{ 'map.plan_instr'|trans }}</div>
+        <ul class="cc-plan-stops" id="planStops"></ul>
+        <div class="cc-ride-status" id="planStatus" role="status"></div>
+        <div class="hint cc-plan-undo">{{ 'map.plan_undo_hint'|trans }}</div>
+      </div>
+      <div class="grp cc-plan" id="planFigsGrp" hidden>
+        <h3>{{ 'map.plan_ride_h'|trans }}</h3>
+        <div class="cc-plan-figs" id="planFigs">
+          <div class="cc-plan-fig"><b id="planDist">0</b><span>{{ 'map.plan_distance'|trans }}</span></div>
+          <div class="cc-plan-fig"><b id="planUp">0</b><span>{{ 'map.plan_climbed'|trans }}</span></div>
+          <div class="cc-plan-fig"><b id="planDown">0</b><span>{{ 'map.plan_descended'|trans }}</span></div>
+          <div class="cc-plan-fig cc-plan-fig-wide"><b id="planTough"></b><span>{{ 'map.plan_tough'|trans }} · <em id="planToughSub"></em></span></div>
+        </div>
+      </div>
+      <div class="grp cc-plan" id="planProfGrp" hidden>
+        <h3>{{ 'map.plan_profile_h'|trans }}</h3>
+        <div class="cc-plan-prof" id="planProf"><svg id="planProfSvg" viewBox="0 0 280 118" preserveAspectRatio="none" aria-hidden="true"></svg><div class="cc-plan-cursor" id="planProfCur"></div><div class="cc-plan-tip" id="planProfTip"></div></div>
+      </div>
+      <div class="grp cc-plan" id="planAlongGrp" hidden>
+        <h3>{{ 'map.plan_along_h'|trans }} <span class="cc-plan-within">· {{ 'map.plan_within'|trans({'{d}': 250|cc_m}) }}</span></h3>
+        <ul class="cc-near-list" id="planAlong"></ul>
+      </div>
+      <div class="grp cc-plan" id="planActsGrp" hidden>
+        <h3>{{ 'map.plan_keep_h'|trans }}</h3>
+        <div class="cc-plan-acts" id="planActs">
+          {% if app.user %}<button type="button" class="cc-ride-btn cc-plan-go" id="planSave">{{ 'map.plan_save'|trans }}</button>{% else %}<a class="cc-ride-btn" href="{{ path('login') }}">{{ 'map.plan_save_login'|trans }}</a>{% endif %}
+          <button type="button" class="cc-ride-btn" id="planGpx">{{ 'map.plan_gpx'|trans }}</button>
+          <button type="button" class="cc-ride-btn cc-plan-quiet" id="planClear">{{ 'map.plan_clear'|trans }}</button>
+        </div>
+        <div class="cc-plan-save" id="planSaveRow" hidden><input type="text" id="planName" maxlength="80" placeholder="{{ 'map.plan_name_ph'|trans }}" aria-label="{{ 'map.plan_name_ph'|trans }}"><button type="button" class="cc-ride-btn cc-plan-go" id="planSaveGo">{{ 'map.plan_save'|trans }}</button></div>
+        <div class="hint" id="planSaveHint"></div>
+      </div>
+      </section>
       <section class="panel" id="p-key">
       {# The map key (map-and-search.md §4.7): live marks only. The panel is
          the whole key, as the /map-key page tells it: how to read a pin,
@@ -612,6 +668,12 @@
        gradients are derived from the DEM, so the short form belongs in the
        attribution with the full notice one click away. #}
     <div id="map" data-credits="{{ path('credits') }}"></div>
+    {# The ride bar (route-planner.md section 3): the planned ride's figures
+       while its panel is closed, with a way back in. plan.js fills and shows it. #}
+    {# The height profile along the foot of the map (route-planner.md section
+       4.5): the panel's profile, the map's width wide. plan.js draws it. #}
+    <div class="cc-plan-strip" id="planStrip" hidden><svg id="planStripSvg" viewBox="0 0 800 140" aria-hidden="true"></svg><div class="cc-plan-cursor" id="planStripCur"></div><div class="cc-plan-tip" id="planStripTip"></div><button type="button" class="cc-plan-strip-x" id="planStripX" aria-label="{{ 'map.plan_strip_hide'|trans }}" title="{{ 'map.plan_strip_hide'|trans }}">✕</button></div>
+    <div class="cc-plan-bar" id="planBar" hidden><span class="cc-plan-bar-f" id="planBarText"></span><button type="button" class="cc-ride-btn cc-plan-go" id="planBarOpen">{{ 'map.plan_bar_open'|trans }}</button><button type="button" class="cc-ride-btn cc-plan-quiet" id="planBarClear">{{ 'map.plan_clear'|trans }}</button></div>
     {# "Not covered yet" banner (map-and-search.md §4.5b): the rider panned or
        searched to a place outside every onboarded country. Same pill as the
        pan-away nudge (.cc-area-nudge), same top-centre slot - the two never
@@ -912,6 +974,23 @@ window.CC_VENDOR = {{ {
     url: {{ path('map_ride_check')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }},
     token: {{ csrf_token('ride-check')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}
   };
+</script>
+
+{# The ride planner (route-planner.md section 8): its two open endpoints with
+   their stateless tokens for everyone, the save and ride endpoints for a
+   rider, and the account's Rides page. The map talks to these, never to the
+   routing engine. #}
+<script nonce="{{ csp_nonce() }}">
+  window.CC_PLAN = {{ ({
+    leg: path('map_plan_leg'), legToken: csrf_token('plan-leg'),
+    along: path('map_plan_along'), alongToken: csrf_token('plan-along'),
+    item: path('map') ~ '?item=',
+    signedIn: app.user ? true : false
+  }|merge(app.user ? {
+    save: path('map_plan_save'), saveToken: csrf_token('plan-save'),
+    ride: path('map_plan_ride', {id: 0})|slice(0, -1),
+    rides: path('account_rides')
+  } : {}))|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT') b-or constant('JSON_UNESCAPED_SLASHES'))|raw }};
 </script>
 
 {% if is_granted('ROLE_USER') %}

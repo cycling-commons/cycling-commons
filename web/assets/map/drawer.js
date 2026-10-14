@@ -770,8 +770,18 @@ function buildRecord(layer, f){
       + '</div>')
     : '';
 
+  /* The ride planner's Add to ride (docs/specs/route-planner.md section 4.3):
+     any place with a point, a climb at its foot, never a route or a surface
+     stretch. plan.js binds the click and paints "In your ride"; the group
+     shows while a ride is being planned (body.cc-planning). */
+  const planLL = f.route ? f.route[0] : (f.geom && f.geom.ll);
+  const planItem = f.id != null ? (f.letter || layer.letter) + ':' + f.id : (f.osmRef ? 'osm:' + f.osmRef : null);
+  const plan = (planLL && planItem && layer.key !== 'experience' && layer.key !== 'surface')
+    ? `<button type="button" class="cc-d-act cc-d-plan" data-plan-add data-plan-item="${escPend(planItem)}" data-plan-letter="${escPend(f.letter || layer.letter || '')}" data-plan-name="${escPend(f.name || f.osmName || '')}" data-plan-lat="${planLL[0]}" data-plan-lng="${planLL[1]}">${D.planAdd || '+ Add to ride'}</button>`
+    : '';
   const grp = (html, cls) => html ? `<div class="cc-d-grp${cls?' '+cls:''}">${html}</div>` : '';
-  const act = grp(confirmPanel + vote, 'cc-d-grp-community')
+  const act = grp(plan, 'cc-d-grp-plan')
+    + grp(confirmPanel + vote, 'cc-d-grp-community')
     + grp(edit, 'cc-d-grp-edit')
     + grp(osmConfirm + stateRow, 'cc-d-grp-state');
   const desc = f.desc ? `<p class="cc-d-desc">${escPend(f.desc)}${f.descTr?` <span class="cc-d-tr">· ${escPend(D.autoTranslated || 'auto-translated')}</span>`:''}</p>` : '';

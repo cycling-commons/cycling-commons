@@ -14,6 +14,7 @@ import { updateHeatFilter, render, boundLayerIds, surfaceClsLayerIds } from './r
 import { refreshBestOf } from './panels.js';
 import { COVERAGE_KEYS, COVERAGE_CCS } from './coverage.js';
 import { isPicking } from './picking.js';
+import { isPlanning } from './plan-state.js';
 import { corrLayerIds } from './corrections.js';
 import { hitScopeForAll } from './hit-scope.js';
 import { parkTiledOverlays, unparkTiledOverlays } from './tile-park.js';
@@ -559,6 +560,8 @@ export function initClickToScope(){
     }
     map.on('click', async e=>{
       if(isPicking()) return;
+      // A click while planning a ride is a stop, never a scope change (plan.js).
+      if(isPlanning()) return;
       if(map.queryRenderedFeatures(e.point, {layers:selectableLayers()}).length) return;
       if(!window.CCScope) return;
       const r=await window.CCScope.regionOfPointPrecise(e.lngLat.lng, e.lngLat.lat);

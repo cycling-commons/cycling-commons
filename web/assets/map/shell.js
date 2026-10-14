@@ -13,8 +13,15 @@ const TITLES = () => ({
   search: I18N.railSearch || 'Search & region',
   layers: I18N.railLayers || 'Layers & filters',
   tools: I18N.railTools || 'Ride tools',
+  plan: I18N.railPlan || 'Plan a ride',
   key: I18N.railKey || 'Map key',
 });
+/* Which section is open now, or null. The planner (plan.js) reads it to know
+   whether a map click is a stop. */
+export const activePanel = () => active;
+/* Every open and close is told on the document as `cc:panel` with {key} (null
+   on close), so a module can follow the drawer without owning it. */
+const tell = key => document.dispatchEvent(new CustomEvent('cc:panel', {detail: {key}}));
 
 let active = null;
 
@@ -67,6 +74,7 @@ export function initShell(){
     dwr.setAttribute('aria-hidden', 'false');
     active = key;
     resizeWhenSettled(dwr);
+    tell(key);
   }
 
   function closePanel(){
@@ -75,6 +83,7 @@ export function initShell(){
     paintButtons(null);
     active = null;
     resizeWhenSettled(dwr);
+    tell(null);
   }
 
   buttons.forEach(b => {

@@ -7,6 +7,7 @@ import { uKm } from './units.js';
 import { map, initMapControls, addSatellite, markStyleReady, initCoordPopup,
          localiseBasemapLabels } from './map-init.js';
 import { initRideCheck } from './ride-check.js';
+import { initPlan } from './plan.js';
 import { CATALOG, active, layerByKey, cityLink, mode } from './catalog.js';
 import { addMapillary, initMapillaryDock, initStreetToggle } from './mapillary.js';
 import { curScope, scopeLabel, renderScopeChips, applyScope, initScope, initScopeRail,
@@ -319,6 +320,7 @@ import { layerGlyph } from './icons.js';
   initClickToScope();
 
   initRideCheck();
+  initPlan();
   initTrafficLayer();
 
   initDrawerChrome();

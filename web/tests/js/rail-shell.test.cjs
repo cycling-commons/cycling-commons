@@ -35,7 +35,7 @@ const controller = read('src/Controller/MapController.php');
 // The four panels are siblings in source order, so a panel's markup is
 // everything from its own id up to the next panel's (the last one runs to the
 // end of the drawer body).
-const PANELS = ['p-search', 'p-layers', 'p-tools', 'p-key'];
+const PANELS = ['p-search', 'p-layers', 'p-tools', 'p-plan', 'p-key'];
 function panelSrc(id) {
   const at = twig.indexOf(`id="${id}"`);
   assert.ok(at >= 0, `no <section id="${id}"> in the template`);
@@ -47,11 +47,11 @@ function panelSrc(id) {
   return twig.slice(at, end);
 }
 
-test('the icon rail carries exactly the four rider sections', () => {
+test('the icon rail carries exactly the five rider sections', () => {
   assert.ok(/<nav class="irail"/.test(twig), 'no <nav class="irail"> in the template');
   const panels = [...twig.matchAll(/<button[^>]*class="ib"[^>]*data-panel="([a-z]+)"/g)].map(m => m[1]);
-  assert.deepEqual(panels, ['search', 'layers', 'tools', 'key'],
-    'the rail must carry search, layers, tools and key, in that order and no others');
+  assert.deepEqual(panels, ['search', 'layers', 'tools', 'plan', 'key'],
+    'the rail must carry search, layers, tools, plan and key, in that order and no others');
   assert.ok(twig.includes('id="ib-theme"'), 'the rail has no theme button');
   assert.ok(twig.includes('id="ib-layers"'), 'the layers button needs its id for the filter dot');
 });
@@ -83,6 +83,11 @@ test('each panel still owns the ids its module binds to', () => {
   const tools = panelSrc('p-tools');
   for (const id of ['rcFile', 'rcPick', 'rcRadius', 'rcStatus']) {
     assert.ok(tools.includes(`id="${id}"`), `#${id} left the tools panel`);
+  }
+  // The ride planner (route-planner.md section 3): plan.js binds these.
+  const plan = panelSrc('p-plan');
+  for (const id of ['planBikes', 'planStops', 'planStatus', 'planFigs', 'planProf', 'planAlong', 'planActs', 'planSaveRow']) {
+    assert.ok(plan.includes(`id="${id}"`), `#${id} left the plan panel`);
   }
 });
 
