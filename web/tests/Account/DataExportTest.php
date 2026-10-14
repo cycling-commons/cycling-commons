@@ -19,6 +19,8 @@ use App\Media\MediaStorage;
 use App\Media\ProcessedPhoto;
 use App\Messaging\Entity\UserMessage;
 use App\Messaging\UserMessageKind;
+use App\Tests\Planner\RideFixtures;
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -36,6 +38,8 @@ use Symfony\Component\Uid\Uuid;
  */
 final class DataExportTest extends WebTestCase
 {
+    use RideFixtures;
+
     private const string PASSWORD = 'securepass12345!';
 
     /**
@@ -307,6 +311,45 @@ final class DataExportTest extends WebTestCase
 
         $account = $this->entry($zip, 'account.json');
         self::assertSame(['pending_follows_areas'], $account['closed_hints']);
+    }
+
+    /**
+     * A saved ride is personal data (docs/specs/route-planner.md section 7):
+     * the export carries every ride as GeoJSON with its name, bike, stops,
+     * figures and dates, and only the rider's own.
+     */
+    public function testASavedRideIsExportedAsGeoJson(): void
+    {
+        $client = $this->client();
+        $user = $this->login($client, 'rides');
+        $db = static::getContainer()->get(Connection::class);
+        $id = self::seedRide($db, (int) $user->getId(), 'Sunday loop');
+        self::seedRide($db, (int) $this->makeUser('export-rides-stranger@example.com')->getId(), 'Somebody else’s ride');
+        $token = $this->exportToken($client);
+
+        [$zip, $bytes] = $this->download($client, $token);
+
+        $rides = $this->entry($zip, 'rides.geojson');
+        self::assertSame('FeatureCollection', $rides['type']);
+        self::assertCount(1, $rides['features']);
+        $feature = $rides['features'][0];
+        self::assertSame('Feature', $feature['type']);
+        self::assertSame($id, $feature['id']);
+        self::assertSame('LineString', $feature['geometry']['type']);
+        self::assertCount(3, $feature['geometry']['coordinates']);
+        $properties = $feature['properties'];
+        self::assertSame('Sunday loop', $properties['name']);
+        self::assertSame('Gravel', $properties['bike']);
+        self::assertIsArray($properties['stops'], 'jsonb comes back decoded, not as JSON quoted inside JSON');
+        self::assertSame('Fontaine', $properties['stops'][1]['name']);
+        self::assertIsInt($properties['distance_m']);
+        self::assertSame(120, $properties['ascent_m']);
+        self::assertSame(118, $properties['descent_m']);
+        self::assertArrayHasKey('created_at', $properties);
+        self::assertArrayHasKey('updated_at', $properties);
+
+        $zip->close();
+        self::assertStringNotContainsString('Somebody else', $bytes);
     }
 
     public function testCredentialsAreNeverExported(): void

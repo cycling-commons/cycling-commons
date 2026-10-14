@@ -62,6 +62,7 @@ final class DataExportService
         $zip->addFromString('messages.json', $this->json($this->messages($userId)));
         $zip->addFromString('consent.json', $this->json($this->consent($userId)));
         $zip->addFromString('translations.json', $this->json($this->translations($userId)));
+        $zip->addFromString('rides.geojson', $this->json($this->rides($userId)));
 
         // addFile() reads at close(); addFromString() would hold every photo in RAM.
         $staged = $this->stagePhotos($userId, $zip);
@@ -248,6 +249,35 @@ final class DataExportService
              FROM translation_proposal WHERE submitter_id = ? ORDER BY created_at',
             [$userId],
         );
+    }
+
+    /**
+     * The rides the rider planned and saved (docs/specs/route-planner.md
+     * section 7), one GeoJSON FeatureCollection: each feature carries the
+     * line as saved and, as properties, the name, bike, stops, the figures
+     * as the rider saw them when saving, and the dates.
+     *
+     * @return array<string, mixed>
+     */
+    private function rides(int $userId): array
+    {
+        $rows = $this->decodeAll($this->db->fetchAllAssociative(
+            'SELECT id, name, bike, stops, ST_AsGeoJSON(line) AS line, distance_m, ascent_m, descent_m, created_at, updated_at
+             FROM planned_ride WHERE user_id = ? ORDER BY created_at, id',
+            [$userId],
+        ), ['stops', 'line']);
+
+        $features = [];
+        foreach ($rows as $row) {
+            $features[] = [
+                'type' => 'Feature',
+                'id' => (int) $row['id'],
+                'geometry' => $row['line'],
+                'properties' => array_diff_key($row, ['id' => true, 'line' => true]),
+            ];
+        }
+
+        return ['type' => 'FeatureCollection', 'features' => $features];
     }
 
     /**
