@@ -1313,6 +1313,8 @@ map:
   plan_terrain_hilly: "hügelig"
   plan_terrain_mountainous: "bergig"
   plan_strip_hide: "Profilleiste ausblenden"
+  plan_surface_gravel: "{d} Schotter"
+  plan_surface_rough: "{d} rau"
   plan_name_ph: "Gib dieser Fahrt einen Namen"
   plan_saved: "Gespeichert als {name}."
   plan_my_rides: "Meine Fahrten"

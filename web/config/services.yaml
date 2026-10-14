@@ -156,6 +156,13 @@ services:
             $valhallaUrl: '%env(ELEVATION_URL)%'
             $endpoints: '@App\Elevation\ElevationEndpoints'
 
+    # The surfaces under a planned leg (route-planner.md section 4.4): the same
+    # engine, the same master switch, the same per-continent selection.
+    App\Elevation\LegSurfaces:
+        arguments:
+            $valhallaUrl: '%env(ELEVATION_URL)%'
+            $endpoints: '@App\Elevation\ElevationEndpoints'
+
     # One Valhalla per continent, each serving only the .hgt tiles it holds, so
     # a climb outside Europe has to be asked of the instance that has its ground
     # (climb-elevation.md §2b-i). ELEVATION_URL remains both the default and the

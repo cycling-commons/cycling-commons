@@ -242,9 +242,26 @@ takes the map to the stop (owner 2026-10-14); hovering a row rings it.
   nothing, 8 to 15 rolling adds 1, 15 to 25 hilly adds 2, 25 and over
   mountainous adds 3), and the sum, capped at 5, reads in the routes'
   difficulty words (`DifficultyVocabulary::LABELS`, Easy to Very hard), so a
-  planned ride and a recommended route speak the same scale. The tile shows
-  the word, the terrain and the m/km. Example: 46 km with 977 m is hilly
-  (21 m/km), 1 plus 2, Challenging.
+  planned ride and a recommended route speak the same scale. **The surface
+  weighs in** (owner 2026-10-15: "km on pavement vs gravel vs even rougher
+  has impact"): the distance that gives the base is the ride's effective
+  distance, a kilometre of gravel or compacted road counting 1.3 km and a
+  kilometre of rough road (cobbles, dirt, a path) 1.6 km
+  (`SURFACE_WEIGHT`); what the engine could not say counts as paved. The
+  surfaces come from the engine itself: `POST /map/plan/leg` walks the
+  routed leg with `/trace_attributes` (`App\Elevation\LegSurfaces`) and
+  folds its surface words (paved_smooth and paved are paved; compacted and
+  gravel are gravel; paved_rough, dirt, path and impassable are rough) into
+  metres per class, carried as `surfaces` with the leg and summed over the
+  ride (`surfaceMix`). The tile shows the word, the terrain, the m/km and,
+  when there is at least half a kilometre of it, the gravel and rough
+  kilometres. Examples: 46 km with 977 m is hilly (21 m/km), 1 plus 2,
+  Challenging; 40 km flat all on rough roads counts as 64 km, Moderate.
+  **A graphic under the tile shows how the level is built** (owner
+  2026-10-15): the distance bar split by surface (paved, gravel, rough,
+  unknown in grey) with the ride's km, its effective km and the base they
+  give; the climb gauge in the profile's purples with the m/km and what it
+  adds; and the five-step ladder with the level and its word.
 
 ### 4.5 The profile
 
@@ -389,7 +406,7 @@ section 7a), and `PrivacyNoticeVersions::CURRENT` becomes 5 there.
 
 | Endpoint | Who | CSRF id | Limiter |
 |---|---|---|---|
-| `POST /map/plan/leg` `{a: [lng, lat], b: [lng, lat], bike}` (GeoJSON order, as `/contribute/route`) → `{routed, coordinates, distanceM, heights}`; `routed: false` carries no line, so nothing that is not a road ever comes from the server | everyone (owner decision, section 11) | `plan-leg` | `plan_leg` 600 per 10 minutes keyed `user-<id>`; `plan_leg_anon` 100 per day keyed on the salted address hash, the ride check's pattern |
+| `POST /map/plan/leg` `{a: [lng, lat], b: [lng, lat], bike}` (GeoJSON order, as `/contribute/route`) → `{routed, coordinates, distanceM, heights, surfaces}`; `routed: false` carries no line, so nothing that is not a road ever comes from the server | everyone (owner decision, section 11) | `plan-leg` | `plan_leg` 600 per 10 minutes keyed `user-<id>`; `plan_leg_anon` 100 per day keyed on the salted address hash, the ride check's pattern |
 | `POST /map/plan/along` `{line: GeoJSON LineString}` → `{radiusM, climbs, groups, coverage}`, the ride check's lists; 2 to 5000 points, 500 m to 400 km, else 400 (`bad_request`, `length_range`) | everyone | `plan-along` | `plan_along` 60 per 10 minutes per user; `plan_along_anon` 20 per day |
 | `POST /map/plan/save` `{id?, name, bike, stops, line, figures}` → `{id}` | signed in | `plan-save` | `plan_save` 30 per 10 minutes |
 | `GET /map/plan/ride/{id}` → the saved ride's JSON | its rider | | `coverage_read`'s budget |

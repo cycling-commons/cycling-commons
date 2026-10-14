@@ -496,6 +496,9 @@
           <div class="cc-plan-fig"><b id="planDown">0</b><span>{{ 'map.plan_descended'|trans }}</span></div>
           <div class="cc-plan-fig cc-plan-fig-wide"><b id="planTough"></b><span>{{ 'map.plan_tough'|trans }} · <em id="planToughSub"></em></span></div>
         </div>
+        {# How the toughness is built (route-planner.md section 4.4): the distance
+           bar by surface, the climb gauge, the ladder. plan.js draws it. #}
+        <div class="cc-plan-toughfx" id="planToughFx" hidden><svg id="planToughSvg" viewBox="0 0 280 108" aria-hidden="true"></svg></div>
       </div>
       <div class="grp cc-plan" id="planProfGrp" hidden>
         <h3>{{ 'map.plan_profile_h'|trans }}</h3>

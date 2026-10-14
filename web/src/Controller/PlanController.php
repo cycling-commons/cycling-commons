@@ -10,6 +10,7 @@ use App\Catalog\BikeType;
 use App\Catalog\RideCheckService;
 use App\Contribution\Gpx\TrackProcessor;
 use App\Elevation\ElevationClient;
+use App\Elevation\LegSurfaces;
 use App\Elevation\RouteSnapper;
 use App\Entity\User;
 use App\Security\PseudonymousKey;
@@ -50,6 +51,7 @@ final class PlanController extends AbstractController
         Request $request,
         RouteSnapper $snapper,
         ElevationClient $elevation,
+        LegSurfaces $surfaces,
         RateLimiterFactoryInterface $planLegLimiter,
         RateLimiterFactoryInterface $planLegAnonLimiter,
         #[Autowire('%kernel.secret%')]
@@ -88,16 +90,17 @@ final class PlanController extends AbstractController
             // No road is an answer, not an error, and it carries no line: nothing that is not a road leaves this server.
             return new JsonResponse(['routed' => false]);
         }
-        $heights = $elevation->profile(array_map(
-            static fn (array $c): array => [$c[1], $c[0]],
-            $snapped['coordinates'],
-        ));
+        $latLng = array_map(static fn (array $c): array => [$c[1], $c[0]], $snapped['coordinates']);
+        $heights = $elevation->profile($latLng);
+        // The surfaces under the leg, for the toughness (section 4.4); null leaves them out.
+        $mix = $surfaces->along($latLng);
 
         return new JsonResponse([
             'routed' => true,
             'coordinates' => $snapped['coordinates'],
             'distanceM' => $snapped['distanceM'],
             'heights' => $heights,
+            'surfaces' => $mix,
         ]);
     }
 

@@ -6,7 +6,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  MAX_STOPS, stopKey, legKeys, nearLine, insertIndex, figures, profileRuns, pointAt, gpxText, barText, createHistory, toughness, tickStepKm,
+  MAX_STOPS, stopKey, legKeys, nearLine, insertIndex, figures, profileRuns, pointAt, gpxText, barText, createHistory, toughness, tickStepKm, surfaceMix, toughnessBars,
 } from '../../assets/map/plan-model.js';
 
 // A straight 2 km leg east along lat 50.4 (0.001 deg lng is about 71 m), 30 m samples.
@@ -149,7 +149,8 @@ test('the history is bounded and hands back copies, never the array it was given
    base, the metres climbed per km add to it, and the level reads in the
    routes' own difficulty words. */
 test('toughness: a short flat ride is easy, and climbing per km raises the level', () => {
-  assert.deepEqual(toughness(30000, 120), { level: 1, terrain: 'flat', perKm: 4 });
+  const easy = toughness(30000, 120);
+  assert.equal(easy.level, 1); assert.equal(easy.terrain, 'flat'); assert.equal(easy.perKm, 4);
   assert.equal(toughness(46000, 977).level, 3);          // the owner's Spa ride: 21 m/km, hilly, short
   assert.equal(toughness(46000, 977).terrain, 'hilly');
   assert.equal(toughness(80000, 2400).level, 5);         // 30 m/km on a medium ride: very hard
@@ -175,4 +176,36 @@ test('the distance axis keeps about ten ticks whatever the length', () => {
     const n = Math.floor(km / tickStepKm(km));
     assert.ok(n >= 4 && n <= 15, `${km} km gives ${n} ticks`);
   }
+});
+
+/* The surface mix (route-planner.md section 4.4): metres on paved, gravel and
+   rough roads over the routed legs, and what they do to the toughness. */
+test('surfaceMix sums the legs and leaves what the engine did not say as unknown', () => {
+  const mix = surfaceMix([
+    { routed: true, distM: 3000, surfaces: { paved: 2000, gravel: 800, rough: 200, unknown: 0 } },
+    { routed: true, distM: 1000, surfaces: null },
+    { routed: false },
+  ]);
+  assert.deepEqual(mix, { paved: 2000, gravel: 800, rough: 200, unknown: 1000 });
+});
+
+test('gravel and rough kilometres weigh more than paved ones in the toughness', () => {
+  // 40 km flat on asphalt is easy; with 30 km of gravel it counts as 49 km, still short; all rough it counts as 64 km: a medium ride.
+  assert.equal(toughness(40000, 100, { paved: 40000, gravel: 0, rough: 0, unknown: 0 }).level, 1);
+  assert.equal(toughness(40000, 100, { paved: 10000, gravel: 30000, rough: 0, unknown: 0 }).level, 1);
+  assert.equal(toughness(40000, 100, { paved: 0, gravel: 0, rough: 40000, unknown: 0 }).level, 2);
+  assert.equal(toughness(40000, 100, { paved: 0, gravel: 0, rough: 40000, unknown: 0 }).effectiveKm, 64);
+  // Unknown surface counts as paved, and no mix at all means the plain distance.
+  assert.equal(toughness(40000, 100, { paved: 0, gravel: 0, rough: 0, unknown: 40000 }).effectiveKm, 40);
+  assert.equal(toughness(40000, 100).effectiveKm, 40);
+});
+
+/* The toughness graphic (route-planner.md section 4.4): the distance bar's
+   surface segments as shares of the ride, in a fixed order, zero widths left out. */
+test('toughnessBars gives the surface segments of the distance bar as shares', () => {
+  assert.deepEqual(toughnessBars({ paved: 30000, gravel: 10000, rough: 0, unknown: 0 }), [
+    { cls: 'paved', share: 0.75 }, { cls: 'gravel', share: 0.25 },
+  ]);
+  assert.deepEqual(toughnessBars({ paved: 0, gravel: 0, rough: 0, unknown: 5000 }), [{ cls: 'unknown', share: 1 }]);
+  assert.deepEqual(toughnessBars({ paved: 0, gravel: 0, rough: 0, unknown: 0 }), []);
 });

@@ -1926,6 +1926,8 @@ map:
   plan_terrain_hilly: "hilly"
   plan_terrain_mountainous: "mountainous"
   plan_strip_hide: "Hide the profile strip"
+  plan_surface_gravel: "{d} gravel"
+  plan_surface_rough: "{d} rough"
   plan_name_ph: "Name this ride"
   plan_saved: "Saved as {name}."
   plan_my_rides: "My rides"

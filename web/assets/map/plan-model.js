@@ -169,13 +169,29 @@ export function createHistory(limit = 30){
    climbed per km add to it, and the level reads in the routes' difficulty
    words (DifficultyVocabulary::LABELS, 1 Easy to 5 Very hard). */
 const TERRAIN_BUMP = { flat: 0, rolling: 1, hilly: 2, mountainous: 3 };
-export function toughness(distM, upM){
+/* A kilometre of gravel rides like 1.3 km of asphalt, a kilometre of rough
+   road (cobbles, dirt, a path) like 1.6 km; what the engine could not say
+   counts as paved. */
+export const SURFACE_WEIGHT = { paved: 1, gravel: 1.3, rough: 1.6, unknown: 1 };
+export function toughness(distM, upM, mix){
   const km = distM / 1000;
   if(!(km > 0)) return null;
   const perKm = upM / km;
-  const base = km < 50 ? 1 : km < 100 ? 2 : km < 150 ? 3 : 4;
+  const effectiveKm = mix ? Object.keys(SURFACE_WEIGHT).reduce((sum, k) => sum + (mix[k] || 0) / 1000 * SURFACE_WEIGHT[k], 0) : km;
+  const base = effectiveKm < 50 ? 1 : effectiveKm < 100 ? 2 : effectiveKm < 150 ? 3 : 4;
   const terrain = perKm < 8 ? 'flat' : perKm < 15 ? 'rolling' : perKm < 25 ? 'hilly' : 'mountainous';
-  return { level: Math.min(5, base + TERRAIN_BUMP[terrain]), terrain, perKm };
+  return { level: Math.min(5, base + TERRAIN_BUMP[terrain]), terrain, perKm, effectiveKm, base, bump: TERRAIN_BUMP[terrain] };
+}
+
+/** Metres on paved, gravel and rough roads over the routed legs; a leg without an answer is unknown. */
+export function surfaceMix(legs){
+  const mix = { paved: 0, gravel: 0, rough: 0, unknown: 0 };
+  for(const leg of legs){
+    if(!leg || !leg.routed) continue;
+    if(leg.surfaces){ for(const k of Object.keys(mix)) mix[k] += leg.surfaces[k] || 0; }
+    else mix.unknown += leg.distM || 0;
+  }
+  return mix;
 }
 
 /** The distance axis's tick step in km: the largest of 1, 2, 5 and their tens at or under a tenth-and-a-half of the ride, so the axis keeps about ten ticks at any length. */
@@ -185,4 +201,11 @@ export function tickStepKm(totalKm){
   let step = 1;
   for(const s of ladder){ if(s <= ceiling) step = s; }
   return step;
+}
+
+/** The distance bar of the toughness graphic: one segment per surface class with its share of the ride, in a fixed order, empty classes left out. */
+export function toughnessBars(mix){
+  const total = ['paved', 'gravel', 'rough', 'unknown'].reduce((sum, k) => sum + (mix[k] || 0), 0);
+  if(!(total > 0)) return [];
+  return ['paved', 'gravel', 'rough', 'unknown'].filter(k => (mix[k] || 0) > 0).map(k => ({ cls: k, share: (mix[k] || 0) / total }));
 }

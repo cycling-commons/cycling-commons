@@ -1949,3 +1949,12 @@
   .map-wrap.cc-strip-on .legend{bottom:calc(140px + 6.65rem)}
   .cc-plan-fig-wide{grid-column:1 / -1}
   .cc-plan-fig-wide span em{font-style:normal;text-transform:none;letter-spacing:0;color:rgb(var(--chrome-fg) / .8)}
+  /* how the toughness is built (route-planner.md section 4.4) */
+  .cc-plan-toughfx{margin-top:.5rem;background:rgb(var(--chrome-fg) / .06);border-radius:8px;padding:.45rem .6rem .3rem}
+  .cc-plan-toughfx[hidden]{display:none}
+  .cc-plan-toughfx svg{display:block;width:100%;height:auto}
+  .cc-plan-toughfx text{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;fill:rgb(var(--chrome-fg) / .7)}
+  .cc-plan-toughfx text.val{text-transform:none;letter-spacing:0;font-size:9.5px;fill:var(--chrome-fg-solid)}
+  .cc-plan-toughfx text.num{font-size:11px;font-weight:500;fill:var(--chrome-fg-solid)}
+  .cc-plan-toughfx text.on{font-size:10px;font-weight:500;fill:#fff}
+  .cc-plan-toughfx text.off{font-size:10px;fill:rgb(var(--chrome-fg) / .7)}

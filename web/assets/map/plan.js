@@ -15,7 +15,7 @@ import { isPicking } from './picking.js';
 import { setPlanning } from './plan-state.js';
 import { CATALOG } from './catalog.js';
 import { layerGlyph } from './icons.js';
-import { MAX_STOPS, CORRIDOR_M, legKeys, insertIndex, figures, profileRuns, pointAt, gpxText, barText, createHistory, toughness, tickStepKm } from './plan-model.js';
+import { MAX_STOPS, CORRIDOR_M, legKeys, insertIndex, figures, profileRuns, pointAt, gpxText, barText, createHistory, toughness, tickStepKm, surfaceMix, toughnessBars } from './plan-model.js';
 
 /* The routes' difficulty words by level (DifficultyVocabulary::LABELS), translated as attribute values. */
 const TOUGH_WORDS = { 1: 'Easy', 2: 'Moderate', 3: 'Challenging', 4: 'Hard', 5: 'Very hard' };
@@ -45,7 +45,7 @@ async function routeLeg(a, b, bike){
     if(!r.ok) return { routed: false, down: true };
     const d = await r.json();
     if(!d.routed) return { routed: false };
-    return { routed: true, line: d.coordinates, distM: d.distanceM, heights: d.heights || null };
+    return { routed: true, line: d.coordinates, distM: d.distanceM, heights: d.heights || null, surfaces: d.surfaces || null };
   } catch(e){ return { routed: false, down: true }; }
 }
 async function fetchAlong(line){
@@ -184,16 +184,59 @@ function renderFigures(){
   $('planUp').textContent = uElev(f.upM);
   $('planDown').textContent = uElev(f.downM);
   // Toughness: the routes' difficulty words, so a ride and a route speak one scale.
-  const t = toughness(f.distM, f.upM);
+  const mix = surfaceMix(ride.legs);
+  const t = toughness(f.distM, f.upM, mix);
   const tEl = $('planTough'), tSub = $('planToughSub');
   if(tEl) tEl.textContent = t ? trVal(TOUGH_WORDS[t.level]) : '';
-  if(tSub) tSub.textContent = t ? `${(P().terrain || {})[t.terrain] || t.terrain} · ${tpl(P().perKm || '{n} m/km', { n: Math.round(t.perKm) })}` : '';
+  if(tSub){
+    const parts = t ? [`${(P().terrain || {})[t.terrain] || t.terrain} · ${tpl(P().perKm || '{n} m/km', { n: Math.round(t.perKm) })}`] : [];
+    if(t && mix.gravel >= 500) parts.push(tpl(P().surfGravel || '{d} gravel', { d: fmtKm(mix.gravel) }));
+    if(t && mix.rough >= 500) parts.push(tpl(P().surfRough || '{d} rough', { d: fmtKm(mix.rough) }));
+    tSub.textContent = parts.join(' · ');
+  }
+  renderToughGraphic(t, mix, f);
   const wait = unrouted() || routing;
   const save = $('planSave'), gpx = $('planGpx');
   if(save) save.disabled = wait;
   if(gpx) gpx.disabled = wait;
   const hint = $('planSaveHint'); if(hint && (unrouted() && !routing)) hint.textContent = P().saveWait || 'Save and GPX wait until every leg has a road.';
 }
+/* How the toughness is built (route-planner.md section 4.4), in three rows:
+   the distance bar split by surface, with the ride's km and its effective km
+   and the base they give; the climb gauge in the profile's purples with the
+   ride's m/km and what it adds; and the five-step ladder with the level. */
+const SURFACE_COLOUR = { paved: '#577A71', gravel: '#C8923A', rough: '#6E5849', unknown: 'rgb(var(--chrome-fg) / .25)' };
+function renderToughGraphic(t, mix, f){
+  const box = $('planToughFx'), svg = $('planToughSvg'); if(!box || !svg) return;
+  if(!t){ box.hidden = true; return; }
+  box.hidden = false;
+  const W = 280, L = 58, BW = 128, X2 = L + BW + 6;
+  const lbl = (y, text) => `<text x="0" y="${y}" class="lbl">${escPend(text)}</text>`;
+  let s = lbl(23, P().distance || 'distance');
+  const bars = toughnessBars(mix);
+  let x = L;
+  for(const seg of bars){ const w = BW * seg.share; s += `<rect x="${x.toFixed(1)}" y="12" width="${Math.max(w, 0.5).toFixed(1)}" height="14" rx="2" fill="${SURFACE_COLOUR[seg.cls]}"/>`; x += w; }
+  if(!bars.length) s += `<rect x="${L}" y="12" width="${BW}" height="14" rx="2" fill="${SURFACE_COLOUR.unknown}"/>`;
+  const eff = Math.abs(t.effectiveKm - f.distM / 1000) >= 0.5 ? ` → ${uKm(t.effectiveKm, 0)}` : '';
+  s += `<text x="${X2}" y="23" class="val">${escPend(fmtKm(f.distM) + eff)}</text>`;
+  s += `<text x="${W}" y="23" text-anchor="end" class="num">${t.base}</text>`;
+  s += lbl(53, P().climbed || 'climbed');
+  const zones = [[0, 8, '#D9A6F2'], [8, 15, '#B25BE8'], [15, 25, '#8A2BD0'], [25, 35, '#5E18A0']];
+  for(const [a, b, c] of zones) s += `<rect x="${(L + BW * a / 35).toFixed(1)}" y="42" width="${(BW * (b - a) / 35).toFixed(1)}" height="14" rx="2" fill="${c}"/>`;
+  const px = L + BW * Math.min(35, Math.max(0, t.perKm)) / 35;
+  s += `<polygon points="${px.toFixed(1)},41 ${(px - 5).toFixed(1)},34 ${(px + 5).toFixed(1)},34" fill="var(--trail)"/>`;
+  s += `<text x="${X2}" y="53" class="val">${escPend(tpl(P().perKm || '{n} m/km', { n: Math.round(t.perKm) }))}</text>`;
+  s += `<text x="${W}" y="53" text-anchor="end" class="num">+${t.bump}</text>`;
+  s += lbl(91, P().tough || 'toughness');
+  for(let i = 1; i <= 5; i++){
+    const bx = L + (i - 1) * (BW / 5), on = i === t.level;
+    s += `<rect x="${(bx + 1).toFixed(1)}" y="78" width="${(BW / 5 - 2).toFixed(1)}" height="20" rx="4" fill="${on ? 'var(--trail)' : 'rgb(var(--chrome-fg) / .1)'}"/>`;
+    s += `<text x="${(bx + BW / 10).toFixed(1)}" y="92" text-anchor="middle" class="${on ? 'on' : 'off'}">${i}</text>`;
+  }
+  s += `<text x="${X2}" y="92" class="val">${escPend(trVal(TOUGH_WORDS[t.level]))}</text>`;
+  svg.innerHTML = s;
+}
+
 /* The profile in the panel and, the map's width wide, as a strip along the
    foot of the map (route-planner.md section 4.5); one drawing, two sizes. */
 let stripClosed = false;

@@ -1308,6 +1308,8 @@ map:
   plan_terrain_hilly: "accidenté"
   plan_terrain_mountainous: "montagneux"
   plan_strip_hide: "Masquer la bande du profil"
+  plan_surface_gravel: "{d} de gravier"
+  plan_surface_rough: "{d} de route rugueuse"
   plan_name_ph: "Nommez cette sortie"
   plan_saved: "Enregistrée sous {name}."
   plan_my_rides: "Mes sorties"

@@ -74,6 +74,12 @@ test('the height profile also runs along the foot of the map, and the panel keep
   assert.ok(plan.includes("$('planStripSvg')") && plan.includes("$('planProfSvg')"), 'plan.js does not draw both profiles');
 });
 
+test('the toughness is explained by a graphic under its tile', () => {
+  // Owner 2026-10-15: an infographic of the toughness from all its elements.
+  assert.ok(twig.includes('id="planToughSvg"'), 'no toughness graphic in the map template');
+  assert.ok(plan.includes("$('planToughSvg')") && plan.includes('toughnessBars('), 'plan.js does not draw the toughness graphic');
+});
+
 test('the controller hands every planner string to the script', () => {
   assert.ok(controller.includes("'railPlan' => $t->trans('map.rail_plan')"), 'the rail title is not translated');
   for (const key of ['plan_no_road', 'plan_max_stops', 'plan_already', 'plan_rate_limited', 'plan_engine_down', 'plan_saved', 'plan_too_many', 'plan_bar_stops', 'plan_leave']) {

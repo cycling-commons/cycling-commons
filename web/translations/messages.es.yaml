@@ -1933,6 +1933,8 @@ map:
   plan_terrain_hilly: "montuoso"
   plan_terrain_mountainous: "montañoso"
   plan_strip_hide: "Ocultar la banda del perfil"
+  plan_surface_gravel: "{d} de grava"
+  plan_surface_rough: "{d} de firme áspero"
   plan_name_ph: "Ponle nombre a esta salida"
   plan_saved: "Guardada como {name}."
   plan_my_rides: "Mis salidas"

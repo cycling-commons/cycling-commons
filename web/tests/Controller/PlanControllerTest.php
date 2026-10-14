@@ -11,6 +11,7 @@ use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Controller\PlanController;
 use App\Elevation\ElevationClient;
+use App\Elevation\LegSurfaces;
 use App\Elevation\RouteSnapper;
 use App\Entity\User;
 use App\Tests\Coverage\CoverageSchema;
@@ -121,9 +122,11 @@ final class PlanControllerTest extends WebTestCase
         $engine = new MockHttpClient([
             new MockResponse((string) json_encode(['trip' => ['legs' => [['shape' => $shape, 'summary' => ['length' => 2.4]]]]])),
             new MockResponse((string) json_encode(['range_height' => [[0, 300], [30, 305], [60, 311]]])),
+            new MockResponse((string) json_encode(['units' => 'kilometers', 'edges' => [['surface' => 'paved_smooth', 'length' => 2.0], ['surface' => 'gravel', 'length' => 0.4]]])),
         ]);
         static::getContainer()->set(RouteSnapper::class, new RouteSnapper($engine, new NullLogger(), 'http://valhalla.test'));
         static::getContainer()->set(ElevationClient::class, new ElevationClient($engine, new NullLogger(), 'http://valhalla.test', 'Copernicus DEM GLO-30'));
+        static::getContainer()->set(LegSurfaces::class, new LegSurfaces($engine, new NullLogger(), 'http://valhalla.test'));
 
         self::post($client, '/map/plan/leg', 'plan-leg', self::leg('Gravel'));
 
@@ -135,6 +138,7 @@ final class PlanControllerTest extends WebTestCase
         // JSON carries a whole number without its fraction; the values are what count.
         self::assertEqualsWithDelta(2400.0, $json['distanceM'], 1e-6);
         self::assertEquals([[0, 300], [30, 305], [60, 311]], $json['heights']);
+        self::assertSame(['paved' => 2000, 'gravel' => 400, 'rough' => 0, 'unknown' => 0], $json['surfaces']);
     }
 
     public function testAVisitorOverTheDailyBudgetIs429(): void

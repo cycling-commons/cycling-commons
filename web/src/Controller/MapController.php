@@ -711,6 +711,11 @@ final class MapController extends AbstractController
                 'barStops' => $t->trans('map.plan_bar_stops'),
                 'leave' => $t->trans('map.plan_leave'),
                 'perKm' => $t->trans('map.plan_per_km'),
+                'distance' => $t->trans('map.plan_distance'),
+                'climbed' => $t->trans('map.plan_climbed'),
+                'tough' => $t->trans('map.plan_tough'),
+                'surfGravel' => $t->trans('map.plan_surface_gravel'),
+                'surfRough' => $t->trans('map.plan_surface_rough'),
                 'terrain' => [
                     'flat' => $t->trans('map.plan_terrain_flat'),
                     'rolling' => $t->trans('map.plan_terrain_rolling'),

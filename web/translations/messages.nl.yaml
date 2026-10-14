@@ -1310,6 +1310,8 @@ map:
   plan_terrain_hilly: "heuvelachtig"
   plan_terrain_mountainous: "bergachtig"
   plan_strip_hide: "Profielstrook verbergen"
+  plan_surface_gravel: "{d} grind"
+  plan_surface_rough: "{d} ruw"
   plan_name_ph: "Geef deze rit een naam"
   plan_saved: "Bewaard als {name}."
   plan_my_rides: "Mijn ritten"
