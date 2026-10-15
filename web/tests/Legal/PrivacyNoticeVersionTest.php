@@ -116,17 +116,14 @@ final class PrivacyNoticeVersionTest extends WebTestCase
         self::assertContains('privacy.change.v2_base_location', $v2[0]['changes']);
     }
 
-    public function testTheKeptAddressAfterDeletionIsAnnounced(): void
+    /** Everything since the published version 2 ships as one version 3 (owner 2026-10-15; privacy-notice.md section 7a). */
+    public function testEverythingSinceThePublishedVersionIsAnnouncedAsVersionThree(): void
     {
         $v3 = array_values(array_filter(PrivacyNoticeVersions::all(), static fn (array $v): bool => 3 === $v['number']));
         self::assertCount(1, $v3);
-        self::assertContains('privacy.change.v3_kept_address', $v3[0]['changes']);
-    }
-
-    public function testRoadmapVotesFollowsAndIdeasAreAnnounced(): void
-    {
-        $v4 = array_values(array_filter(PrivacyNoticeVersions::all(), static fn (array $v): bool => 4 === $v['number']));
-        self::assertCount(1, $v4);
-        self::assertContains('privacy.change.v4_roadmap', $v4[0]['changes']);
+        foreach (['v3_kept_address', 'v4_roadmap', 'v5_rides', 'v6_forecast', 'v7_presets'] as $change) {
+            self::assertContains('privacy.change.'.$change, $v3[0]['changes']);
+        }
+        self::assertSame(3, PrivacyNoticeVersions::CURRENT, 'nothing past version 3 until version 3 is online');
     }
 }

@@ -283,24 +283,34 @@ which version each account has seen is kept.
   `privacy.change.*`, in all five locales). `CURRENT` is the newest number. The
   page shows "Version 2 · 7 October 2026" at the top, in the reader's date
   format, and under "Changes to this policy" every version with its changes.
-  Version 3 (11 October 2026, not significant) says that a message sent or a
-  report filed while signed in keeps its address for its own period also
-  after the account is deleted, so we can still answer and tell a reporter
-  the outcome (`privacy.change.v3_kept_address`; owner 2026-10-11).
-  Version 4 (13 October 2026, not significant) adds roadmap votes, follows
-  and proposals, with what is kept, what becomes public after review and
-  without a name, and for how long
-  (`privacy.collect_contribute_roadmap`, `privacy.retention_roadmap`,
-  `privacy.change.v4_roadmap`; roadmap-and-changelog.md section 8.8). Not
-  significant because the processing is optional and only happens when a
-  rider uses it; nothing changes for data already given.
-  Version 5 (14 October 2026, not significant) adds the rides a rider plans
-  on the map and saves: what is kept (name, bike type, stops, line, figures),
-  that nobody but the rider sees one, that an unsaved ride stays in the
-  browser and its leg requests reach only our own routing engine, and that a
-  saved ride stays until deleted on the Rides page or with the account and is
-  in the export (`privacy.collect_rides`, `privacy.retention_rides`,
-  `privacy.change.v5_rides`; [route-planner.md](route-planner.md) section 7).
+  Version 3 (15 October 2026, not significant) is everything since the
+  published version 2, shipped as one version (owner 2026-10-15: "combine
+  all changes into version 3, online we are at version 2"). Its change keys,
+  each a line under "Changes to this policy": `privacy.change.v3_kept_address`
+  (a message sent or a report filed while signed in keeps its address for
+  its own period also after the account is deleted, so we can still answer
+  and tell a reporter the outcome; owner 2026-10-11); `privacy.change.v4_roadmap`
+  (roadmap votes, follows and proposals, with what is kept, what becomes
+  public after review and without a name, and for how long;
+  `privacy.collect_contribute_roadmap`, `privacy.retention_roadmap`,
+  roadmap-and-changelog.md section 8.8); `privacy.change.v5_rides` (the rides
+  a rider plans on the map and saves: name, bike type, stops, line, figures,
+  nobody but the rider sees one, an unsaved ride stays in the browser and
+  its leg requests reach only our own routing engine, kept until deleted and
+  in the export; `privacy.collect_rides`, `privacy.retention_rides`,
+  [route-planner.md](route-planner.md) section 7); `privacy.change.v6_forecast`
+  (the forecast service our server asks for a planned ride's date,
+  Open-Meteo, which sees our server's address, one point rounded to about
+  10 km and the date, nothing about the rider, cached three hours;
+  `privacy.server_services_forecast`); `privacy.change.v7_presets` (the map
+  presets a rider keeps: the name and the switches, linked to the account,
+  nobody but the rider sees one, kept until deleted in Settings or with the
+  account, in the export; `privacy.collect_map_presets`,
+  `privacy.retention_map_presets`, [map-presets.md](map-presets.md) section
+  6). Not significant: each is optional, new processing a rider chooses, or
+  a clearer statement of what already happens; nothing changes for data
+  already given. The key names keep the number of the change they were
+  written for, which is not the version they ship in.
   Version 1 is the page as committed on 4 October 2026. Version 2 (7 October
   2026) adds traffic summaries and Scout tags, the stored time zone, the base
   location stored as a random point up to 2.5 km away instead of rounded to

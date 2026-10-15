@@ -437,7 +437,7 @@ inside a group are not news.
 
 ### 8.8 Personal data
 
-Privacy notice version 4 (privacy-notice.md section 7a) adds the votes,
+Privacy notice version 3 (privacy-notice.md section 7a, the change key `v4_roadmap`) adds the votes,
 follows and proposals, marked not significant: the processing is new but
 optional and happens only when a rider uses it, so nothing changes for data
 riders already gave. On account deletion (`RoadmapDeletionHook`) votes and
