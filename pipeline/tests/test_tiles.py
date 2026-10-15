@@ -109,6 +109,38 @@ def test_export_geojsonl_shapes(db, tmp_path):
             assert not extra, f"{ref}: undeclared tile prop(s) {extra} (contract drift)"
 
 
+def test_export_folds_dense_same_kind_points_onto_one_member(db, tmp_path):
+    """Five or more points of one letter and kind within about 60 m of each
+    other (coverage-provider.md §3 step 5, owner 2026-10-15: a chalet park
+    drawn as forty pins) ride the tiles as one: the member nearest the group's
+    centre carries `grp` with the count, the others stay out of the tiles. A
+    point on its own and a group under five stay as they are."""
+    ensure_schema(db)
+    sid = _src_id(db)
+    rows = []
+    for i in range(6):   # six chalets about 20 m apart along a row
+        rows.append((f"node/910000{i}", "O", None, f"Chalet {i}", 4.7000 + i * 0.0003, 50.9000, {"tourism": "chalet"}))
+    rows.append(("node/9100099", "O", None, "Chalet far", 4.7300, 50.9000, {"tourism": "chalet"}))   # 2 km east
+    for i in range(4):   # four hotels close together: under the five that make a group
+        rows.append((f"node/920000{i}", "O", None, f"Hotel {i}", 4.8000 + i * 0.0003, 50.9000, {"tourism": "hotel"}))
+    for ref, letter, kind, name, lon, lat, tags in rows:
+        db.execute(
+            "INSERT INTO coverage_poi (ref, letter, kind, name, geom, tags, src_region_id, country_code)"
+            " VALUES (%s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326), %s, %s, 'BE')",
+            (ref, letter, kind, name, lon, lat, Json(tags), sid))
+    out = tiles.export_geojsonl(db, tmp_path)
+
+    feats = _features(out[("O", "BE")])
+    chalets = [f for f in feats.values() if f["properties"]["t"] == _label("O", "tourism=chalet")]
+    assert len(chalets) == 2, "six chalets in a row are one feature, the far one its own"
+    folded = [f for f in chalets if "grp" in f["properties"]]
+    assert len(folded) == 1 and folded[0]["properties"]["grp"] == 6
+    assert folded[0]["properties"]["ref"] in {"node/9100002", "node/9100003"}, "the member nearest the group's centre stands for it"
+    assert "grp" not in feats["node/9100099"]["properties"]
+    for i in range(4):
+        assert "grp" not in feats[f"node/920000{i}"]["properties"], "four is not a group"
+
+
 def test_export_carries_scope_tokens_when_stamped(db, tmp_path):
     """A region-stamped row emits ridtok="|<region_id>|" + cctok="|<cc>|"; a
     cc-only boundary row (region_id NULL) emits an EMPTY ridtok but a non-empty

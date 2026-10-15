@@ -136,7 +136,8 @@ function bindCoverageHandlers(){
     openCoverageDrawer(iconLayerKey.get(f0.layer.id), tp, {lng:c[0], lat:c[1]}); flyToPin([c[0],c[1]]); });
   map.on('mousemove', e=>{ const f0=covHit(e); if(!f0){ leave(); return; }
     if(!covHovered){ covHovered=true; map.getCanvas().style.cursor='pointer'; }
-    const p=f0.properties; showTip(p.n||p.t||(layerByKey[iconLayerKey.get(f0.layer.id)]||{}).label||'Item', e.lngLat); });
+    const p=f0.properties, what=p.n||p.t||(layerByKey[iconLayerKey.get(f0.layer.id)]||{}).label||'Item';
+    showTip(p.grp ? `${what} ×${p.grp}` : what, e.lngLat); });
   map.on('mouseout', leave);
 }
 // One icon+heat layer pair per (letter, country) against the source that serves cc. cc===null is the pre-split `<letter>` fallback.
@@ -209,7 +210,13 @@ function addCoverageLayers(cc, src){
               8,['case',isFood,DISC_SIZES[0],DROP_SIZES[0]],
               13,['case',isFood,DISC_SIZES[1],DROP_SIZES[1]],
               18,['case',isFood,DISC_SIZES[2],DROP_SIZES[2]]]
-          : ['interpolate',['linear'],['zoom'],8,DISC_SIZES[0],13,DISC_SIZES[1],18,DISC_SIZES[2]]}}, COV_SEL_LAYER);
+          : ['interpolate',['linear'],['zoom'],8,DISC_SIZES[0],13,DISC_SIZES[1],18,DISC_SIZES[2]],
+        // A folded group's size (coverage-provider.md §3 step 5): one pin stands
+        // for five or more of a kind close together, and says how many.
+        'text-field': ['case', ['has','grp'], ['to-string',['get','grp']], ''],
+        'text-font': ['Noto Sans Bold'], 'text-size': 10, 'text-anchor': 'left', 'text-offset': [0.9, -0.8],
+        'text-allow-overlap': true, 'text-ignore-placement': true, 'text-optional': true},
+      paint:{'text-color':'#F3EBD8','text-halo-color':'#1F2A24','text-halo-width':1.4}}, COV_SEL_LAYER);
     iconLayerKey.set(id, key);
   });
 }
@@ -244,6 +251,7 @@ export function covProps(key, tp, d){
   const cc=(tp.cctok||'').replace(/\|/g,'');   // "|nl|" → NL; water verify links are per-country
   if(cc) p.cc=cc.toUpperCase();
   if(tp.ref) p.ref=tp.ref;
+  if(tp.grp!=null && Number(tp.grp) > 1) p.grp=Number(tp.grp);   // the folded group this pin stands for
   if(key==='services' && tp.kind) p.serviceKind=tp.kind;
   if(PLACE_LETTER[key] && tp.kind) p.type=tp.kind;
   if(PLACE_LETTER[key] && !p.type && tp.t) p.type=kindOfLabel(PLACE_LETTER[key], tp.t) || undefined;

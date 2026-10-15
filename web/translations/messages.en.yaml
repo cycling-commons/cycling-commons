@@ -2372,6 +2372,8 @@ map:
   d_rider_ramp: 'ramp'
   d_fresh_fresh: 'fresh'
   d_climb_finish: 'Summit'
+  d_cov_group: "Grouped"
+  d_cov_group_value: "{n} of these stand close together; the map shows them as one pin"
   d_avg_short: 'avg'
   d_fresh_ageing: 'ageing'
   d_fresh_stale: 'stale'
@@ -5009,6 +5011,7 @@ changelog:
   v097_mail_why: "<b>Every email says why it came.</b> The answer to a bug report, a curator application or a change to your areas no longer says it is about a contribution you made."
   v097_curator_proposals: "<b>Read riders' roadmap proposals.</b> Curators see the proposals riders send, pictures included, before they go public."
   v097_fixes: "<b>Among smaller fixes:</b> a register tap no longer stands beside the same tap that riders confirmed, and the coverage page explains its counts under both the globe and the table."
+  v097_grouped_pins: "<b>One pin for a crowd.</b> Five or more places of one kind that stand close together, such as the forty chalets of a holiday park, show as one pin with a count. Hover it or open it to see how many it stands for."
   v096_denmark: "<b>Denmark is on the map.</b> You can now find and add places, climbs and routes there."
   v096_scout: "<b>Add a ride from the Scout page.</b> An 'Add a Scout ride' button opens the ride review on the map. The page also says where to get the app, and that with a rear radar Scout also measures the traffic on the roads you ride."
   v096_tools: "<b>Every ride tool on the map looks the same.</b> 'Scout', 'Add a climb' and 'Propose a route' each have the same orange button. Without an account, the button takes you to log in first."

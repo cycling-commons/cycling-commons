@@ -1754,6 +1754,8 @@ map:
   d_rider_ramp: 'rampe'
   d_fresh_fresh: 'récent'
   d_climb_finish: 'Sommet'
+  d_cov_group: "Regroupés"
+  d_cov_group_value: "{n} de ces lieux sont côte à côte ; la carte les montre comme une seule épingle"
   d_avg_short: 'moy'
   d_fresh_ageing: 'vieillissant'
   d_fresh_stale: 'périmé'
@@ -4987,6 +4989,7 @@ changelog:
   v097_mail_why: "<b>Chaque e-mail dit pourquoi il arrive.</b> La réponse à un signalement de bug, une candidature à la curation ou un changement de vos zones ne dit plus qu'elle concerne une contribution de votre part."
   v097_curator_proposals: "<b>Lisez les propositions des cyclistes pour la feuille de route.</b> La curation voit les propositions envoyées par les cyclistes, images comprises, avant qu'elles deviennent publiques."
   v097_fixes: "<b>Parmi les petites corrections :</b> un point d'eau du registre n'apparaît plus à côté du même point d'eau confirmé par des cyclistes, et la page de couverture explique ses chiffres sous le globe comme sous le tableau."
+  v097_grouped_pins: "<b>Une épingle pour un groupe.</b> Cinq lieux ou plus d'un même type qui se tiennent côte à côte, comme les quarante chalets d'un parc de vacances, apparaissent comme une seule épingle avec un nombre. Survolez-la ou ouvrez-la pour voir combien elle représente."
   v096_denmark: "<b>Le Danemark est sur la carte.</b> Vous pouvez maintenant y trouver et y ajouter des lieux, des cols et des itinéraires."
   v096_scout: "<b>Ajoutez une sortie depuis la page Scout.</b> Un bouton 'Ajouter une sortie Scout' ouvre la revue de la sortie sur la carte. La page dit aussi où obtenir l'application, et qu'avec un radar arrière Scout mesure aussi le trafic sur les routes où vous roulez."
   v096_tools: "<b>Chaque outil de sortie sur la carte a le même aspect.</b> 'Reconnaissance', 'Ajouter un col' et 'Proposer un itinéraire' ont chacun le même bouton orange. Sans compte, le bouton vous mène d'abord à la connexion."

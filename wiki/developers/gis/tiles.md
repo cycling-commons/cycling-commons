@@ -171,15 +171,22 @@ streams:
 
 <!-- CODE-FROM pipeline/coverage/tiles.py -->
 ```python
-"COPY (SELECT COALESCE(country_code, 'ZZ'), jsonb_build_object("
+"COPY (WITH pts AS ("
+...
+"SELECT COALESCE(country_code, 'ZZ'), jsonb_build_object("
 "'type', 'Feature', "
 ...
 "'geometry', ST_AsGeoJSON(geom)::jsonb, "
 f"'properties', jsonb_strip_nulls(jsonb_build_object({', '.join(props)}))"
-f")::text FROM coverage_poi "
-f"WHERE letter = {_lit(letter)} "
-f"ORDER BY COALESCE(country_code, 'ZZ'), ref) TO STDOUT"
+")::text FROM pts LEFT JOIN reps ON reps.rep_ref = pts.ref "
+"WHERE pts.fold IS NULL OR reps.rep_ref IS NOT NULL "
+"ORDER BY COALESCE(country_code, 'ZZ'), ref) TO STDOUT"
 ```
+
+The `WITH pts … reps` head is the fold: five or more points of one letter and kind, in one
+country, chained within 100 Web Mercator metres of each other, leave the file as one row, the
+member nearest the group's centre, carrying `grp` with the count. A holiday park of forty chalets
+is one pin that says 40, placed on one of its chalets, never on a centroid.
 
 The second sort key, `ref`, fixes the order inside a country. `(ref, letter)` is unique, so the same
 rows always export as the same bytes, and the per-country fingerprint that decides whether a country

@@ -65,6 +65,7 @@ final class ReleaseNotes
                     'changelog.v097_roadmap',
                     'changelog.v097_karoo',
                     'changelog.v097_privacy',
+                    'changelog.v097_grouped_pins',
                     'changelog.v097_fixes',
                 ],
                 'rider' => [
@@ -80,6 +81,7 @@ final class ReleaseNotes
                 'changelog.v097_roadmap' => 'new',
                 'changelog.v097_karoo' => 'new',
                 'changelog.v097_privacy' => 'improved',
+                'changelog.v097_grouped_pins' => 'new',
                 'changelog.v097_fixes' => 'fixed',
                 'changelog.v097_proposals' => 'new',
                 'changelog.v097_mail_why' => 'fixed',

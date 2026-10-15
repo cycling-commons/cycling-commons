@@ -67,7 +67,7 @@ def test_universal_tile_props_carry_the_scope_keys():
     # so tippecanoe can union them across a cluster. Per-letter
     # tileProps stay extras-only.
     contract = load_contract()
-    assert contract.universal_tile_props == ["ref", "n", "t", "ridtok", "cctok"]
+    assert contract.universal_tile_props == ["ref", "n", "t", "ridtok", "cctok", "grp"]
 
 
 def test_universal_tile_props_required_not_optional(tmp_path):

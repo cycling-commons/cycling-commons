@@ -311,7 +311,8 @@
     "n",
     "t",
     "ridtok",
-    "cctok"
+    "cctok",
+    "grp"
   ],
   "storedTagKeys": [
     "addr:city",

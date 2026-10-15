@@ -2379,6 +2379,8 @@ map:
   d_rider_ramp: 'rampa'
   d_fresh_fresh: 'reciente'
   d_climb_finish: 'Cima'
+  d_cov_group: "Agrupados"
+  d_cov_group_value: "{n} de estos están muy juntos; el mapa los muestra como un solo pin"
   d_avg_short: 'media'
   d_fresh_ageing: 'envejeciendo'
   d_fresh_stale: 'caducado'
@@ -5019,6 +5021,7 @@ changelog:
   v097_mail_why: "<b>Cada correo dice por qué llega.</b> La respuesta a un informe de error, una solicitud de curaduría o un cambio en tus zonas ya no dice que trata de una contribución tuya."
   v097_curator_proposals: "<b>Lee las propuestas de los ciclistas para la hoja de ruta.</b> La curaduría ve las propuestas que envían los ciclistas, imágenes incluidas, antes de que sean públicas."
   v097_fixes: "<b>Entre los arreglos menores:</b> una fuente de un registro ya no aparece junto a la misma fuente que confirmaron ciclistas, y la página de cobertura explica sus cifras bajo el globo y bajo la tabla."
+  v097_grouped_pins: "<b>Un pin para un grupo.</b> Cinco o más lugares de un mismo tipo que están muy juntos, como los cuarenta chalés de un parque de vacaciones, se muestran como un solo pin con un número. Pasa el ratón o ábrelo para ver cuántos representa."
   v096_denmark: "<b>Dinamarca está en el mapa.</b> Ya puedes encontrar y añadir lugares, puertos y rutas allí."
   v096_scout: "<b>Añade una salida desde la página de Scout.</b> Un botón 'Añadir una salida de Scout' abre la revisión de la salida en el mapa. La página también dice dónde conseguir la app, y que con un radar trasero Scout también mide el tráfico de las carreteras por las que circulas."
   v096_tools: "<b>Todas las herramientas de salida del mapa se ven igual.</b> 'Exploración', 'Añadir un puerto' y 'Proponer una ruta' tienen el mismo botón naranja. Sin cuenta, el botón te lleva primero a iniciar sesión."

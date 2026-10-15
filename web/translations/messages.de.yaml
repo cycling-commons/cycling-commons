@@ -1759,6 +1759,8 @@ map:
   d_rider_ramp: 'Rampe'
   d_fresh_fresh: 'aktuell'
   d_climb_finish: 'Gipfel'
+  d_cov_group: "Gruppiert"
+  d_cov_group_value: "{n} davon stehen dicht beieinander; die Karte zeigt sie als eine Nadel"
   d_avg_short: 'Ø'
   d_fresh_ageing: 'alternd'
   d_fresh_stale: 'veraltet'
@@ -4992,6 +4994,7 @@ changelog:
   v097_mail_why: "<b>Jede E-Mail sagt, warum sie kommt.</b> Die Antwort auf eine Fehlermeldung, eine Kurations-Bewerbung oder eine Änderung deiner Gebiete sagt nicht mehr, es gehe um einen Beitrag von dir."
   v097_curator_proposals: "<b>Lies die Fahrplan-Vorschläge der Fahrenden.</b> Die Kuration sieht die Vorschläge, die Fahrende schicken, samt Bildern, bevor sie öffentlich werden."
   v097_fixes: "<b>Unter den kleineren Korrekturen:</b> ein Wasserhahn aus einem Register steht nicht mehr neben demselben Wasserhahn, den Radfahrende bestätigt haben, und die Abdeckungsseite erklärt ihre Zahlen unter dem Globus wie unter der Tabelle."
+  v097_grouped_pins: "<b>Eine Nadel für eine Gruppe.</b> Fünf oder mehr Orte einer Art, die dicht beieinander stehen, etwa die vierzig Chalets eines Ferienparks, erscheinen als eine Nadel mit einer Zahl. Fahre darüber oder öffne sie, um zu sehen, für wie viele sie steht."
   v096_denmark: "<b>Dänemark ist auf der Karte.</b> Du kannst dort jetzt Orte, Anstiege und Routen finden und hinzufügen."
   v096_scout: "<b>Füge eine Fahrt von der Scout-Seite aus hinzu.</b> Ein Knopf 'Eine Scout-Fahrt hinzufügen' öffnet die Durchsicht der Fahrt auf der Karte. Die Seite sagt auch, wo es die App gibt, und dass Scout mit einem Rückradar auch den Verkehr auf deinen Straßen misst."
   v096_tools: "<b>Jedes Fahrtwerkzeug auf der Karte sieht gleich aus.</b> 'Erkundung', 'Anstieg hinzufügen' und 'Route vorschlagen' haben denselben orangen Knopf. Ohne Konto führt der Knopf dich zuerst zur Anmeldung."

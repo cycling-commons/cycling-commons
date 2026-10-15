@@ -437,6 +437,7 @@ final class MapController extends AbstractController
             'communityReport' => 'd_community_report', 'reportPhoto' => 'd_report_photo',
             'source' => 'd_source', 'editItem' => 'd_edit_item', 'fixLocation' => 'd_fix_location',
             'planAdd' => 'd_plan_add', 'planInRide' => 'd_plan_in_ride',
+            'covGroup' => 'd_cov_group', 'covGroupValue' => 'd_cov_group_value',
             'voteRound' => 'd_vote_round', 'downloadGpx' => 'd_download_gpx',
             'proposedChange' => 'd_proposed_change', 'history' => 'd_history', 'initialEntry' => 'd_initial_entry',
             'historyAuto' => 'd_history_auto', 'riderRemoved' => 'd_rider_removed',

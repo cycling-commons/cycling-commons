@@ -132,7 +132,7 @@ final class CoverageContractTest extends TestCase
         // tokens so cluster bubbles can union them) are emitted on EVERY tile
         // layer by pipeline tiles.py::_letter_sql; per-letter tileProps stay
         // extras-only.
-        self::assertSame(['ref', 'n', 't', 'ridtok', 'cctok'], $this->loadContract()['universalTileProps']);
+        self::assertSame(['ref', 'n', 't', 'ridtok', 'cctok', 'grp'], $this->loadContract()['universalTileProps']);
     }
 
     public function testEveryWhitelistedDisplayTagIsActuallyStored(): void

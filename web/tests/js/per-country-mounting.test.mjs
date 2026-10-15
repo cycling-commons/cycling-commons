@@ -41,7 +41,7 @@ test('one coverage handler set, bound once, acting on the first rendered hit', (
 test('late-mounted coverage layers go under the selected-POI overlay', () => {
   const layers = body(coverage, 'function addCoverageLayers(cc, src){');
   assert.match(layers, /map\.addLayer\(heatSpec,\s*COV_SEL_LAYER\)/);
-  assert.match(layers, /\]\}\},\s*COV_SEL_LAYER\);/, 'the icon layer too');
+  assert.match(layers, /'text-halo-width':1\.4\}\},\s*COV_SEL_LAYER\);/, 'the icon layer too');
   const add = body(coverage, 'export function addCoverage(){');
   assert.ok(add.indexOf("map.addSource('cov-sel'") < add.indexOf('mount();'),
     'the overlay exists before the first mount');

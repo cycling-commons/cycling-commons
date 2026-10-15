@@ -260,6 +260,8 @@ export function osmDrawer(layer, p, ll, src){
   const placeLbl = p.type && typeField && (typeField.choices || {})[p.type];
   const typeLbl = kindLbl || placeLbl || p.t || lbl;
   let rec=[{label:D.type||'Type', value:typeLbl, method: provider ? provider.name : drawerOrigin(p.srcType, sourceLabel)}];
+  // One pin for a dense group of a kind (coverage-provider.md §3 step 5): say how many it stands for.
+  if(p.grp) rec.push({label:D.covGroup||'Grouped', value:tpl(D.covGroupValue||'{n} of these stand close together; the map shows them as one pin', {n:p.grp})});
   if(p.town && layer.letter!=='O') rec.push({label:D.town||'Town', value:p.town});  // docs/specs/coverage-provider.md §2 — no province row when region_id is null (no Wallonia fallback).
   if(p.prov) rec.push({label:D.province||'Province', value:p.prov});
   // Scenic-view facts OSM already holds (docs/specs/coverage-provider.md §5):

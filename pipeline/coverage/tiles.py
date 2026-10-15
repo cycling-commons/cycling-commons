@@ -93,12 +93,35 @@ def _universal_props(spec, universal: list[str]) -> list[str]:
         "t": f"'t', {_label_case(spec.selectors)}",
         "ridtok": "'ridtok', CASE WHEN region_id IS NOT NULL THEN '|' || region_id || '|' ELSE '' END",
         "cctok": "'cctok', CASE WHEN country_code IS NOT NULL THEN '|' || country_code || '|' ELSE '' END",
+        # The fold (coverage-provider.md §3 step 5): the member that stands for
+        # a dense same-kind group carries the group's size; every other
+        # feature is NULL here and the key is stripped.
+        "grp": "'grp', grp",
     }
     if list(frags) != universal:
         raise ValueError(
             f"tiles.py universal props {list(frags)} != contract.universalTileProps "
             f"{universal} — keep coverage-contract.json and _universal_props in lockstep")
     return [frags[k] for k in universal]
+
+
+# The fold (coverage-provider.md §3 step 5, owner 2026-10-15: a chalet park
+# drawn as forty pins): FOLD_MIN or more points of one letter and kind, in one
+# country, chained within FOLD_EPS of each other, ride the tiles as ONE
+# feature, the member nearest the group's centre, carrying `grp` = the count.
+# FOLD_EPS is in Web Mercator metres: on the ground that is about 65 m at
+# 50° north and 100 m at the equator. The pin is always a real member, never
+# a centroid, which is what the no-clustering rule of step 6 protects.
+# Measured on the dev index (BE + NL, 2026-10-15): 7,255 chalet points in 127
+# groups, the biggest a holiday park of 2,523.
+FOLD_EPS = 100
+FOLD_MIN = 5
+
+
+def _kind_key(spec) -> str:
+    """What makes two points 'of one kind' for the fold: the stamped kind, else
+    the selector label the tile shows as `t`; the empty string when neither."""
+    return f"COALESCE(kind, {_label_case(spec.selectors)}, '')"
 
 
 def _letter_sql(letter: str, spec, universal: list[str]) -> str:
@@ -110,10 +133,30 @@ def _letter_sql(letter: str, spec, universal: list[str]) -> str:
     # as a leading column and rows are ordered by it, so export_geojsonl routes
     # each row to its per-cc file client-side. This turns ~letters×countries
     # full-table scans into ~letters.
+    #
+    # The fold runs here, in SQL, before anything is written: `pts` stamps every
+    # row of the letter with its group (NULL outside one), `reps` picks the one
+    # member that stands for each group, and the final SELECT keeps every
+    # ungrouped row plus the representatives. The group is per country, so a
+    # fold never spans a border, as the per-country layers never do.
     props = _universal_props(spec, universal)
     props += [_EXTRA_SQL[p] for p in spec.tile_props]
+    kind_key = _kind_key(spec)
     return (
-        "COPY (SELECT COALESCE(country_code, 'ZZ'), jsonb_build_object("
+        "COPY (WITH pts AS ("
+        f"SELECT cp.*, ST_ClusterDBSCAN(ST_Transform(geom, 3857), eps := {FOLD_EPS}, minpoints := {FOLD_MIN}) "
+        f"OVER (PARTITION BY country_code, {kind_key}) AS fold "
+        f"FROM coverage_poi cp WHERE letter = {_lit(letter)}"
+        "), grps AS ("
+        f"SELECT country_code, {kind_key} AS kind_key, fold, count(*) AS n, ST_Centroid(ST_Collect(geom)) AS centre "
+        "FROM pts WHERE fold IS NOT NULL GROUP BY 1, 2, 3"
+        "), reps AS ("
+        "SELECT DISTINCT ON (g.country_code, g.kind_key, g.fold) p.ref AS rep_ref, g.n AS grp "
+        f"FROM pts p JOIN grps g ON g.fold = p.fold AND g.kind_key = {kind_key} "
+        "AND g.country_code IS NOT DISTINCT FROM p.country_code "
+        "ORDER BY g.country_code, g.kind_key, g.fold, ST_Distance(p.geom, g.centre), p.ref"
+        ") "
+        "SELECT COALESCE(country_code, 'ZZ'), jsonb_build_object("
         "'type', 'Feature', "
         # feature id = numeric osm id (coverage-provider.md §4). node/NNN and
         # way/NNN are independent OSM id spaces, so this strips the type and
@@ -124,11 +167,11 @@ def _letter_sql(letter: str, spec, universal: list[str]) -> str:
         "'id', split_part(ref, '/', 2)::bigint, "
         "'geometry', ST_AsGeoJSON(geom)::jsonb, "
         f"'properties', jsonb_strip_nulls(jsonb_build_object({', '.join(props)}))"
-        f")::text FROM coverage_poi "
-        f"WHERE letter = {_lit(letter)} "
+        ")::text FROM pts LEFT JOIN reps ON reps.rep_ref = pts.ref "
+        "WHERE pts.fold IS NULL OR reps.rep_ref IS NOT NULL "
         # ref too: (ref, letter) is unique, so unchanged data gives the same
         # bytes, and the per-country fingerprint can say "unchanged".
-        f"ORDER BY COALESCE(country_code, 'ZZ'), ref) TO STDOUT"
+        "ORDER BY COALESCE(country_code, 'ZZ'), ref) TO STDOUT"
     )
 
 

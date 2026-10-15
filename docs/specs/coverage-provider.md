@@ -384,7 +384,26 @@ Per region in `COVERAGE_REGIONS`, independently:
 
 After all regions, once per run:
 
-5. **Export** per-letter newline-delimited GeoJSON from the full index.
+5. **Export** per-letter newline-delimited GeoJSON from the full index,
+   **folding dense groups of one kind** (owner 2026-10-15: a holiday park
+   drawn as forty chalet pins; "can we cluster groups like these"): five or
+   more points of one letter and kind, in one country, chained within 100
+   Web Mercator metres of each other (about 65 m on the ground at 50° north,
+   100 m at the equator; `ST_ClusterDBSCAN`, `tiles.py` `FOLD_EPS`,
+   `FOLD_MIN`) ride the tiles as **one feature**: the member nearest the
+   group's centre, carrying `grp` = the count; the other members stay in the
+   index and out of the tiles. "Of one kind" is the stamped `kind`, else the
+   selector label `t`. The pin is a real member, never a centroid, so it is
+   always drawn where a point is, inside its own country, and the scope
+   tokens stay exact: this is what the no-clustering rule of step 6 protects,
+   and the fold keeps it. The pin shows the count beside its glyph
+   (`coverage.js`, `text-field` on `grp`), the hover tip says "Chalet ×40",
+   and the drawer carries a **Grouped** row ("40 of these stand close
+   together; the map shows them as one pin", `d_cov_group`,
+   `d_cov_group_value`). Measured on the dev index, Belgium and the
+   Netherlands: 7,255 chalet points in 127 groups, the biggest a park of
+   2,523; the toilets of event grounds and the memorials of a cemetery fold
+   the same way. Pinned by `test_export_folds_dense_same_kind_points_onto_one_member`.
 6. **Build tiles** with tippecanoe: one layer per letter, `--minimum-zoom 6 /
    --maximum-zoom 14`, direct `.pmtiles` output
    (`pipeline/coverage/tiles.py::build_pmtiles`). Tiles carry **individual
@@ -410,7 +429,9 @@ After all regions, once per run:
    (`coverage.js`, owner 2026-09-30). Clustering is ruled out on purpose: a
    cluster is drawn at the *centroid* of its members, which can sit outside
    the scoped region and mixes members across a border. The heatmap bins the
-   points themselves, so nothing is ever drawn where no POI is.
+   points themselves, so nothing is ever drawn where no POI is. The fold of
+   step 5 is not that: its one feature is a member, in its own country, and
+   its count is a fact about the index, not a tile's.
 7. **Verify** with go-pmtiles (`verify_pmtiles`): header bounds, addressed tile
    count, expected layers, and a sample tile decode — a broken build never
    ships.
@@ -705,8 +726,9 @@ across the credits.
 | `food` | B | `true` for the shop and eatery half of letter B, absent for the water half; picks the food kind glyph |
 | `acc` | O | stays accessibility filter |
 | `cd` | all (when dated) | OSM `check_date`, only when it is a full `YYYY-MM-DD`, truncated to the day. A witness inside the freshness window drops the `?` badge on the coverage disc (data-provider-hierarchy.md §6.7.7, rung 8); the map compares it as a string to `window.CC_WITNESS_CUTOFF` |
+| `grp` | all (the one member that stands for a folded group) | the group's size (§3 step 5): five or more points of one kind close together ride the tiles as this one feature; absent on every other feature |
 
-`ref`/`n`/`t`/`ridtok`/`cctok` are the **universal** props (every layer, declared
+`ref`/`n`/`t`/`ridtok`/`cctok`/`grp` are the **universal** props (every layer, declared
 as `universalTileProps` in `coverage-contract.json`, consumed by
 `tiles.py::_universal_props` and pinned by both language contract suites);
 `kind`/`potable`/`food`/`acc`/`cd` are per-letter extras (`tileProps`). **No cluster props
