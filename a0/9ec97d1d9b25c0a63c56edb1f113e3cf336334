@@ -1,0 +1,25 @@
+web/tests/js/plan-wiring.test.cjs
+  s_c707f1443f1405::t_a1838a71e210c2 250
+  s_c707f1443f1405::t_7d68cdf4bda36d 240-249
+web/assets/map/plan.js
+  s_c707f1443f1405::t_3abf6a06c374d3 151-155
+  s_c707f1443f1405::t_82fbaae9a96eb3 156-157
+docs/specs/route-planner.md
+  s_c707f1443f1405::t_3f95d248e83139 188-192
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a09ec97d1d9b25c0a63c56edb1f113e3cf336334",
+  "prompts": {},
+  "sessions": {
+    "s_c707f1443f1405": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6b21b1b-dfdf-4cfe-8fa1-eda87e9640b3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
