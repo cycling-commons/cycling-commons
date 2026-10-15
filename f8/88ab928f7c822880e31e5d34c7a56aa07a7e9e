@@ -1,0 +1,104 @@
+web/src/Catalog/CatalogProvider.php
+  s_bc1f503934afca::t_e9d24f661e0ce6 10-11,187-190,193,458,471-475
+web/translations/messages.en.yaml
+  s_bc1f503934afca::t_bb41173a806283 1425
+  s_bc1f503934afca::t_90308a7a804055 1426
+web/tests/Links/WebsiteGateAtSubmitTest.php
+  s_bc1f503934afca::t_13bfe93aefd176 12
+  s_bc1f503934afca::t_7a47d1ece3eff2 120
+  s_bc1f503934afca::t_b608b14d0b5543 1-11,13-66,68-80,82-119,121-152
+  s_bc1f503934afca::t_bb41173a806283 67,81
+web/src/Links/Command/CheckWebsitesCommand.php
+  s_bc1f503934afca::t_0c9e21763e7753 1-49
+docs/specs/README.md
+  s_bc1f503934afca::t_230c6c9473da98 55-56
+  s_bc1f503934afca::t_b785e34e5248e6 54
+wiki/developers/gis/osm-to-database.md
+  s_bc1f503934afca::t_3d3c748deb018d 208-211
+web/tests/Provider/HarvestWebsiteGateTest.php
+  s_bc1f503934afca::t_3776c03672cf88 1-132
+web/src/Content/ReleaseNotes.php
+  s_bc1f503934afca::t_3b30cf65eacec6 69,86
+web/tests/Links/WebsiteHiddenOnServeTest.php
+  s_bc1f503934afca::t_3776c03672cf88 1-71
+web/src/Api/V1/PublicItemsProvider.php
+  s_bc1f503934afca::t_e9d24f661e0ce6 19-20,153-154,158,165,173-176
+web/src/Provider/Command/HarvestProviderCommand.php
+  s_bc1f503934afca::t_e9d24f661e0ce6 131-132
+web/src/Contribution/CatalogContributionService.php
+  s_bc1f503934afca::t_e9d24f661e0ce6 72,187,502-505,1008-1026
+  s_bc1f503934afca::t_13bfe93aefd176 27-28
+  s_bc1f503934afca::t_1682bd8077c36a 1027-1028
+docs/specs/catalog-data-model.md
+  s_bc1f503934afca::t_230c6c9473da98 831-834
+web/migrations/Version20261015010000.php
+  s_bc1f503934afca::t_cf8d9fa4a23b77 1-16,22-45,52-59
+  s_bc1f503934afca::t_13bfe93aefd176 17-21,46-51
+web/tests/Links/WebsiteCheckerTest.php
+  s_bc1f503934afca::t_9d9a7fad6ad049 1-71
+docs/specs/website-liveness.md
+  s_bc1f503934afca::t_13bfe93aefd176 58-65,67-70,79-81,97-100,118-125
+  s_bc1f503934afca::t_7b04ca27376fac 1-57,66,71-78,82-96,101-106,110-117
+  s_bc1f503934afca::t_230c6c9473da98 107-109
+web/src/Coverage/CoverageRepository.php
+  s_bc1f503934afca::t_e9d24f661e0ce6 14-15,104-110,172,234,238-267
+  s_bc1f503934afca::t_84fd5f218843eb 268-269
+web/config/table_comments.yaml
+  s_bc1f503934afca::t_bc9ca03bf3d180 73-76
+web/config/services.yaml
+  s_bc1f503934afca::t_13bfe93aefd176 234-244
+web/src/Links/WebsiteVerdictStore.php
+  s_bc1f503934afca::t_bb41173a806283 26-35,107
+  s_bc1f503934afca::t_c1b30e59bafbc3 1-25,36-106,108-114
+web/src/Links/WebsiteGate.php
+  s_bc1f503934afca::t_bb41173a806283 1-79
+web/translations/messages.es.yaml
+  s_bc1f503934afca::t_bb41173a806283 1435
+  s_bc1f503934afca::t_417c844cec245e 1436
+web/src/Provider/ProviderHarvest.php
+  s_bc1f503934afca::t_13bfe93aefd176 414
+  s_bc1f503934afca::t_e9d24f661e0ce6 16-17,90,97,101-102,383-413
+  s_bc1f503934afca::t_c10a68814a6c4b 415-416
+web/tests/Links/CheckWebsitesCommandTest.php
+  s_bc1f503934afca::t_bd97369c879d11 68-69
+  s_bc1f503934afca::t_da07e650a82a29 37-40,48-50,52-57,60
+  s_bc1f503934afca::t_13bfe93aefd176 41-45
+  s_bc1f503934afca::t_fd03b33560aa13 1-36,47,51,58-59,61-67,70-94,96-111,113-115,117-120
+  s_bc1f503934afca::t_08502e81a9e894 46,95,112,116
+wiki/developers/api/the-rest-of-the-api.md
+  s_bc1f503934afca::t_3d3c748deb018d 41-43
+web/src/Links/WebsiteVerdict.php
+  s_bc1f503934afca::t_0cc05d0ee42eb9 1-98,105-123
+  s_bc1f503934afca::t_bb41173a806283 99-104
+docs/specs/data-provider-hierarchy.md
+  s_bc1f503934afca::t_13bfe93aefd176 647-649
+web/src/Links/WebsiteSweep.php
+  s_bc1f503934afca::t_848da981f42932 1-10,12-45,47-48,50-51,53-62,64-91
+  s_bc1f503934afca::t_7521aaae2fc410 46
+  s_bc1f503934afca::t_13bfe93aefd176 49,52
+  s_bc1f503934afca::t_08502e81a9e894 11,63
+web/tests/Links/WebsiteVerdictStoreTest.php
+  s_bc1f503934afca::t_76a4fe2b4d5467 1-76
+web/tests/Links/WebsiteVerdictTest.php
+  s_bc1f503934afca::t_9d9a7fad6ad049 1-68
+web/src/Links/WebsiteChecker.php
+  s_bc1f503934afca::t_28b7b6527a9f3c 1-10,12-17,20-28,30-38,68,82-84,86-87
+  s_bc1f503934afca::t_ede97a82b057a4 11,29,39-67,69-71,85
+  s_bc1f503934afca::t_7521aaae2fc410 18-19,72-81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f888ab928f7c822880e31e5d34c7a56aa07a7e9e",
+  "prompts": {},
+  "sessions": {
+    "s_bc1f503934afca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "81bf59e0-0d1b-42ea-8a2a-bc0c63aecbf5",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
