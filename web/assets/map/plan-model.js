@@ -178,8 +178,22 @@ export function createHistory(limit = 30, redoLimit = 5){
     redo(current){ if(!future.length) return null; past.push(copy(current)); if(past.length > limit) past.shift(); return future.pop(); },
     size(){ return past.length; },
     redoSize(){ return future.length; },
+    /** The steps as copies, for the browser to keep. */
+    state(){ return { past: copy(past), future: copy(future) }; },
+    /** Kept steps back in, the newest within the bounds; anything that is not a list restores nothing. */
+    restore(s){
+      past.length = 0; future.length = 0;
+      if(s && Array.isArray(s.past)) past.push(...copy(s.past).slice(-limit));
+      if(s && Array.isArray(s.future)) future.push(...copy(s.future).slice(-redoLimit));
+    },
   };
 }
+
+/** How long the browser keeps a ride's work, the draft and its undo and redo steps, after the last change
+    (owner 2026-10-15). A ride to keep longer is a file the rider saves; nothing of it stays on our server. */
+export const WORK_KEEP_MS = 7 * 24 * 3600 * 1000;
+/** True while work stamped `at` (ms) is younger than seven days at `now`; a stamp from the future is not trusted. */
+export function workFresh(at, now){ return Number.isFinite(at) && at <= now && now - at < WORK_KEEP_MS; }
 
 /* Toughness (route-planner.md section 4.4): the routes' length bands give the
    base (BestOfPreview::LENGTHS, Short under 50 km, Medium to 150 km, Long

@@ -6,7 +6,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  MAX_STOPS, stopKey, legKeys, nearLine, insertIndex, figures, profileRuns, pointAt, gpxText, barText, createHistory, tickStepKm, surfaceMix,
+  MAX_STOPS, WORK_KEEP_MS, workFresh, stopKey, legKeys, nearLine, insertIndex, figures, profileRuns, pointAt, gpxText, barText, createHistory, tickStepKm, surfaceMix,
   PACE, flatSpeed, rideTime, surfaceBars, gradientBars, roundedHm, steepestKm, longestClimb, waterGap, sunTimes, windShares,
 } from '../../assets/map/plan-model.js';
 
@@ -430,4 +430,41 @@ test('pointAt walks the line in metres, not in vertices: a dense village and a s
   const at500 = pointAt(legs, 500);
   const metresEast = (at500[0] - 5.8) * kx;
   assert.ok(Math.abs(metresEast - 500) < 5, `the point at 500 m sits ${metresEast.toFixed(0)} m along`);
+});
+
+/* The browser keeps a ride's work, the draft and its undo and redo steps,
+   seven days after the last change (owner 2026-10-15): a closed tab loses
+   nothing, and nothing stays longer; a ride to keep is a file the rider saves. */
+test('work is kept seven days after the last change, and not a moment longer', () => {
+  const now = Date.UTC(2026, 9, 15, 12, 0, 0);
+  assert.equal(WORK_KEEP_MS, 7 * 24 * 3600 * 1000);
+  assert.equal(workFresh(now - 1000, now), true);
+  assert.equal(workFresh(now - WORK_KEEP_MS + 1000, now), true);
+  assert.equal(workFresh(now - WORK_KEEP_MS, now), false, 'day seven is the last');
+  assert.equal(workFresh(now + 60000, now), false, 'a stamp from the future is not trusted');
+  assert.equal(workFresh(undefined, now), false);
+  assert.equal(workFresh('yesterday', now), false);
+});
+
+test('the history hands out its steps as copies and takes them back, within its bounds', () => {
+  const h = createHistory(3, 2);
+  h.push(st(0)); h.push(st(1));
+  h.undo(st(2));
+  const saved = h.state();
+  assert.deepEqual(saved.past.map(x => x[0].name), ['s0']);
+  assert.deepEqual(saved.future.map(x => x[0].name), ['s2']);
+  saved.past[0][0].name = 'changed outside';
+  assert.equal(h.state().past[0][0].name, 's0', 'state() is a copy');
+
+  const h2 = createHistory(3, 2);
+  h2.restore({ past: [st(0), st(1), st(2), st(3), st(4)], future: [st(7), st(8), st(9)] });
+  assert.equal(h2.size(), 3, 'restore keeps the newest undo steps within the limit');
+  assert.equal(h2.redoSize(), 2, 'and the redo steps nearest the ride');
+  assert.equal(h2.undo(st(5))[0].name, 's4');
+  assert.equal(h2.redo(st(4))[0].name, 's5');
+  const h3 = createHistory(3, 2);
+  h3.restore(null);
+  assert.equal(h3.size(), 0);
+  h3.restore({ past: 'junk', future: 7 });
+  assert.equal(h3.size() + h3.redoSize(), 0, 'junk from storage restores nothing');
 });

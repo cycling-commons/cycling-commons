@@ -518,6 +518,24 @@ rows (`plan.js`) because an add button cannot sit inside the row button
 
 ## 6. Saving, the account, and the GPX
 
+### 6.0 Work in progress, in the browser
+
+The ride being planned lives in the rider's browser, never on our server
+until they save it: the draft (`localStorage` `cc-plan-draft`: name, bike,
+stops, the day) and its undo and redo steps (`cc-plan-history`), each with
+the time of the last change. Both are kept **seven days after the last
+change** (owner 2026-10-15, `plan-model.js` `WORK_KEEP_MS`, `workFresh()`),
+so a closed tab or browser loses nothing; on the first visit after that the
+browser forgets them. A cleared ride keeps its steps, so undo still brings it
+back. A draft from before the time stamp is kept and stamped at its next
+change. The privacy notice's local storage paragraph says so.
+
+**Owner decision, 2026-10-15, not built yet.** The Commons is a data system,
+not a users system: a ride to keep becomes a file the rider downloads and
+opens again, and saved rides leave our server (6.1 and 6.2 below describe
+what is built today). A share system, where the rider keeps a ride somewhere
+remote of their own choosing, may come later.
+
 ### 6.1 Saved rides
 
 A signed-in rider saves the ride under a name, `POST /map/plan/save`

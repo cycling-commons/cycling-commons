@@ -258,3 +258,16 @@ test('redo: Ctrl+Shift+Z, the command key with shift and Z on a Mac, or Ctrl+Y; 
   assert.match(plan, /function redo\(\)\{ const next = history\.redo\(ride\.stops\); if\(!next\) return; ride\.stops = next; afterChange\(\); \}/);
 });
 
+test('the draft and its undo and redo steps survive a closed tab for seven days (owner 2026-10-15)', () => {
+  assert.match(plan, /const HISTORY_KEY = 'cc-plan-history';/);
+  const save = (plan.match(/function saveDraft\(\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.match(save, /at: Date\.now\(\)/, 'the draft carries the time of the last change');
+  assert.match(save, /localStorage\.setItem\(HISTORY_KEY, JSON\.stringify\(Object\.assign\(\{ at: Date\.now\(\) \}, history\.state\(\)\)\)\)/);
+  const load = (plan.match(/function loadDraft\(\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.match(load, /workFresh\(d\.at, Date\.now\(\)\)/, 'a draft older than seven days is dropped');
+  const hist = (plan.match(/function loadHistory\(\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.match(hist, /workFresh\(h\.at, Date\.now\(\)\)/, 'undo steps older than seven days are dropped');
+  // Read before the draft is restored: restoring saves, and an empty history would overwrite the kept one.
+  assert.ok(plan.indexOf('const keptHistory = loadHistory();') < plan.indexOf("if(wanted && CC_PLAN.ride) openSaved(wanted);"));
+  assert.match(plan, /if\(keptHistory\)\{ history\.restore\(keptHistory\); saveDraft\(\); \}/);
+});

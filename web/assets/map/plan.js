@@ -18,12 +18,13 @@ import { isPicking } from './picking.js';
 import { setPlanning } from './plan-state.js';
 import { CATALOG } from './catalog.js';
 import { layerGlyph } from './icons.js';
-import { MAX_STOPS, CORRIDOR_M, legKeys, insertIndex, figures, profileRuns, pointAt, gpxText, barText, createHistory, tickStepKm, rideTime, surfaceBars, gradientBars, roundedHm, tileSurfaceClass, mergeSurfaces, streetAt, stopStreet, roadAt, steepestKm, longestClimb, waterGap, sunTimes, windShares } from './plan-model.js';
+import { MAX_STOPS, CORRIDOR_M, workFresh, legKeys, insertIndex, figures, profileRuns, pointAt, gpxText, barText, createHistory, tickStepKm, rideTime, surfaceBars, gradientBars, roundedHm, tileSurfaceClass, mergeSurfaces, streetAt, stopStreet, roadAt, steepestKm, longestClimb, waterGap, sunTimes, windShares } from './plan-model.js';
 
 const CC_PLAN = window.CC_PLAN || {};
 const P = () => I18N.plan || {};
 const ALONG_VISIBLE = 3;
 const DRAFT_KEY = 'cc-plan-draft';
+const HISTORY_KEY = 'cc-plan-history';
 /* Whether the ride line shows (owner 2026-10-15): a per-browser convenience, the stops stay either way. */
 const LINE_KEY = 'cc-plan-line';
 let lineShown = (() => { try { return localStorage.getItem(LINE_KEY) !== 'off'; } catch(e){ return true; } })();
@@ -589,8 +590,32 @@ function paintDrawerButtons(){
 }
 
 /* ---------- saving, the draft, the GPX ---------- */
-function saveDraft(){ try { if(ride.stops.length) localStorage.setItem(DRAFT_KEY, JSON.stringify({ bike: ride.bike, stops: ride.stops, id: ride.id, name: ride.name, date: rideDate() })); else localStorage.removeItem(DRAFT_KEY); } catch(e){} }
-function loadDraft(){ try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch(e){ return null; } }
+/* The ride's work lives in this browser only, seven days after the last change (route-planner.md section 6):
+   the draft, and the undo and redo steps beside it, so a closed tab loses nothing; a cleared ride keeps its
+   steps, so undo still brings it back. */
+function saveDraft(){
+  try {
+    if(ride.stops.length) localStorage.setItem(DRAFT_KEY, JSON.stringify({ bike: ride.bike, stops: ride.stops, id: ride.id, name: ride.name, date: rideDate(), at: Date.now() }));
+    else localStorage.removeItem(DRAFT_KEY);
+    if(history.size() || history.redoSize()) localStorage.setItem(HISTORY_KEY, JSON.stringify(Object.assign({ at: Date.now() }, history.state())));
+    else localStorage.removeItem(HISTORY_KEY);
+  } catch(e){}
+}
+function loadDraft(){
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+    if(d && d.at !== undefined && !workFresh(d.at, Date.now())){ localStorage.removeItem(DRAFT_KEY); return null; }
+    return d;
+  } catch(e){ return null; }
+}
+function loadHistory(){
+  try {
+    const h = JSON.parse(localStorage.getItem(HISTORY_KEY) || 'null');
+    if(!h) return null;
+    if(!workFresh(h.at, Date.now())){ localStorage.removeItem(HISTORY_KEY); return null; }
+    return h;
+  } catch(e){ return null; }
+}
 function suggestName(){ const a = ride.stops[0], b = ride.stops[ride.stops.length - 1]; const nm = s => s && s.letter ? s.name : ''; return [nm(a), nm(b)].filter(Boolean).join(' · ') || ''; }
 async function doSave(){
   const name = (ride.name || '').trim(); if(!name){ askName(); return; }
@@ -729,10 +754,15 @@ export function initPlan(){
     dateIn.value = draft && typeof draft.date === 'string' && draft.date >= todayIso() ? draft.date : todayIso();
     dateIn.addEventListener('change', () => { saveDraft(); renderFigures(); scheduleWeather(); });
   }
-  // A saved ride by its link, else the draft from the last visit.
+  // A saved ride by its link, else the draft from the last visit with its undo and redo steps. The steps are
+  // read first: restoring the draft saves, and an empty history would overwrite the kept one.
+  const keptHistory = loadHistory();
   const wanted = new URLSearchParams(location.search).get('ride');
   if(wanted && CC_PLAN.ride) openSaved(wanted);
-  else { const d = draft; if(d && Array.isArray(d.stops) && d.stops.length){ ride = { id: d.id || null, name: d.name || '', bike: d.bike || ride.bike, stops: d.stops, legs: [] }; if(!document.querySelector(`#planBikes .chip[data-bike="${ride.bike}"]`)) showAllBikes(); paintBikes(); afterChange(); dirty = false; } }
+  else {
+    const d = draft; if(d && Array.isArray(d.stops) && d.stops.length){ ride = { id: d.id || null, name: d.name || '', bike: d.bike || ride.bike, stops: d.stops, legs: [] }; if(!document.querySelector(`#planBikes .chip[data-bike="${ride.bike}"]`)) showAllBikes(); paintBikes(); afterChange(); dirty = false; }
+    if(keptHistory){ history.restore(keptHistory); saveDraft(); }
+  }
   syncStart();
   syncPlanning();
 }
