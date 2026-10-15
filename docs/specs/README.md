@@ -51,6 +51,9 @@ Revisit when there is a separate infrastructure repository to hold it.
 - `route-planner.md`: the one-day ride planner on the map: stops, the bike
   costing, the profile, what is along the ride, saved rides and the GPX.
   Specified, pending implementation.
+- `website-liveness.md`: there must be a site behind a website address: the
+  live/parked/dead/unknown verdict, the sweep, the wizard's and the provider
+  ingest's gate, and what a rider sees.
 - `climb-elevation.md`: how a climb's length, gain, gradients and profile are
   MEASURED (elevation source chain, binning, the steepest-ramp window) and how
   the profile chart is drawn. Nobody types a gradient.

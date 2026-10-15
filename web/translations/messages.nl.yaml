@@ -2160,6 +2160,8 @@ contribute:
     photo_field: 'Een foto kan niet als veld worden verstuurd. Voeg hem toe met de fotoknop, zodat hij wordt gecontroleerd voordat hij verschijnt.'
     invalid_geometry: 'De getekende vorm kon niet worden gelezen — teken hem opnieuw en probeer het nogmaals.'
     invalid_links: "Deze links konden niet worden gelezen. Controleer of elk adres met https:// begint en probeer opnieuw."
+    website_dead: "Op dit adres staat geen website: het antwoordt niet. Controleer het adres of laat het leeg."
+    website_parked: "Dit adres toont alleen een pagina dat het domein te koop is of nog niet aan een site is gekoppeld. Laat het leeg tot er een website is."
     media_invalid: 'Een van de bijgevoegde foto''s kon niet worden gebruikt — verwijder hem en probeer het opnieuw.'
   bikeway:
     heading: 'Langs een fietsweg?'
@@ -4994,6 +4996,7 @@ changelog:
   v097_curator_proposals: "<b>Lees de voorstellen van rijders voor de routekaart.</b> Regiobeheerders zien de voorstellen die rijders sturen, met afbeeldingen, voordat ze openbaar worden."
   v097_fixes: "<b>Onder de kleinere verbeteringen:</b> een kraan uit een register staat niet meer naast dezelfde kraan die fietsers bevestigden, en de dekkingspagina legt haar aantallen uit onder zowel de wereldbol als de tabel."
   v097_grouped_pins: "<b>Eén speld voor een groep.</b> Vijf of meer plekken van één soort die dicht bij elkaar staan, zoals de veertig chalets van een vakantiepark, verschijnen als één speld met een aantal. Beweeg erover of open hem om te zien voor hoeveel hij staat."
+  v097_websites: "<b>Websites die ergens heen leiden.</b> Een websiteadres wordt gecontroleerd zodra het binnenkomt, van een fietser, een register of OpenStreetMap: een dood adres of een geparkeerd domein wordt niet getoond, en het formulier zegt het als je er een intypt."
   v096_denmark: "<b>Denemarken staat op de kaart.</b> Je kunt er nu plekken, klimmen en routes vinden en toevoegen."
   v096_scout: "<b>Voeg een rit toe vanaf de Scout-pagina.</b> Een knop 'Een Scout-rit toevoegen' opent het nakijken van je rit op de kaart. De pagina zegt ook waar je de app krijgt, en dat Scout met een achterradar ook het verkeer meet op de wegen waar je fietst."
   v096_tools: "<b>Elk ritgereedschap op de kaart ziet er hetzelfde uit.</b> 'Verkenning', 'Klim toevoegen' en 'Stel een route voor' hebben elk dezelfde oranje knop. Zonder account brengt de knop je eerst naar het inloggen."

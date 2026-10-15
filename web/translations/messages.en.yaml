@@ -1422,6 +1422,8 @@ contribute:
     photo_field: 'Photos cannot be sent as a field. Add a photo with the photo button so it is checked before it is shown.'
     invalid_geometry: 'The drawn shape could not be read — redraw it and try again.'
     invalid_links: "Those links could not be read. Check each address starts with https:// and try again."
+    website_dead: "There is no website at this address: it does not answer. Check the address, or leave it empty."
+    website_parked: "This address only shows a page that the domain is for sale or not connected to a site yet. Leave it empty until there is a website."
     media_invalid: 'One of the attached photos could not be used — remove it and try again.'
   bikeway:
     heading: 'Along a bike way?'
@@ -5012,6 +5014,7 @@ changelog:
   v097_curator_proposals: "<b>Read riders' roadmap proposals.</b> Curators see the proposals riders send, pictures included, before they go public."
   v097_fixes: "<b>Among smaller fixes:</b> a register tap no longer stands beside the same tap that riders confirmed, and the coverage page explains its counts under both the globe and the table."
   v097_grouped_pins: "<b>One pin for a crowd.</b> Five or more places of one kind that stand close together, such as the forty chalets of a holiday park, show as one pin with a count. Hover it or open it to see how many it stands for."
+  v097_websites: "<b>Websites that lead somewhere.</b> A website address is checked when it comes in, from a rider, a register or OpenStreetMap: a dead address or a parked domain is not shown, and the form says so when you type one."
   v096_denmark: "<b>Denmark is on the map.</b> You can now find and add places, climbs and routes there."
   v096_scout: "<b>Add a ride from the Scout page.</b> An 'Add a Scout ride' button opens the ride review on the map. The page also says where to get the app, and that with a rear radar Scout also measures the traffic on the roads you ride."
   v096_tools: "<b>Every ride tool on the map looks the same.</b> 'Scout', 'Add a climb' and 'Propose a route' each have the same orange button. Without an account, the button takes you to log in first."

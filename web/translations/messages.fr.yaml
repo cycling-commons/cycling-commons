@@ -2158,6 +2158,8 @@ contribute:
     photo_field: 'Une photo ne peut pas être envoyée comme champ. Ajoutez-la avec le bouton photo, pour qu''elle soit vérifiée avant d''être affichée.'
     invalid_geometry: 'La forme dessinée n’a pas pu être lue — redessinez-la et réessayez.'
     invalid_links: "Ces liens n'ont pas pu être lus. Vérifiez que chaque adresse commence par https:// et réessayez."
+    website_dead: "Aucun site web à cette adresse : elle ne répond pas. Vérifiez l'adresse ou laissez-la vide."
+    website_parked: "Cette adresse n'affiche qu'une page disant que le domaine est à vendre ou pas encore relié à un site. Laissez-la vide tant qu'il n'y a pas de site."
     media_invalid: 'Une des photos jointes n''a pas pu être utilisée — retirez-la et réessayez.'
   bikeway:
     heading: 'Le long d''une voie cyclable ?'
@@ -4990,6 +4992,7 @@ changelog:
   v097_curator_proposals: "<b>Lisez les propositions des cyclistes pour la feuille de route.</b> La curation voit les propositions envoyées par les cyclistes, images comprises, avant qu'elles deviennent publiques."
   v097_fixes: "<b>Parmi les petites corrections :</b> un point d'eau du registre n'apparaît plus à côté du même point d'eau confirmé par des cyclistes, et la page de couverture explique ses chiffres sous le globe comme sous le tableau."
   v097_grouped_pins: "<b>Une épingle pour un groupe.</b> Cinq lieux ou plus d'un même type qui se tiennent côte à côte, comme les quarante chalets d'un parc de vacances, apparaissent comme une seule épingle avec un nombre. Survolez-la ou ouvrez-la pour voir combien elle représente."
+  v097_websites: "<b>Des sites web qui mènent quelque part.</b> Une adresse de site web est vérifiée à son arrivée, qu'elle vienne d'un cycliste, d'un registre ou d'OpenStreetMap : une adresse morte ou un domaine parqué n'est pas affiché, et le formulaire le dit quand vous en saisissez une."
   v096_denmark: "<b>Le Danemark est sur la carte.</b> Vous pouvez maintenant y trouver et y ajouter des lieux, des cols et des itinéraires."
   v096_scout: "<b>Ajoutez une sortie depuis la page Scout.</b> Un bouton 'Ajouter une sortie Scout' ouvre la revue de la sortie sur la carte. La page dit aussi où obtenir l'application, et qu'avec un radar arrière Scout mesure aussi le trafic sur les routes où vous roulez."
   v096_tools: "<b>Chaque outil de sortie sur la carte a le même aspect.</b> 'Reconnaissance', 'Ajouter un col' et 'Proposer un itinéraire' ont chacun le même bouton orange. Sans compte, le bouton vous mène d'abord à la connexion."

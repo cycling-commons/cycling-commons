@@ -24,6 +24,8 @@ use App\Catalog\SubmissionType;
 use App\Community\ItemConfirmationService;
 use App\Elevation\ClimbProfiler;
 use App\Entity\User;
+use App\Links\WebsiteGate;
+use App\Links\WebsiteVerdict;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaClaimService;
 use App\Media\PhotoAltSuggestion;
@@ -67,6 +69,7 @@ final class CatalogContributionService implements ContributionStubInterface
         private readonly BikeWayLocator $bikeWays,
         private readonly RateLimiterFactoryInterface $elevationLimiter,
         private readonly RateLimiterFactoryInterface $routeSnapLimiter,
+        private readonly WebsiteGate $websites,
     ) {
     }
 
@@ -181,6 +184,7 @@ final class CatalogContributionService implements ContributionStubInterface
         }
 
         $proposed = $this->decodeLinks($proposed);
+        $this->checkWebsite($proposed['web'] ?? null);
 
         $attributes = [];
         foreach ($proposed as $field => $raw) {
@@ -494,6 +498,10 @@ final class CatalogContributionService implements ContributionStubInterface
             if (null !== $now) {
                 $attributes[$field] = $now;
             }
+        }
+        // The form posts the prefilled address back; only a changed one is looked at.
+        if (isset($changes['web'])) {
+            $this->checkWebsite($changes['web']['now']);
         }
 
         // Representative point is the first vertex; never assume a Point.
@@ -995,6 +1003,27 @@ final class CatalogContributionService implements ContributionStubInterface
         $this->checkLinks($decoded);
 
         return $proposed;
+    }
+
+    /**
+     * There must be a site behind a `web` address (docs/specs/website-liveness.md
+     * section 2): dead and parked refuse the field with what we found, unknown
+     * is accepted, because an outage on our side must not cost a rider a
+     * correct address. One fetch at most, and none within a verdict's period.
+     */
+    private function checkWebsite(mixed $raw): void
+    {
+        $url = \is_string($raw) ? trim($raw) : '';
+        if ('' === $url) {
+            return;
+        }
+        $verdict = $this->websites->verdictOf($url);
+        if (WebsiteVerdict::DEAD === $verdict) {
+            $this->reject('contribute.error.website_dead', 'web');
+        }
+        if (WebsiteVerdict::PARKED === $verdict) {
+            $this->reject('contribute.error.website_parked', 'web');
+        }
     }
 
     /**

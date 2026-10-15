@@ -231,6 +231,17 @@ services:
 
 when@test:
     services:
+        # The website check never leaves the suite: every address answers 200,
+        # so every website is live, unless a test installs its own checker
+        # over a mock web (WebsiteGateAtSubmitTest, HarvestWebsiteGateTest).
+        App\Links\WebsiteChecker:
+            public: true
+            autowire: true
+            arguments:
+                $http: '@app.test.website_http'
+        app.test.website_http:
+            class: Symfony\Component\HttpClient\MockHttpClient
+
         # Where a town lies, with no OpenStreetMap request: a test names the
         # point it needs (FakeTownPointSource::place()).
         App\Town\TownPointSource:

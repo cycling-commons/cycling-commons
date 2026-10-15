@@ -7,6 +7,8 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 use App\Coverage\CoverageRepository;
+use App\Links\WebsiteVerdict;
+use App\Links\WebsiteVerdictStore;
 use App\Media\PhotoPlace;
 use App\Media\PhotoValidator;
 use App\Media\PublicPhotos;
@@ -182,9 +184,13 @@ final class CatalogProvider
                        -- docs/specs/moderation-and-contribution.md 6.3: `form` must not reset freshness.
                        (SELECT max(c2.created_at) FROM item_confirmation c2
                          WHERE c2.item_id = i.id AND c2.source <> \'form\') AS last_confirmed,
-                       i.state, i.imported_at, '.ItemEvidenceResolver::selectSql('i').'
+                       i.state, i.imported_at, '.ItemEvidenceResolver::selectSql('i').',
+                       -- The last verdict on the row\'s website host, so a dead
+                       -- or parked site is served to nobody (website-liveness.md 3).
+                       wc.verdict AS web_verdict
                 FROM item i
                 LEFT JOIN world_subdivision s ON s.id = i.subdivision_id
+                LEFT JOIN website_check wc ON wc.host = '.WebsiteVerdictStore::hostSql("i.attributes->>'web'").'
                 -- Which authority published the row, for the citation line in
                 -- the drawer. NULL for every other source
                 -- (data-provider-hierarchy.md 7).
@@ -449,7 +455,7 @@ final class CatalogProvider
      * a live-inserted feature can never drift from the served one. `$photoRef`
      * is the OSM point whose photo the item may borrow (osmPhotoRefs()).
      *
-     * @param array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, pk: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null, pin_lat: float|string|null, pin_lng: float|string|null} $row
+     * @param array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, pk: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null, pin_lat: float|string|null, pin_lng: float|string|null, web_verdict?: string|null} $row
      *
      * @return array{type: string, properties: array<string, mixed>, geometry: mixed}
      */
@@ -462,6 +468,11 @@ final class CatalogProvider
         $props = PhotoValidator::sift($props, PhotoPlace::of($row['letter'], $row['pin_lat'], $row['pin_lng']))['attributes'];
         // Served without where the camera stood (PublicPhotos).
         $props = PublicPhotos::of($props);
+        // A dead or parked website stays stored and is shown to nobody
+        // (docs/specs/website-liveness.md section 3).
+        if (WebsiteVerdict::hides($row['web_verdict'] ?? null)) {
+            unset($props['web']);
+        }
         // No photo of its own: the drawer asks /map/coverage/photo for the OSM
         // point's, judged against this item's pin (coverage-provider.md §7).
         // Absent otherwise, so every other row stays byte-stable.

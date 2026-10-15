@@ -38,7 +38,9 @@ form the site's own contribution wizard renders, so your app offers the same cho
 
 Two flags on each field carry the rule of the whole API. **`served`**: the field appears on
 `/v1/items/{id}`. Only values picked from a list, numbers the server measured, and a place's own
-website are served. **`accepted`**: a partner app may send it. Text a rider typed, such as a note
+website are served, and that website only while there is a site behind it: a host that answers
+with a parking page or does not answer at all is left out, on the verdict a worker sweep keeps
+per host (`web/src/Links/WebsiteSweep.php`). **`accepted`**: a partner app may send it. Text a rider typed, such as a note
 or the tools at a stand, is accepted for review but never served, because free text can hold
 somebody's name or phone number and the API carries no personal data.
 

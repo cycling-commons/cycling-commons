@@ -11,6 +11,8 @@ use App\Catalog\Entity\Item;
 use App\Catalog\GoneRows;
 use App\Catalog\ItemState;
 use App\Catalog\PlaceKind;
+use App\Links\WebsiteVerdict;
+use App\Links\WebsiteVerdictStore;
 use App\Media\Commons\CommonsFile;
 use App\Media\PhotoPlace;
 use App\Media\PhotoValidator;
@@ -99,8 +101,13 @@ final class CoverageRepository
     /** Default result cap for search(). */
     public const int SEARCH_LIMIT = 12;
 
-    public function __construct(private readonly Connection $db)
-    {
+    /** The website tags a drawer shows, each judged by its own host (docs/specs/website-liveness.md section 3). */
+    private const array WEBSITE_TAGS = ['website', 'contact:website', 'url'];
+
+    public function __construct(
+        private readonly Connection $db,
+        private readonly WebsiteVerdictStore $websites,
+    ) {
     }
 
     /**
@@ -162,7 +169,7 @@ final class CoverageRepository
             'kind' => $row['kind'] ?? self::placeKindOf($row['letter'], $tags),
             'll' => [(float) $row['lat'], (float) $row['lng']],
             // (object) so an empty whitelist intersection still encodes {}.
-            'tags' => (object) array_intersect_key($tags, array_flip(self::TAG_WHITELIST)),
+            'tags' => (object) $this->shownTags($tags),
             // coverage-provider.md §7 - only WHETHER a Commons file is
             // resolvable, never its state. This response is cached for 300s, so
             // a state would freeze at `pending` and the spinner would never
@@ -224,8 +231,40 @@ final class CoverageRepository
         return [
             'ref' => $ref,
             'name' => $row['name'],
-            'tags' => (object) array_intersect_key($tags, array_flip(self::TAG_WHITELIST)),
+            'tags' => (object) $this->shownTags($tags),
         ];
+    }
+
+    /**
+     * The whitelisted tags, minus a website tag whose host is dead or parked
+     * (docs/specs/website-liveness.md section 3). The OpenStreetMap tag itself
+     * is untouched; a curator who fixes it upstream is the way it comes back.
+     *
+     * @param array<string, mixed> $tags
+     *
+     * @return array<string, mixed>
+     */
+    private function shownTags(array $tags): array
+    {
+        $shown = array_intersect_key($tags, array_flip(self::TAG_WHITELIST));
+        $hosts = [];
+        foreach (self::WEBSITE_TAGS as $tag) {
+            $host = \is_string($shown[$tag] ?? null) ? WebsiteVerdict::hostOf($shown[$tag]) : null;
+            if (null !== $host) {
+                $hosts[$tag] = $host;
+            }
+        }
+        if ([] === $hosts) {
+            return $shown;
+        }
+        $hidden = $this->websites->hidden(array_values($hosts));
+        foreach ($hosts as $tag => $host) {
+            if (\in_array($host, $hidden, true)) {
+                unset($shown[$tag]);
+            }
+        }
+
+        return $shown;
     }
 
     /**

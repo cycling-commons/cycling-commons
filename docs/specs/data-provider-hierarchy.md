@@ -644,7 +644,9 @@ custody as the provider's from that date until a confirmation newer than it
 lands, and as ours again the moment one does. The state, the rung and the
 confirmations never move with custody: a reclaimed verified tap draws dashed
 with no `?`. The same attribute is the published witness rung 8 reads for a
-provider row. The harvest summary counts `custody reclaimed`. No harvest path
+provider row. The harvest summary counts `custody reclaimed`, and `websites
+dropped` for the records whose website was dead or parked at intake
+([website-liveness.md](website-liveness.md) section 2). No harvest path
 deletes an `item_confirmation` row, and `CustodyReclaimTest` asserts the count
 before and after; the one deleter in `web/src/` is the curator's purge command,
 which removes the item itself and everything hanging off it.

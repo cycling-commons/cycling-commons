@@ -205,7 +205,10 @@ The 43 kept keys split into seven groups, and they are easy to double-count:
   `description`, `wheelchair`, `fee`, `capacity`, for scenic views `ele`, `direction` and
   `height` (a viewpoint's altitude, the way it faces, how far a waterfall drops), and for getting
   there `bicycle` and `bicycle:fee` (whether a bike may come aboard, and whether it costs extra)
-  and a ferry route's `duration`, `seasonal` and `toll` (crossing time, season, fare).
+  and a ferry route's `duration`, `seasonal` and `toll` (crossing time, season, fare). A
+  `website`, `contact:website` or `url` whose host answers with a parking page or does not answer
+  at all is kept in the store and left out of the drawer, on the verdict a worker sweep keeps per
+  host (`web/src/Links/WebsiteSweep.php`).
 - **4 media/reference keys**: `wikidata`, `wikipedia`, `image`, `wikimedia_commons`. Three of them
   are what a photo of the place can be found under, and the drawer serves them as the citation for
   a picture a rider is looking at (`coverage-provider.md` §7); `wikipedia` is stored and read by

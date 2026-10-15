@@ -828,7 +828,10 @@ outage can never read as clean, a suffix-matched host allowlist
 (`wikipedia.org`, `wikimedia.org`, `wikidata.org`, `openstreetmap.org`) that a
 look-alike domain cannot spoof and that spends no quota on a known answer,
 `worst()` for the queue card, and OFF with an empty `SAFE_BROWSING_KEY` rather
-than quietly passing everything. Pinned by `SafeBrowsingTest`.
+than quietly passing everything. Pinned by `SafeBrowsingTest`. Whether
+there is a site at all behind a `web` address is the other question, answered
+by [website-liveness.md](website-liveness.md): at submit a dead or parked
+address is refused, and a served item's dead or parked website is not shown.
 
 **The verdict lives in its own table, keyed by url** (`link_verdict`,
 `App\Catalog\Links\LinkVerdictStore`, `Version20260816220000`). A verdict

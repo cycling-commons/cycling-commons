@@ -16,6 +16,8 @@ use App\Catalog\GoneRows;
 use App\Catalog\ItemEvidenceResolver;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
+use App\Links\WebsiteVerdict;
+use App\Links\WebsiteVerdictStore;
 use App\Media\PhotoPlace;
 use App\Media\PhotoValidator;
 use App\Media\PublicPhotos;
@@ -148,17 +150,19 @@ final class PublicItemsProvider
             'SELECT i.id, i.name, i.letter, ST_AsGeoJSON(i.geom) AS geom, (i.state = \'verified\') AS verified,
                     i.state, i.source, i.imported_at, i.country_code, i.osm_ref, i.source_ref, i.attributes,
                     ST_Y(ST_PointOnSurface(i.geom)) AS pin_lat, ST_X(ST_PointOnSurface(i.geom)) AS pin_lng,
-                    r.slug AS region, '.self::SOURCE_SQL.' AS public_source, '.ItemEvidenceResolver::selectSql('i').'
+                    r.slug AS region, '.self::SOURCE_SQL.' AS public_source, '.ItemEvidenceResolver::selectSql('i').',
+                    wc.verdict AS web_verdict
              FROM item i
              LEFT JOIN region r ON r.id = i.region_id
              LEFT JOIN data_provider dp ON dp.id = i.provider_id
+             LEFT JOIN website_check wc ON wc.host = '.WebsiteVerdictStore::hostSql("i.attributes->>'web'").'
              WHERE i.id = :id AND '.BulkExportBuilder::servedItemSql('i'),
             ['id' => $id],
         );
         if (false === $row) {
             return null;
         }
-        /** @var array{id: int|string, name: string, letter: string, geom: string, verified: bool, state: string, source: string, imported_at: string|null, country_code: string|null, osm_ref: string|null, source_ref: string|null, attributes: string, pin_lat: float|string|null, pin_lng: float|string|null, region: string|null, public_source: string, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null} $row */
+        /** @var array{id: int|string, name: string, letter: string, geom: string, verified: bool, state: string, source: string, imported_at: string|null, country_code: string|null, osm_ref: string|null, source_ref: string|null, attributes: string, pin_lat: float|string|null, pin_lng: float|string|null, region: string|null, public_source: string, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null, web_verdict: string|null} $row */
         $geometry = json_decode($row['geom'], true);
         if (!\is_array($geometry)) {
             return null;
@@ -166,6 +170,10 @@ final class PublicItemsProvider
         $type = ItemType::fromLetter($row['letter']);
         /** @var array<string, mixed> $stored */
         $stored = json_decode($row['attributes'], true) ?: [];
+        // A dead or parked website is served to nobody (docs/specs/website-liveness.md section 3).
+        if (WebsiteVerdict::hides($row['web_verdict'])) {
+            unset($stored['web']);
+        }
         // The photos the map shows, minus the keys no public payload carries.
         $shown = PublicPhotos::of(PhotoValidator::sift($stored, PhotoPlace::of($row['letter'], $row['pin_lat'], $row['pin_lng']))['attributes']);
         $kindField = null !== $type ? PublicFields::kindField($type) : null;

@@ -1432,6 +1432,8 @@ contribute:
     photo_field: 'Una foto no se puede enviar como campo. Añádela con el botón de foto para que se revise antes de mostrarse.'
     invalid_geometry: 'No se ha podido leer la forma dibujada — vuelve a dibujarla e inténtalo otra vez.'
     invalid_links: "No se pudieron leer esos enlaces. Comprueba que cada dirección empieza por https:// e inténtalo de nuevo."
+    website_dead: "En esta dirección no hay ningún sitio web: no responde. Revisa la dirección o déjala vacía."
+    website_parked: "Esta dirección solo muestra una página que dice que el dominio está en venta o aún no está conectado a un sitio. Déjala vacía hasta que haya un sitio web."
     media_invalid: 'Una de las fotos adjuntas no se ha podido usar — quítala e inténtalo otra vez.'
   bikeway:
     heading: '¿Junto a una vía ciclable?'
@@ -5022,6 +5024,7 @@ changelog:
   v097_curator_proposals: "<b>Lee las propuestas de los ciclistas para la hoja de ruta.</b> La curaduría ve las propuestas que envían los ciclistas, imágenes incluidas, antes de que sean públicas."
   v097_fixes: "<b>Entre los arreglos menores:</b> una fuente de un registro ya no aparece junto a la misma fuente que confirmaron ciclistas, y la página de cobertura explica sus cifras bajo el globo y bajo la tabla."
   v097_grouped_pins: "<b>Un pin para un grupo.</b> Cinco o más lugares de un mismo tipo que están muy juntos, como los cuarenta chalés de un parque de vacaciones, se muestran como un solo pin con un número. Pasa el ratón o ábrelo para ver cuántos representa."
+  v097_websites: "<b>Sitios web que llevan a algún sitio.</b> Una dirección web se comprueba cuando llega, venga de un ciclista, de un registro o de OpenStreetMap: una dirección muerta o un dominio aparcado no se muestra, y el formulario te lo dice cuando escribes una."
   v096_denmark: "<b>Dinamarca está en el mapa.</b> Ya puedes encontrar y añadir lugares, puertos y rutas allí."
   v096_scout: "<b>Añade una salida desde la página de Scout.</b> Un botón 'Añadir una salida de Scout' abre la revisión de la salida en el mapa. La página también dice dónde conseguir la app, y que con un radar trasero Scout también mide el tráfico de las carreteras por las que circulas."
   v096_tools: "<b>Todas las herramientas de salida del mapa se ven igual.</b> 'Exploración', 'Añadir un puerto' y 'Proponer una ruta' tienen el mismo botón naranja. Sin cuenta, el botón te lleva primero a iniciar sesión."

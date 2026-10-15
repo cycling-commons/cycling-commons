@@ -13,6 +13,8 @@ use App\Catalog\Entity\Item;
 use App\Catalog\ItemEvidenceResolver;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
+use App\Links\WebsiteGate;
+use App\Links\WebsiteVerdict;
 use App\Provider\Entity\DataProvider;
 use Doctrine\DBAL\Connection;
 
@@ -85,17 +87,19 @@ final class ProviderHarvest
         private readonly Connection $db,
         private readonly ProviderCitations $citations,
         private readonly ItemEvidenceResolver $evidence,
+        private readonly WebsiteGate $websites,
     ) {
     }
 
     /**
      * @param list<array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code?: string|null}> $features
      *
-     * @return array{attached: int, inserted: int, updated: int, moved: int, skipped_rider: int, retired_beside_ours: int, stale: int, contested: int, reclaimed: int}
+     * @return array{attached: int, inserted: int, updated: int, moved: int, skipped_rider: int, retired_beside_ours: int, stale: int, contested: int, reclaimed: int, websites_dropped: int}
      */
     public function apply(DataProvider $provider, array $features, \DateTimeImmutable $now = new \DateTimeImmutable()): array
     {
-        $counts = ['attached' => 0, 'inserted' => 0, 'updated' => 0, 'moved' => 0, 'skipped_rider' => 0, 'retired_beside_ours' => 0, 'stale' => 0, 'contested' => 0, 'reclaimed' => 0];
+        $counts = ['attached' => 0, 'inserted' => 0, 'updated' => 0, 'moved' => 0, 'skipped_rider' => 0, 'retired_beside_ours' => 0, 'stale' => 0, 'contested' => 0, 'reclaimed' => 0, 'websites_dropped' => 0];
+        $features = $this->withoutDeadWebsites($features, $counts['websites_dropped']);
         // Every ref this run carries, known up front: a row whose ref is not
         // among them and that sits near a ref nobody has is a point that MOVED.
         $refs = array_map(static fn (array $f): string => $f['ref'], $features);
@@ -374,6 +378,40 @@ final class ProviderHarvest
         );
 
         return false === $id ? null : (int) $id;
+    }
+
+    /**
+     * A record's website is checked at intake (docs/specs/website-liveness.md
+     * section 2): a dead or parked one is left out of the row and counted,
+     * never stored to be hidden later. The place itself is never refused.
+     * One fetch per host for the whole run, none within a verdict's period.
+     *
+     * @param list<array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code?: string|null}> $features
+     *
+     * @return list<array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code?: string|null}>
+     */
+    private function withoutDeadWebsites(array $features, int &$dropped): array
+    {
+        $urls = [];
+        foreach ($features as $feature) {
+            $web = $feature['attributes']['web'] ?? null;
+            if (\is_string($web) && '' !== trim($web)) {
+                $urls[] = trim($web);
+            }
+        }
+        if ([] === $urls) {
+            return $features;
+        }
+        $verdicts = $this->websites->verdictsOf(array_values(array_unique($urls)));
+        foreach ($features as $i => $feature) {
+            $web = $feature['attributes']['web'] ?? null;
+            if (\is_string($web) && WebsiteVerdict::hides($verdicts[trim($web)] ?? null)) {
+                unset($features[$i]['attributes']['web']);
+                ++$dropped;
+            }
+        }
+
+        return $features;
     }
 
     /**

@@ -70,6 +70,10 @@ tables:
         Google Safe Browsing verdict for one URL, keyed by a hash of it, asked when a rider sends
         the link in and shown to the curator who reviews it. A fact about a URL and not about a
         submission, so every submission pointing at the same page shares one row.
+    website_check: >-
+        One verdict per website host: live, parked, dead or unknown, the address checked, and
+        when it is due again (docs/specs/website-liveness.md). Written by the sweep, the wizard
+        and the provider ingest; a dead or parked host's website is served to nobody.
 
     # Hand-written migrations.
     system_setting: >-
