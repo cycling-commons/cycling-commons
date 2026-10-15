@@ -1,0 +1,43 @@
+web/assets/map/drawer.js
+  s_c707f1443f1405::t_568f64cae2ef50 503-512
+  s_c707f1443f1405::t_5fbaa65bdaa822 785-790
+web/assets/map/plan.js
+  s_c707f1443f1405::t_d924ee0452ec5c 679-681
+  s_c707f1443f1405::t_d8975c2dd93065 682-684
+docs/specs/route-planner.md
+  s_c707f1443f1405::t_437eaebc0f947d 168-175
+web/tests/js/plan-wiring.test.cjs
+  s_c707f1443f1405::t_323eb2634d8780 49-51
+web/assets/map/render.js
+  s_c707f1443f1405::t_3c2732ef4bf548 544,546
+  s_c707f1443f1405::t_50e5ccd361b84f 15
+  s_c707f1443f1405::t_4b93c447dc5566 8
+  s_c707f1443f1405::t_11e797e7d8a9a5 545
+web/assets/map/util.js
+  s_c707f1443f1405::t_729f1221b794bf 63-71
+web/assets/map/coverage.js
+  s_c707f1443f1405::t_04c07748c1b250 133-138
+  s_c707f1443f1405::t_eec670435427fc 11-12
+  s_c707f1443f1405::t_44f347dc33159e 141-143,145
+web/templates/map/index.html.twig
+  s_c707f1443f1405::t_437eaebc0f947d 521
+web/tests/js/plan-place-menu.test.cjs
+  s_c707f1443f1405::t_fa86ebd20e8797 30-31
+  s_c707f1443f1405::t_31ab71f06b056f 1-29,32-58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "bdfa10edd89abfca8550a2bbb8d46220c84fda54",
+  "prompts": {},
+  "sessions": {
+    "s_c707f1443f1405": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6b21b1b-dfdf-4cfe-8fa1-eda87e9640b3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
