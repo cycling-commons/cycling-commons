@@ -3,33 +3,39 @@
    panel, the stops and legs on the map, the figures, the profile, the along
    list, Add to ride on the place drawer, the ride bar, saving and the GPX.
    The model is plan-model.js; this module owns the DOM and the map. The
-   browser never talks to the routing engine: every leg is one
-   POST /map/plan/leg, and what is along the ride is POST /map/plan/along. */
+   browser never talks to the routing engine or the forecast service: every
+   leg is one POST /map/plan/leg, what is along the ride is POST /map/plan/along,
+   and the day's forecast is POST /map/plan/weather. */
 import { map, flyToPin } from './map-init.js';
 import { I18N, D, tpl, trVal } from './i18n.js';
-import { escPend, txtOn, gradColor } from './util.js';
+import { escPend, txtOn, gradColor, photonLang } from './util.js';
 import { uKm, uM, uElev } from './units.js';
 import { highlightAt, clearHighlight } from './drawer.js';
+import { pinElFor } from './pin-fan.js';
+import { liftInfoLayersAboveRoutes } from './render.js';
 import { activePanel } from './shell.js';
 import { isPicking } from './picking.js';
 import { setPlanning } from './plan-state.js';
 import { CATALOG } from './catalog.js';
 import { layerGlyph } from './icons.js';
-import { MAX_STOPS, CORRIDOR_M, legKeys, insertIndex, figures, profileRuns, pointAt, gpxText, barText, createHistory, toughness, tickStepKm, surfaceMix, toughnessBars } from './plan-model.js';
-
-/* The routes' difficulty words by level (DifficultyVocabulary::LABELS), translated as attribute values. */
-const TOUGH_WORDS = { 1: 'Easy', 2: 'Moderate', 3: 'Challenging', 4: 'Hard', 5: 'Very hard' };
+import { MAX_STOPS, CORRIDOR_M, legKeys, insertIndex, figures, profileRuns, pointAt, gpxText, barText, createHistory, tickStepKm, rideTime, surfaceBars, gradientBars, roundedHm, tileSurfaceClass, mergeSurfaces, streetAt, stopStreet, roadAt, steepestKm, longestClimb, waterGap, sunTimes, windShares } from './plan-model.js';
 
 const CC_PLAN = window.CC_PLAN || {};
 const P = () => I18N.plan || {};
 const ALONG_VISIBLE = 3;
 const DRAFT_KEY = 'cc-plan-draft';
+/* Whether the ride line shows (owner 2026-10-15): a per-browser convenience, the stops stay either way. */
+const LINE_KEY = 'cc-plan-line';
+let lineShown = (() => { try { return localStorage.getItem(LINE_KEY) !== 'off'; } catch(e){ return true; } })();
 const BIKES = ['Road', 'Gravel', 'MTB', 'E-bike', 'Handbike', 'Recumbent', 'Trike', 'Tandem'];
 
 let ride = { id: null, name: '', bike: 'Road', stops: [], legs: [] };
 const history = createHistory(30);
 const legCache = new Map();
 let gen = 0, routing = false, alongTimer = null, dirty = false;
+/* The day (route-planner.md section 4.4): the along rows once fetched (null until then), the forecast for the ride's date, and what was last asked. */
+let alongRows = null, forecast = null, forecastKey = '', weatherTimer = null;
+const weatherCache = new Map();
 let markers = [], scrubMarker = null;
 let baseSources = null;
 const $ = id => document.getElementById(id);
@@ -45,7 +51,7 @@ async function routeLeg(a, b, bike){
     if(!r.ok) return { routed: false, down: true };
     const d = await r.json();
     if(!d.routed) return { routed: false };
-    return { routed: true, line: d.coordinates, distM: d.distanceM, heights: d.heights || null, surfaces: d.surfaces || null };
+    return { routed: true, line: d.coordinates, distM: d.distanceM, heights: d.heights || null, surfaces: d.surfaces || null, streets: d.streets || null };
   } catch(e){ return { routed: false, down: true }; }
 }
 async function fetchAlong(line){
@@ -67,9 +73,15 @@ function syncPlanning(){
   if(activePanel() === 'plan') everOpened = true;
   setPlanning(planning());
   document.body.classList.toggle('cc-planning', everOpened || planning());
+  /* The rail's dot on the Plan icon while a stop is on the map, as Layers wears one for a filter. */
+  const b = document.getElementById('ib-plan');
+  if(b) b.classList.toggle('riding', ride.stops.length > 0);
 }
 
+/* The name comes first (owner 2026-10-15): no first stop without it. */
+function askName(){ openPanel(); const n = $('planRideName'); if(n) n.focus(); setStatus(P().nameFirst || 'Give your ride a name first.'); }
 function addStop(stop, at){
+  if(!ride.stops.length && !(ride.name || '').trim()){ askName(); return; }
   if(ride.stops.length >= MAX_STOPS){ setStatus(tpl(P().maxStops || 'A ride holds at most {n} stops.', { n: MAX_STOPS })); return; }
   if(stop.item && ride.stops.some(s => s.item === stop.item)){ setStatus(P().already || 'That place is already in your ride.'); return; }
   if(at == null || at < 0 || at > ride.stops.length) at = ride.stops.length;
@@ -79,6 +91,47 @@ function addStop(stop, at){
 }
 function removeStop(i){ remember(); ride.stops.splice(i, 1); afterChange(); }
 function moveStop(i, d){ const j = i + d; if(j < 0 || j >= ride.stops.length) return; remember(); const s = ride.stops.splice(i, 1)[0]; ride.stops.splice(j, 0, s); afterChange(); }
+let stopsOpen = false;
+/* A stop's title: its place's name, or its street for a map point, or "Map point". */
+function stopTitle(i){ const s = ride.stops[i]; if(!s) return ''; return s.item ? s.name : (stopStreet(ride.legs, i) || s.name); }
+/* An unnamed road says what it is (owner 2026-10-15). */
+function roadLabel(kind){ return kind ? ((P().roads || {})[kind] || null) : null; }
+/* Opening the planner with a ride on the map takes the map to the ride (owner 2026-10-15), clear of the drawer and the strip. */
+function fitRide(){
+  const pts = rideLine(); if(pts.length < 2) return;
+  let w = 180, s = 90, e = -180, n = -90;
+  for(const [x, y] of pts){ if(x < w) w = x; if(x > e) e = x; if(y < s) s = y; if(y > n) n = y; }
+  const narrow = window.innerWidth < 820;
+  map.fitBounds([[w, s], [e, n]], { padding: narrow ? { top: 40, bottom: 260, left: 30, right: 30 } : { top: 60, bottom: 200, left: 380, right: 80 }, maxZoom: 15, duration: 600 });
+}
+/* ---------- the start: a name, then a town or a street (route-planner.md section 4.1) ---------- */
+let startTimer = null, startCtl = null;
+function syncStart(){
+  const n = $('planRideName'), box = $('planStartBox'); if(!n || !box) return;
+  if(document.activeElement !== n) n.value = ride.name || '';
+  box.hidden = !(ride.name || '').trim() || ride.stops.length > 0;
+}
+async function searchStart(qy){
+  const ul = $('planStartResults'); if(!ul) return;
+  if(startCtl) startCtl.abort();
+  if(qy.length < 3){ ul.innerHTML = ''; return; }
+  startCtl = new AbortController();
+  const c = map.getCenter();
+  const url = 'https://photon.komoot.io/api/?limit=6&layer=city&layer=district&layer=locality&layer=street'
+    + '&q=' + encodeURIComponent(qy) + '&lat=' + c.lat.toFixed(3) + '&lon=' + c.lng.toFixed(3) + '&lang=' + photonLang(document.documentElement.lang);
+  let feats = [];
+  try { const r = await fetch(url, { signal: startCtl.signal }); feats = r.ok ? ((await r.json()).features || []) : []; } catch(e){ return; }
+  // Towns first, then streets: a ride starts in a place, a street narrows it.
+  const rows = feats.map(f => { const p = f.properties || {}, street = p.type === 'street' || p.osm_key === 'highway';
+    return { name: p.name || '', where: [street ? (p.city || p.town || p.village || p.district) : null, p.state, p.country].filter(Boolean).join(', '), lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0], street }; })
+    .filter(r => r.name).sort((a, b) => Number(a.street) - Number(b.street));
+  ul.innerHTML = rows.length
+    ? rows.map((r, i) => `<li><button type="button" class="cc-near" data-start="${i}"><span class="cc-near-nm">${escPend(r.name)}</span><em>${escPend(r.where)}</em></button></li>`).join('')
+    : `<li class="cc-near-empty">${escPend(P().startNone || 'Nothing found. Try a nearby town.')}</li>`;
+  ul.onclick = e => { const b = e.target.closest('[data-start]'); if(!b) return; const r = rows[Number(b.dataset.start)];
+    map.flyTo({ center: [r.lng, r.lat], zoom: r.street ? 16 : 13 }); ul.innerHTML = ''; $('planStartSearch').value = r.name;
+    setStatus(P().startClick || 'Click the map where you start.'); };
+}
 function setBike(b){ ride.bike = b; paintBikes(); afterChange(); }
 /* A place from the drawer or the along list: in at its km along, or out again. */
 function togglePlace(place){
@@ -99,7 +152,7 @@ function clearRide(){
 function remember(){ history.push(ride.stops); }
 /* Ctrl+Z, or the command key with Z on a Mac: the stops before the last change. */
 function undo(){ const prev = history.pop(); if(!prev) return; ride.stops = prev; afterChange(); }
-function afterChange(){ dirty = ride.stops.length >= 2; renderStops(); drawRide(); routeAll(); saveDraft(); syncPlanning(); paintDrawerButtons(); }
+function afterChange(){ dirty = ride.stops.length >= 2; alongRows = null; syncStart(); renderStops(); drawRide(); routeAll(); saveDraft(); syncPlanning(); paintDrawerButtons(); }
 
 async function routeAll(){
   const myGen = ++gen;
@@ -128,20 +181,33 @@ function finishRouting(){
   else if(legs.some(l => l.down)) setStatus(P().engineDown || 'The routing engine did not answer. Try again in a moment.');
   else if(legs.some(l => !l.routed)) setStatus(P().noRoad || 'No road found between these stops');
   else setStatus(ride.stops.length < 2 ? '' : (P().routed || 'Routed.'));
-  renderFigures(); renderProfile(); scheduleAlong(); renderBar(); saveDraft();
+  renderFigures(); renderProfile(); scheduleAlong(); scheduleWeather(); scheduleTileRead(); renderBar(); saveDraft();
 }
 
 /* ---------- panel: bikes ---------- */
 function bikeLabel(b){ const el = document.querySelector(`#planBikes .chip[data-bike="${b}"]`); return el ? el.textContent : b; }
 function paintBikes(){
   document.querySelectorAll('#planBikes .chip').forEach(c => { const on = c.dataset.bike === ride.bike; c.classList.toggle('on', on); c.setAttribute('aria-pressed', on ? 'true' : 'false'); });
-  const why = $('planWhy'); if(why) why.textContent = (P().why || {})[ride.bike] || '';
+  const why = $('planWhyText'); if(why) why.textContent = (P().why || {})[ride.bike] || '';
 }
+/* Every bike type, or only the rider's own (owner 2026-10-15): the switch stays, both ways. */
+let allBikes = false;
 function showAllBikes(){
   const box = $('planBikes'); if(!box) return;
   const have = new Set([...box.querySelectorAll('.chip')].map(c => c.dataset.bike));
-  BIKES.filter(b => !have.has(b)).forEach(b => { const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.dataset.bike = b; c.textContent = b; box.appendChild(c); });
-  const all = $('planBikesAll'); if(all) all.remove();
+  BIKES.filter(b => !have.has(b)).forEach(b => { const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.dataset.bike = b; c.dataset.extra = '1'; c.textContent = b; box.appendChild(c); });
+  allBikes = true; paintBikeSwitch(); paintBikes();
+}
+function showFewerBikes(){
+  const box = $('planBikes'); if(!box) return;
+  // The bike the ride is planned for stays, even when it is not one of the rider's own.
+  box.querySelectorAll('.chip[data-extra]').forEach(c => { if(c.dataset.bike !== ride.bike) c.remove(); });
+  allBikes = false; paintBikeSwitch(); paintBikes();
+}
+function toggleAllBikes(){ if(allBikes) showFewerBikes(); else showAllBikes(); }
+function paintBikeSwitch(){
+  const all = $('planBikesAll'); if(!all) return;
+  all.textContent = allBikes ? (P().bikeFewer || 'Show fewer bike types') : (P().bikeAll || 'Show every bike type');
 }
 
 /* ---------- panel: stops ---------- */
@@ -150,14 +216,21 @@ function renderStops(){
   const ul = $('planStops'); if(!ul) return;
   const n = ride.stops.length;
   const instr = $('planInstr'); if(instr) instr.hidden = n >= 2;
+  // Folded by default once the ride has a start and an end (owner 2026-10-15): one line says what it holds.
+  const tgl = $('planStopsToggle'), sum = $('planStopsSum'), folded = n >= 2 && !stopsOpen;
+  if(tgl){ tgl.hidden = n < 2; tgl.setAttribute('aria-expanded', String(!folded)); tgl.textContent = folded ? (P().stopsShow || 'show') : (P().stopsHide || 'hide'); }
+  if(sum){ sum.hidden = !folded; if(folded) sum.textContent = tpl(P().stopsSum || '{n} stops, {from} to {to}', { n, from: stopTitle(0), to: stopTitle(n - 1) }); }
+  ul.hidden = folded;
   if(!n){ ul.innerHTML = `<li class="cc-near-empty">${escPend(P().noStops || 'No stops yet.')}</li>`; return; }
   let html = '';
   ride.stops.forEach((s, i) => {
     const cls = i === 0 ? 'start' : (i === n - 1 && n > 1 ? 'end' : '');
-    const lbl = i === 0 ? 'S' : (i === n - 1 && n > 1 ? 'E' : String(i));
+    const lbl = i === 0 ? 'S' : (i === n - 1 && n > 1 ? FINISH_FLAG : String(i));
     const meta = s.letter ? metaFor(s.letter) : null;
     const kind = meta ? `<span class="k" style="background:${meta.color}" title="${escPend(meta.label)}"></span>` : '';
-    const sub = meta ? meta.label : (s.lat.toFixed(4) + ', ' + s.lng.toFixed(4));
+    // A map point says its street (owner 2026-10-15), from the engine's names along its leg; a place keeps its kind.
+    const street = s.item ? null : stopStreet(ride.legs, i);
+    const sub = meta ? meta.label : (street || (s.lat.toFixed(4) + ', ' + s.lng.toFixed(4)));
     // The name takes the map to the stop, a map point as much as a place (owner 2026-10-14).
     html += `<li class="cc-plan-stop ${cls}" data-i="${i}"><span class="n">${lbl}</span>${kind}<span class="nm"><b class="lnk" data-fly="1">${escPend(s.name)}</b><small>${escPend(sub)}</small></span>`
       + `<span class="act"><button type="button" data-up title="${escPend(P().up || 'Move up')}" ${i === 0 ? 'disabled' : ''}>↑</button><button type="button" data-down title="${escPend(P().down || 'Move down')}" ${i === n - 1 ? 'disabled' : ''}>↓</button><button type="button" data-rm title="${escPend(P().remove || 'Remove')}">✕</button></span></li>`;
@@ -183,75 +256,167 @@ function renderFigures(){
   $('planDist').textContent = fmtKm(f.distM);
   $('planUp').textContent = uElev(f.upM);
   $('planDown').textContent = uElev(f.downM);
-  // Toughness: the routes' difficulty words, so a ride and a route speak one scale.
-  const mix = surfaceMix(ride.legs);
-  const t = toughness(f.distM, f.upM, mix);
-  const tEl = $('planTough'), tSub = $('planToughSub');
-  if(tEl) tEl.textContent = t ? trVal(TOUGH_WORDS[t.level]) : '';
-  if(tSub){
-    const parts = t ? [`${(P().terrain || {})[t.terrain] || t.terrain} · ${tpl(P().perKm || '{n} m/km', { n: Math.round(t.perKm) })}`] : [];
-    if(t && mix.gravel >= 500) parts.push(tpl(P().surfGravel || '{d} gravel', { d: fmtKm(mix.gravel) }));
-    if(t && mix.rough >= 500) parts.push(tpl(P().surfRough || '{d} rough', { d: fmtKm(mix.rough) }));
-    tSub.textContent = parts.join(' · ');
-  }
-  renderToughGraphic(t, mix, f);
+  // The day (route-planner.md section 4.4): the reference rider's time, the flat equivalent, the bar, what makes it tougher.
+  const day = rideTime(dayLegs(), ride.bike);
+  const tEl = $('planTime'), tSub = $('planTimeSub');
+  if(tEl) tEl.textContent = day ? hmText(day.seconds) : '';
+  if(tSub) tSub.textContent = day ? tpl(P().feelsLike || 'feels like {d} flat', { d: uKm(day.flatKm, 0) }) : '';
+  renderDayGraphic(day);
+  renderTougher(day, f);
   const wait = unrouted() || routing;
   const save = $('planSave'), gpx = $('planGpx');
   if(save) save.disabled = wait;
   if(gpx) gpx.disabled = wait;
   const hint = $('planSaveHint'); if(hint && (unrouted() && !routing)) hint.textContent = P().saveWait || 'Save and GPX wait until every leg has a road.';
 }
-/* How the toughness is built (route-planner.md section 4.4), in three rows:
-   the distance bar split by surface, with the ride's km and its effective km
-   and the base they give; the climb gauge in the profile's purples with the
-   ride's m/km and what it adds; and the five-step ladder with the level. */
-const SURFACE_COLOUR = { paved: '#577A71', gravel: '#C8923A', rough: '#6E5849', unknown: 'rgb(var(--chrome-fg) / .25)' };
-function renderToughGraphic(t, mix, f){
-  const box = $('planToughFx'), svg = $('planToughSvg'); if(!box || !svg) return;
-  if(!t){ box.hidden = true; return; }
-  box.hidden = false;
-  const W = 280, L = 58, BW = 128, X2 = L + BW + 6;
-  const lbl = (y, text) => `<text x="0" y="${y}" class="lbl">${escPend(text)}</text>`;
-  let s = lbl(23, P().distance || 'distance');
-  const bars = toughnessBars(mix);
-  let x = L;
-  for(const seg of bars){ const w = BW * seg.share; s += `<rect x="${x.toFixed(1)}" y="12" width="${Math.max(w, 0.5).toFixed(1)}" height="14" rx="2" fill="${SURFACE_COLOUR[seg.cls]}"/>`; x += w; }
-  if(!bars.length) s += `<rect x="${L}" y="12" width="${BW}" height="14" rx="2" fill="${SURFACE_COLOUR.unknown}"/>`;
-  const eff = Math.abs(t.effectiveKm - f.distM / 1000) >= 0.5 ? ` → ${uKm(t.effectiveKm, 0)}` : '';
-  s += `<text x="${X2}" y="23" class="val">${escPend(fmtKm(f.distM) + eff)}</text>`;
-  s += `<text x="${W}" y="23" text-anchor="end" class="num">${t.base}</text>`;
-  s += lbl(53, P().climbed || 'climbed');
-  const zones = [[0, 8, '#D9A6F2'], [8, 15, '#B25BE8'], [15, 25, '#8A2BD0'], [25, 35, '#5E18A0']];
-  for(const [a, b, c] of zones) s += `<rect x="${(L + BW * a / 35).toFixed(1)}" y="42" width="${(BW * (b - a) / 35).toFixed(1)}" height="14" rx="2" fill="${c}"/>`;
-  const px = L + BW * Math.min(35, Math.max(0, t.perKm)) / 35;
-  s += `<polygon points="${px.toFixed(1)},41 ${(px - 5).toFixed(1)},34 ${(px + 5).toFixed(1)},34" fill="var(--trail)"/>`;
-  s += `<text x="${X2}" y="53" class="val">${escPend(tpl(P().perKm || '{n} m/km', { n: Math.round(t.perKm) }))}</text>`;
-  s += `<text x="${W}" y="53" text-anchor="end" class="num">+${t.bump}</text>`;
-  s += lbl(91, P().tough || 'toughness');
-  for(let i = 1; i <= 5; i++){
-    const bx = L + (i - 1) * (BW / 5), on = i === t.level;
-    s += `<rect x="${(bx + 1).toFixed(1)}" y="78" width="${(BW / 5 - 2).toFixed(1)}" height="20" rx="4" fill="${on ? 'var(--trail)' : 'rgb(var(--chrome-fg) / .1)'}"/>`;
-    s += `<text x="${(bx + BW / 10).toFixed(1)}" y="92" text-anchor="middle" class="${on ? 'on' : 'off'}">${i}</text>`;
+/* Seconds as "4 h 45", to five minutes; under an hour as minutes. */
+function hmText(seconds){ const { h, m } = roundedHm(seconds); return h ? tpl(P().hm || '{h} h {m}', { h, m: String(m).padStart(2, '0') }) : tpl(P().min || '{m} min', { m }); }
+/* A part of the day, to the minute. */
+function partText(seconds){ if(seconds > 0 && seconds < 30) return P().underMin || 'under 1 min'; const h = Math.floor(seconds / 3600), m = Math.round((seconds % 3600) / 60); return h ? tpl(P().hm || '{h} h {m}', { h, m: String(m).padStart(2, '0') }) : tpl(P().min || '{m} min', { m }); }
+/* The day graphic (route-planner.md section 4.4): two bars of the same time, by surface and by gradient,
+   each with a legend of its parts and their minutes. */
+/* The finish: a chequered flag, not an E (owner 2026-10-15). */
+const FINISH_FLAG = '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M3 1.5v13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3.8 2h10v7h-10z" fill="#fff"/><path d="M3.8 2h2.5v2.33H3.8zM8.8 2h2.5v2.33H8.8zM6.3 4.33h2.5v2.33H6.3zM11.3 4.33h2.5v2.33h-2.5zM3.8 6.66h2.5V9H3.8zM8.8 6.66h2.5V9H8.8z" fill="#101E16"/></svg>';
+/* ---------- the map's surface lines along the ride (route-planner.md section 4.4a) ----------
+   The engine names a surface for every road; where the map's surface lines are drawn, they say
+   which roads have none recorded. Each sample point a leg has been seen at keeps its class, so the
+   knowledge grows as the rider looks along the ride. */
+const SAMPLE_M = 50;
+const tileSeen = new Map();   // leg key -> Map(sample index -> planner class)
+function legSamples(leg){
+  const out = []; let next = 0, run = 0;
+  for(let i = 1; i < leg.line.length; i++){
+    const [x1, y1] = leg.line[i - 1], [x2, y2] = leg.line[i];
+    const len = Math.hypot((x2 - x1) * 111320 * Math.cos(y1 * Math.PI / 180), (y2 - y1) * 110540);
+    while(next <= run + len){ const f = len > 0 ? (next - run) / len : 0; out.push([x1 + (x2 - x1) * f, y1 + (y2 - y1) * f]); next += SAMPLE_M; }
+    run += len;
   }
-  s += `<text x="${X2}" y="92" class="val">${escPend(trVal(TOUGH_WORDS[t.level]))}</text>`;
-  svg.innerHTML = s;
+  return out;
+}
+function readTileSurfaces(){
+  const surfLayers = (map.getStyle()?.layers || []).map(l => l.id).filter(id => (id.startsWith('surftile-') || id.startsWith('surftodo-')) && map.getLayoutProperty(id, 'visibility') !== 'none');
+  if(!surfLayers.length) return false;
+  const w = map.getCanvas().clientWidth, h = map.getCanvas().clientHeight;
+  let changed = false;
+  for(const leg of ride.legs){
+    if(!leg || !leg.routed || !Array.isArray(leg.line)) continue;
+    let seen = tileSeen.get(leg.key); if(!seen){ seen = new Map(); tileSeen.set(leg.key, seen); }
+    legSamples(leg).forEach((p, i) => {
+      const pt = map.project(p); if(pt.x < 0 || pt.y < 0 || pt.x > w || pt.y > h) return;
+      const f = map.queryRenderedFeatures([[pt.x - 4, pt.y - 4], [pt.x + 4, pt.y + 4]], { layers: surfLayers })[0];
+      if(!f) return;
+      const cls = f.layer.id.startsWith('surftodo-') ? 'unknown' : tileSurfaceClass(f.properties && f.properties.cls);
+      if(cls && seen.get(i) !== cls){ seen.set(i, cls); changed = true; }
+    });
+  }
+  return changed;
+}
+function tileMetres(leg){
+  const seen = tileSeen.get(leg.key), out = {}; if(!seen) return out;
+  for(const cls of seen.values()) out[cls] = (out[cls] || 0) + SAMPLE_M;
+  return out;
+}
+/* The legs the day's figures read: each with its surfaces corrected by the map's lines where seen. */
+function dayLegs(){ return ride.legs.map(leg => leg && leg.routed ? { ...leg, surfaces: mergeSurfaces(leg.surfaces, tileMetres(leg), leg.distM) } : leg); }
+let tileTimer = null;
+function scheduleTileRead(){ clearTimeout(tileTimer); tileTimer = setTimeout(() => { if(ride.stops.length >= 2 && readTileSurfaces()){ renderFigures(); renderBar(); } }, 400); }
+const PART_COLOUR = { paved: '#577A71', gravel: '#C8923A', rough: '#6E5849', unknown: '#C2402F', climb: '#7B4F9D', flat: '#C9BFA8', descend: '#9FB8C9' };
+function partLabel(cls){ const d = { paved: P().partPaved || 'on asphalt', gravel: P().partGravel || 'on gravel', rough: P().partRough || 'on rough road', unknown: P().partUnknown || 'surface not recorded', climb: P().partClimb || 'climbing', flat: P().partFlat || 'on the flat', descend: P().partDescend || 'descending' }; return d[cls] || cls; }
+let dayUnit = 'time';
+function renderDayGraphic(day){
+  const box = $('planDayFx'), host = $('planDaySvg'); if(!box || !host) return;
+  const byDist = dayUnit === 'dist';
+  const src = day ? (byDist ? day.metres : day.parts) : null;
+  const rows = src ? [surfaceBars(src), gradientBars(src)].filter(r => r.length) : [];
+  if(!rows.length){ box.hidden = true; return; }
+  box.hidden = false;
+  const value = b => byDist ? fmtKm(b.seconds) : partText(b.seconds);   // barsOf calls the amount `seconds` whatever its unit
+  host.innerHTML = rows.map(bars => {
+    let x = 0;
+    const rects = bars.map(b => { const w = 100 * b.share, r = `<rect x="${x.toFixed(2)}" y="0" width="${Math.max(w, 0.2).toFixed(2)}" height="10" fill="${PART_COLOUR[b.cls]}"><title>${escPend(partLabel(b.cls))} · ${escPend(value(b))}</title></rect>`; x += w; return r; }).join('');
+    const legend = bars.map(b => `<li><i style="background:${PART_COLOUR[b.cls]}"></i>${escPend(partLabel(b.cls))} · ${escPend(value(b))}</li>`).join('');
+    return `<svg viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">${rects}</svg><ul class="cc-plan-daylegend">${legend}</ul>`;
+  }).join('');
+}
+/* The day of the ride: the date field, today by default, kept with the draft only. */
+function todayIso(){ const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function rideDate(){ const i = $('planDate'); const v = i ? i.value : ''; return /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : todayIso(); }
+function clockText(d){ return d.toLocaleTimeString(document.documentElement.lang || 'en', { hour: '2-digit', minute: '2-digit', hour12: false }); }
+const DIRS = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'];
+function dirWord(deg){ const k = DIRS[Math.round(((deg % 360) + 360) % 360 / 45) % 8]; return (P().dirs || {})[k] || k.toUpperCase(); }
+/* What makes it tougher (route-planner.md section 4.4): one line each, only when it applies. */
+function renderTougher(day, f){
+  const grp = $('planTougherGrp'), ul = $('planTougher'); if(!grp || !ul) return;
+  const lines = [];
+  const steep = steepestKm(ride.legs);
+  if(steep) lines.push(tpl(P().steepest || 'Steepest km: {g} % at km {at}', { g: steep.grad.toFixed(0), at: steep.atKm.toFixed(0) }));
+  const climb = longestClimb(ride.legs);
+  if(climb) lines.push(tpl(P().longestClimb || 'Longest climb: {d}, {m} up, {g} %', { d: uKm(climb.km, 1), m: uElev(climb.upM), g: climb.grad.toFixed(1) }));
+  if(alongRows){ const gap = waterGap(alongRows, f.distM); if(gap != null && gap >= 15) lines.push(tpl(P().waterGap || '{d} without water or food along the way', { d: uKm(gap, 0) })); }
+  const busyM = ride.legs.reduce((t, l) => t + (l && l.routed && l.surfaces ? (l.surfaces.busy || 0) : 0), 0);
+  if(busyM >= 1000) lines.push(tpl(P().busy || '{d} on busy roads without a cycle lane', { d: fmtKm(busyM) }));
+  const start = ride.stops[0];
+  const sun = start ? sunTimes(start.lat, start.lng, rideDate()) : null;
+  if(sun){
+    const h = Math.floor(sun.daylightS / 3600), m = Math.round((sun.daylightS % 3600) / 60);
+    lines.push(tpl(P().daylight || 'Daylight {h} h {m}, {from} to {to}', { h, m: String(m).padStart(2, '0'), from: clockText(sun.sunrise), to: clockText(sun.sunset) }));
+    if(day && day.seconds > sun.daylightS) lines.push(P().daylightShort || 'The riding time is longer than the daylight.');
+  }
+  let credit = '';
+  if(forecast && forecast.date === rideDate()){
+    if(forecast.windKmh >= 15){ const w = windShares(ride.legs, forecast.windFromDeg); lines.push(tpl(P().wind || 'Wind {s} km/h from the {dir}: {head} into it, {tail} with it', { s: Math.round(forecast.windKmh), dir: dirWord(forecast.windFromDeg), head: fmtKm(w.headM), tail: fmtKm(w.tailM) })); }
+    if(forecast.tempMaxC >= 28) lines.push(tpl(P().heat || 'Up to {t} °C', { t: Math.round(forecast.tempMaxC) }));
+    if(forecast.rainMm >= 2) lines.push(tpl(P().rain || '{r} mm of rain', { r: Math.round(forecast.rainMm) }));
+    credit = `<li class="cc-plan-credit">${escPend(P().forecastBy || 'Forecast: Open-Meteo')}</li>`;
+  }
+  ul.innerHTML = lines.map(l => `<li>${escPend(l)}</li>`).join('') + credit;
+  grp.hidden = !lines.length;
+}
+/* The forecast for the ride's date at the ride's middle, through our server, once the legs settle; one ask per 0.1° cell and date. */
+function scheduleWeather(){ clearTimeout(weatherTimer); weatherTimer = setTimeout(fetchWeather, 1200); }
+async function fetchWeather(){
+  if(!CC_PLAN.weather || ride.stops.length < 2 || unrouted()) return;
+  const f = figures(ride.legs); const mid = pointAt(ride.legs, f.distM / 2); if(!mid) return;
+  const date = rideDate(), key = `${mid[1].toFixed(1)},${mid[0].toFixed(1)},${date}`;
+  if(forecastKey === key) return;
+  let got = weatherCache.get(key);
+  if(got === undefined){
+    try {
+      const r = await fetch(CC_PLAN.weather, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CC-Token': CC_PLAN.weatherToken }, body: JSON.stringify({ lat: mid[1], lng: mid[0], date }) });
+      got = r.ok ? ((await r.json()).forecast || null) : null;
+    } catch(e){ got = null; }
+    weatherCache.set(key, got);
+  }
+  forecast = got; forecastKey = key;
+  renderFigures();
 }
 
 /* The profile in the panel and, the map's width wide, as a strip along the
    foot of the map (route-planner.md section 4.5); one drawing, two sizes. */
 let stripClosed = false;
+/* The height profile is the strip along the foot of the map (route-planner.md section 4.5); a closed
+   strip comes back from the panel's Show the height profile. */
+/* The strip slides rather than snaps (owner 2026-10-15): open it, then let it rise; fold it, then hide it once down. */
+let stripShown = false, stripFoldTimer = null;
+function showStrip(on){
+  const strip = $('planStrip'), wrap = document.querySelector('.map-wrap'); if(!strip) return;
+  if(on === stripShown) return;
+  stripShown = on; clearTimeout(stripFoldTimer);
+  wrap && wrap.classList.toggle('cc-strip-on', on);
+  if(on){ strip.hidden = false; strip.classList.add('folded'); void strip.offsetHeight; strip.classList.remove('folded'); }
+  else { strip.classList.add('folded'); stripFoldTimer = setTimeout(() => { if(!stripShown) strip.hidden = true; }, 320); }
+}
 function renderProfile(){
-  const g = $('planProfGrp'), svgEl = $('planProfSvg'), strip = $('planStrip'); if(!g || !svgEl) return;
+  const strip = $('planStrip'), reopen = $('planStripOpen'); if(!strip) return;
   const f = figures(ride.legs);
   const runs = ride.stops.length >= 2 ? profileRuns(ride.legs, Math.max(100, Math.ceil(f.distM / 120 / 100) * 100)) : [];
   const bins = runs.flat();
   const wrap = document.querySelector('.map-wrap');
-  if(bins.length < 2){ g.hidden = true; if(strip){ strip.hidden = true; wrap && wrap.classList.remove('cc-strip-on'); } return; }
-  g.hidden = false;
-  drawProfile($('planProf'), svgEl, $('planProfCur'), $('planProfTip'), 280, 118, f, bins);
-  if(strip){
-    strip.hidden = stripClosed;
-    wrap && wrap.classList.toggle('cc-strip-on', !stripClosed);
+  const tab = $('planStripTab'); if(tab) tab.hidden = !stripClosed;
+  if(bins.length < 2){ showStrip(false); if(reopen) reopen.hidden = true; if(tab) tab.hidden = true; return; }
+  if(reopen) reopen.hidden = !stripClosed;
+  {
+    showStrip(!stripClosed);
     if(!stripClosed){
       const w = Math.max(320, strip.clientWidth || 800);
       $('planStripSvg').setAttribute('viewBox', `0 0 ${w} 140`);
@@ -288,7 +453,8 @@ function drawProfile(prof, svgEl, cur, tip, W, H, f, bins){
     scrubTo(d);
     cur.style.display = 'block'; cur.style.left = (fx / W * 100) + '%';
     const near = bins.reduce((b, p) => Math.abs(p.d0 - d) < Math.abs(b.d0 - d) ? p : b, bins[0]);
-    tip.style.display = 'block'; tip.textContent = `${uKm(d / 1000)} · ${uElev(near.h0)}`; tip.style.left = Math.min(fx / W * 100, 70) + '%';
+    const st = streetAt(ride.legs, d) || roadLabel(roadAt(ride.legs, d));
+    tip.style.display = 'block'; tip.textContent = `${uKm(d / 1000)} · ${uElev(near.h0)}` + (st ? ` · ${st}` : ''); tip.style.left = Math.min(fx / W * 100, 70) + '%';
   };
   prof.onmouseleave = () => { cur.style.display = 'none'; tip.style.display = 'none'; if(scrubMarker){ scrubMarker.remove(); scrubMarker = null; } };
 }
@@ -333,6 +499,7 @@ async function renderAlong(){
   }
   if(!html) html = `<li class="cc-near-empty">${escPend(tpl(P().alongEmpty || 'Nothing the Commons knows within {d} of this ride yet.', { d: uM(CORRIDOR_M) }))}</li>`;
   ul.innerHTML = html;
+  alongRows = rows; renderFigures();   // the water gap reads the rows
   ul.querySelectorAll('.cc-near-more[aria-controls]').forEach(b => {
     const rest = ul.querySelector('#' + b.getAttribute('aria-controls')); if(!rest) return;
     b.onclick = () => { const open = b.getAttribute('aria-expanded') !== 'true'; rest.hidden = !open; b.setAttribute('aria-expanded', String(open)); b.textContent = open ? b.dataset.fewer : b.dataset.more; };
@@ -356,20 +523,31 @@ function drawRide(){
   ride.stops.forEach((s, i) => {
     const el = document.createElement('div');
     el.className = 'cc-plan-mk ' + (i === 0 ? 'start' : (i === n - 1 && n > 1 ? 'end' : ''));
-    el.textContent = i === 0 ? 'S' : (i === n - 1 && n > 1 ? 'E' : String(i));
+    if(i === n - 1 && n > 1) el.innerHTML = FINISH_FLAG; else el.textContent = i === 0 ? 'S' : String(i);
     el.title = s.name;
     const m = new maplibregl.Marker({ element: el, draggable: true }).setLngLat([s.lng, s.lat]).addTo(map);
     m.on('dragend', () => { remember(); const ll = m.getLngLat(); const st = ride.stops[i]; st.lng = ll.lng; st.lat = ll.lat; if(st.item){ st.item = null; st.letter = null; st.name = P().mapPoint || 'Map point'; } afterChange(); });
     markers.push(m);
   });
 }
+function applyLineShown(){
+  ['plan-casing', 'plan-line', 'plan-straight'].forEach(id => { if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', lineShown ? 'visible' : 'none'); });
+  const b = $('planLineToggle'); if(!b) return;
+  const label = lineShown ? (P().lineHide || 'Hide the ride line') : (P().lineShow || 'Show the ride line');
+  b.setAttribute('aria-pressed', lineShown ? 'true' : 'false'); b.title = label; b.setAttribute('aria-label', label);
+  b.classList.toggle('off', !lineShown);
+}
 function addLayers(){
   if(map.getSource('plan')) return;
   map.addSource('plan', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   map.addSource('plan-straight', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-  map.addLayer({ id: 'plan-casing', type: 'line', source: 'plan', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#F3EBD8', 'line-width': 7, 'line-opacity': .9 } });
-  map.addLayer({ id: 'plan-line', type: 'line', source: 'plan', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#FF5A1F', 'line-width': 4 } });
+  // Thin, so the surface band under the ride stays readable on both sides of it (owner 2026-10-15).
+  map.addLayer({ id: 'plan-casing', type: 'line', source: 'plan', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#F3EBD8', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 18, 4.5], 'line-opacity': .7 } });
+  map.addLayer({ id: 'plan-line', type: 'line', source: 'plan', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#FF5A1F', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1.8, 18, 3] } });
   map.addLayer({ id: 'plan-straight', type: 'line', source: 'plan-straight', paint: { 'line-color': '#E8A33D', 'line-width': 3, 'line-dasharray': [1.5, 1.5] } });
+  // Into the one stacking order (map-and-search.md section 4.1): over every other line, under the icons.
+  liftInfoLayersAboveRoutes();
+  applyLineShown();
   drawRide();
 }
 /* An empty map click is a stop. A click on anything of ours (a pin, a coverage
@@ -383,7 +561,7 @@ function renderBar(){
   const bar = $('planBar'); if(!bar) return;
   const show = activePanel() !== 'plan' && ride.stops.length >= 2;
   bar.hidden = !show;
-  if(show) $('planBarText').textContent = barText(figures(ride.legs), ride.stops.length, { km: fmtKm, m: uElev, stops: n => tpl(P().barStops || '{n} stops', { n }) });
+  if(show){ const day = rideTime(dayLegs(), ride.bike); $('planBarText').textContent = barText(figures(ride.legs), ride.stops.length, { km: fmtKm, m: uElev, stops: n => tpl(P().barStops || '{n} stops', { n }) }, day ? hmText(day.seconds) : ''); }
 }
 function openPanel(){ const b = document.getElementById('ib-plan'); if(b && activePanel() !== 'plan') b.click(); }
 
@@ -401,11 +579,11 @@ function paintDrawerButtons(){
 }
 
 /* ---------- saving, the draft, the GPX ---------- */
-function saveDraft(){ try { if(ride.stops.length) localStorage.setItem(DRAFT_KEY, JSON.stringify({ bike: ride.bike, stops: ride.stops, id: ride.id, name: ride.name })); else localStorage.removeItem(DRAFT_KEY); } catch(e){} }
+function saveDraft(){ try { if(ride.stops.length) localStorage.setItem(DRAFT_KEY, JSON.stringify({ bike: ride.bike, stops: ride.stops, id: ride.id, name: ride.name, date: rideDate() })); else localStorage.removeItem(DRAFT_KEY); } catch(e){} }
 function loadDraft(){ try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch(e){ return null; } }
 function suggestName(){ const a = ride.stops[0], b = ride.stops[ride.stops.length - 1]; const nm = s => s && s.letter ? s.name : ''; return [nm(a), nm(b)].filter(Boolean).join(' · ') || ''; }
 async function doSave(){
-  const name = ($('planName').value || '').trim(); if(!name){ $('planName').focus(); return; }
+  const name = (ride.name || '').trim(); if(!name){ askName(); return; }
   const f = figures(ride.legs);
   const body = { id: ride.id, name, bike: ride.bike, stops: ride.stops, line: { type: 'LineString', coordinates: rideLine() }, distanceM: Math.round(f.distM), ascentM: Math.round(f.upM), descentM: Math.round(f.downM) };
   const hint = $('planSaveHint');
@@ -452,7 +630,7 @@ export function initPlan(){
   const chips = $('planBikes');
   const first = chips && chips.querySelector('.chip.on'); if(first) ride.bike = first.dataset.bike;
   chips && chips.addEventListener('click', e => { const c = e.target.closest('.chip[data-bike]'); if(c) setBike(c.dataset.bike); });
-  const all = $('planBikesAll'); if(all) all.addEventListener('click', e => { e.preventDefault(); showAllBikes(); });
+  const all = $('planBikesAll'); if(all) all.addEventListener('click', e => { e.preventDefault(); toggleAllBikes(); });
   paintBikes();
   $('planStops').addEventListener('click', e => {
     const li = e.target.closest('.cc-plan-stop'); if(!li) return;
@@ -469,16 +647,23 @@ export function initPlan(){
     const add = e.target.closest('[data-plan-place]'); if(add){ togglePlace(JSON.parse(add.dataset.planPlace)); renderAlong(); return; }
     const row = e.target.closest('.cc-near[data-plan-ll]'); if(row){ const [lat, lng] = row.dataset.planLl.split(',').map(Number); flyToPin([lng, lat]); }
   });
-  along.addEventListener('mouseover', e => { const row = e.target.closest('.cc-near[data-plan-ll]'); if(!row) return; const [lat, lng] = row.dataset.planLl.split(',').map(Number); highlightAt([lat, lng], [0, 0], row.dataset.planKey); });
+  along.addEventListener('mouseover', e => { const row = e.target.closest('.cc-near[data-plan-ll]'); if(!row) return; const [lat, lng] = row.dataset.planLl.split(',').map(Number); /* A drawn pin stands on its tip: the ring goes onto its body (owner 2026-10-15). */ highlightAt([lat, lng], pinElFor(row.dataset.planKey) ? [0, -16] : [0, 0], row.dataset.planKey); });
   along.addEventListener('mouseleave', clearHighlight);
-  const save = $('planSave'); if(save) save.addEventListener('click', () => { $('planSaveRow').hidden = false; $('planName').value = ride.name || suggestName(); $('planName').focus(); });
-  const go = $('planSaveGo'); if(go) go.addEventListener('click', doSave);
-  const nameEl = $('planName'); if(nameEl) nameEl.addEventListener('keydown', e => { if(e.key === 'Enter') doSave(); });
+  // One save: the name is the one at the top of the panel (owner 2026-10-15).
+  const save = $('planSave'); if(save) save.addEventListener('click', doSave);
+  { const t = $('planStopsToggle'); if(t) t.addEventListener('click', () => { stopsOpen = !stopsOpen; renderStops(); }); }
+  { const sm = $('planStopsSum'); if(sm) sm.addEventListener('click', () => { stopsOpen = true; renderStops(); }); }
+  { const w = $('planWhyWrap'), b = $('planWhyBtn'); if(w && b) b.addEventListener('click', () => { const open = !w.classList.contains('open'); w.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open)); }); }
+  { const u = $('planDayUnit'); if(u) u.addEventListener('click', e => { const b = e.target.closest('button[data-u]'); if(!b) return; dayUnit = b.dataset.u; u.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderFigures(); }); }
   $('planGpx').addEventListener('click', downloadGpx);
+  { const n = $('planRideName'); if(n) n.addEventListener('input', () => { ride.name = n.value.slice(0, 80); saveDraft(); syncStart(); if((ride.name || '').trim()) setStatus(''); }); }
+  { const q = $('planStartSearch'); if(q) q.addEventListener('input', () => { clearTimeout(startTimer); startTimer = setTimeout(() => searchStart(q.value.trim()), 350); }); }
   $('planClear').addEventListener('click', clearRide);
+  { const lt = $('planLineToggle'); if(lt) lt.addEventListener('click', () => { lineShown = !lineShown; try { localStorage.setItem(LINE_KEY, lineShown ? 'on' : 'off'); } catch(e){} applyLineShown(); }); applyLineShown(); }
   $('planBarOpen').addEventListener('click', openPanel);
   $('planBarClear').addEventListener('click', clearRide);
   const stripX = $('planStripX'); if(stripX) stripX.addEventListener('click', () => { stripClosed = true; renderProfile(); });
+  ['planStripOpen', 'planStripTab'].forEach(id => { const b = $(id); if(b) b.addEventListener('click', () => { stripClosed = false; renderProfile(); }); });
   let resizeT = null;
   window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(renderProfile, 150); });
   // Add to ride on any place drawer (drawer.js writes the button).
@@ -490,7 +675,7 @@ export function initPlan(){
   });
   const drawer = document.getElementById('drawer');
   if(drawer) new MutationObserver(paintDrawerButtons).observe(drawer, { childList: true, subtree: true });
-  document.addEventListener('cc:panel', () => { renderBar(); syncPlanning(); });
+  document.addEventListener('cc:panel', e => { renderBar(); syncPlanning(); const key = e.detail && e.detail.key; if(key === 'plan' && ride.stops.length >= 2) fitRide(); });
   // The map: layers once the style is there, the basemap's sources remembered for the click test.
   const ready = () => { baseSources = new Set(Object.keys((map.getStyle() || {}).sources || {})); };
   if(map.isStyleLoaded && map.isStyleLoaded()) ready(); else map.once('style.load', ready);
@@ -503,7 +688,8 @@ export function initPlan(){
     openPanel();
     addStop({ lat: e.lngLat.lat, lng: e.lngLat.lng, name: P().mapPoint || 'Map point' });
   });
-  map.on('moveend', () => { if(ride.stops.length >= 2) scheduleAlong(); });
+  map.on('moveend', () => { if(ride.stops.length >= 2){ scheduleAlong(); scheduleTileRead(); } });
+  map.on('idle', () => { if(ride.stops.length >= 2) scheduleTileRead(); });
   document.addEventListener('keydown', e => {
     if(!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || 'z' !== String(e.key).toLowerCase()) return;
     const t = e.target;
@@ -513,9 +699,17 @@ export function initPlan(){
     undo();
   });
   window.addEventListener('beforeunload', e => { if(dirty && ride.stops.length >= 2 && !ride.id){ e.preventDefault(); e.returnValue = P().leave || ''; } });
+  // The day of the ride: today unless the draft holds a later date; a change redraws the daylight and asks the forecast.
+  const dateIn = $('planDate'), draft = loadDraft();
+  if(dateIn){
+    dateIn.min = todayIso();
+    dateIn.value = draft && typeof draft.date === 'string' && draft.date >= todayIso() ? draft.date : todayIso();
+    dateIn.addEventListener('change', () => { saveDraft(); renderFigures(); scheduleWeather(); });
+  }
   // A saved ride by its link, else the draft from the last visit.
   const wanted = new URLSearchParams(location.search).get('ride');
   if(wanted && CC_PLAN.ride) openSaved(wanted);
-  else { const d = loadDraft(); if(d && Array.isArray(d.stops) && d.stops.length){ ride = { id: d.id || null, name: d.name || '', bike: d.bike || ride.bike, stops: d.stops, legs: [] }; if(!document.querySelector(`#planBikes .chip[data-bike="${ride.bike}"]`)) showAllBikes(); paintBikes(); afterChange(); dirty = false; } }
+  else { const d = draft; if(d && Array.isArray(d.stops) && d.stops.length){ ride = { id: d.id || null, name: d.name || '', bike: d.bike || ride.bike, stops: d.stops, legs: [] }; if(!document.querySelector(`#planBikes .chip[data-bike="${ride.bike}"]`)) showAllBikes(); paintBikes(); afterChange(); dirty = false; } }
+  syncStart();
   syncPlanning();
 }

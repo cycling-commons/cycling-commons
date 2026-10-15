@@ -1994,6 +1994,10 @@ The geometry is pure (`web/assets/map/fan-out.js`, tested in
   The halo offset is anchor-aware: `[0,-16]` for bottom-anchored teardrop pins
   (confirmed/curated/pending — the halo rings the icon, not the ground point;
   climbs use the foot vertex), `[0,0]` for centred canvas dots and lines.
+  The ride planner's along-the-line list does the same: a row whose pin is
+  drawn rings the pin body, a tile dot keeps the ring on the point (owner
+  2026-10-15). The ring is 30 px with a 3 px solid orange line, a paper
+  casing and a strong glow, so it reads on the light, dark and satellite maps.
   No DOM marker's own class sets a `position` on the map: MapLibre places
   each one with `position:absolute` and a transform, and a relative one sits
   in page flow below the markers added before it, so the hover ring on a town
@@ -2786,6 +2790,10 @@ with a Belgian row.
   gate, the bbox the coarse pre-filter, dropped for a box that crosses the
   antimeridian, §4.5a) to kill cross-border near-spellings. With the search
   reach on Everywhere (§4.5) Photon goes unscoped.
+- **The planner's start search** asks Photon for streets too
+  (`layer=street` beside the town layers, [route-planner.md](route-planner.md)
+  section 4.1): Photon indexes every named OpenStreetMap object, streets
+  and addresses included; the map search keeps to towns by choice.
 
 ### 7.3 Dropdown presentation
 

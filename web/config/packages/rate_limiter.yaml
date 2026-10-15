@@ -29,6 +29,14 @@ framework:
                 adapter: cache.app
             cache.plan_along_anon_limiter:
                 adapter: cache.app
+            cache.plan_weather_limiter:
+                adapter: cache.app
+            cache.plan_weather_anon_limiter:
+                adapter: cache.app
+            # The forecast answers (route-planner.md section 8): one per rounded point and date, three hours.
+            cache.forecast:
+                adapter: cache.app
+                default_lifetime: 10800
             cache.plan_save_limiter:
                 adapter: cache.app
             cache.map_preset_save_limiter:
@@ -197,6 +205,19 @@ framework:
             limit: 20
             interval: '1 day'
             cache_pool: cache.plan_along_anon_limiter
+        # The forecast for a planned ride's date (route-planner.md section 4.4):
+        # one outbound request per rounded point and date, cached three hours,
+        # asked once the legs settle and when the date changes.
+        plan_weather:
+            policy: sliding_window
+            limit: 60
+            interval: '10 minutes'
+            cache_pool: cache.plan_weather_limiter
+        plan_weather_anon:
+            policy: sliding_window
+            limit: 30
+            interval: '1 day'
+            cache_pool: cache.plan_weather_anon_limiter
         # Saving a planned ride (route-planner.md section 6.1): one row per
         # save, after the body's shape is checked and before the line is
         # measured in PostGIS. Signed in only, so no visitor limiter; a rider
@@ -490,6 +511,12 @@ when@test:
                 cache.plan_along_limiter:
                     adapter: cache.adapter.array
                 cache.plan_along_anon_limiter:
+                    adapter: cache.adapter.array
+                cache.plan_weather_limiter:
+                    adapter: cache.adapter.array
+                cache.plan_weather_anon_limiter:
+                    adapter: cache.adapter.array
+                cache.forecast:
                     adapter: cache.adapter.array
                 cache.plan_save_limiter:
                     adapter: cache.adapter.array

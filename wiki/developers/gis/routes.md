@@ -253,7 +253,9 @@ All of them answer `null` rather than a guess when the engine is unreachable.
     The one rider-facing use is the ride planner on the map (`/map?panel=plan`): a start, a few
     stops and an end, each leg routed for the rider's bike type through `POST /map/plan/leg`
     (`web/src/Controller/PlanController.php`) with the heights of the leg, and what the Commons
-    has along the planned line through `POST /map/plan/along`. Course 2's
+    has along the planned line through `POST /map/plan/along`. The riding time it shows is one
+    reference rider's per bike type, from the gradient of every height step and the surface under
+    it (`web/assets/map/plan-model.js`), never the rider's own pace. Course 2's
     [routing chapter](../gis-beyond/routing.md) is the full account: why graph search is not a
     spatial query, what the engine is asked and what it is not, and why the browser never talks to
     it. It is not repeated here. Turn-by-turn directions are not built.
@@ -278,8 +280,8 @@ All of them answer `null` rather than a guess when the engine is unreachable.
   several defensible ones, and that choice should be visible to whoever reads the result, not
   buried inside a function that looks like it is reporting a fact.
 - Routing between two points is a graph-search problem this project hands to Valhalla, for
-  snapping a climb's two ends to the road and for reading elevation, never something it builds
-  itself. A rider-facing A-to-B planner is not built.
+  snapping a climb's two ends to the road, for reading elevation and for the ride planner's legs,
+  never something it builds itself.
 
 
 ## Further reading

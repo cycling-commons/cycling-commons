@@ -86,7 +86,7 @@ test('each panel still owns the ids its module binds to', () => {
   }
   // The ride planner (route-planner.md section 3): plan.js binds these.
   const plan = panelSrc('p-plan');
-  for (const id of ['planBikes', 'planStops', 'planStatus', 'planFigs', 'planProf', 'planAlong', 'planActs', 'planSaveRow']) {
+  for (const id of ['planBikes', 'planStops', 'planStatus', 'planFigs', 'planStripOpen', 'planAlong', 'planActs']) {
     assert.ok(plan.includes(`id="${id}"`), `#${id} left the plan panel`);
   }
 });

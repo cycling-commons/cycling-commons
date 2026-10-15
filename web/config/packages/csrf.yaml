@@ -18,6 +18,7 @@ framework:
             # two open ones, and the signed-in save and delete of a ride.
             - plan-leg
             - plan-along
+            - plan-weather
             - plan-save
             - map-preset
             - plan-delete

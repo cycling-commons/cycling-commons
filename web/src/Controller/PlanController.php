@@ -14,6 +14,7 @@ use App\Elevation\LegSurfaces;
 use App\Elevation\RouteSnapper;
 use App\Entity\User;
 use App\Security\PseudonymousKey;
+use App\Weather\Forecast;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -92,15 +93,16 @@ final class PlanController extends AbstractController
         }
         $latLng = array_map(static fn (array $c): array => [$c[1], $c[0]], $snapped['coordinates']);
         $heights = $elevation->profile($latLng);
-        // The surfaces under the leg, for the toughness (section 4.4); null leaves them out.
-        $mix = $surfaces->along($latLng);
+        // The surfaces and the street names under the leg, from one walk (section 4.4a); null leaves them out.
+        $read = $surfaces->read($latLng);
 
         return new JsonResponse([
             'routed' => true,
             'coordinates' => $snapped['coordinates'],
             'distanceM' => $snapped['distanceM'],
             'heights' => $heights,
-            'surfaces' => $mix,
+            'surfaces' => $read['surfaces'] ?? null,
+            'streets' => $read['streets'] ?? null,
         ]);
     }
 
@@ -152,6 +154,39 @@ final class PlanController extends AbstractController
         );
 
         return new JsonResponse($rideCheck->alongLine($geoJson, $lengthM, RideCheckService::DEFAULT_RADIUS));
+    }
+
+    /**
+     * The forecast for a planned ride's date (docs/specs/route-planner.md
+     * section 4.4): one point, rounded before it leaves our server, and one
+     * date; `forecast: null` when the service is off, does not answer, or the
+     * date is past its reach, so the panel simply shows no line.
+     */
+    #[Route('/map/plan/weather', name: 'map_plan_weather', methods: ['POST'])]
+    public function weather(
+        Request $request,
+        Forecast $forecast,
+        RateLimiterFactoryInterface $planWeatherLimiter,
+        RateLimiterFactoryInterface $planWeatherAnonLimiter,
+        #[Autowire('%kernel.secret%')]
+        string $secret,
+    ): JsonResponse {
+        if (!$this->isCsrfTokenValid('plan-weather', (string) $request->headers->get('X-CC-Token'))) {
+            throw new AccessDeniedHttpException('Invalid CSRF token.');
+        }
+        $payload = json_decode($request->getContent(), true);
+        $lat = \is_array($payload) ? ($payload['lat'] ?? null) : null;
+        $lng = \is_array($payload) ? ($payload['lng'] ?? null) : null;
+        $date = \is_array($payload) ? ($payload['date'] ?? null) : null;
+        if (!is_numeric($lat) || !is_numeric($lng) || abs((float) $lat) > 90 || abs((float) $lng) > 180
+            || !\is_string($date) || 1 !== preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || false === \DateTimeImmutable::createFromFormat('!Y-m-d', $date)) {
+            return new JsonResponse(['error' => 'bad_request'], 400);
+        }
+        if (!$this->spend($request, $planWeatherLimiter, $planWeatherAnonLimiter, $secret)) {
+            return new JsonResponse(['error' => 'rate_limited'], 429);
+        }
+
+        return new JsonResponse(['forecast' => $forecast->forDay((float) $lat, (float) $lng, $date)]);
     }
 
     /** A rider spends their own budget; a visitor spends the address-hash budget. */

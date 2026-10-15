@@ -15,10 +15,13 @@ use App\Elevation\LegSurfaces;
 use App\Elevation\RouteSnapper;
 use App\Entity\User;
 use App\Tests\Coverage\CoverageSchema;
+use App\Weather\Forecast;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Clock\ClockInterface;
 use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
@@ -122,7 +125,7 @@ final class PlanControllerTest extends WebTestCase
         $engine = new MockHttpClient([
             new MockResponse((string) json_encode(['trip' => ['legs' => [['shape' => $shape, 'summary' => ['length' => 2.4]]]]])),
             new MockResponse((string) json_encode(['range_height' => [[0, 300], [30, 305], [60, 311]]])),
-            new MockResponse((string) json_encode(['units' => 'kilometers', 'edges' => [['surface' => 'paved_smooth', 'length' => 2.0], ['surface' => 'gravel', 'length' => 0.4]]])),
+            new MockResponse((string) json_encode(['units' => 'kilometers', 'edges' => [['surface' => 'paved_smooth', 'length' => 2.0, 'names' => ['Avenue Reine Astrid']], ['surface' => 'gravel', 'length' => 0.4, 'names' => ['Chemin du Thier']]]])),
         ]);
         static::getContainer()->set(RouteSnapper::class, new RouteSnapper($engine, new NullLogger(), 'http://valhalla.test'));
         static::getContainer()->set(ElevationClient::class, new ElevationClient($engine, new NullLogger(), 'http://valhalla.test', 'Copernicus DEM GLO-30'));
@@ -138,7 +141,8 @@ final class PlanControllerTest extends WebTestCase
         // JSON carries a whole number without its fraction; the values are what count.
         self::assertEqualsWithDelta(2400.0, $json['distanceM'], 1e-6);
         self::assertEquals([[0, 300], [30, 305], [60, 311]], $json['heights']);
-        self::assertSame(['paved' => 2000, 'gravel' => 400, 'rough' => 0, 'unknown' => 0], $json['surfaces']);
+        self::assertSame(['paved' => 2000, 'gravel' => 400, 'rough' => 0, 'unknown' => 0, 'busy' => 0], $json['surfaces']);
+        self::assertSame([[0, 'Avenue Reine Astrid', 'road'], [2000, 'Chemin du Thier', 'road']], $json['streets'], 'the leg carries its street names, from our own engine');
     }
 
     public function testAVisitorOverTheDailyBudgetIs429(): void
@@ -238,5 +242,71 @@ final class PlanControllerTest extends WebTestCase
         }
 
         return $out;
+    }
+
+    /* ---- the forecast (route-planner.md section 4.4, section 8) ---- */
+
+    /** @return array<string, mixed> */
+    private static function weatherAsk(): array
+    {
+        return ['lat' => 50.4825, 'lng' => 5.8630, 'date' => (new \DateTimeImmutable('tomorrow'))->format('Y-m-d')];
+    }
+
+    public function testTheForecastNeedsTheTokenAndAWellFormedAsk(): void
+    {
+        $client = static::createClient();
+        self::post($client, '/map/plan/weather', 'plan-weather', self::weatherAsk(), 'not-a-token');
+        self::assertResponseStatusCodeSame(403);
+
+        self::post($client, '/map/plan/weather', 'plan-weather', ['lat' => 'x', 'lng' => 5.86, 'date' => '2026-10-18']);
+        self::assertResponseStatusCodeSame(400);
+        self::post($client, '/map/plan/weather', 'plan-weather', ['lat' => 50.48, 'lng' => 5.86, 'date' => '18/10/2026']);
+        self::assertResponseStatusCodeSame(400);
+    }
+
+    public function testWithoutAForecastServiceTheAnswerIsNullNeverAnError(): void
+    {
+        $client = static::createClient();
+
+        self::post($client, '/map/plan/weather', 'plan-weather', self::weatherAsk());
+
+        self::assertResponseIsSuccessful();
+        self::assertNull(self::json($client)['forecast'], 'the test environment has no forecast service, as it has no engine');
+    }
+
+    public function testTheForecastIsPassedThroughForTheRoundedPoint(): void
+    {
+        $client = static::createClient();
+        $asked = [];
+        $http = new MockHttpClient(function (string $method, string $url) use (&$asked): MockResponse {
+            $asked[] = $url;
+
+            return new MockResponse((string) json_encode(['daily' => [
+                'time' => [self::weatherAsk()['date']], 'wind_speed_10m_max' => [28.1], 'wind_direction_10m_dominant' => [225], 'temperature_2m_max' => [31.4], 'precipitation_sum' => [6.2],
+            ]]));
+        });
+        static::getContainer()->set(Forecast::class, new Forecast($http, new ArrayAdapter(), new NullLogger(), static::getContainer()->get(ClockInterface::class), 'https://forecast.test'));
+
+        self::post($client, '/map/plan/weather', 'plan-weather', self::weatherAsk());
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(['date' => self::weatherAsk()['date'], 'windKmh' => 28.1, 'windFromDeg' => 225, 'tempMaxC' => 31.4, 'rainMm' => 6.2], self::json($client)['forecast']);
+        self::assertCount(1, $asked);
+        self::assertStringContainsString('latitude=50.5&longitude=5.9', $asked[0], 'the point leaves our server rounded to a tenth of a degree');
+        self::assertStringNotContainsString('50.48', $asked[0]);
+    }
+
+    public function testAVisitorOverTheForecastBudgetIs429(): void
+    {
+        $client = static::createClient();
+        $secret = (string) static::getContainer()->getParameter('kernel.secret');
+        $limiter = static::getContainer()->get('limiter.plan_weather_anon')->create(PlanController::anonKey('127.0.0.1', $secret));
+        for ($i = 0, $n = self::limit('plan_weather_anon'); $i < $n; ++$i) {
+            self::assertTrue($limiter->consume()->isAccepted());
+        }
+
+        self::post($client, '/map/plan/weather', 'plan-weather', self::weatherAsk());
+
+        self::assertResponseStatusCodeSame(429);
     }
 }

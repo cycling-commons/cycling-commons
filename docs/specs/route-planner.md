@@ -32,7 +32,8 @@ different product and stays out.
 |---|---|
 | A start, stops and an end, set by clicking the map or by adding a place the Commons knows | Turn-by-turn directions or navigation |
 | The line follows roads, chosen by our routing engine for the rider's bike type | Alternatives, "avoid this area", "prefer quiet roads" sliders |
-| Distance, metres climbed, metres descended, and the height profile | Time or speed estimates, calories, training figures |
+| Distance, metres climbed, metres descended, and the height profile | Calories, training figures, a personal pace or level |
+| The riding time of one general reference rider per bike type, the flat-equivalent distance, and what makes the day tougher: steepness, water gaps, busy roads, daylight, the forecast (section 4.4) | Comparing a ride against the rider's own history or fitness; there is no usage data and none is collected for it |
 | What the Commons has along the ride (a tap, a toilet, a climb, a view), each addable as a stop | Multi-day plans, round-trip generation, a route from a GPS file to edit |
 | Save the ride under a name in the account, reopen it on the map, delete it | Public or shared plans, comments, ratings, a feed |
 | Download the ride as a GPX (GPS Exchange Format) file for a device or another planner | Sending to a device or an app for the rider |
@@ -46,6 +47,10 @@ round: a line the rider draws here.
 The record of every place that said "no route planning", and what each one
 becomes:
 
+- **This spec's own "no time or speed estimates"** (2026-10-14). Reversed
+  2026-10-15 for one general pace per bike type (section 4.4), after the 1
+  to 5 level proved uncalibrated: a time is the number a rider plans a day
+  by. A personal pace stays out.
 - **map-and-search.md section 11**, "No route planner on the map (owner
   2026-08-02)". Reversed 2026-10-14. The reason behind it still binds the
   planner: a control that looks like a planner and is not one is refused, so
@@ -80,12 +85,35 @@ shows, which is the point.
 - **The rail** gets a fourth icon after Ride tools: **Plan a ride** (two pins
   joined by a line), key `plan`, `/map?panel=plan`. The home page's
   "Plan a ride" link opens it the way "Check your route (GPX)" opens the
-  tools.
+  tools. While a stop is on the map the icon wears the rail's orange dot,
+  the one Layers wears for an active filter (map-and-search.md section
+  4.0), so a closed panel still says a ride is being planned (owner,
+  2026-10-15).
 - **The panel**, in the 320 px drawer, top to bottom: the bike chips
   (section 4.2), one instruction line ("Click the map to set a start, then
   click again for each stop"), the stops (section 4.1), the figures
   (section 4.4), the profile (section 4.5), what is along the ride
   (section 5), then Save, Download GPX and Clear (section 6).
+- **The line on the map** sits above every other line layer, the routes, the
+  surfaces, the climbs, and below the place icons, in the one stacking order
+  of map-and-search.md section 4.1 (owner 2026-10-15: "these routes must go
+  over any other layer, but stay below spot icons"). It is thin, 1.8 px at zoom 10
+  to 3 px at zoom 18 over a faint cream edge, so the surface band under it
+  stays readable on both sides (owner 2026-10-15).
+- **Show or hide the line** (owner 2026-10-15): an eye beside "Your ride"
+  in the panel (`#planLineToggle`) hides the ride line and shows it again,
+  so the surface under it can be read on its own; the stops, the profile and
+  the figures stay. The choice is a per-browser convenience
+  (`localStorage` `cc-plan-line`), kept across visits, never with a ride.
+- **Opening the planner with a ride on the map** takes the map to the ride
+  (`fitRide()`, clear of the drawer and the strip; owner 2026-10-15).
+- **The stops fold** once the ride has a start and an end: one line says
+  "5 stops, Petit Coo to Thier de Coo" with "show" beside the heading; the
+  list opens on it (owner 2026-10-15). Folded, that line is a tinted card
+  with a chevron, a click on it opens the list, and the open list sits in
+  the same tint, so the stops read as one block (owner 2026-10-15).
+- **One save**: Save to my rides saves under the name at the top of the
+  panel; there is no second name field (owner 2026-10-15).
 - **The ride outlives the panel.** Closing the panel keeps the line and the
   stops on the map. While a ride with at least two stops is on the map and the
   panel is closed, a **ride bar** sits at the foot of the map: "42.3 km ·
@@ -146,7 +174,32 @@ routes.
   The panel says so under the stops.
 - **Clear** empties the ride after a confirmation, and undo brings it back.
 
+**A new ride starts with its name** (owner 2026-10-15: "first step a user
+must add to a new ride plan is give it a name; then they can search for a
+start town and we pan/zoom to that location; there the user sets the first
+location"). The first block of the panel (`#planStart`):
+
+1. **Name your ride** (`#planRideName`, up to 80 characters, kept with the
+   draft and offered again by Save). The map takes no first stop without
+   it: a click, or Add to ride on a drawer, opens the panel on the name with
+   "Give your ride a name first."
+2. **Where do you start?** (`#planStartSearch`), shown once the ride has a
+   name and until it has a stop: a town or a street, through Photon in the
+   browser as the map search is (map-and-search.md section 7.2), with
+   `layer=city|district|locality|street` instead of the map search's towns
+   only, biased to the map's centre, towns listed before streets. Picking a
+   row flies the map there (zoom 13 for a town, 16 for a street) and says
+   "Click the map where you start."
+3. **The first click** sets the start, as before.
+
 ### 4.2 Legs, the engine, and the bike
+
+What each bike does to the route ("A road bike stays on paved roads...")
+sits behind an info icon beside "Your bike" (`#planWhyBtn`): hover or focus
+shows it, a click keeps it open, the next click closes it (owner
+2026-10-15). "From your settings." heads that bubble. Under the chips one
+switch stays: "Show every bike type" adds the other types, "Show fewer bike
+types" takes them away again, keeping the bike the ride is planned for.
 
 Two consecutive stops make a **leg**. Every leg is routed by our own
 routing engine (climb-elevation.md section 2b: Valhalla, one instance per
@@ -222,7 +275,7 @@ A place stop's row in the panel shows the category's kind icon and the
 place's name. Clicking any stop's name, a map point's as much as a place's,
 takes the map to the stop (owner 2026-10-14); hovering a row rings it.
 
-### 4.4 Figures
+### 4.4 Figures: the day
 
 - **Distance** is the sum of the routed legs' lengths, from the engine.
 - **Climbed and descended** are read from the leg heights with one rule:
@@ -233,37 +286,172 @@ takes the map to the stop (owner 2026-10-14); hovering a row rings it.
   it is the same for every ride, so two rides compare.
 - The figures follow the rider's distance and elevation units
   (account-and-auth.md section 9).
-- **Toughness** (owner 2026-10-14: "relative toughness based on the climb
-  per km ratio, one part pure distance, then something on top"), one rule in
-  `plan-model.js` `toughness()`: the distance gives a base from the routes'
-  length bands (`BestOfPreview::LENGTHS`: under 50 km is 1, 50 to 100 is 2,
-  100 to 150 is 3, past 150 is 4; the Medium band is split at 100 km because
-  this is one day), the metres climbed per km add to it (under 8 flat adds
-  nothing, 8 to 15 rolling adds 1, 15 to 25 hilly adds 2, 25 and over
-  mountainous adds 3), and the sum, capped at 5, reads in the routes'
-  difficulty words (`DifficultyVocabulary::LABELS`, Easy to Very hard), so a
-  planned ride and a recommended route speak the same scale. **The surface
-  weighs in** (owner 2026-10-15: "km on pavement vs gravel vs even rougher
-  has impact"): the distance that gives the base is the ride's effective
-  distance, a kilometre of gravel or compacted road counting 1.3 km and a
-  kilometre of rough road (cobbles, dirt, a path) 1.6 km
-  (`SURFACE_WEIGHT`); what the engine could not say counts as paved. The
-  surfaces come from the engine itself: `POST /map/plan/leg` walks the
-  routed leg with `/trace_attributes` (`App\Elevation\LegSurfaces`) and
-  folds its surface words (paved_smooth and paved are paved; compacted and
-  gravel are gravel; paved_rough, dirt, path and impassable are rough) into
-  metres per class, carried as `surfaces` with the leg and summed over the
-  ride (`surfaceMix`). The tile shows the word, the terrain, the m/km and,
-  when there is at least half a kilometre of it, the gravel and rough
-  kilometres. Examples: 46 km with 977 m is hilly (21 m/km), 1 plus 2,
-  Challenging; 40 km flat all on rough roads counts as 64 km, Moderate.
-  **A graphic under the tile shows how the level is built** (owner
-  2026-10-15): the distance bar split by surface (paved, gravel, rough,
-  unknown in grey) with the ride's km, its effective km and the base they
-  give; the climb gauge in the profile's purples with the m/km and what it
-  adds; and the five-step ladder with the level and its word.
+
+**Riding time at a steady pace** (owner 2026-10-15: "what else could we use
+for toughness instead of a 1 to 5 scale; as we have no usage data we can't
+compare the ride against someone's personal level; do we take into account
+all the ingredients that make a ride tougher; all, generally speaking"). The
+1 to 5 level of 2026-10-14 went: a "3" means nothing to a rider until they
+have ridden a "3", and there are no rides to calibrate it on. What a rider
+already knows is hours, and how many flat kilometres they can do in a day.
+So the tile holds one number, the riding time of one **reference rider** per
+bike type, and under it the ride's **flat equivalent**. No personal input,
+no account data: the pace is general, and it stays general (section 1).
+
+- **The model**, one pure function in `plan-model.js`, `rideTime(legs, bike)`.
+  For every height sample step of every routed leg (the engine's 30 m
+  resample, smoothed as the climbed rule smooths), the gradient of the step
+  and the leg's rolling resistance (its surface mix, section 4.4a, weighted
+  by metres) give the speed the reference rider holds at their power:
+  `P = m g v (sin θ + Crr cos θ) + ½ ρ CdA v³`, with ρ 1.2 kg/m³, solved for
+  `v`. On a descent where gravity alone gives more than the cap, the speed is
+  the cap: the bike's on paved road, 30 km/h on gravel, 22 km/h on rough
+  road; a leg's rolling resistance and cap are its surface mix's weighted
+  means, since the engine answers per leg. Below 4 km/h the rider walks at
+  4 km/h. An E-bike's motor stops
+  helping at 25 km/h: above that only the rider's own power counts. A leg
+  without heights is flat. The time is the sum of the steps, rounded to five
+  minutes: "4 h 45". It is riding time, not the day: stops, photos and lunch
+  are the rider's.
+- **The reference riders**, `PACE` in `plan-model.js`: the power the rider
+  holds all day, the drag area, the mass of rider plus bike plus a day's
+  bag, the rolling resistance on smooth asphalt, the paved descent cap.
+
+  | Bike | W | CdA m² | kg | Crr paved | cap km/h |
+  |---|---|---|---|---|---|
+  | Road | 150 | 0.36 | 90 | 0.005 | 42 |
+  | Gravel | 150 | 0.40 | 92 | 0.006 | 38 |
+  | MTB | 140 | 0.45 | 94 | 0.009 | 35 |
+  | E-bike | 100 own, 250 motor to 25 km/h | 0.50 | 105 | 0.007 | 35 |
+  | Handbike | 90 | 0.30 | 95 | 0.006 | 35 |
+  | Recumbent | 150 | 0.25 | 95 | 0.005 | 42 |
+  | Trike | 130 | 0.35 | 100 | 0.007 | 35 |
+  | Tandem | 300 | 0.45 | 170 | 0.006 | 42 |
+
+  Gravel rolls at 0.012, rough road at 0.020, an unknown surface at 0.007,
+  whatever the bike. These are round numbers for a steady day on a loaded
+  bike, not racing figures; they are the same for everyone, which is the
+  point.
+- **Feels like N flat km.** The same model, the same bike, on smooth level
+  asphalt: the ride's time divided by the flat speed. The tile's second line
+  reads "feels like 125 flat km", a number a rider sets beside their own
+  flat days. Example: 85 km with 1,200 m up and 20 km of gravel on a gravel
+  bike is about 4 h 45 and feels like 125 flat km; the same 85 km flat on
+  asphalt is 3 h 10.
+- **Time or distance** (owner 2026-10-15): a switch above the bars shows
+  both splits in minutes or in kilometres (`rideTime().metres`), and the
+  legends are text under each bar, big enough to read and wrapping, never
+  cut off.
+- **The graphic under the tile** (owner 2026-10-15: "show an infographic
+  about the toughness based on all these elements"): two bars of the same
+  riding time, each part with its minutes. **By surface**: on asphalt, on
+  gravel, on rough road, over every step, from each leg's surface shares
+  (`surfaceBars()`). **By gradient**: climbing (a step steeper than 2 %), on
+  the flat, descending (steeper than −2 %) (`gradientBars()`). Two splits,
+  not one, because a gravel climb is both (owner 2026-10-15: a leg from
+  Thier Antoine with 955 m of gravel, mostly climbing, read "0 min on
+  gravel" when climbing took the gravel's minutes). A part under half a
+  minute reads "under 1 min", never "0 min".
+- **What makes it tougher**, under the bar, one line each, only when it
+  applies, so a flat ride on a mild day shows nothing:
+  - **Steepest kilometre**, `steepestKm()`: the 1 km window of the profile
+    with the highest average gradient, from 4 %: "steepest km: 9 % at km 31".
+  - **Longest climb**, `longestClimb()`: the longest run of 100 m profile
+    bins at 2 % or steeper, a dip of up to 300 m not breaking it, from 1 km:
+    "longest climb: 6.2 km, 410 m up, 6.6 %".
+  - **Longest stretch without water or food**, `waterGap()`: from the along
+    list (section 5), the largest gap along the ride between the start, the
+    letter B places and the end, from 15 km; not shown while that letter's
+    list is capped, since the gap could be smaller than it looks.
+  - **Busy roads**: the kilometres on trunk, primary and secondary roads
+    without a dedicated or separated cycle lane, from 1 km, read per edge
+    from the engine (`LegSurfaces`: `road_class` and `cycle_lane`), carried
+    with the leg as `surfaces.busy` metres.
+  - **Daylight** for the ride's date: a date field under the figures, today
+    by default, kept with the browser's draft and never with a saved ride
+    (a saved ride is ridden on many days). Sunrise and sunset at the start
+    are computed in the browser (`sunTimes()`, the NOAA solar equations, a
+    minute's precision), shown in the rider's clock: "daylight 10 h 40,
+    08:12 to 18:52". When the riding time is longer than the daylight the
+    line says so.
+  - **The forecast** for that date, through our server (section 8): from 15
+    km/h, the day's dominant wind direction and its highest wind speed, the kilometres
+    ridden into it and with it (`windShares()`: the bearing of every profile
+    step within 60° of the wind's origin is headwind, within 60° of its
+    destination tailwind), the day's highest temperature from 28 °C, the
+    rain from 2 mm. "Wind 28 km/h from the south-west: 42 km into it, 25 km
+    with it · 31 °C · 6 mm rain". The forecast reaches 16 days; a later date
+    shows no line. Credited "Open-Meteo" on the line and on the credits page.
+- **The ride bar** (section 3) adds the time: "42.3 km · 610 m ↑ · 2 h 05 ·
+  3 stops".
+
+#### 4.4a The surfaces
+
+The surfaces come from the engine itself: `POST /map/plan/leg` walks the
+routed leg with `/trace_attributes` (`App\Elevation\LegSurfaces`) and folds
+its surface words (paved_smooth and paved are paved; compacted and gravel are
+gravel; paved_rough, dirt, path and impassable are rough) into metres per
+class, plus the busy metres above, carried as `surfaces` with the leg and
+summed over the ride (`surfaceMix`). The model reads them as rolling
+resistance; the graphic shows them as the surface bar's parts.
+
+**The engine guesses where OpenStreetMap is silent** (owner 2026-10-15,
+measured on a leg through Chevrouheid: four roads with no `surface` tag the
+engine called asphalt and dirt, 2.15 km the map draws as "surface not
+recorded"). Until the server knows (the to-do below), the browser reads the
+map's own surface lines where they are drawn: every 50 m of a leg, the
+point is looked up among the drawn surface layers (`surftile-*` for a
+recorded class, `surftodo-*` for none recorded), and the class found there
+replaces the engine's word for that stretch (`tileSurfaceClass()`,
+`mergeSurfaces()` in plan-model.js). A stretch keeps what it was seen as, so
+the reading grows as the rider looks along the ride; a stretch never drawn
+keeps the engine's split. Only with the Road surface overlay on, and only
+for what has been on screen at a zoom that draws the lines. "Surface not
+recorded" is its own part of the surface bar, in the map's red.
+
+**Street names** (owner 2026-10-15: "what about street names, I miss
+that info"). The same walk asks the engine for `edge.names` and the leg
+carries `streets`: each name with the metre it starts at, a run of one name
+merged, an unnamed road `null` (`LegSurfaces::read()`). A stop set on the
+map shows its street under its name instead of its coordinates
+(`stopStreet()`: where its next leg starts, the last stop where the last leg
+ends), and the profile's hover says the street at that point beside the km
+and the height (`streetAt()`). The names are OpenStreetMap's, from our own
+engine: nothing leaves our servers for them.
+
+An unnamed road says what it is instead (owner 2026-10-15: the hover was
+empty on a road OpenStreetMap names nothing, way 10744244 at Coo): each
+`streets` entry carries the road's kind from the engine's `edge.use`, road,
+track, path or cycleway, and the hover and the stop row read "unnamed road",
+"track", "path" or "cycle path" (`roadAt()`). The hover's marker sits at the same
+distance the name is read at: `pointAt()` walks the drawn line in metres,
+scaled to the engine's length, not by counting vertices (owner 2026-10-15:
+at Coo the marker sat on Thier de Coo while the ride was 600 m further, on
+the unnamed road, because the village part of the line has many vertices).
+
+**To do: the recorded surfaces on the server** (owner 2026-10-15, "add
+option 1 to the todo"). The weekly pipeline writes which OpenStreetMap ways
+carry a recorded surface, way id and class, to a table, and
+`POST /map/plan/leg` looks up each edge's way id (`edge.way_id` from the
+engine's `/trace_attributes`); an edge whose way is not there is "not
+recorded". Exact for the whole ride and every rider, with or without the
+overlay, from the same data and classes as the map's lines. Measure the
+table's size per onboarded country before building it; the browser reading
+above then goes.
 
 ### 4.5 The profile
+
+The profile is the strip along the foot of the map; the panel draws none of
+its own (owner 2026-10-15: "remove the height panel in the left drawer").
+A closed strip folds into a tab at the foot of the map, "Show the height
+profile" (`#planStripTab`), and a click opens it again; the same button sits
+under the figures in the panel (`#planStripOpen`) (owner 2026-10-15: closed,
+it could not be opened again). The strip slides down into the tab and back up
+(0.3 s), and what sits above it (the ride bar, the filter "!", the legend)
+moves with it; the legend folds into its corner the same way, its content at
+one fixed width so the text never rewraps mid-fold (owner 2026-10-15: it
+shot up to a tall shape before settling). Riders whose
+system asks for reduced motion get no animation (owner 2026-10-15).
 
 An SVG profile under the figures, drawn with the climb profile's grammar
 (climb-elevation.md section 6, `gradColor` bands: purple up, blue down,
@@ -276,6 +464,11 @@ a **strip along the foot of the map**, the map's width wide, with its own
 close button; the panel keeps its profile too while the owner compares the
 two (2026-10-14). The ride bar and the legend step up above the strip.
 
+While the strip is open, the map's bottom-edge furniture moves up with it:
+the ride bar, the filter "!" (just above the strip, at the left) and the
+surface legend (just above the strip, at the right; the bug button sits on
+the strip, so the legend keeps no gap for it there; owner 2026-10-15).
+
 ## 5. Along the ride
 
 As soon as every leg is routed, and 1.2 seconds after the last change, the
@@ -287,7 +480,8 @@ climbs near it (route-domain.md section 6.4, `RouteClimbService::climbsAlong()`)
 and the coverage points of the tiles that the browser reads along the same
 corridor. The corridor is fixed at 250 m (owner decision, section 11), not
 the ride check's picker: the planner's question is "what can I stop at",
-not "how wide shall I look".
+not "how wide shall I look". The letter B rows also feed the longest
+stretch without water or food (section 4.4).
 
 The list renders with `along-list.js` as the ride check renders it, one
 group per letter with its count, the first rows shown and the rest folded,
@@ -377,7 +571,7 @@ the Commons. The file is named after the ride ("La Redoute loop.gpx";
 the public API's `/v1/routes/{id}.gpx` is for recommended routes and stays
 what it is.
 
-## 7. Personal data: privacy notice version 5
+## 7. Personal data: privacy notice version 3
 
 A saved ride is personal data: a line the rider drew, with the places they
 chose, linked to their account. What the notice says about it, in the words
@@ -397,17 +591,30 @@ source of truth in code):
   ride as GeoJSON with its name, bike, figures and dates.
 
 Keys, five locales: `privacy.collect_rides`, `privacy.retention_rides`,
-`privacy.change.v5_rides`. **Version 5 is not significant**: the processing
-is optional and only happens when a rider saves a ride; nothing changes for
-data already given. It ships in the same change as the save (privacy-notice.md
-section 7a), and `PrivacyNoticeVersions::CURRENT` becomes 5 there.
+`privacy.change.v5_rides`. **Not significant**: the processing is optional
+and only happens when a rider saves a ride; nothing changes for data already
+given. It ships in privacy notice version 3, the one version that holds
+everything since the published version 2 (privacy-notice.md section 7a).
+
+**The forecast** (section 4.4), the change key `v6_forecast` in the same
+version 3: for the ride's date our server
+asks Open-Meteo for the day's forecast at one point, the middle of the ride
+rounded to 0.1° (about 10 km), with the date. Open-Meteo sees our server's
+address, that rounded point and the date; nothing about the rider, no
+account, no stops, no line. The answer is cached for three hours under the
+rounded point and the date, and nothing else is kept. Keys, five locales:
+`privacy.server_services_forecast` (under "Services our server asks") and
+`privacy.change.v6_forecast`. **Not significant**: no personal data is
+processed; it is a new service our server asks, and the notice names every
+one of those.
 
 ## 8. Endpoints and limiters
 
 | Endpoint | Who | CSRF id | Limiter |
 |---|---|---|---|
-| `POST /map/plan/leg` `{a: [lng, lat], b: [lng, lat], bike}` (GeoJSON order, as `/contribute/route`) → `{routed, coordinates, distanceM, heights, surfaces}`; `routed: false` carries no line, so nothing that is not a road ever comes from the server | everyone (owner decision, section 11) | `plan-leg` | `plan_leg` 600 per 10 minutes keyed `user-<id>`; `plan_leg_anon` 100 per day keyed on the salted address hash, the ride check's pattern |
+| `POST /map/plan/leg` `{a: [lng, lat], b: [lng, lat], bike}` (GeoJSON order, as `/contribute/route`) → `{routed, coordinates, distanceM, heights, surfaces, streets}`; `routed: false` carries no line, so nothing that is not a road ever comes from the server | everyone (owner decision, section 11) | `plan-leg` | `plan_leg` 600 per 10 minutes keyed `user-<id>`; `plan_leg_anon` 100 per day keyed on the salted address hash, the ride check's pattern |
 | `POST /map/plan/along` `{line: GeoJSON LineString}` → `{radiusM, climbs, groups, coverage}`, the ride check's lists; 2 to 5000 points, 500 m to 400 km, else 400 (`bad_request`, `length_range`) | everyone | `plan-along` | `plan_along` 60 per 10 minutes per user; `plan_along_anon` 20 per day |
+| `POST /map/plan/weather` `{lat, lng, date}` → `{forecast: {date, windKmh, windFromDeg, tempMaxC, rainMm} \| null}`; `null` when the service is off (`FORECAST_URL` empty), does not answer, or the date is past its 16 days; a malformed point or date is 400 | everyone | `plan-weather` | `plan_weather` 60 per 10 minutes per user; `plan_weather_anon` 30 per day |
 | `POST /map/plan/save` `{id?, name, bike, stops, line, figures}` → `{id}` | signed in | `plan-save` | `plan_save` 30 per 10 minutes |
 | `GET /map/plan/ride/{id}` → the saved ride's JSON | its rider | | `coverage_read`'s budget |
 | `GET /account/rides`, `POST /account/rides/{id}/delete` | its rider | `plan-delete` | |
@@ -423,6 +630,13 @@ section 7a), and `PrivacyNoticeVersions::CURRENT` becomes 5 there.
 - `/map/plan/along` is `RideCheckService` on a line instead of a file: same
   corridor, same letters, same caps, same climbs rule. No GPX is parsed and
   nothing is stored.
+- `/map/plan/weather` is `App\Weather\Forecast`: the point rounded to 0.1°
+  before anything else, one GET of Open-Meteo's daily forecast (wind speed
+  and dominant direction at 10 m, highest temperature, rain sum; the day in
+  the place's own time zone), a 5 second timeout, the answer cached for
+  three hours in the `cache.forecast` pool under the rounded point and the
+  date, so a ride dragged around a town costs one request an afternoon.
+  Nothing of the rider reaches the service (section 7).
 - The line sent to `save` is checked against the stops it claims: at most
   25 stops, the line within 400 km (the route-domain cap), the figures
   recomputed server-side from the line's length and refused when they differ
@@ -447,6 +661,21 @@ open another rider's ride, before any other test.
 - **Node** (`web/tests/js`): inserting a place at its km along; the climbed
   and descended rule on a known sample; the profile's gap for a leg without
   heights; the GPX writer's output on a two-leg ride; the ride bar's text.
+  The day (section 4.4): the flat speed of each reference rider at its
+  power, a 6 % climb at about 9 km/h for the road rider, a descent at its
+  cap, gravel slower than asphalt, a leg without heights as flat, the flat
+  equivalent above the distance when there is climbing, the E-bike's motor
+  stopping at 25 km/h; the steepest kilometre and the longest climb on a
+  known profile; the water gap with and without places, and none while
+  capped; sunrise and sunset in Brussels on both solstices to the minute;
+  the wind shares of a line ridden east under a west wind.
+- **PHP, the day.** `LegSurfaces` counts the busy metres from `road_class`
+  and `cycle_lane`. `Forecast`: the point rounded to 0.1° before the request,
+  one request for two asks of the same rounded point and date, `null` for a
+  date past 16 days, for no service and for no answer. `POST /map/plan/weather`:
+  the token, 400 for a bad point or date, the two limiters, `forecast: null`
+  passed through. The test environment has no forecast service
+  (`FORECAST_URL` empty in `.env.test`), as it has no engine.
 - **Copy.** The five locales carry every new key (translations.md).
 
 ## 10. Build order
@@ -466,7 +695,7 @@ commit as the code they describe.
    figures, profile, the along list, Add to ride on the drawer, the ride
    bar, the GPX writer, five locales. Node tests first. Built 2026-10-14.
 5. **Saving.** `planned_ride`, save and open, the Rides tab, delete, the
-   export, privacy notice version 5, five locales.
+   export, the privacy notice change `v5_rides`, five locales.
 6. **Ship.** The three wiki passages (section 2), the changelog note, the
    roadmap item marked shipped on the desk.
 

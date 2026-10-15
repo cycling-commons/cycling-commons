@@ -163,6 +163,14 @@ services:
             $valhallaUrl: '%env(ELEVATION_URL)%'
             $endpoints: '@App\Elevation\ElevationEndpoints'
 
+    # The forecast for a planned ride's date (route-planner.md section 4.4):
+    # Open-Meteo, asked by our server for a point rounded to 0.1°, the answer
+    # cached three hours. Empty FORECAST_URL = off, the panel shows no line.
+    App\Weather\Forecast:
+        arguments:
+            $forecastUrl: '%env(FORECAST_URL)%'
+            $cache: '@cache.forecast'
+
     # One Valhalla per continent, each serving only the .hgt tiles it holds, so
     # a climb outside Europe has to be asked of the instance that has its ground
     # (climb-elevation.md §2b-i). ELEVATION_URL remains both the default and the
