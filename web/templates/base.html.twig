@@ -59,6 +59,8 @@
 <script src="{{ asset('js/cc-dates.js') }}"></script>
 <script src="{{ asset('js/cc-units.js') }}"></script>
 <script src="{{ asset('js/a11y.js') }}"></script>
+{# After signing out, the browser forgets the ride being planned here (route-planner.md section 6.0). #}
+<script src="{{ asset('js/signed-out.js') }}"></script>
 {# Filter dropdowns and the pager's page-length select submit on change. Must
    be a FILE, not an onchange= attribute: the CSP blocks inline handlers and
    does it silently. See the script's own header. #}

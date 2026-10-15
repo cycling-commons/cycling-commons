@@ -528,7 +528,13 @@ change** (owner 2026-10-15, `plan-model.js` `WORK_KEEP_MS`, `workFresh()`),
 so a closed tab or browser loses nothing; on the first visit after that the
 browser forgets them. A cleared ride keeps its steps, so undo still brings it
 back. A draft from before the time stamp is kept and stamped at its next
-change. The privacy notice's local storage paragraph says so.
+change. **Signing out forgets both** (owner 2026-10-15): the redirect home
+after a sign-out carries `#signed-out` (`SignedOutMarkSubscriber`, on the
+firewall's `LogoutEvent`), and `assets/js/signed-out.js`, on every page of
+the base layout, removes the two keys and then the mark; the display and map
+preferences stay. A fragment never reaches a server, so the mark is in no
+log. This answers a shared computer: the next person finds an empty
+planner. The privacy notice's local storage paragraph says so.
 
 **Owner decision, 2026-10-15, not built yet.** The Commons is a data system,
 not a users system: a ride to keep becomes a file the rider downloads and

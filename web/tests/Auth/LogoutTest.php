@@ -78,6 +78,30 @@ final class LogoutTest extends WebTestCase
     }
 
     /**
+     * Signing out marks the way home with `#signed-out`, so the browser
+     * forgets the ride being planned there (route-planner.md section 6.0,
+     * owner 2026-10-15). A fragment never reaches a server, so the mark
+     * tells our side nothing and lands in no log.
+     */
+    public function testSigningOutMarksTheWayHomeSoTheBrowserForgetsTheRide(): void
+    {
+        $client = static::createClient();
+        $user = $this->createVerifiedUser('logout-mark@example.com', 'hunter2secure!');
+        $client->loginUser($user);
+        $client->request('GET', '/account/contributions');   // the session the token lives in
+
+        /** @var CsrfTokenManagerInterface $csrfManager */
+        $csrfManager = static::getContainer()->get(CsrfTokenManagerInterface::class);
+        $client->request('POST', '/logout', ['_csrf_token' => $csrfManager->getToken('logout')->getValue()]);
+
+        self::assertResponseRedirects();
+        $location = (string) $client->getResponse()->headers->get('Location');
+        self::assertStringEndsWith('#signed-out', $location);
+        self::assertSame('/', (string) parse_url($location, \PHP_URL_PATH), 'the way home is unchanged, only marked');
+        self::assertSame(1, substr_count($location, '#'), 'one fragment, never two');
+    }
+
+    /**
      * A GET request to /logout must NOT log the user out (route only accepts POST).
      * The firewall no longer intercepts GET; Symfony returns 405 Method Not Allowed.
      */
