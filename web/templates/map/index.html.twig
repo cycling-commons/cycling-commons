@@ -196,6 +196,20 @@
       {# View mode is the primary filter (curated best-of vs the full backlog), so it sits right
          under Region. Its active button is styled bright (#mode in the CSS) so the current mode
          is obvious at a glance. #}
+      {# Map presets (docs/specs/map-presets.md section 3): one chip per preset,
+         the default applied at open, Save as preset for the current switches.
+         A visitor sees one sign-in line. presets.js fills it. #}
+      <div class="grp" id="presets">
+        <h3>{{ 'map.presets_h'|trans }} <a class="dl-all ico" id="presetsEdit" href="{{ path('settings', {tab: 'presets'}) }}" title="{{ 'map.presets_edit'|trans }}" aria-label="{{ 'map.presets_edit'|trans }}"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></a></h3>
+        <div class="hint" id="presetsSignIn" hidden><a href="{{ path('login') }}">{{ 'map.presets_sign_in'|trans }}</a></div>
+        <div class="chips" id="presetChips" hidden></div>
+        <div class="preset-edited" id="presetEdited" hidden><span>{{ 'map.presets_changed'|trans }} <b id="presetEditedName"></b>.</span><button type="button" class="pri" id="presetSaveChanges">{{ 'map.presets_save_changes'|trans }}</button><button type="button" id="presetReset">{{ 'map.presets_reset'|trans }}</button></div>
+        <div class="preset-saveas" id="presetSaveAsBox" hidden><input type="text" id="presetName" maxlength="40" placeholder="{{ 'map.presets_name_ph'|trans }}"><button type="button" id="presetSaveBtn">{{ 'map.presets_save'|trans }}</button></div>
+        <div class="hint" id="presetStatus" hidden></div>
+        <div class="hint" id="presetsTap" hidden>{{ 'map.presets_tap'|trans }}</div>
+        <div class="hint" id="presetsTool" hidden></div>
+      </div>
+
       <div class="grp">
         <h3>{{ 'map.view_mode'|trans }}</h3>
         {# Everything carries the server-rendered `on`, because it is the GLOBAL
@@ -984,6 +998,11 @@ window.CC_VENDOR = {{ {
    rider, and the account's Rides page. The map talks to these, never to the
    routing engine. #}
 <script nonce="{{ csp_nonce() }}">
+  {# Map presets (map-presets.md section 3): the rider's list, the endpoints and the token; a visitor gets only signedIn: false. #}
+  window.CC_PRESETS = {{ ({signedIn: app.user ? true : false, page: scout_review|default(false) ? 'scout' : 'map'}|merge(app.user ? {
+    list: map_presets|default([]),
+    save: path('map_presets_save'), token: csrf_token('map-preset')
+  } : {}))|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT') b-or constant('JSON_UNESCAPED_SLASHES'))|raw }};
   window.CC_PLAN = {{ ({
     leg: path('map_plan_leg'), legToken: csrf_token('plan-leg'),
     along: path('map_plan_along'), alongToken: csrf_token('plan-along'),

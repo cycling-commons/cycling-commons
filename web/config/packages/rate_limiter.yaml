@@ -31,6 +31,8 @@ framework:
                 adapter: cache.app
             cache.plan_save_limiter:
                 adapter: cache.app
+            cache.map_preset_save_limiter:
+                adapter: cache.app
             cache.coverage_read_limiter:
                 adapter: cache.app
             cache.coverage_photo_limiter:
@@ -204,6 +206,14 @@ framework:
             limit: 30
             interval: '10 minutes'
             cache_pool: cache.plan_save_limiter
+        # Saving a map preset (map-presets.md section 5): one row per save,
+        # after the body's shape is checked. Signed in only, so no visitor
+        # limiter; a rider keeps six at most.
+        map_preset_save:
+            policy: sliding_window
+            limit: 30
+            interval: '10 minutes'
+            cache_pool: cache.map_preset_save_limiter
         # Coverage query plane (coverage-provider.md §5): the
         # app's first anonymous-read limiter — per-IP sliding window, generous
         # for normal map use, bounded against scraping (access-terms rule).
@@ -482,6 +492,8 @@ when@test:
                 cache.plan_along_anon_limiter:
                     adapter: cache.adapter.array
                 cache.plan_save_limiter:
+                    adapter: cache.adapter.array
+                cache.map_preset_save_limiter:
                     adapter: cache.adapter.array
                 cache.coverage_read_limiter:
                     adapter: cache.adapter.array

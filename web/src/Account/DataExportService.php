@@ -63,6 +63,7 @@ final class DataExportService
         $zip->addFromString('consent.json', $this->json($this->consent($userId)));
         $zip->addFromString('translations.json', $this->json($this->translations($userId)));
         $zip->addFromString('rides.geojson', $this->json($this->rides($userId)));
+        $zip->addFromString('map-presets.json', $this->json($this->mapPresets($userId)));
 
         // addFile() reads at close(); addFromString() would hold every photo in RAM.
         $staged = $this->stagePhotos($userId, $zip);
@@ -249,6 +250,22 @@ final class DataExportService
              FROM translation_proposal WHERE submitter_id = ? ORDER BY created_at',
             [$userId],
         );
+    }
+
+    /**
+     * The map presets the rider keeps (docs/specs/map-presets.md section 6):
+     * the name, the tools it is used for, the switches and the dates.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function mapPresets(int $userId): array
+    {
+        return $this->decodeAll($this->db->fetchAllAssociative(
+            "SELECT p.id, p.name, COALESCE((SELECT json_agg(u.context ORDER BY array_position(ARRAY['map','plan','ride','scout']::text[], u.context::text)) FROM map_preset_use u WHERE u.preset_id = p.id), '[]'::json) AS uses,
+                    p.settings, p.created_at, p.updated_at
+             FROM map_preset p WHERE p.user_id = ? ORDER BY p.created_at, p.id",
+            [$userId],
+        ), ['settings', 'uses']);
     }
 
     /**

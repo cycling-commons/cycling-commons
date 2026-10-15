@@ -19,6 +19,7 @@ framework:
             - plan-leg
             - plan-along
             - plan-save
+            - map-preset
             - plan-delete
             - scout-tags
             - scout-traffic

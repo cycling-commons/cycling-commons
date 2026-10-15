@@ -859,6 +859,8 @@ settings:
   heading: 'Einstellungen'
   tab_profile: 'Profil'
   tab_security: 'Sicherheit'
+  tab_presets: "Kartenvoreinstellungen"
+  tab_data: "Deine Daten"
   section_identity: 'Identität'
   label_email: 'E-Mail'
   email_hint: 'Um Ihre E-Mail-Adresse zu ändern, <a href="/de/contact?topic=question">schreiben Sie uns</a>.'
@@ -874,14 +876,34 @@ settings:
   view_public_save_off: "Klicke unten auf Profil speichern, um deine öffentliche Seite zu verbergen."
   cancel: 'Abbrechen'
   section_preferences: 'Fahrvorlieben'
+  presets_h: "Kartenvoreinstellungen"
+  presets_help: "Eine Voreinstellung ist ein Satz Kartenschalter unter einem Namen: welche Ebenen zu sehen sind, welche Overlays, der Ansichtsmodus und die Saison- und Radfilter. Die Karte öffnet mit deiner Standardvoreinstellung. Nur du siehst deine Voreinstellungen."
+  presets_new: "+ Neue Voreinstellung"
+  presets_count: "{n} von {max} Voreinstellungen"
+  presets_edit: "Bearbeiten"
+  presets_make_default: "Als Standard"
+  presets_delete: "Löschen"
+  presets_delete_confirm: "Diese Voreinstellung löschen?"
+  presets_name: "Name"
+  presets_facets: "Facetten je Ebene"
+  presets_facets_help: "Eine Facette, bei der alle Chips an sind, bleibt so, wie die Karte sie hat."
+  presets_use_for: "Diese Voreinstellung verwenden für"
+  presets_use_map: "Standard"
+  presets_use_plan: "Fahrt planen"
+  presets_use_ride: "Meine Fahrt prüfen"
+  presets_use_scout: "Scout-Prüfung"
+  presets_cancel: "Abbrechen"
+  presets_save: "Voreinstellung speichern"
+  presets_none: "Noch keine Voreinstellungen."
   section_security: 'Sicherheit'
+  section_password: "Passwort"
   twofa_label: 'Zwei-Faktor-Authentifizierung (2FA)'
   twofa_enabled: '2FA ist auf deinem Konto aktiviert.'
   twofa_disabled: 'Füge eine zusätzliche Sicherheitsebene zu deinem Konto hinzu.'
   twofa_manage: '2FA verwalten ↗'
   twofa_setup: '2FA einrichten ↗'
   notice: '<b>Dein Profil bleibt privat, bis du Öffentliches Profil einschaltest.</b> Eingeschaltet sind dein Anzeigename, die Zahl deiner Beiträge und deine bestätigten Routen öffentlich. Ausgeschaltet sehen andere nur deinen anonymen Namen, nie deinen Anzeigenamen. Daten kommen unter <b>ODbL 1.0</b> in die Commons, Medien unter <b>CC BY-SA 4.0</b>.'
-  section_export: 'Deine Daten herunterladen'
+  section_export: "Eine Kopie herunterladen"
   export_help: 'Alles, was wir über dich gespeichert haben, in einer einzigen ZIP-Datei: dein Konto, deine Beiträge, deine Nachrichten, deine Lizenz-Einwilligungen und deine Fotos als Dateien. Dein Passwort und deine Zwei-Faktor-Geheimnisse sind nie dabei.'
   label_export_password: 'Aktuelles Passwort'
   export_password_help: 'Bestätigt, dass du es bist, bevor wir die Datei zusammenstellen.'
@@ -1264,6 +1286,20 @@ map:
   rail_sections: 'Kartenbereiche'
   rail_search: 'Suche & Region'
   rail_layers: 'Ebenen & Filter'
+  presets_h: "Voreinstellungen"
+  presets_edit: "Voreinstellungen in den Einstellungen bearbeiten"
+  presets_sign_in: "Melde dich an, um Voreinstellungen zu speichern"
+  presets_tap: "Tippe eine Voreinstellung an, um jeden Schalter darunter auf einmal zu setzen."
+  presets_save_as: "+ Als Voreinstellung speichern"
+  presets_name_ph: "Gib dieser Voreinstellung einen Namen"
+  presets_save: "Speichern"
+  presets_changed: "Geändert, seit du gewählt hast:"
+  presets_save_changes: "Änderungen speichern"
+  presets_reset: "Zurücksetzen"
+  presets_saved: "Gespeichert."
+  presets_failed: "Die Voreinstellung konnte nicht gespeichert werden."
+  presets_full: "Du hast schon 6 Voreinstellungen. Lösche zuerst eine in den Einstellungen."
+  presets_tool_line: "{tool} verwendet {name}. Verlässt du es, kommen deine Schalter zurück."
   rail_tools: 'Tourwerkzeuge'
   rail_key: 'Legende'
   # The ride planner (docs/specs/route-planner.md): the rail section, its panel, the ride bar and the drawer button.
@@ -4997,6 +5033,7 @@ changelog:
   v097_curator_proposals: "<b>Lies die Fahrplan-Vorschläge der Fahrenden.</b> Die Kuration sieht die Vorschläge, die Fahrende schicken, samt Bildern, bevor sie öffentlich werden."
   v097_fixes: "<b>Unter den kleineren Korrekturen:</b> ein Wasserhahn aus einem Register steht nicht mehr neben demselben Wasserhahn, den Radfahrende bestätigt haben, und die Abdeckungsseite erklärt ihre Zahlen unter dem Globus wie unter der Tabelle."
   v097_grouped_pins: "<b>Eine Nadel für eine Gruppe.</b> Fünf oder mehr Orte einer Art, die dicht beieinander stehen, etwa die vierzig Chalets eines Ferienparks, erscheinen als eine Nadel mit einer Zahl. Fahre darüber oder öffne sie, um zu sehen, für wie viele sie steht."
+  v097_presets: "<b>Kartenvoreinstellungen.</b> Speichere die Schalter, die du auf der Karte an haben willst, unter einem Namen, in den Einstellungen oder direkt auf der Karte, und wähle eine, mit der die Karte öffnet. Bis zu sechs, nur für dich."
   v097_websites: "<b>Websites, die irgendwohin führen.</b> Eine Website-Adresse wird beim Eingang geprüft, ob von Radfahrenden, einem Register oder OpenStreetMap: eine tote Adresse oder eine geparkte Domain wird nicht gezeigt, und das Formular sagt es dir, wenn du eine eintippst."
   v096_denmark: "<b>Dänemark ist auf der Karte.</b> Du kannst dort jetzt Orte, Anstiege und Routen finden und hinzufügen."
   v096_scout: "<b>Füge eine Fahrt von der Scout-Seite aus hinzu.</b> Ein Knopf 'Eine Scout-Fahrt hinzufügen' öffnet die Durchsicht der Fahrt auf der Karte. Die Seite sagt auch, wo es die App gibt, und dass Scout mit einem Rückradar auch den Verkehr auf deinen Straßen misst."

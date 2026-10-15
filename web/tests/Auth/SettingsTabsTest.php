@@ -11,8 +11,8 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * Settings two-tab layout (Profile / Security, account-and-auth.md §8): default tab,
- * ?tab=security activation, and a failed password submission landing on the
+ * Settings tabs (Profile / Map presets / Security, account-and-auth.md §8): default tab,
+ * ?tab=security and ?tab=presets activation, and a failed password submission landing on the
  * Security tab so the errors are visible.
  *
  * Test isolation: DAMA\DoctrineTestBundle wraps each test in a rolled-back
@@ -88,6 +88,39 @@ final class SettingsTabsTest extends WebTestCase
         self::assertSelectorExists('#tabbtn-security[aria-selected="true"]');
         self::assertSelectorExists('#tab-security.on');
         self::assertSelectorNotExists('#tab-profile.on');
+    }
+
+    /** Downloading the data and deleting the account are a tab of their own (owner 2026-10-15). */
+    public function testQueryParamActivatesYourDataTab(): void
+    {
+        $client = static::createClient();
+        $plain = $this->createUser('tabs-data@example.com', 'securepass12345!', 'Tabs Data Rider');
+        $this->loginAs($client, 'tabs-data@example.com', $plain);
+
+        $client->request('GET', '/account/settings?tab=data');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('#tabbtn-data[aria-selected="true"]');
+        self::assertSelectorExists('#tab-data.on form[action$="/account/settings/export"]');
+        self::assertSelectorExists('#tab-data.on #delete');
+        self::assertSelectorNotExists('#tab-security #delete');
+        self::assertSelectorNotExists('#tab-security form[action$="/account/settings/export"]');
+    }
+
+    /** Map presets are a tab of their own, opened by the map's pencil (docs/specs/map-presets.md section 4). */
+    public function testQueryParamActivatesMapPresetsTab(): void
+    {
+        $client = static::createClient();
+        $plain = $this->createUser('tabs-presets@example.com', 'securepass12345!', 'Tabs Presets Rider');
+        $this->loginAs($client, 'tabs-presets@example.com', $plain);
+
+        $client->request('GET', '/account/settings?tab=presets');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('#tabbtn-presets[aria-selected="true"]');
+        self::assertSelectorExists('#map-presets.on #mpList');
+        self::assertSelectorNotExists('#tab-profile.on');
+        self::assertSelectorNotExists('#tab-profile #mpList');
     }
 
     public function testWrongPasswordLandsOnSecurityTab(): void

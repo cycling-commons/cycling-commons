@@ -10,6 +10,8 @@ use App\Account\UpdatesSubscription;
 use App\Entity\User;
 use App\Form\SettingsPasswordType;
 use App\Form\SettingsType;
+use App\Map\MapPresets;
+use App\Map\PresetCatalog;
 use App\Media\RiderCreditSync;
 use App\Routing\LocalePrefix;
 use App\Service\BaseLocationService;
@@ -45,6 +47,8 @@ final class SettingsController extends AbstractController
         private readonly RiderCreditSync $creditSync,
         private readonly UpdatesSubscription $updates,
         private readonly DisplayNameCheck $nameCheck,
+        private readonly MapPresets $mapPresets,
+        private readonly PresetCatalog $presetCatalog,
         // The one budget for every password check outside the login form
         // (rate_limiter.yaml password_reauth): no authenticator runs here, so
         // neither login throttling nor the account lockout would count these.
@@ -146,7 +150,12 @@ final class SettingsController extends AbstractController
 
         $activeTab = 'security' === $request->query->get('tab')
             || ($passwordForm->isSubmitted() && !$passwordForm->isValid())
-            ? 'security' : 'profile';
+            ? 'security'
+            : match ($request->query->get('tab')) {
+                'presets' => 'presets',
+                'data' => 'data',
+                default => 'profile',
+            };
 
         $baseRegionSlugs = [];
         if ([] !== $user->getBaseRegionIds()) {
@@ -167,6 +176,9 @@ final class SettingsController extends AbstractController
             'page_description' => 'meta.settings_description',
             'nav_active' => '',
             'cc_user' => $user,
+            // Map presets (map-presets.md section 4): the list and the catalogue the editor draws.
+            'map_presets' => $this->mapPresets->rowsFor($user),
+            'preset_catalog' => $this->presetCatalog->build(),
             'profileForm' => $profileForm,
             'passwordForm' => $passwordForm,
             'active_tab' => $activeTab,
@@ -222,7 +234,7 @@ final class SettingsController extends AbstractController
         if (!$this->isCsrfTokenValid('delete_request', $request->request->get('_token'))) {
             $this->addFlash('error', 'flash.invalid_token');
 
-            return $this->redirectToRoute('settings', ['tab' => 'security']);
+            return $this->redirectToRoute('settings', ['tab' => 'data']);
         }
 
         // Password re-check before issuing a deletion code (shared-session).
@@ -230,18 +242,18 @@ final class SettingsController extends AbstractController
         if ('' !== $password && !$this->passwordTryAllowed($user)) {
             $this->addFlash('error', 'flash.reauth_too_many');
 
-            return $this->redirectToRoute('settings', ['tab' => 'security']);
+            return $this->redirectToRoute('settings', ['tab' => 'data']);
         }
         if ('' === $password || !$this->passwordHasher->isPasswordValid($user, $password)) {
             $this->addFlash('error', 'flash.current_password_incorrect');
 
-            return $this->redirectToRoute('settings', ['tab' => 'security']);
+            return $this->redirectToRoute('settings', ['tab' => 'data']);
         }
 
         $this->deletionService->requestDeletion($user);
         $this->addFlash('success', 'flash.deletion_code_sent');
 
-        return $this->redirectToRoute('settings', ['tab' => 'security']);
+        return $this->redirectToRoute('settings', ['tab' => 'data']);
     }
 
     /**
@@ -256,7 +268,7 @@ final class SettingsController extends AbstractController
         if (!$this->isCsrfTokenValid('delete_confirm', $request->request->get('_token'))) {
             $this->addFlash('error', 'flash.invalid_token');
 
-            return $this->redirectToRoute('settings', ['tab' => 'security']);
+            return $this->redirectToRoute('settings', ['tab' => 'data']);
         }
 
         $code = (string) $request->request->get('deletion_code', '');
@@ -266,7 +278,7 @@ final class SettingsController extends AbstractController
         if (!$this->deletionService->confirmDeletion($user, $code, $request->request->getBoolean('keep_media_credit'))) {
             $this->addFlash('error', 'flash.deletion_code_invalid');
 
-            return $this->redirectToRoute('settings', ['tab' => 'security']);
+            return $this->redirectToRoute('settings', ['tab' => 'data']);
         }
 
         $request->getSession()->invalidate();

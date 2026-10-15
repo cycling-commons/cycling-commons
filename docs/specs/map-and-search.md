@@ -469,6 +469,9 @@ map module opens `#drawer` behind its back.
 
 ### 4.1 Layer toggles
 
+Above everything in the panel sits the Presets group: the switches of 4.1
+to 4.4 saved under a name, [map-presets.md](map-presets.md).
+
 - The Layers panel lists the catalog layers (localized label + icon + colour), each
   individually toggleable, with a **`shown/total`** count that
   reflects the current mode and filters (`layerCounts()`). **Both parts are

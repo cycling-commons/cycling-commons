@@ -859,6 +859,8 @@ settings:
   heading: 'Instellingen'
   tab_profile: 'Profiel'
   tab_security: 'Beveiliging'
+  tab_presets: "Kaartpresets"
+  tab_data: "Je gegevens"
   section_identity: 'Identiteit'
   label_email: 'E-mail'
   email_hint: 'Wil je je e-mailadres wijzigen? <a href="/nl/contact?topic=question">Schrijf ons</a>.'
@@ -874,14 +876,34 @@ settings:
   view_public_save_off: "Klik hieronder op Profiel opslaan om je openbare pagina te verbergen."
   cancel: 'Annuleren'
   section_preferences: 'Rijvoorkeuren'
+  presets_h: "Kaartpresets"
+  presets_help: "Een preset is een set kaartschakelaars onder een naam: welke lagen zichtbaar zijn, welke overlays, de weergave, en de seizoens- en fietsfilters. De kaart opent met je standaard. Alleen jij ziet je presets."
+  presets_new: "+ Nieuwe preset"
+  presets_count: "{n} van {max} presets"
+  presets_edit: "Bewerk"
+  presets_make_default: "Maak standaard"
+  presets_delete: "Verwijder"
+  presets_delete_confirm: "Deze preset verwijderen?"
+  presets_name: "Naam"
+  presets_facets: "Facetten per laag"
+  presets_facets_help: "Een facet met alle chips aan blijft zoals de kaart hem heeft."
+  presets_use_for: "Gebruik deze preset voor"
+  presets_use_map: "Standaard"
+  presets_use_plan: "Rit plannen"
+  presets_use_ride: "Mijn rit checken"
+  presets_use_scout: "Scout-review"
+  presets_cancel: "Annuleer"
+  presets_save: "Preset bewaren"
+  presets_none: "Nog geen presets."
   section_security: 'Beveiliging'
+  section_password: "Wachtwoord"
   twofa_label: 'Twee-factor-authenticatie (2FA)'
   twofa_enabled: '2FA is ingeschakeld op je account.'
   twofa_disabled: 'Voeg een extra beveiligingslaag toe aan je account.'
   twofa_manage: '2FA beheren ↗'
   twofa_setup: '2FA instellen ↗'
   notice: '<b>Je profiel is privé tot je Openbaar profiel aanzet.</b> Staat het aan, dan zijn je weergavenaam, het aantal bijdragen en je geverifieerde routes openbaar. Staat het uit, dan zien anderen alleen je anonieme naam, nooit je weergavenaam. Gegevens komen in de Commons onder <b>ODbL 1.0</b>, media onder <b>CC BY-SA 4.0</b>.'
-  section_export: 'Je gegevens downloaden'
+  section_export: "Een kopie downloaden"
   export_help: 'Alles wat we over je bewaren, in één ZIP-bestand: je account, je bijdragen, je berichten, je licentietoestemmingen en je foto''s als bestanden. Je wachtwoord en tweefactorgeheimen zitten er nooit in.'
   label_export_password: 'Huidig wachtwoord'
   export_password_help: 'Bevestigt dat jij het bent voordat we het bestand samenstellen.'
@@ -1261,6 +1283,20 @@ map:
   rail_sections: 'Kaartsecties'
   rail_search: 'Zoeken & regio'
   rail_layers: 'Lagen & filters'
+  presets_h: "Presets"
+  presets_edit: "Bewerk je presets in Instellingen"
+  presets_sign_in: "Meld je aan om presets te bewaren"
+  presets_tap: "Tik op een preset om elke schakelaar hieronder in één keer te zetten."
+  presets_save_as: "+ Bewaar als preset"
+  presets_name_ph: "Geef deze preset een naam"
+  presets_save: "Bewaar"
+  presets_changed: "Gewijzigd sinds je koos voor"
+  presets_save_changes: "Wijzigingen bewaren"
+  presets_reset: "Terugzetten"
+  presets_saved: "Bewaard."
+  presets_failed: "De preset kon niet worden bewaard."
+  presets_full: "Je hebt al 6 presets. Verwijder er eerst een in Instellingen."
+  presets_tool_line: "{tool} gebruikt {name}. Verlaat je het, dan komen je schakelaars terug."
   rail_tools: 'Ritgereedschap'
   rail_key: 'Legenda'
   # The ride planner (docs/specs/route-planner.md): the rail section, its panel, the ride bar and the drawer button.
@@ -4996,6 +5032,7 @@ changelog:
   v097_curator_proposals: "<b>Lees de voorstellen van rijders voor de routekaart.</b> Regiobeheerders zien de voorstellen die rijders sturen, met afbeeldingen, voordat ze openbaar worden."
   v097_fixes: "<b>Onder de kleinere verbeteringen:</b> een kraan uit een register staat niet meer naast dezelfde kraan die fietsers bevestigden, en de dekkingspagina legt haar aantallen uit onder zowel de wereldbol als de tabel."
   v097_grouped_pins: "<b>Eén speld voor een groep.</b> Vijf of meer plekken van één soort die dicht bij elkaar staan, zoals de veertig chalets van een vakantiepark, verschijnen als één speld met een aantal. Beweeg erover of open hem om te zien voor hoeveel hij staat."
+  v097_presets: "<b>Kaartpresets.</b> Bewaar de schakelaars die je op de kaart aan wilt onder een naam, in Instellingen of direct op de kaart, en kies er een waarmee de kaart opent. Tot zes, alleen van jou."
   v097_websites: "<b>Websites die ergens heen leiden.</b> Een websiteadres wordt gecontroleerd zodra het binnenkomt, van een fietser, een register of OpenStreetMap: een dood adres of een geparkeerd domein wordt niet getoond, en het formulier zegt het als je er een intypt."
   v096_denmark: "<b>Denemarken staat op de kaart.</b> Je kunt er nu plekken, klimmen en routes vinden en toevoegen."
   v096_scout: "<b>Voeg een rit toe vanaf de Scout-pagina.</b> Een knop 'Een Scout-rit toevoegen' opent het nakijken van je rit op de kaart. De pagina zegt ook waar je de app krijgt, en dat Scout met een achterradar ook het verkeer meet op de wegen waar je fietst."

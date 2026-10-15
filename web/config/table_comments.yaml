@@ -70,6 +70,13 @@ tables:
         Google Safe Browsing verdict for one URL, keyed by a hash of it, asked when a rider sends
         the link in and shown to the curator who reviews it. A fact about a URL and not about a
         submission, so every submission pointing at the same page shares one row.
+    map_preset: >-
+        The map switches a rider saved under a name: the view mode, the layers and overlays
+        that are on, the Best of season and bike chips and the facet chips; at most six per
+        rider (docs/specs/map-presets.md).
+    map_preset_use: >-
+        Which map preset a rider uses for each tool: the map at open, Plan a ride, Check my
+        ride, Scout review; one per tool (docs/specs/map-presets.md).
     website_check: >-
         One verdict per website host: live, parked, dead or unknown, the address checked, and
         when it is due again (docs/specs/website-liveness.md). Written by the sweep, the wizard

@@ -85,6 +85,11 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Planner/Entity'
                 prefix: 'App\Planner\Entity'
                 alias: Planner
+            Map:
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Map/Entity'
+                prefix: 'App\Map\Entity'
+                alias: Map
 
 when@prod:
     doctrine:

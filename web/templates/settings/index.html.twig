@@ -21,9 +21,15 @@
     <button type="button" role="tab" id="tabbtn-profile" aria-controls="tab-profile"
             aria-selected="{{ active_tab == 'profile' ? 'true' : 'false' }}"
             tabindex="{{ active_tab == 'profile' ? '0' : '-1' }}">{{ 'settings.tab_profile'|trans }}</button>
+    <button type="button" role="tab" id="tabbtn-presets" aria-controls="map-presets"
+            aria-selected="{{ active_tab == 'presets' ? 'true' : 'false' }}"
+            tabindex="{{ active_tab == 'presets' ? '0' : '-1' }}">{{ 'settings.tab_presets'|trans }}</button>
     <button type="button" role="tab" id="tabbtn-security" aria-controls="tab-security"
             aria-selected="{{ active_tab == 'security' ? 'true' : 'false' }}"
             tabindex="{{ active_tab == 'security' ? '0' : '-1' }}">{{ 'settings.tab_security'|trans }}</button>
+    <button type="button" role="tab" id="tabbtn-data" aria-controls="tab-data"
+            aria-selected="{{ active_tab == 'data' ? 'true' : 'false' }}"
+            tabindex="{{ active_tab == 'data' ? '0' : '-1' }}">{{ 'settings.tab_data'|trans }}</button>
   </div>
 
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
@@ -259,6 +265,7 @@
       </div>
     </div>
 
+
     {# Section header like the other .sec headers; the toggle's old bold label
        is redundant under it, so the row keeps only the description + switch.
        Two-column split per the rest of the page: toggle left, view-link right. #}
@@ -345,10 +352,34 @@
 
   </div>{# /#tab-profile #}
 
+  {# Map presets, a tab of its own (owner 2026-10-15, docs/specs/map-presets.md section 4). #}
+  <div class="dpane {{ active_tab == 'presets' ? 'on' }}" id="map-presets" role="tabpanel" aria-labelledby="tabbtn-presets">
+    {# ── Map presets (docs/specs/map-presets.md section 4): the switches a rider
+       wants on the map, under a name; settings/map-presets.js lists and edits
+       them against the same endpoints the map uses. ── #}
+    <p class="help">{{ 'settings.presets_help'|trans }}</p>
+    <div class="mp-list" id="mpList"></div>
+    <div class="mp-foot"><button type="button" class="btn ghost" id="mpNew">{{ 'settings.presets_new'|trans }}</button><span class="help" id="mpCount"></span></div>
+    <div class="mp-editor" id="mpEditor" hidden>
+      <div class="field"><label for="mpName">{{ 'settings.presets_name'|trans }}</label><input type="text" id="mpName" maxlength="40"></div>
+      <div class="field"><label>{{ 'map.view_mode'|trans }}</label><div class="mp-seg" id="mpMode"></div></div>
+      <div class="field"><label>{{ 'map.data_layers'|trans }}</label><div class="mp-rows" id="mpLayers"></div></div>
+      <div class="field"><label>{{ 'map.map_overlays'|trans }}</label><div class="mp-rows" id="mpOverlays"></div></div>
+      <div class="field"><label>{{ 'item_type.road-surface.label'|trans }}</label><div class="mp-pchips" id="mpSurfaces"></div></div>
+      <div class="field"><label>{{ 'map.route_network'|trans }}</label><div class="mp-pchips" id="mpRoutes"></div></div>
+      <div class="field"><label>{{ 'map.best_season'|trans }}</label><div class="mp-pchips" id="mpSeasons"></div></div>
+      <div class="field"><label>{{ 'map.best_bike'|trans }}</label><div class="mp-pchips" id="mpBikes"></div></div>
+      <div class="field"><label>{{ 'settings.presets_facets'|trans }}</label><div id="mpFacets"></div><p class="help">{{ 'settings.presets_facets_help'|trans }}</p></div>
+      <div class="field"><label>{{ 'settings.presets_use_for'|trans }}</label><div class="mp-pchips" id="mpUse"></div></div>
+      <div class="help" id="mpStatus" hidden></div>
+      <div class="submit-row mp-actions"><button type="button" class="btn ghost" id="mpCancel">{{ 'settings.presets_cancel'|trans }}</button><button type="button" class="btn" id="mpSave">{{ 'settings.presets_save'|trans }}</button></div>
+    </div>
+  </div>{# /#map-presets #}
+
   <div class="dpane {{ active_tab == 'security' ? 'on' }}" id="tab-security" role="tabpanel" aria-labelledby="tabbtn-security">
 
   {# ── Security ── #}
-  <h2 class="sec">{{ 'settings.section_security'|trans }}</h2>
+  <h2 class="sec">{{ 'settings.section_password'|trans }}</h2>
   {{ form_start(passwordForm, {attr: {novalidate: 'novalidate', id: 'password-form', class: 'cc-validate'}}) }}
   {% include 'partials/_form_errors.html.twig' with {form: passwordForm} %}
     <div class="grid-2">
@@ -387,11 +418,16 @@
     </a>
   </div>
 
+  </div>{# /#tab-security #}
+
+  {# Your data: download it, or delete the account (owner 2026-10-15, account-and-auth.md §8). #}
+  <div class="dpane {{ active_tab == 'data' ? 'on' }}" id="tab-data" role="tabpanel" aria-labelledby="tabbtn-data">
+
   {# ── Download my data (docs/specs/account-and-auth.md §11) ──
-     Sits directly above the danger zone on purpose: the last thing a rider
-     reads before closing an account should be that they can take a copy with
-     them first. #}
-  <div style="margin-top:1.6rem;padding-top:1.2rem;border-top:1px solid rgba(20,22,14,.1)" id="export">
+     First in the Your data tab, directly above the danger zone on purpose:
+     the last thing a rider reads before closing an account should be that
+     they can take a copy with them first. #}
+  <div id="export">
     <h2 class="sec">{{ 'settings.section_export'|trans }}</h2>
     <p class="fhelp" style="margin:0 0 1rem">{{ 'settings.export_help'|trans }}</p>
     <form method="post" action="{{ path('settings_export') }}">
@@ -462,7 +498,7 @@
     </details>
   </div>
 
-  </div>{# /#tab-security #}
+  </div>{# /#tab-data #}
 
 </div>
 
@@ -476,7 +512,7 @@
         b.tabIndex = on ? 0 : -1;
       });
       document.querySelectorAll('.dpane[role=tabpanel]').forEach(p => p.classList.toggle('on', p.id === btn.getAttribute('aria-controls')));
-      history.replaceState(null, '', btn.id === 'tabbtn-security' ? '?tab=security' : location.pathname);
+      history.replaceState(null, '', btn.id === 'tabbtn-security' ? '?tab=security' : btn.id === 'tabbtn-presets' ? '?tab=presets' : btn.id === 'tabbtn-data' ? '?tab=data' : location.pathname);
       if (focus) btn.focus();
     };
     tabs.forEach((btn, i) => {
@@ -502,6 +538,21 @@
 <script src="{{ asset('js/auth-validate.js') }}" defer></script>
 <script src="{{ asset('settings/base-location.js') }}" defer></script>
 <script src="{{ asset('settings/public-profile.js') }}" defer></script>
+<script nonce="{{ csp_nonce() }}">
+  window.CC_PRESET_CATALOG = {{ preset_catalog|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT') b-or constant('JSON_UNESCAPED_SLASHES'))|raw }};
+  window.CC_PRESETS_PAGE = {{ {
+    list: map_presets,
+    save: path('map_presets_save'), use: path('map_presets_use', {id: 0}), 'delete': path('map_presets_delete', {id: 0}),
+    token: csrf_token('map-preset'),
+    strings: {
+      none: 'settings.presets_none'|trans, count: 'settings.presets_count'|trans,
+      edit: 'settings.presets_edit'|trans, makeDefault: 'settings.presets_make_default'|trans, 'delete': 'settings.presets_delete'|trans,
+      deleteConfirm: 'settings.presets_delete_confirm'|trans, failed: 'map.presets_failed'|trans, full: 'map.presets_full'|trans,
+      uses: {map: 'settings.presets_use_map'|trans, plan: 'settings.presets_use_plan'|trans, ride: 'settings.presets_use_ride'|trans, scout: 'settings.presets_use_scout'|trans}
+    }
+  }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT') b-or constant('JSON_UNESCAPED_SLASHES'))|raw }};
+</script>
+<script src="{{ asset('settings/map-presets.js') }}" defer></script>
 <script src="{{ asset('settings/updates-cadence.js') }}" defer></script>
 <script src="{{ asset('js/name-hint.js') }}" defer></script>
 {% endblock %}

@@ -107,6 +107,18 @@
   .ib .fdot{display:none;position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;
     background:var(--trail);border:1.5px solid var(--chrome-bg)}
   .ib.filtered .fdot{display:block}
+  /* map presets on the Layers panel (map-presets.md section 3) */
+  #presets .dl-all.ico{margin-left:.45rem;padding:.2rem .35rem;display:inline-flex;align-items:center;text-decoration:none}
+  #presets .chip.plus{border-style:dashed}
+  #presets .chip .ed{width:6px;height:6px;border-radius:50%;background:var(--ink);display:none;margin-left:.3rem}
+  #presets .chip.on.edited .ed{display:inline-block}
+  .preset-edited{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin-top:.6rem;background:rgb(var(--chrome-fg) / .08);border-radius:6px;padding:.45rem .6rem;font-size:.8rem}
+  .preset-edited[hidden],.preset-saveas[hidden]{display:none}
+  .preset-edited button{background:transparent;border:1px solid rgb(var(--chrome-fg) / .35);color:var(--chrome-fg-solid);font-family:var(--mono);font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;padding:.25rem .5rem;border-radius:4px;cursor:pointer}
+  .preset-edited button.pri{background:var(--trail);border-color:var(--trail);color:var(--ink)}
+  .preset-saveas{display:flex;gap:.4rem;margin-top:.6rem}
+  .preset-saveas input{flex:1;min-width:0;font:inherit;font-size:.9rem;padding:.4rem .55rem;border:1px solid rgb(var(--chrome-fg) / .3);border-radius:5px;background:rgb(var(--chrome-fg) / .06);color:var(--chrome-fg-solid)}
+  .preset-saveas button{background:var(--trail);color:var(--ink);border:none;border-radius:5px;font-family:var(--sans);font-weight:700;font-size:.8rem;padding:.3rem .7rem;cursor:pointer}
   /* Site nav + language + account: one flyout, opening RIGHT of the rail and
      anchored to its bottom, because the button sits at the bottom of a 48px
      column. `.nav-open` is the same class initRailChrome() already toggles. */

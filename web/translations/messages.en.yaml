@@ -859,6 +859,8 @@ settings:
   heading: 'Settings'
   tab_profile: 'Profile'
   tab_security: 'Security'
+  tab_presets: "Map presets"
+  tab_data: "Your data"
   section_identity: 'Identity'
   label_email: 'Email'
   email_hint: 'To change your email address, <a href="/contact?topic=question">write to us</a>.'
@@ -874,14 +876,34 @@ settings:
   view_public_save_off: "Click Save profile below to hide your public page."
   cancel: 'Cancel'
   section_preferences: 'Riding preferences'
+  presets_h: "Map presets"
+  presets_help: "A preset is a set of map switches under a name: which layers show, which overlays, the view mode, and the season and bike filters. The map opens with your default. Only you see your presets."
+  presets_new: "+ New preset"
+  presets_count: "{n} of {max} presets"
+  presets_edit: "Edit"
+  presets_make_default: "Make default"
+  presets_delete: "Delete"
+  presets_delete_confirm: "Delete this preset?"
+  presets_name: "Name"
+  presets_facets: "Per-layer facets"
+  presets_facets_help: "A facet with every chip on is left as the map has it."
+  presets_use_for: "Use this preset for"
+  presets_use_map: "Default"
+  presets_use_plan: "Plan a ride"
+  presets_use_ride: "Check my ride"
+  presets_use_scout: "Scout review"
+  presets_cancel: "Cancel"
+  presets_save: "Save preset"
+  presets_none: "No presets yet."
   section_security: 'Security'
+  section_password: "Password"
   twofa_label: 'Two-factor authentication (2FA)'
   twofa_enabled: '2FA is enabled on your account.'
   twofa_disabled: 'Add an extra layer of security to your account.'
   twofa_manage: 'Manage 2FA ↗'
   twofa_setup: 'Set up 2FA ↗'
   notice: '<b>Your profile is private unless you turn on Public profile.</b> With it on, your display name, your contribution counts and your verified routes are public. With it off, others see only your anonymous name, never your display name. Data joins the Commons under <b>ODbL 1.0</b>, media under <b>CC BY-SA 4.0</b>.'
-  section_export: 'Download your data'
+  section_export: "Download a copy"
   export_help: 'Everything we hold about you, in one ZIP file: your account, your contributions, your messages, your licence consents, and your photos as files. Your password and two-factor secrets are never included.'
   label_export_password: 'Current password'
   export_password_help: 'Confirms it is you before we assemble the file.'
@@ -1879,6 +1901,20 @@ map:
   rail_sections: 'Map sections'
   rail_search: 'Search & region'
   rail_layers: 'Layers & filters'
+  presets_h: "Presets"
+  presets_edit: "Edit your presets in Settings"
+  presets_sign_in: "Sign in to save presets"
+  presets_tap: "Tap a preset to set every switch below at once."
+  presets_save_as: "+ Save as preset"
+  presets_name_ph: "Name this preset"
+  presets_save: "Save"
+  presets_changed: "Changed since you picked"
+  presets_save_changes: "Save changes"
+  presets_reset: "Reset"
+  presets_saved: "Saved."
+  presets_failed: "Could not save the preset."
+  presets_full: "You hold 6 presets already. Delete one in Settings first."
+  presets_tool_line: "{tool} uses {name}. Leaving it puts your switches back."
   rail_tools: 'Ride tools'
   rail_key: 'Map key'
   # The ride planner (docs/specs/route-planner.md): the rail section, its panel, the ride bar and the drawer button.
@@ -5014,6 +5050,7 @@ changelog:
   v097_curator_proposals: "<b>Read riders' roadmap proposals.</b> Curators see the proposals riders send, pictures included, before they go public."
   v097_fixes: "<b>Among smaller fixes:</b> a register tap no longer stands beside the same tap that riders confirmed, and the coverage page explains its counts under both the globe and the table."
   v097_grouped_pins: "<b>One pin for a crowd.</b> Five or more places of one kind that stand close together, such as the forty chalets of a holiday park, show as one pin with a count. Hover it or open it to see how many it stands for."
+  v097_presets: "<b>Map presets.</b> Save the switches you want on the map under a name, in Settings or right on the map, and pick one that opens the map. Up to six, yours alone."
   v097_websites: "<b>Websites that lead somewhere.</b> A website address is checked when it comes in, from a rider, a register or OpenStreetMap: a dead address or a parked domain is not shown, and the form says so when you type one."
   v096_denmark: "<b>Denmark is on the map.</b> You can now find and add places, climbs and routes there."
   v096_scout: "<b>Add a ride from the Scout page.</b> An 'Add a Scout ride' button opens the ride review on the map. The page also says where to get the app, and that with a rear radar Scout also measures the traffic on the roads you ride."

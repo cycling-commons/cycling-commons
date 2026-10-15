@@ -552,4 +552,36 @@ final class DataExportTest extends WebTestCase
         $client->followRedirect();
         self::assertSelectorTextContains('.flash-error', 'already requested your data');
     }
+
+    /**
+     * Map presets (docs/specs/map-presets.md section 6): the export carries
+     * every preset with its name, whether it opens the map, its settings and
+     * its dates, and only the rider's own.
+     */
+    public function testMapPresetsAreExported(): void
+    {
+        $client = $this->client();
+        $user = $this->login($client, 'presets');
+        $db = static::getContainer()->get(Connection::class);
+        $settings = json_encode(['mode' => 'curated', 'layers' => ['climbs'], 'overlays' => [], 'seasons' => [], 'bikes' => [], 'facets' => []], \JSON_THROW_ON_ERROR);
+        $mine = (int) $db->fetchOne(
+            "INSERT INTO map_preset (user_id, name, settings, created_at, updated_at) VALUES (?, 'Gravel weekend', ?::jsonb, NOW(), NOW()) RETURNING id",
+            [(int) $user->getId(), $settings],
+        );
+        $db->executeStatement("INSERT INTO map_preset_use (user_id, context, preset_id) VALUES (?, 'map', ?), (?, 'plan', ?)", [(int) $user->getId(), $mine, (int) $user->getId(), $mine]);
+        $db->executeStatement(
+            "INSERT INTO map_preset (user_id, name, settings, created_at, updated_at) VALUES (?, 'Not mine', ?::jsonb, NOW(), NOW())",
+            [(int) $this->makeUser('export-presets-stranger@example.com')->getId(), $settings],
+        );
+        $token = $this->exportToken($client);
+
+        [$zip, $bytes] = $this->download($client, $token);
+
+        $presets = $this->entry($zip, 'map-presets.json');
+        self::assertCount(1, $presets);
+        self::assertSame('Gravel weekend', $presets[0]['name']);
+        self::assertSame(['map', 'plan'], $presets[0]['uses']);
+        self::assertSame('curated', $presets[0]['settings']['mode']);
+        self::assertStringNotContainsString('Not mine', $bytes);
+    }
 }

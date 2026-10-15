@@ -39,6 +39,7 @@ use App\Coverage\RoutesManifest;
 use App\Coverage\SurfaceManifest;
 use App\Entity\User;
 use App\Map\MapHint;
+use App\Map\MapPresets;
 use App\Media\PhotoLocationConfirmation;
 use App\Moderation\DeskSeen;
 use App\Moderation\ModerationScopeProvider;
@@ -69,7 +70,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 final class MapController extends AbstractController
 {
-    public function __construct(private readonly DeskSeen $deskSeen, private readonly RegionLabels $regionLabels, private readonly CountryTimezones $timezones)
+    public function __construct(private readonly DeskSeen $deskSeen, private readonly RegionLabels $regionLabels, private readonly CountryTimezones $timezones, private readonly MapPresets $mapPresets)
     {
     }
 
@@ -129,6 +130,8 @@ final class MapController extends AbstractController
             'basemap_icons' => BasemapIcons::set(),
             'map_i18n' => $this->mapI18n($translator),
             'regions' => $regionRows,
+            // The rider's map presets (map-presets.md section 3); a visitor has none.
+            'map_presets' => $user instanceof User ? $this->mapPresets->rowsFor($user) : [],
             'rider_prefs' => [
                 // Per-account uid so a shared browser does not inherit another rider's toggles.
                 'uid' => $user instanceof User ? $user->getUuid() : null,
@@ -729,6 +732,15 @@ final class MapController extends AbstractController
             // throws from the Map constructor rather than returning a
             // map that never paints, so catalog-load.js has something
             // to catch and something to say.
+            // Map presets (map-presets.md section 3).
+            'presets' => [
+                'saveAs' => $t->trans('map.presets_save_as'),
+                'saved' => $t->trans('map.presets_saved'),
+                'failed' => $t->trans('map.presets_failed'),
+                'full' => $t->trans('map.presets_full'),
+                'toolLine' => $t->trans('map.presets_tool_line'),
+                'tools' => ['plan' => $t->trans('settings.presets_use_plan'), 'ride' => $t->trans('settings.presets_use_ride')],
+            ],
             'gpuUnsupported' => $t->trans('map.gpu_unsupported'),
             'filtersHide' => $t->trans('map.filters_hide'),
             'filtersHideOne' => $t->trans('map.filters_hide_one'),

@@ -8,6 +8,7 @@ import { map, initMapControls, addSatellite, markStyleReady, initCoordPopup,
          localiseBasemapLabels } from './map-init.js';
 import { initRideCheck } from './ride-check.js';
 import { initPlan } from './plan.js';
+import { initPresets } from './presets.js';
 import { CATALOG, active, layerByKey, cityLink, mode } from './catalog.js';
 import { addMapillary, initMapillaryDock, initStreetToggle } from './mapillary.js';
 import { curScope, scopeLabel, renderScopeChips, applyScope, initScope, initScopeRail,
@@ -352,6 +353,8 @@ import { layerGlyph } from './icons.js';
   initAddClimbHere();
 
   initChips();          // MUST follow initScopeRail/initAreaNudge
+  // Last: the default preset applies over everything the panel remembered (map-presets.md section 3).
+  initPresets();
 
   initMapillaryDock();
 

@@ -857,6 +857,8 @@ settings:
   heading: 'Paramètres'
   tab_profile: 'Profil'
   tab_security: 'Sécurité'
+  tab_presets: "Préréglages de la carte"
+  tab_data: "Vos données"
   section_identity: 'Identité'
   label_email: 'Email'
   email_hint: 'Pour modifier votre adresse e-mail, <a href="/fr/contact?topic=question">écrivez-nous</a>.'
@@ -872,14 +874,34 @@ settings:
   view_public_save_off: "Cliquez sur Enregistrer le profil ci-dessous pour masquer votre page publique."
   cancel: 'Annuler'
   section_preferences: 'Préférences de pratique'
+  presets_h: "Préréglages de la carte"
+  presets_help: "Un préréglage est un ensemble de commutateurs de la carte sous un nom : les couches affichées, les calques, le mode d'affichage, et les filtres saison et vélo. La carte s'ouvre avec votre préréglage par défaut. Vous seul voyez vos préréglages."
+  presets_new: "+ Nouveau préréglage"
+  presets_count: "{n} préréglages sur {max}"
+  presets_edit: "Modifier"
+  presets_make_default: "Par défaut"
+  presets_delete: "Supprimer"
+  presets_delete_confirm: "Supprimer ce préréglage ?"
+  presets_name: "Nom"
+  presets_facets: "Facettes par couche"
+  presets_facets_help: "Une facette dont toutes les puces sont actives reste telle que la carte la tient."
+  presets_use_for: "Utiliser ce préréglage pour"
+  presets_use_map: "Par défaut"
+  presets_use_plan: "Planifier une sortie"
+  presets_use_ride: "Vérifier ma sortie"
+  presets_use_scout: "Revue Scout"
+  presets_cancel: "Annuler"
+  presets_save: "Enregistrer le préréglage"
+  presets_none: "Pas encore de préréglage."
   section_security: 'Sécurité'
+  section_password: "Mot de passe"
   twofa_label: 'Authentification à deux facteurs (2FA)'
   twofa_enabled: 'La 2FA est activée sur votre compte.'
   twofa_disabled: 'Ajoutez une couche de sécurité supplémentaire à votre compte.'
   twofa_manage: 'Gérer la 2FA ↗'
   twofa_setup: 'Configurer la 2FA ↗'
   notice: '<b>Votre profil reste privé tant que vous n''activez pas Profil public.</b> Activé, votre nom affiché, le nombre de vos contributions et vos itinéraires vérifiés sont publics. Désactivé, les autres ne voient que votre nom anonyme, jamais votre nom affiché. Les données rejoignent le Commons sous <b>ODbL 1.0</b>, les médias sous <b>CC BY-SA 4.0</b>.'
-  section_export: 'Télécharger vos données'
+  section_export: "Télécharger une copie"
   export_help: 'Tout ce que nous détenons à votre sujet, dans un seul fichier ZIP : votre compte, vos contributions, vos messages, vos consentements de licence et vos photos sous forme de fichiers. Votre mot de passe et vos secrets à deux facteurs n''y figurent jamais.'
   label_export_password: 'Mot de passe actuel'
   export_password_help: 'Confirme que c''est bien vous avant que nous assemblions le fichier.'
@@ -1259,6 +1281,20 @@ map:
   rail_sections: 'Sections de la carte'
   rail_search: 'Recherche & région'
   rail_layers: 'Couches & filtres'
+  presets_h: "Préréglages"
+  presets_edit: "Modifier vos préréglages dans les Réglages"
+  presets_sign_in: "Connectez-vous pour enregistrer des préréglages"
+  presets_tap: "Touchez un préréglage pour régler d'un coup chaque commutateur ci-dessous."
+  presets_save_as: "+ Enregistrer comme préréglage"
+  presets_name_ph: "Nommez ce préréglage"
+  presets_save: "Enregistrer"
+  presets_changed: "Modifié depuis que vous avez choisi"
+  presets_save_changes: "Enregistrer les changements"
+  presets_reset: "Rétablir"
+  presets_saved: "Enregistré."
+  presets_failed: "Le préréglage n'a pas pu être enregistré."
+  presets_full: "Vous avez déjà 6 préréglages. Supprimez-en un d'abord dans les Réglages."
+  presets_tool_line: "{tool} utilise {name}. En le quittant, vos commutateurs reviennent."
   rail_tools: 'Outils de sortie'
   rail_key: 'Légende'
   # The ride planner (docs/specs/route-planner.md): the rail section, its panel, the ride bar and the drawer button.
@@ -4992,6 +5028,7 @@ changelog:
   v097_curator_proposals: "<b>Lisez les propositions des cyclistes pour la feuille de route.</b> La curation voit les propositions envoyées par les cyclistes, images comprises, avant qu'elles deviennent publiques."
   v097_fixes: "<b>Parmi les petites corrections :</b> un point d'eau du registre n'apparaît plus à côté du même point d'eau confirmé par des cyclistes, et la page de couverture explique ses chiffres sous le globe comme sous le tableau."
   v097_grouped_pins: "<b>Une épingle pour un groupe.</b> Cinq lieux ou plus d'un même type qui se tiennent côte à côte, comme les quarante chalets d'un parc de vacances, apparaissent comme une seule épingle avec un nombre. Survolez-la ou ouvrez-la pour voir combien elle représente."
+  v097_presets: "<b>Préréglages de la carte.</b> Enregistrez sous un nom les commutateurs que vous voulez actifs, dans les Réglages ou directement sur la carte, et choisissez celui qui ouvre la carte. Jusqu'à six, rien qu'à vous."
   v097_websites: "<b>Des sites web qui mènent quelque part.</b> Une adresse de site web est vérifiée à son arrivée, qu'elle vienne d'un cycliste, d'un registre ou d'OpenStreetMap : une adresse morte ou un domaine parqué n'est pas affiché, et le formulaire le dit quand vous en saisissez une."
   v096_denmark: "<b>Le Danemark est sur la carte.</b> Vous pouvez maintenant y trouver et y ajouter des lieux, des cols et des itinéraires."
   v096_scout: "<b>Ajoutez une sortie depuis la page Scout.</b> Un bouton 'Ajouter une sortie Scout' ouvre la revue de la sortie sur la carte. La page dit aussi où obtenir l'application, et qu'avec un radar arrière Scout mesure aussi le trafic sur les routes où vous roulez."

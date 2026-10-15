@@ -1377,7 +1377,7 @@ and sign in the next day: `/account`.
 
 ### Settings (`App\Controller\SettingsController`, `/account/settings`)
 
-Two tabs:
+Four tabs:
 
 - **Profile** (default): account status; Identity section (display name,
   with under it the name others see (owner 2026-10-03): "Others see:" and,
@@ -1394,15 +1394,23 @@ Two tabs:
   on, the display name, contribution counts and verified routes are public;
   off, others see only the anonymous name. There is no per-contribution
   choice, so the notice never offers one.
-- **Security**: password change, 2FA block, danger zone (account deletion §10).
+- **Map presets**: the rider's named sets of map switches, the editor and the
+  default the map opens with ([map-presets.md](map-presets.md) section 4),
+  opened directly by `?tab=presets`.
+- **Security**: password change, 2FA block.
+- **Your data** (owner 2026-10-15): download my data (§11) and the danger
+  zone (account deletion §10), opened directly by `?tab=data`; the deletion
+  email links to it (`?tab=data#delete`).
 
 Contract points:
 
 - **Server picks the initial tab**: `?tab=security`, or a failed password-form
   submission (the 422 re-render must show the tab holding the errors);
-  everything else defaults to Profile. Pane switching itself is client-side.
-- Password-change and both deletion-flow redirects target
-  `settings?tab=security` so flashes land on the visible tab.
+  `?tab=presets` opens Map presets, `?tab=data` Your data; everything else
+  defaults to Profile. Pane switching itself is client-side.
+- Password-change redirects target `settings?tab=security`; the export and
+  both deletion-flow redirects target `settings?tab=data`, so flashes land on
+  the visible tab.
 - Password change requires the **current password** (checked against the
   hasher) before the new one is accepted. The check spends a try from
   `password_reauth`, shared with the deletion request below
@@ -1412,6 +1420,12 @@ Contract points:
   simple, honest option is documented in the controller docblock.
 - Saving settings applies the (possibly changed) locale to the session
   immediately; clearing it falls back to browser/site default.
+- **Buttons are an orange outline** (owner 2026-10-15): transparent, a
+  1.5 px border in the brand orange and the label in a deeper orange
+  (`#B83D0E`, 4.56:1 on the page; the brand orange itself is 2.5:1, too faint
+  for small text), right under the last field of their form. A secondary
+  action (Cancel, New preset) is a grey outline; a deletion keeps
+  `.btn-danger`. Pinned by `settings-buttons.test.cjs`.
 - Preference checkbox groups use the **chip-check pill pattern** (label wraps
   the input; `:has(input:checked)` drives the active look): the established
   styling shared with the propose-route form.

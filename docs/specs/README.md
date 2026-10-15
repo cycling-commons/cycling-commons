@@ -51,6 +51,9 @@ Revisit when there is a separate infrastructure repository to hold it.
 - `route-planner.md`: the one-day ride planner on the map: stops, the bike
   costing, the profile, what is along the ride, saved rides and the GPX.
   Specified, pending implementation.
+- `map-presets.md`: the map switches a rider saves under a name, up to six,
+  one the default the map opens with; the Presets group on the Layers panel
+  and the section in Settings.
 - `website-liveness.md`: there must be a site behind a website address: the
   live/parked/dead/unknown verdict, the sweep, the wizard's and the provider
   ingest's gate, and what a rider sees.

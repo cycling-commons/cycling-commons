@@ -271,7 +271,7 @@ final class AccountDeletionTest extends WebTestCase
         // session on a shared machine must not be enough to start a deletion.
         $client->request('POST', '/account/settings/delete-request', ['_token' => $token, 'current_password' => $plain]);
 
-        self::assertResponseRedirects('/account/settings?tab=security');
+        self::assertResponseRedirects('/account/settings?tab=data');
         $client->followRedirect();
         self::assertSelectorTextContains('.flash-success', 'Check your email');
 
@@ -279,7 +279,7 @@ final class AccountDeletionTest extends WebTestCase
         $crawler = $client->request('GET', '/account/settings');
         $token = $crawler->filter('form[action$="/account/settings/delete-request"] input[name="_token"]')->attr('value');
         $client->request('POST', '/account/settings/delete-request', ['_token' => $token, 'current_password' => 'wrong-password']);
-        self::assertResponseRedirects('/account/settings?tab=security');
+        self::assertResponseRedirects('/account/settings?tab=data');
         $client->followRedirect();
         self::assertSelectorExists('.flash-error');
 

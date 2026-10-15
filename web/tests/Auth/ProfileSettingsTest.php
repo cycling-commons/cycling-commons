@@ -354,7 +354,7 @@ final class ProfileSettingsTest extends WebTestCase
             $crawler = $client->request('GET', '/account/settings');
             $token = $crawler->filter('form[action$="/account/settings/delete-request"] input[name="_token"]')->attr('value');
             $client->request('POST', '/account/settings/delete-request', ['_token' => $token, 'current_password' => $current]);
-            self::assertResponseRedirects('/account/settings?tab=security');
+            self::assertResponseRedirects('/account/settings?tab=data');
             $client->followRedirect();
         };
 

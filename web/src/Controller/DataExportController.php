@@ -47,21 +47,21 @@ final class DataExportController extends AbstractController
         if (!$this->isCsrfTokenValid('data_export', $request->request->get('_token'))) {
             $this->addFlash('export_error', 'flash.invalid_token');
 
-            return $this->redirectToRoute('settings', ['tab' => 'security']);
+            return $this->redirectToRoute('settings', ['tab' => 'data']);
         }
 
         // docs/specs/account-and-auth.md §11 — limiter before password (no unmetered oracle).
         if (!$dataExportLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
             $this->addFlash('export_error', 'flash.export_rate_limited');
 
-            return $this->redirectToRoute('settings', ['tab' => 'security']);
+            return $this->redirectToRoute('settings', ['tab' => 'data']);
         }
 
         $password = (string) $request->request->get('current_password', '');
         if ('' === $password || !$this->passwordHasher->isPasswordValid($user, $password)) {
             $this->addFlash('export_error', 'flash.current_password_incorrect');
 
-            return $this->redirectToRoute('settings', ['tab' => 'security']);
+            return $this->redirectToRoute('settings', ['tab' => 'data']);
         }
 
         $path = $this->exports->export($user);

@@ -862,6 +862,8 @@ settings:
   heading: 'Ajustes'
   tab_profile: 'Perfil'
   tab_security: 'Seguridad'
+  tab_presets: "Preajustes del mapa"
+  tab_data: "Tus datos"
   section_identity: 'Identidad'
   label_email: 'Correo electrónico'
   email_hint: 'Para cambiar su dirección de correo, <a href="/es/contact?topic=question">escríbanos</a>.'
@@ -877,14 +879,34 @@ settings:
   view_public_save_off: "Haz clic en Guardar el perfil abajo para ocultar tu página pública."
   cancel: 'Cancelar'
   section_preferences: 'Preferencias de rodaje'
+  presets_h: "Preajustes del mapa"
+  presets_help: "Un preajuste es un conjunto de interruptores del mapa bajo un nombre: qué capas se ven, qué superposiciones, el modo de vista y los filtros de temporada y bici. El mapa se abre con tu preajuste por defecto. Solo tú ves tus preajustes."
+  presets_new: "+ Nuevo preajuste"
+  presets_count: "{n} de {max} preajustes"
+  presets_edit: "Editar"
+  presets_make_default: "Por defecto"
+  presets_delete: "Borrar"
+  presets_delete_confirm: "¿Borrar este preajuste?"
+  presets_name: "Nombre"
+  presets_facets: "Facetas por capa"
+  presets_facets_help: "Una faceta con todos los chips activos se deja como la tiene el mapa."
+  presets_use_for: "Usar este preajuste para"
+  presets_use_map: "Predeterminado"
+  presets_use_plan: "Planificar una salida"
+  presets_use_ride: "Revisar mi salida"
+  presets_use_scout: "Revisión de Scout"
+  presets_cancel: "Cancelar"
+  presets_save: "Guardar preajuste"
+  presets_none: "Aún no hay preajustes."
   section_security: 'Seguridad'
+  section_password: "Contraseña"
   twofa_label: 'Autenticación en dos factores (2FA)'
   twofa_enabled: 'La 2FA está activada en tu cuenta.'
   twofa_disabled: 'Añade una capa más de seguridad a tu cuenta.'
   twofa_manage: 'Gestionar 2FA ↗'
   twofa_setup: 'Configurar 2FA ↗'
   notice: '<b>Tu perfil es privado hasta que actives Perfil público.</b> Activado, tu nombre visible, el número de tus aportaciones y tus rutas verificadas son públicos. Desactivado, los demás solo ven tu nombre anónimo, nunca tu nombre visible. Los datos entran en el Commons bajo <b>ODbL 1.0</b>, los medios bajo <b>CC BY-SA 4.0</b>.'
-  section_export: 'Descarga tus datos'
+  section_export: "Descargar una copia"
   export_help: 'Todo lo que tenemos sobre ti, en un único archivo ZIP: tu cuenta, tus aportaciones, tus mensajes, tus consentimientos de licencia y tus fotos como archivos. Tu contraseña y tus secretos de doble factor nunca se incluyen.'
   label_export_password: 'Contraseña actual'
   export_password_help: 'Confirma que eres tú antes de que montemos el archivo.'
@@ -1886,6 +1908,20 @@ map:
   rail_sections: 'Secciones del mapa'
   rail_search: 'Búsqueda y región'
   rail_layers: 'Capas y filtros'
+  presets_h: "Preajustes"
+  presets_edit: "Edita tus preajustes en Ajustes"
+  presets_sign_in: "Inicia sesión para guardar preajustes"
+  presets_tap: "Toca un preajuste para poner de una vez todos los interruptores de abajo."
+  presets_save_as: "+ Guardar como preajuste"
+  presets_name_ph: "Ponle nombre a este preajuste"
+  presets_save: "Guardar"
+  presets_changed: "Cambiado desde que elegiste"
+  presets_save_changes: "Guardar cambios"
+  presets_reset: "Restablecer"
+  presets_saved: "Guardado."
+  presets_failed: "No se pudo guardar el preajuste."
+  presets_full: "Ya tienes 6 preajustes. Borra uno antes en Ajustes."
+  presets_tool_line: "{tool} usa {name}. Al salir, vuelven tus interruptores."
   rail_tools: 'Herramientas de ruta'
   rail_key: 'Leyenda'
   # The ride planner (docs/specs/route-planner.md): the rail section, its panel, the ride bar and the drawer button.
@@ -5024,6 +5060,7 @@ changelog:
   v097_curator_proposals: "<b>Lee las propuestas de los ciclistas para la hoja de ruta.</b> La curaduría ve las propuestas que envían los ciclistas, imágenes incluidas, antes de que sean públicas."
   v097_fixes: "<b>Entre los arreglos menores:</b> una fuente de un registro ya no aparece junto a la misma fuente que confirmaron ciclistas, y la página de cobertura explica sus cifras bajo el globo y bajo la tabla."
   v097_grouped_pins: "<b>Un pin para un grupo.</b> Cinco o más lugares de un mismo tipo que están muy juntos, como los cuarenta chalés de un parque de vacaciones, se muestran como un solo pin con un número. Pasa el ratón o ábrelo para ver cuántos representa."
+  v097_presets: "<b>Preajustes del mapa.</b> Guarda bajo un nombre los interruptores que quieres activos en el mapa, en Ajustes o en el propio mapa, y elige uno con el que se abre el mapa. Hasta seis, solo tuyos."
   v097_websites: "<b>Sitios web que llevan a algún sitio.</b> Una dirección web se comprueba cuando llega, venga de un ciclista, de un registro o de OpenStreetMap: una dirección muerta o un dominio aparcado no se muestra, y el formulario te lo dice cuando escribes una."
   v096_denmark: "<b>Dinamarca está en el mapa.</b> Ya puedes encontrar y añadir lugares, puertos y rutas allí."
   v096_scout: "<b>Añade una salida desde la página de Scout.</b> Un botón 'Añadir una salida de Scout' abre la revisión de la salida en el mapa. La página también dice dónde conseguir la app, y que con un radar trasero Scout también mide el tráfico de las carreteras por las que circulas."
