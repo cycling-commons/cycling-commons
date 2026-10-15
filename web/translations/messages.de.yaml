@@ -1354,6 +1354,7 @@ map:
   plan_clear: "Leeren"
   plan_clear_confirm: "Diese Fahrt leeren? Strg+Z (⌘Z auf einem Mac) holt sie zurück."
   plan_undo_hint: "Strg+Z, oder ⌘Z auf einem Mac, macht die letzte Änderung an den Stopps rückgängig."
+  plan_remove_hint: "Rechtsklick auf einen Stopp auf der Karte, oder ⌘-Klick auf einem Mac, entfernt ihn."
   plan_strip_hide: "Profilleiste ausblenden"
   plan_strip_show: "Höhenprofil zeigen"
   plan_time: "Fahrzeit bei ruhigem Tempo"

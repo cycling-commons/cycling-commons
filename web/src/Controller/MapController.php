@@ -697,6 +697,7 @@ final class MapController extends AbstractController
                 'up' => $t->trans('map.plan_up'),
                 'down' => $t->trans('map.plan_down'),
                 'remove' => $t->trans('map.plan_remove'),
+                'removeHint' => $t->trans('map.plan_remove_hint'),
                 'noRoad' => $t->trans('map.plan_no_road'),
                 'noHeights' => $t->trans('map.plan_no_heights'),
                 'within' => $t->trans('map.plan_within'),

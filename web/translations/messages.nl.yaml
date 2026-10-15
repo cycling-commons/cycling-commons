@@ -1351,6 +1351,7 @@ map:
   plan_clear: "Wissen"
   plan_clear_confirm: "Deze rit wissen? Ctrl+Z (⌘Z op een Mac) haalt hem terug."
   plan_undo_hint: "Ctrl+Z, of ⌘Z op een Mac, maakt de laatste wijziging aan de stops ongedaan."
+  plan_remove_hint: "Klik met de rechterknop op een stop op de kaart, of ⌘-klik op een Mac, om hem te verwijderen."
   plan_strip_hide: "Profielstrook verbergen"
   plan_strip_show: "Toon het hoogteprofiel"
   plan_time: "rijtijd bij een rustig tempo"

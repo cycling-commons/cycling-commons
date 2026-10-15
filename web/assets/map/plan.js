@@ -524,7 +524,10 @@ function drawRide(){
     const el = document.createElement('div');
     el.className = 'cc-plan-mk ' + (i === 0 ? 'start' : (i === n - 1 && n > 1 ? 'end' : ''));
     if(i === n - 1 && n > 1) el.innerHTML = FINISH_FLAG; else el.textContent = i === 0 ? 'S' : String(i);
-    el.title = s.name;
+    el.title = s.name + '\n' + (P().removeHint || '');
+    // Right-click, or a click with the command key on a Mac (owner 2026-10-15); a Mac's Ctrl+click is a right-click already.
+    el.addEventListener('contextmenu', e => { e.preventDefault(); e.stopPropagation(); removeStop(i); });
+    el.addEventListener('click', e => { if(!e.metaKey) return; e.preventDefault(); e.stopPropagation(); removeStop(i); });
     const m = new maplibregl.Marker({ element: el, draggable: true }).setLngLat([s.lng, s.lat]).addTo(map);
     m.on('dragend', () => { remember(); const ll = m.getLngLat(); const st = ride.stops[i]; st.lng = ll.lng; st.lat = ll.lat; if(st.item){ st.item = null; st.letter = null; st.name = P().mapPoint || 'Map point'; } afterChange(); });
     markers.push(m);
@@ -685,6 +688,8 @@ export function initPlan(){
   map.on('click', e => {
     if(isPicking() || !planning()) return;
     if(hitsFeature(e)) return;
+    const t = e.originalEvent && e.originalEvent.target;
+    if(t && t.closest && t.closest('.cc-plan-mk')) return;   // a click on a stop is about that stop
     openPanel();
     addStop({ lat: e.lngLat.lat, lng: e.lngLat.lng, name: P().mapPoint || 'Map point' });
   });

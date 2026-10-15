@@ -1349,6 +1349,7 @@ map:
   plan_clear: "Effacer"
   plan_clear_confirm: "Effacer cette sortie ? Ctrl+Z (⌘Z sur un Mac) la ramène."
   plan_undo_hint: "Ctrl+Z, ou ⌘Z sur un Mac, annule la dernière modification des étapes."
+  plan_remove_hint: "Clic droit sur une étape de la carte, ou ⌘-clic sur un Mac, pour la retirer."
   plan_strip_hide: "Masquer la bande du profil"
   plan_strip_show: "Afficher le profil d’altitude"
   plan_time: "temps de route à allure régulière"

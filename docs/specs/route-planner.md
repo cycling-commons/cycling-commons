@@ -164,7 +164,10 @@ routes.
   ride" and removes it.
 - **Reorder** by the row's up and down buttons; **Remove** per row. On a
   pointer device a stop can also be dragged on the map, which re-routes its
-  two legs when dropped.
+  two legs when dropped, and removed on the map by a right-click, or a click
+  with the command key on a Mac (owner 2026-10-15); undo brings it back. A
+  click on a stop never adds a stop. The panel says so under the stops, and
+  the stop's tooltip says it too.
 - **At most 25 stops** (owner decision, section 11). The 26th click is
   refused with the reason.
 - **Undo**: Ctrl+Z, or the command key with Z on a Mac (owner 2026-10-14),
