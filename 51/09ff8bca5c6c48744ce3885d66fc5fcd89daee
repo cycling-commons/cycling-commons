@@ -1,0 +1,39 @@
+web/translations/messages.es.yaml
+  s_c707f1443f1405::t_2492588c91fa78 1979
+docs/specs/route-planner.md
+  s_c707f1443f1405::t_2492588c91fa78 167-169
+  s_c707f1443f1405::t_231571b37da6e6 170
+web/translations/messages.en.yaml
+  s_c707f1443f1405::t_2492588c91fa78 1972
+web/translations/messages.nl.yaml
+  s_c707f1443f1405::t_2492588c91fa78 1354
+web/translations/messages.de.yaml
+  s_c707f1443f1405::t_2492588c91fa78 1357
+web/assets/map/plan.js
+  s_c707f1443f1405::t_2492588c91fa78 527-529
+  s_c707f1443f1405::t_d805684f6a47ed 530
+web/tests/js/plan-stop-remove.test.cjs
+  s_c707f1443f1405::t_b4675bc175d872 1-35
+web/src/Controller/MapController.php
+  s_c707f1443f1405::t_2492588c91fa78 700
+web/translations/messages.fr.yaml
+  s_c707f1443f1405::t_2492588c91fa78 1352
+web/templates/map/index.html.twig
+  s_c707f1443f1405::t_2492588c91fa78 521
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5109ff8bca5c6c48744ce3885d66fc5fcd89daee",
+  "prompts": {},
+  "sessions": {
+    "s_c707f1443f1405": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6b21b1b-dfdf-4cfe-8fa1-eda87e9640b3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
