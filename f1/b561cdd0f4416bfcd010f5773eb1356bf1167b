@@ -1,0 +1,56 @@
+web/tests/Catalog/CoverageContractTest.php
+  s_bc1f503934afca::t_95751da6b93526 135
+web/tests/js/coverage-fold.test.cjs
+  s_bc1f503934afca::t_cab7cdec368115 1-36
+docs/specs/coverage-provider.md
+  s_bc1f503934afca::t_cab7cdec368115 387-406,432-434,729,731
+web/src/Controller/MapController.php
+  s_bc1f503934afca::t_cab7cdec368115 440
+pipeline/tests/test_tiles.py
+  s_bc1f503934afca::t_1a98d18449a5d6 112-143
+pipeline/coverage/contract.py
+  s_bc1f503934afca::t_765fa2c095dfcc 324,326
+pipeline/tests/test_contract.py
+  s_bc1f503934afca::t_c62182055069a0 70
+web/assets/map/coverage.js
+  s_bc1f503934afca::t_cab7cdec368115 139-140,213-219,254
+web/tests/js/per-country-mounting.test.mjs
+  s_bc1f503934afca::t_253b0fee57e623 44
+web/src/Content/ReleaseNotes.php
+  s_bc1f503934afca::t_3b30cf65eacec6 68,84
+wiki/developers/gis/tiles.md
+  s_bc1f503934afca::t_253b0fee57e623 174-176,181-183,186-189
+  s_bc1f503934afca::t_f0741f1197c0d7 190
+pipeline/coverage/tiles.py
+  s_bc1f503934afca::t_ad3af93a4c2ba5 96-99,108-126,136-141,144,146-159,170-171,174
+web/assets/map/drawer.js
+  s_bc1f503934afca::t_cab7cdec368115 263-264
+pipeline/contract/coverage-contract.json
+  s_bc1f503934afca::t_ad3af93a4c2ba5 314-315
+web/translations/messages.de.yaml
+  s_bc1f503934afca::t_21948119df47b2 1762-1763,4997
+web/translations/messages.en.yaml
+  s_bc1f503934afca::t_ea633d1804fc0a 2375-2376,5014
+web/translations/messages.es.yaml
+  s_bc1f503934afca::t_5a81a9d2f2e83d 2382-2383,5024
+web/translations/messages.fr.yaml
+  s_bc1f503934afca::t_adcc60a691fffd 1757-1758,4992
+web/translations/messages.nl.yaml
+  s_bc1f503934afca::t_f26d8b81fa7a25 1759-1760,4996
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f1b561cdd0f4416bfcd010f5773eb1356bf1167b",
+  "prompts": {},
+  "sessions": {
+    "s_bc1f503934afca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "81bf59e0-0d1b-42ea-8a2a-bc0c63aecbf5",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
