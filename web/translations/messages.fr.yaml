@@ -1348,7 +1348,7 @@ map:
   plan_gpx: "Télécharger le GPX"
   plan_clear: "Effacer"
   plan_clear_confirm: "Effacer cette sortie ? Ctrl+Z (⌘Z sur un Mac) la ramène."
-  plan_undo_hint: "Ctrl+Z, ou ⌘Z sur un Mac, annule la dernière modification des étapes."
+  plan_undo_hint: "Ctrl+Z, ou ⌘Z sur un Mac, annule la dernière modification des étapes. Ctrl+Maj+Z ou Ctrl+Y, ou ⌘⇧Z sur un Mac, la rétablit, jusqu'à 5 fois."
   plan_place_hint: "Clic droit sur un lieu de la carte, ou ⌘-clic sur un Mac, pour l'ajouter à votre sortie, ou pour l'en retirer."
   plan_remove_hint: "Clic droit sur une étape de la carte, ou ⌘-clic sur un Mac, pour la retirer."
   plan_strip_hide: "Masquer la bande du profil"

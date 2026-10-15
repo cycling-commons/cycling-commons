@@ -1975,7 +1975,7 @@ map:
   plan_gpx: "Descargar GPX"
   plan_clear: "Borrar"
   plan_clear_confirm: "¿Borrar esta salida? Ctrl+Z (⌘Z en un Mac) la recupera."
-  plan_undo_hint: "Ctrl+Z, o ⌘Z en un Mac, deshace el último cambio en las paradas."
+  plan_undo_hint: "Ctrl+Z, o ⌘Z en un Mac, deshace el último cambio en las paradas. Ctrl+Mayús+Z o Ctrl+Y, o ⌘⇧Z en un Mac, lo rehace, hasta 5 veces."
   plan_place_hint: "Clic derecho en un lugar del mapa, o ⌘-clic en un Mac, para añadirlo a tu ruta, o para quitarlo de nuevo."
   plan_remove_hint: "Clic derecho en una parada del mapa, o ⌘-clic en un Mac, para quitarla."
   plan_strip_hide: "Ocultar la banda del perfil"

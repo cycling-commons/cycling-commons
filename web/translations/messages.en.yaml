@@ -1968,7 +1968,7 @@ map:
   plan_gpx: "Download GPX"
   plan_clear: "Clear"
   plan_clear_confirm: "Clear this ride? Ctrl+Z (⌘Z on a Mac) brings it back."
-  plan_undo_hint: "Ctrl+Z, or ⌘Z on a Mac, undoes the last change to the stops."
+  plan_undo_hint: "Ctrl+Z, or ⌘Z on a Mac, undoes the last change to the stops. Ctrl+Shift+Z or Ctrl+Y, or ⌘⇧Z on a Mac, redoes it, up to 5 times."
   plan_place_hint: "Right-click a place on the map, or ⌘-click it on a Mac, to add it to your ride, or to take it out again."
   plan_remove_hint: "Right-click a stop on the map, or ⌘-click it on a Mac, to remove it."
   plan_strip_hide: "Hide the profile strip"

@@ -1353,7 +1353,7 @@ map:
   plan_gpx: "GPX herunterladen"
   plan_clear: "Leeren"
   plan_clear_confirm: "Diese Fahrt leeren? Strg+Z (⌘Z auf einem Mac) holt sie zurück."
-  plan_undo_hint: "Strg+Z, oder ⌘Z auf einem Mac, macht die letzte Änderung an den Stopps rückgängig."
+  plan_undo_hint: "Strg+Z, oder ⌘Z auf einem Mac, macht die letzte Änderung an den Stopps rückgängig. Strg+Umschalt+Z oder Strg+Y, oder ⌘⇧Z auf einem Mac, stellt sie wieder her, bis zu 5 Mal."
   plan_place_hint: "Rechtsklick auf einen Ort auf der Karte, oder ⌘-Klick auf einem Mac, nimmt ihn in deine Tour auf, oder wieder heraus."
   plan_remove_hint: "Rechtsklick auf einen Stopp auf der Karte, oder ⌘-Klick auf einem Mac, entfernt ihn."
   plan_strip_hide: "Profilleiste ausblenden"

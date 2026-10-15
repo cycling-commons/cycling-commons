@@ -190,6 +190,10 @@ routes.
   the keyboard off a text field first (owner 2026-10-15): a drag or a
   right-click on the map leaves the focus where it was, and Ctrl+Z in the
   ride's name would otherwise undo the name, not the ride.
+- **Redo**: Ctrl+Shift+Z or Ctrl+Y, or the command key with shift and Z on a
+  Mac (owner 2026-10-15), puts back what undo took, one step at a time, the
+  five steps nearest the ride at most; a new change to the stops forgets
+  them, as in any editor. The same hint under the stops says so.
   The panel says so under the stops.
 - **Clear** empties the ride after a confirmation, and undo brings it back.
 

@@ -248,3 +248,13 @@ test('a change to the stops takes the keyboard off a text field, so Ctrl+Z undoe
   assert.ok(m[1].indexOf('a.blur()') < m[1].indexOf('history.push(ride.stops)'), 'the field lets go before the copy is kept');
 });
 
+test('redo: Ctrl+Shift+Z, the command key with shift and Z on a Mac, or Ctrl+Y; never inside a field (owner 2026-10-15)', () => {
+  const m = plan.match(/document\.addEventListener\('keydown', e => \{\n {4}if\(!\(e\.ctrlKey \|\| e\.metaKey\) \|\| e\.altKey\) return;([\s\S]*?)\n {2}\}\);/);
+  assert.ok(m, 'the undo and redo key handler was not found');
+  assert.match(m[1], /const isUndo = k === 'z' && !e\.shiftKey, isRedo = \(k === 'z' && e\.shiftKey\) \|\| \(k === 'y' && !e\.shiftKey && !e\.metaKey\);/);
+  assert.match(m[1], /closest\('input, textarea, select, \[contenteditable\]'\)\) return;/);
+  assert.match(m[1], /if\(isRedo\) redo\(\); else undo\(\);/);
+  assert.match(plan, /const history = createHistory\(30, 5\);/, 'redo is capped at five steps');
+  assert.match(plan, /function redo\(\)\{ const next = history\.redo\(ride\.stops\); if\(!next\) return; ride\.stops = next; afterChange\(\); \}/);
+});
+

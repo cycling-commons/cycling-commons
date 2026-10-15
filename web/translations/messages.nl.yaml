@@ -1350,7 +1350,7 @@ map:
   plan_gpx: "GPX downloaden"
   plan_clear: "Wissen"
   plan_clear_confirm: "Deze rit wissen? Ctrl+Z (⌘Z op een Mac) haalt hem terug."
-  plan_undo_hint: "Ctrl+Z, of ⌘Z op een Mac, maakt de laatste wijziging aan de stops ongedaan."
+  plan_undo_hint: "Ctrl+Z, of ⌘Z op een Mac, maakt de laatste wijziging aan de stops ongedaan. Ctrl+Shift+Z of Ctrl+Y, of ⌘⇧Z op een Mac, voert hem opnieuw uit, tot 5 keer."
   plan_place_hint: "Klik met de rechterknop op een plek op de kaart, of ⌘-klik op een Mac, om hem aan je rit toe te voegen, of om hem er weer uit te halen."
   plan_remove_hint: "Klik met de rechterknop op een stop op de kaart, of ⌘-klik op een Mac, om hem te verwijderen."
   plan_strip_hide: "Profielstrook verbergen"

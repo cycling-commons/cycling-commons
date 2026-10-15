@@ -30,7 +30,7 @@ let lineShown = (() => { try { return localStorage.getItem(LINE_KEY) !== 'off'; 
 const BIKES = ['Road', 'Gravel', 'MTB', 'E-bike', 'Handbike', 'Recumbent', 'Trike', 'Tandem'];
 
 let ride = { id: null, name: '', bike: 'Road', stops: [], legs: [] };
-const history = createHistory(30);
+const history = createHistory(30, 5);
 const legCache = new Map();
 let gen = 0, routing = false, alongTimer = null, dirty = false;
 /* The day (route-planner.md section 4.4): the along rows once fetched (null until then), the forecast for the ride's date, and what was last asked. */
@@ -156,7 +156,8 @@ function remember(){
   history.push(ride.stops);
 }
 /* Ctrl+Z, or the command key with Z on a Mac: the stops before the last change. */
-function undo(){ const prev = history.pop(); if(!prev) return; ride.stops = prev; afterChange(); }
+function undo(){ const prev = history.undo(ride.stops); if(!prev) return; ride.stops = prev; afterChange(); }
+function redo(){ const next = history.redo(ride.stops); if(!next) return; ride.stops = next; afterChange(); }
 function afterChange(){ dirty = ride.stops.length >= 2; alongRows = null; syncStart(); renderStops(); drawRide(); routeAll(); saveDraft(); syncPlanning(); paintDrawerButtons(); }
 
 async function routeAll(){
@@ -709,12 +710,16 @@ export function initPlan(){
   map.on('moveend', () => { if(ride.stops.length >= 2){ scheduleAlong(); scheduleTileRead(); } });
   map.on('idle', () => { if(ride.stops.length >= 2) scheduleTileRead(); });
   document.addEventListener('keydown', e => {
-    if(!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || 'z' !== String(e.key).toLowerCase()) return;
+    if(!(e.ctrlKey || e.metaKey) || e.altKey) return;
+    // Undo: Ctrl+Z, or the command key with Z. Redo: Ctrl+Shift+Z, the command key with shift and Z, or Ctrl+Y.
+    const k = String(e.key).toLowerCase();
+    const isUndo = k === 'z' && !e.shiftKey, isRedo = (k === 'z' && e.shiftKey) || (k === 'y' && !e.shiftKey && !e.metaKey);
+    if(!isUndo && !isRedo) return;
     const t = e.target;
     if(t && t.closest && t.closest('input, textarea, select, [contenteditable]')) return;   // a field keeps its own undo
-    if(!planning() && !history.size()) return;
+    if(!planning() && !history.size() && !history.redoSize()) return;
     e.preventDefault();
-    undo();
+    if(isRedo) redo(); else undo();
   });
   window.addEventListener('beforeunload', e => { if(dirty && ride.stops.length >= 2 && !ride.id){ e.preventDefault(); e.returnValue = P().leave || ''; } });
   // The day of the ride: today unless the draft holds a later date; a change redraws the daylight and asks the forecast.

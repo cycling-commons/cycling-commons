@@ -124,15 +124,15 @@ test('the ride bar reads distance, climbed and the stop count', () => {
 
 test('the history keeps the stops before each change and hands them back one step at a time', () => {
   const h = createHistory(3);
-  assert.equal(h.pop(), null);
+  assert.equal(h.undo([]), null);
   h.push([{ lat: 1, lng: 1, name: 'a' }]);
   h.push([{ lat: 1, lng: 1, name: 'a' }, { lat: 2, lng: 2, name: 'b' }]);
   assert.equal(h.size(), 2);
-  const back = h.pop();
+  const back = h.undo([]);
   assert.equal(back.length, 2);
   assert.equal(back[1].name, 'b');
-  assert.equal(h.pop().length, 1);
-  assert.equal(h.pop(), null);
+  assert.equal(h.undo(back).length, 1);
+  assert.equal(h.undo([]), null);
 });
 
 test('the history is bounded and hands back copies, never the array it was given', () => {
@@ -143,8 +143,56 @@ test('the history is bounded and hands back copies, never the array it was given
   h.push([{ lat: 3, lng: 3, name: 'c' }]);
   assert.equal(h.size(), 2);
   stops[0].name = 'changed after push';
-  assert.equal(h.pop()[0].name, 'c');
-  assert.deepEqual(h.pop(), []);
+  assert.equal(h.undo([])[0].name, 'c');
+  assert.deepEqual(h.undo([]), []);
+});
+
+/* Redo (owner 2026-10-15): what undo took comes back, at most five steps,
+   and a new change to the stops forgets it, as in any editor. */
+const st = i => [{ lat: i, lng: i, name: 's' + i }];
+test('redo hands back what undo took, one step at a time', () => {
+  const h = createHistory(30, 5);
+  h.push(st(0));                       // the ride was s0, is now s1
+  h.push(st(1));                       // is now s2
+  let cur = st(2);
+  cur = h.undo(cur); assert.equal(cur[0].name, 's1');
+  cur = h.undo(cur); assert.equal(cur[0].name, 's0');
+  assert.equal(h.redoSize(), 2);
+  cur = h.redo(cur); assert.equal(cur[0].name, 's1');
+  cur = h.redo(cur); assert.equal(cur[0].name, 's2');
+  assert.equal(h.redo(cur), null);
+  assert.equal(h.undo(cur)[0].name, 's1', 'a redone step can be undone again');
+});
+
+test('redo keeps the five steps nearest the ride, never more', () => {
+  const h = createHistory(30, 5);
+  for (let i = 0; i < 7; i++) h.push(st(i));   // the ride is s7
+  let cur = st(7);
+  for (let i = 0; i < 7; i++) cur = h.undo(cur);
+  assert.equal(cur[0].name, 's0');
+  assert.equal(h.redoSize(), 5);
+  const names = [];
+  for (let n = h.redo(cur); n; n = h.redo(cur)) { names.push(n[0].name); cur = n; }
+  assert.deepEqual(names, ['s1', 's2', 's3', 's4', 's5']);
+});
+
+test('a new change forgets what could be redone', () => {
+  const h = createHistory(30, 5);
+  h.push(st(0));
+  const back = h.undo(st(1));
+  assert.equal(h.redoSize(), 1);
+  h.push(back);                        // the rider changes the ride instead
+  assert.equal(h.redoSize(), 0);
+  assert.equal(h.redo(st(9)), null);
+});
+
+test('redo hands back copies, never the array it was given', () => {
+  const h = createHistory(30, 5);
+  h.push(st(0));
+  const now = st(1);
+  h.undo(now);
+  now[0].name = 'changed after undo';
+  assert.equal(h.redo(st(0))[0].name, 's1');
 });
 
 /* Toughness (route-planner.md section 4.4): the routes' length bands give a

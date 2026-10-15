@@ -166,13 +166,18 @@ export function barText(figs, stopCount, fmt, timeText){
   return parts.join(' · ');
 }
 
-/** The stops before each change, newest last, bounded; Ctrl+Z (and the Mac's command key) hands them back one step at a time. */
-export function createHistory(limit = 30){
-  const past = [];
+/** The stops before each change, newest last, bounded; Ctrl+Z (and the Mac's command key) hands them back one
+    step at a time. What undo took can be redone, the `redoLimit` steps nearest the ride at most, until the next
+    change. Every step is a full copy of the stops, never the array it was given. */
+export function createHistory(limit = 30, redoLimit = 5){
+  const past = [], future = [];
+  const copy = stops => JSON.parse(JSON.stringify(stops));
   return {
-    push(stops){ past.push(JSON.parse(JSON.stringify(stops))); if(past.length > limit) past.shift(); },
-    pop(){ return past.length ? past.pop() : null; },
+    push(stops){ past.push(copy(stops)); if(past.length > limit) past.shift(); future.length = 0; },
+    undo(current){ if(!past.length) return null; future.push(copy(current)); if(future.length > redoLimit) future.shift(); return past.pop(); },
+    redo(current){ if(!future.length) return null; past.push(copy(current)); if(past.length > limit) past.shift(); return future.pop(); },
     size(){ return past.length; },
+    redoSize(){ return future.length; },
   };
 }
 
