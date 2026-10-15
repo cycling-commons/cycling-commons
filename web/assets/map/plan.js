@@ -148,7 +148,13 @@ function clearRide(){
   afterChange();
 }
 /* The stops as they are now, kept for the undo key (route-planner.md section 4.1). */
-function remember(){ history.push(ride.stops); }
+/* Every change to the stops is kept for undo, as a full copy of the stops before it; the legs are routed
+   again from them. The change also takes the keyboard off a text field: a drag or a right-click on the map
+   leaves the focus where it was, and Ctrl+Z in the ride's name would undo the name, not the ride. */
+function remember(){
+  const a = document.activeElement; if(a && a.blur && a.matches && a.matches('input, textarea, select, [contenteditable]')) a.blur();
+  history.push(ride.stops);
+}
 /* Ctrl+Z, or the command key with Z on a Mac: the stops before the last change. */
 function undo(){ const prev = history.pop(); if(!prev) return; ride.stops = prev; afterChange(); }
 function afterChange(){ dirty = ride.stops.length >= 2; alongRows = null; syncStart(); renderStops(); drawRide(); routeAll(); saveDraft(); syncPlanning(); paintDrawerButtons(); }

@@ -185,6 +185,11 @@ routes.
   restores the stops as they were before the last change (a stop added,
   removed, moved, dragged, a place added, a clear), up to 30 steps back, while
   a ride is being planned; inside a text field the key keeps its own meaning.
+  Each step is a full copy of the stops before the change; undo puts them
+  back and the legs are routed again from them. A change to the stops takes
+  the keyboard off a text field first (owner 2026-10-15): a drag or a
+  right-click on the map leaves the focus where it was, and Ctrl+Z in the
+  ride's name would otherwise undo the name, not the ride.
   The panel says so under the stops.
 - **Clear** empties the ride after a confirmation, and undo brings it back.
 

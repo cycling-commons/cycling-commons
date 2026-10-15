@@ -237,3 +237,14 @@ test('The along-the-line hover rings the pin body, not its tip, and the ring is 
   assert.match(rule, /width:30px;height:30px/, 'the ring is still the small one');
   assert.match(rule, /inset 0 0 0 3px/, 'the ring line is still thin');
 });
+
+/* Ctrl+Z did nothing after a stop was dragged (owner 2026-10-15): a drag or a
+   right-click on the map leaves the keyboard where it was, so with the ride's
+   name field still focused the key undid the field's text, not the ride. */
+test('a change to the stops takes the keyboard off a text field, so Ctrl+Z undoes the ride', () => {
+  const m = plan.match(/function remember\(\)\{([\s\S]*?)\n?\}/);
+  assert.ok(m, 'remember() not found');
+  assert.match(m[1], /const a = document\.activeElement; if\(a && a\.blur && a\.matches && a\.matches\('input, textarea, select, \[contenteditable\]'\)\) a\.blur\(\);/);
+  assert.ok(m[1].indexOf('a.blur()') < m[1].indexOf('history.push(ride.stops)'), 'the field lets go before the copy is kept');
+});
+
