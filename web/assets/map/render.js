@@ -160,6 +160,8 @@ export function liftInfoLayersAboveRoutes(){
   if(map.getLayer('surface-q')) map.moveLayer('surface-q');
   dynamicIds.filter(id=>id.startsWith('route-climbs-')).forEach(liftGroup);
   ['mly-cov','mly-img'].forEach(id=>{ if(map.getLayer(id)) map.moveLayer(id); });
+  // The planned ride over every other line (owner 2026-10-15), under the icons that are the stops a rider picks.
+  ['plan-casing','plan-line','plan-straight'].forEach(id=>{ if(map.getLayer(id)) map.moveLayer(id); });
   // The coverage icons over every line (owner 2026-10-08), the selected icon on top of them.
   coverageIconLayerIds(map.getStyle().layers.map(l=>l.id)).forEach(id=>map.moveLayer(id));
   if(map.getLayer('cov-sel-icon')) map.moveLayer('cov-sel-icon');
@@ -489,12 +491,14 @@ export function render(){
           const climbRoute = trimToClimb(f.route, f.length);
           if(lineG) drawClimbLine(`route-${layer.key}-${i}`, climbRoute, lineG, layer, f);
           else drawLine(`route-${layer.key}-${i}`, climbRoute, layer.color, layer, f);
-          /* Summit marker: pin sits at the foot, so without this a climb has no visible end. */
+          /* Summit marker: pin sits at the foot, so without this a climb has no visible end.
+             A drawn flag on a peak (owner 2026-10-15), the name and the word in the tooltip. */
           const summitAt = climbRoute && climbRoute.length ? climbRoute[climbRoute.length-1] : null;
           if(summitAt){
             const fEl=document.createElement('div');
             fEl.className='cc-summit';
-            fEl.textContent=D.climbFinish||'SUMMIT';
+            /* Beside the summit, not on it (owner 2026-10-15): a thin leader from the exact point up to the icon. */
+            fEl.innerHTML=`<svg viewBox="0 0 34 34" aria-hidden="true"><line x1="2" y1="32" x2="13" y2="21" class="lead"/><circle cx="2" cy="32" r="1.8" class="tip"/><g transform="translate(12 0)"><polygon points="1.5,21 11,7.5 20.5,21" class="peak"/><path d="M11 7.5V1.5"/><polygon points="11,1.5 17.5,3.6 11,5.7" class="flag"/></g></svg>`;
             fEl.title=`${f.name} · ${D.climbFinish||'SUMMIT'}`;
             fEl.tabIndex=0; fEl.setAttribute('role','button');
             fEl.setAttribute('aria-label', `${f.name} — ${D.climbFinish||'SUMMIT'}`);
@@ -502,7 +506,7 @@ export function render(){
             const openHere=e=>{ e.stopPropagation(); openDrawer(layer,f); flyToPin([summitAt[1],summitAt[0]]); };
             fEl.addEventListener('click',openHere);
             fEl.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openHere(e); }});
-            const fm=new maplibregl.Marker({element:fEl,anchor:'bottom'})
+            const fm=new maplibregl.Marker({element:fEl,anchor:'bottom-left',offset:[-2,2]})
               .setLngLat([summitAt[1],summitAt[0]]).addTo(map);
             markers.push(fm);
           }

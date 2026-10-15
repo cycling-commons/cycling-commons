@@ -2052,6 +2052,7 @@ map:
   filters_hide: 'Los filtros ocultan {x} lugares'
   filters_hide_one: 'Los filtros ocultan 1 lugar'
   filters_narrowing: 'Los filtros están limitando este mapa'
+  filters_mark_aria: "Hay filtros que reducen este mapa: ver por qué"
   filters_show_all: 'Mostrar todo'
   ride_check_intro: 'Sube una ruta que piensas hacer y verás todo lo que tenemos cerca de ella.'
   scout_heading: 'Exploración'
@@ -5108,6 +5109,7 @@ changelog:
   v097_grouped_pins: "<b>Un pin para un grupo.</b> Cinco o más lugares de un mismo tipo que están muy juntos, como los cuarenta chalés de un parque de vacaciones, se muestran como un solo pin con un número. Pasa el ratón o ábrelo para ver cuántos representa."
   v097_presets: "<b>Preajustes del mapa.</b> Guarda bajo un nombre los interruptores que quieres activos en el mapa, en Ajustes o en el propio mapa, y elige uno con el que se abre el mapa. Hasta seis, solo tuyos."
   v097_websites: "<b>Sitios web que llevan a algún sitio.</b> Una dirección web se comprueba cuando llega, venga de un ciclista, de un registro o de OpenStreetMap: una dirección muerta o un dominio aparcado no se muestra, y el formulario te lo dice cuando escribes una."
+  v097_map_polish: "<b>Pequeños retoques en el mapa.</b> La cima de una subida es una pequeña bandera sobre un pico en vez de una etiqueta, el icono Planificar de la barra lleva un punto mientras hay una salida en el mapa, y la salida que dibujas queda por encima de cualquier otra línea."
   v096_denmark: "<b>Dinamarca está en el mapa.</b> Ya puedes encontrar y añadir lugares, puertos y rutas allí."
   v096_scout: "<b>Añade una salida desde la página de Scout.</b> Un botón 'Añadir una salida de Scout' abre la revisión de la salida en el mapa. La página también dice dónde conseguir la app, y que con un radar trasero Scout también mide el tráfico de las carreteras por las que circulas."
   v096_tools: "<b>Todas las herramientas de salida del mapa se ven igual.</b> 'Exploración', 'Añadir un puerto' y 'Proponer una ruta' tienen el mismo botón naranja. Sin cuenta, el botón te lleva primero a iniciar sesión."

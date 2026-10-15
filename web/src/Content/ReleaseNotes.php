@@ -68,6 +68,7 @@ final class ReleaseNotes
                     'changelog.v097_grouped_pins',
                     'changelog.v097_presets',
                     'changelog.v097_websites',
+                    'changelog.v097_map_polish',
                     'changelog.v097_fixes',
                 ],
                 'rider' => [
@@ -86,6 +87,7 @@ final class ReleaseNotes
                 'changelog.v097_grouped_pins' => 'new',
                 'changelog.v097_presets' => 'new',
                 'changelog.v097_websites' => 'improved',
+                'changelog.v097_map_polish' => 'improved',
                 'changelog.v097_fixes' => 'fixed',
                 'changelog.v097_proposals' => 'new',
                 'changelog.v097_mail_why' => 'fixed',

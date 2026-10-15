@@ -338,13 +338,22 @@ map module opens `#drawer` behind its back.
   row is alive.
 - **Filter transparency, always on the map.** When a chip filter narrows the
   catalog, a pill at the bottom of the map says so and offers a one-tap **Show
-  all**, and the Layers icon wears an orange dot. The pill, the zoom hint and
-  the curator picking bar all sit 4.2rem up from the map's bottom edge
+  all**, and the Layers icon wears an orange dot. The pill is folded into an
+  orange **"!"** mark (owner 2026-10-15): hover or focus opens it, a click on
+  the mark keeps it open, and the next click folds it back into the "!"
+  (`#fpillMark`, `aria-expanded`; `filter-pill-mark.test.cjs`). It sits at
+  the map's left edge above the zoom buttons (7.6rem up), and just above the
+  ride's profile strip while that is open, opening to the right (owner
+  2026-10-15: centred, it covered the strip). The Plan icon wears the
+  same dot while a stop of a ride is on the map
+  ([route-planner.md](route-planner.md) section 3). The zoom hint and
+  the curator picking bar sit 4.2rem up from the map's bottom edge
   (map.css), above the attribution strip, so no message prints across the
   credits. The bottom-right corner is a stack of two, bottom to top: the
   bug circle at 3.4rem ([contact-and-support.md](contact-and-support.md), the
   floating button) and the overlay key box at 6.65rem (`.legend`), shown
-  only while the Road surface or Routes overlay is on, clear of the circle. Both are visible whether or
+  only while the Road surface or Routes overlay is on, clear of the circle, and
+  compact: rows 1.55rem apart, tight headings and buttons (owner 2026-10-15). Both are visible whether or
   not the drawer is open, which is the point: a rider notices data is missing
   while looking at the MAP. The count is a real tally from the render pass
   (`render.js` `hiddenByFilters()`), incremented at the moment the chips - and
@@ -515,9 +524,12 @@ to 4.4 saved under a name, [map-presets.md](map-presets.md).
 - **Layer stacking is decided in exactly one place**, `liftInfoLayersAboveRoutes()`
   (render.js). It moves each named layer to the top in turn, so the call order
   *is* the z-order, bottom to top: **route lines, road surfaces, climb lines,
-  Mapillary, the OpenStreetMap coverage icons (`*-cov`), the selected coverage
-  icon**. The icons sit above every line (owner 2026-10-08): a route drawn over
-  a place hid it. Climbs sit above surfaces (owner 2026-08-03): underneath, an
+  Mapillary, the planned ride's line (`plan-*`, route-planner.md section 3),
+  the OpenStreetMap coverage icons (`*-cov`), the selected coverage icon**.
+  The icons sit above every line (owner 2026-10-08): a route drawn over a
+  place hid it. The planned ride sits above every other line and below the
+  icons (owner 2026-10-15): it is the line the rider is drawing right now, and
+  the icons are the stops they pick. Climbs sit above surfaces (owner 2026-08-03): underneath, an
   8 px surface line swallows the climb it describes. A climb is a named thing a rider came to look at; a surface
   segment is a property of the road beneath it, and the narrower climb line
   still leaves the surface colour visible on both sides. **Do not fix stacking
@@ -1480,8 +1492,12 @@ two places, sized to their audience:
 - **The Key rail panel** (`data-panel="key"`, `#p-key`, title
   `map.rail_key`). It is an explainer and nothing in it is interactive: a
   row is read, never tapped. Anything that switches the map (the surface
-  class rows, Study mode, the Gaps grid) lives in the overlay key box at the
-  bottom-right corner, not here (owner 2026-09-21). The panel opens from the
+  class rows, the route type rows, Study mode, the Gaps grid) lives in the
+  overlay key box at the bottom-right corner, not here (owner 2026-09-21).
+  The route type rows (national, regional and node network, mountain bike,
+  and the numbered junctions) switch their type on and off as the surface
+  rows do (owner 2026-10-15; `routes-tiles.js` `toggleRouteGroup()`); the
+  Routes overlay row in Layers still turns the whole network off. The panel opens from the
   rail's Key button only; a corner button for it would read as that box's
   toggle, so the corner holds the bug circle and the box and nothing else. The
   rail button shows the panel's open state (`aria-expanded`). It carries the
@@ -2013,8 +2029,14 @@ The geometry is pure (`web/assets/map/fan-out.js`, tested in
   - Our own teardrop pins grow from 70% at z8 to full size (30px) at z14
     (`pinScale()`, `--pin-s`; the badges grow with them). A page without the
     map draws them full size.
-  - A climb's summit chip and gradient chip show from z11 (`SUMMIT_MIN_ZOOM`,
-    class `.cc-z-lt11`); zoomed out, the chips of every climb piled up.
+  - A climb's summit icon and gradient chip show from z11 (`SUMMIT_MIN_ZOOM`,
+    class `.cc-z-lt11`); zoomed out, the chips of every climb piled up. The
+    summit icon is a drawn flag on a peak, 22 px, set up and to the right of
+    the summit with a thin leader line to a dot on the exact point, so it
+    covers neither the summit nor the end of the line (owner 2026-10-15), with
+    the climb's name and the word in its tooltip and accessible name (owner 2026-10-15: "more of
+    an icon flag on top of a mountain, so it takes up less space"; it was a
+    dark pill with the word).
   - An OpenStreetMap place waits for its category's icon zoom
     (`iconMinZoom()`: water z11, the rest z12), on a tile and also when it is
     one of our pool rows drawn as a small disc pin (`poolDiscWaits()` in

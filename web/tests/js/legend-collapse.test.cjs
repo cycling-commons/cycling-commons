@@ -53,7 +53,8 @@ test('every key section sits inside the collapsible body', () => {
 });
 
 test('one class hides the body, and the old per-element list is gone', () => {
-  assert.match(css, /\.legend\.collapsed \.lg-body\{display:none\}/);
+  // One class still hides the body; it folds now rather than snapping (owner 2026-10-15).
+  assert.match(css, /\.legend\.collapsed \.lg-body\{max-height:0;max-width:0;opacity:0;visibility:hidden\}/);
   assert.doesNotMatch(css, /\.legend:not\(\.open\)/,
     'the named-children hide list is exactly what this replaced; leaving it behind gives two sources of truth');
 });

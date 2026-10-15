@@ -1427,6 +1427,7 @@ map:
   filters_hide: 'Filters verbergen {x} plaatsen'
   filters_hide_one: 'Filters verbergen 1 plaats'
   filters_narrowing: 'Filters beperken deze kaart'
+  filters_mark_aria: "Filters beperken deze kaart: toon waarom"
   filters_show_all: 'Toon alles'
   ride_check_intro: 'Upload een route die je wilt rijden en zie alles wat we in de buurt hebben.'
   scout_heading: 'Verkenning'
@@ -5080,6 +5081,7 @@ changelog:
   v097_grouped_pins: "<b>Eén speld voor een groep.</b> Vijf of meer plekken van één soort die dicht bij elkaar staan, zoals de veertig chalets van een vakantiepark, verschijnen als één speld met een aantal. Beweeg erover of open hem om te zien voor hoeveel hij staat."
   v097_presets: "<b>Kaartpresets.</b> Bewaar de schakelaars die je op de kaart aan wilt onder een naam, in Instellingen of direct op de kaart, en kies er een waarmee de kaart opent. Tot zes, alleen van jou."
   v097_websites: "<b>Websites die ergens heen leiden.</b> Een websiteadres wordt gecontroleerd zodra het binnenkomt, van een fietser, een register of OpenStreetMap: een dood adres of een geparkeerd domein wordt niet getoond, en het formulier zegt het als je er een intypt."
+  v097_map_polish: "<b>Kleinere verbeteringen op de kaart.</b> De top van een klim is een kleine vlag op een berg in plaats van een label, het Plan-icoon op de balk draagt een stip zolang er een rit op de kaart staat, en de rit die je tekent ligt boven elke andere lijn."
   v096_denmark: "<b>Denemarken staat op de kaart.</b> Je kunt er nu plekken, klimmen en routes vinden en toevoegen."
   v096_scout: "<b>Voeg een rit toe vanaf de Scout-pagina.</b> Een knop 'Een Scout-rit toevoegen' opent het nakijken van je rit op de kaart. De pagina zegt ook waar je de app krijgt, en dat Scout met een achterradar ook het verkeer meet op de wegen waar je fietst."
   v096_tools: "<b>Elk ritgereedschap op de kaart ziet er hetzelfde uit.</b> 'Verkenning', 'Klim toevoegen' en 'Stel een route voor' hebben elk dezelfde oranje knop. Zonder account brengt de knop je eerst naar het inloggen."

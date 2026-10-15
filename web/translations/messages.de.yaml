@@ -1430,6 +1430,7 @@ map:
   filters_hide: 'Filter verbergen {x} Orte'
   filters_hide_one: 'Filter verbergen 1 Ort'
   filters_narrowing: 'Filter schränken diese Karte ein'
+  filters_mark_aria: "Filter schränken diese Karte ein: zeigen, warum"
   filters_show_all: 'Alle anzeigen'
   ride_check_intro: 'Lade eine geplante Route hoch und sieh alles, was wir in ihrer Nähe haben.'
   scout_heading: 'Erkundung'
@@ -5081,6 +5082,7 @@ changelog:
   v097_grouped_pins: "<b>Eine Nadel für eine Gruppe.</b> Fünf oder mehr Orte einer Art, die dicht beieinander stehen, etwa die vierzig Chalets eines Ferienparks, erscheinen als eine Nadel mit einer Zahl. Fahre darüber oder öffne sie, um zu sehen, für wie viele sie steht."
   v097_presets: "<b>Kartenvoreinstellungen.</b> Speichere die Schalter, die du auf der Karte an haben willst, unter einem Namen, in den Einstellungen oder direkt auf der Karte, und wähle eine, mit der die Karte öffnet. Bis zu sechs, nur für dich."
   v097_websites: "<b>Websites, die irgendwohin führen.</b> Eine Website-Adresse wird beim Eingang geprüft, ob von Radfahrenden, einem Register oder OpenStreetMap: eine tote Adresse oder eine geparkte Domain wird nicht gezeigt, und das Formular sagt es dir, wenn du eine eintippst."
+  v097_map_polish: "<b>Kleinere Verbesserungen auf der Karte.</b> Der Gipfel eines Anstiegs ist eine kleine Flagge auf einem Berg statt eines Labels, das Planen-Symbol in der Leiste trägt einen Punkt, solange eine Fahrt auf der Karte liegt, und die Fahrt, die du zeichnest, liegt über jeder anderen Linie."
   v096_denmark: "<b>Dänemark ist auf der Karte.</b> Du kannst dort jetzt Orte, Anstiege und Routen finden und hinzufügen."
   v096_scout: "<b>Füge eine Fahrt von der Scout-Seite aus hinzu.</b> Ein Knopf 'Eine Scout-Fahrt hinzufügen' öffnet die Durchsicht der Fahrt auf der Karte. Die Seite sagt auch, wo es die App gibt, und dass Scout mit einem Rückradar auch den Verkehr auf deinen Straßen misst."
   v096_tools: "<b>Jedes Fahrtwerkzeug auf der Karte sieht gleich aus.</b> 'Erkundung', 'Anstieg hinzufügen' und 'Route vorschlagen' haben denselben orangen Knopf. Ohne Konto führt der Knopf dich zuerst zur Anmeldung."

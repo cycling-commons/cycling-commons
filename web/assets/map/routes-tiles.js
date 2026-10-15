@@ -175,6 +175,22 @@ export function addRoutesTiles() {
 /** Is the layer currently drawn? */
 export const routesTilesVisible = () => visible;
 
+/* Which route types draw, from the key's rows (owner 2026-10-15); the overlay switch above them still decides the whole network. */
+const groupOn = { national: true, regional: true, mtb: true, knoop: true };
+/** Switch one route type, or the numbered junctions ('knoop'), on or off; returns its new state. */
+export function toggleRouteGroup(key) {
+  if (!(key in groupOn)) return false;
+  groupOn[key] = !groupOn[key];
+  applyRoutesVisibility();
+  return groupOn[key];
+}
+/* The group a style layer belongs to: a corridor layer by its group key, a badge layer to 'knoop', the selection to none. */
+function groupOfLayer(id) {
+  if (id.startsWith(KNOOP_PREFIX)) return 'knoop';
+  const g = GROUPS.find(gr => id.startsWith(LINE_PREFIX + gr.key + '-'));
+  return g ? g.key : null;
+}
+
 /* Style loop shared by setRoutesTiles and every mount (a new country arriving
    while the layer is already on must draw in the right state, not off). */
 function applyRoutesVisibility() {
@@ -182,7 +198,8 @@ function applyRoutesVisibility() {
   if (!style) return;
   style.layers.forEach(l => {
     if (l.id.startsWith(LINE_PREFIX) || l.id.startsWith(KNOOP_PREFIX)) {
-      map.setLayoutProperty(l.id, 'visibility', visible ? 'visible' : 'none');
+      const g = groupOfLayer(l.id);
+      map.setLayoutProperty(l.id, 'visibility', visible && groupOn[g] !== false ? 'visible' : 'none');
     }
   });
 }

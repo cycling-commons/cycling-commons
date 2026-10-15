@@ -2045,6 +2045,7 @@ map:
   filters_hide: 'Filters are hiding {x} places'
   filters_hide_one: 'Filters are hiding 1 place'
   filters_narrowing: 'Filters are narrowing this map'
+  filters_mark_aria: "Filters are narrowing this map: show why"
   filters_show_all: 'Show all'
   ride_check_intro: 'Upload a route you plan to ride and see everything we have near it.'
   scout_heading: 'Scout'
@@ -5098,6 +5099,7 @@ changelog:
   v097_grouped_pins: "<b>One pin for a crowd.</b> Five or more places of one kind that stand close together, such as the forty chalets of a holiday park, show as one pin with a count. Hover it or open it to see how many it stands for."
   v097_presets: "<b>Map presets.</b> Save the switches you want on the map under a name, in Settings or right on the map, and pick one that opens the map. Up to six, yours alone."
   v097_websites: "<b>Websites that lead somewhere.</b> A website address is checked when it comes in, from a rider, a register or OpenStreetMap: a dead address or a parked domain is not shown, and the form says so when you type one."
+  v097_map_polish: "<b>Smaller touches on the map.</b> A climb's summit is a small flag on a peak instead of a label, the Plan icon on the rail wears a dot while a ride is on the map, and the ride you draw lies over every other line."
   v096_denmark: "<b>Denmark is on the map.</b> You can now find and add places, climbs and routes there."
   v096_scout: "<b>Add a ride from the Scout page.</b> An 'Add a Scout ride' button opens the ride review on the map. The page also says where to get the app, and that with a rear radar Scout also measures the traffic on the roads you ride."
   v096_tools: "<b>Every ride tool on the map looks the same.</b> 'Scout', 'Add a climb' and 'Propose a route' each have the same orange button. Without an account, the button takes you to log in first."

@@ -1425,6 +1425,7 @@ map:
   filters_hide: 'Les filtres masquent {x} lieux'
   filters_hide_one: 'Les filtres masquent 1 lieu'
   filters_narrowing: 'Les filtres restreignent cette carte'
+  filters_mark_aria: "Des filtres réduisent cette carte : voir pourquoi"
   filters_show_all: 'Tout afficher'
   ride_check_intro: 'Chargez un parcours que vous comptez rouler et voyez tout ce que nous avons à proximité.'
   scout_heading: 'Reconnaissance'
@@ -5076,6 +5077,7 @@ changelog:
   v097_grouped_pins: "<b>Une épingle pour un groupe.</b> Cinq lieux ou plus d'un même type qui se tiennent côte à côte, comme les quarante chalets d'un parc de vacances, apparaissent comme une seule épingle avec un nombre. Survolez-la ou ouvrez-la pour voir combien elle représente."
   v097_presets: "<b>Préréglages de la carte.</b> Enregistrez sous un nom les commutateurs que vous voulez actifs, dans les Réglages ou directement sur la carte, et choisissez celui qui ouvre la carte. Jusqu'à six, rien qu'à vous."
   v097_websites: "<b>Des sites web qui mènent quelque part.</b> Une adresse de site web est vérifiée à son arrivée, qu'elle vienne d'un cycliste, d'un registre ou d'OpenStreetMap : une adresse morte ou un domaine parqué n'est pas affiché, et le formulaire le dit quand vous en saisissez une."
+  v097_map_polish: "<b>Petites touches sur la carte.</b> Le sommet d'une montée est un petit drapeau sur un pic au lieu d'une étiquette, l'icône Planifier de la barre porte un point tant qu'une sortie est sur la carte, et la sortie que vous tracez passe au-dessus de toute autre ligne."
   v096_denmark: "<b>Le Danemark est sur la carte.</b> Vous pouvez maintenant y trouver et y ajouter des lieux, des cols et des itinéraires."
   v096_scout: "<b>Ajoutez une sortie depuis la page Scout.</b> Un bouton 'Ajouter une sortie Scout' ouvre la revue de la sortie sur la carte. La page dit aussi où obtenir l'application, et qu'avec un radar arrière Scout mesure aussi le trafic sur les routes où vous roulez."
   v096_tools: "<b>Chaque outil de sortie sur la carte a le même aspect.</b> 'Reconnaissance', 'Ajouter un col' et 'Proposer un itinéraire' ont chacun le même bouton orange. Sans compte, le bouton vous mène d'abord à la connexion."

@@ -810,20 +810,21 @@
          file by routes-legend.test.cjs - a key that drifts from the map is
          worse than none.
 
-         These rows do NOT filter, unlike the surface rows above. They carry no
-         checkmark and no press state for exactly that reason. #}
+         Each row switches its type on and off, as the surface rows do (owner
+         2026-10-15); the overlay row in Layers still turns the whole network
+         off. routes-tiles.js toggleRouteGroup() owns the state. #}
       <div class="rkey" id="routesKey" hidden>
         <h4>{{ 'map.route_network'|trans }}</h4>
         <div class="skey">
-          <div class="rkey-row"><span class="skey-ln" style="--sc:#C84E64"></span>{{ 'map.legend_route_national'|trans }}</div>
-          <div class="rkey-row"><span class="skey-ln" style="--sc:#7A4FCF"></span>{{ 'map.legend_route_regional'|trans }}</div>
-          <div class="rkey-row"><span class="skey-ln" style="--sc:#8A5A32"></span>{{ 'map.legend_route_mtb'|trans }}</div>
+          <button type="button" class="skey-row" data-route-grp="national" aria-pressed="true"><span class="skey-ln" style="--sc:#C84E64"></span>{{ 'map.legend_route_national'|trans }}</button>
+          <button type="button" class="skey-row" data-route-grp="regional" aria-pressed="true"><span class="skey-ln" style="--sc:#7A4FCF"></span>{{ 'map.legend_route_regional'|trans }}</button>
+          <button type="button" class="skey-row" data-route-grp="mtb" aria-pressed="true"><span class="skey-ln" style="--sc:#8A5A32"></span>{{ 'map.legend_route_mtb'|trans }}</button>
+          <button type="button" class="skey-row" data-route-grp="knoop" aria-pressed="true"><span class="rkey-node" aria-hidden="true">7</span>{{ 'map.legend_route_node'|trans }}</button>
         </div>
         {# The numbered badges are what the node network IS - most of a Dutch or
            Belgian screen is these - so the key names them rather than leaving a
            rider to work out that the circles are junctions. An explanation, in
            the quality-note style. #}
-        <div class="skey-note"><span class="rkey-node" aria-hidden="true">7</span>{{ 'map.legend_route_node'|trans }}</div>
       </div>
       {# The ride review's step 2 lines (traffic-measurements.md section 3.1).
          scout-traffic.js shows it while step 2 is on screen, with a row only
@@ -885,9 +886,12 @@
        drawer is closed by default and would never be. Filled by render.js on
        every zoom. #}
     <div class="zoom-hint" id="zoomHint" hidden></div>
+    {# Folded into a "!" mark (owner 2026-10-15): hover, focus or a click opens
+       the message and Show all, the next click folds it again. #}
     <div class="fpill" id="fpill" role="status" hidden>
-      <span id="fpillMsg"></span>
-      <button type="button" id="fpillReset">{{ 'map.filters_show_all'|trans }}</button>
+      <button type="button" class="fpill-mark" id="fpillMark" aria-expanded="false" aria-controls="fpillBody" aria-label="{{ 'map.filters_mark_aria'|trans }}">!</button>
+      <span class="fpill-body" id="fpillBody"><span id="fpillMsg"></span>
+      <button type="button" id="fpillReset">{{ 'map.filters_show_all'|trans }}</button></span>
     </div>
     <a class="contrib-fab" href="{{ path('contribute') }}" aria-label="{{ 'map.contribute_aria'|trans }}"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
     <aside class="cc-drawer" id="drawer" tabindex="-1" aria-hidden="true" aria-label="{{ 'map.drawer_aria'|trans }}">

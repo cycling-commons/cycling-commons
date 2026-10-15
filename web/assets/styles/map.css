@@ -748,9 +748,24 @@
   .legend .lg-toggle{margin-left:auto;margin-bottom:.2rem}
   .legend.collapsed{padding:.3rem;max-width:none}
   .legend.collapsed .lg-toggle{margin-bottom:0}
-  .legend.collapsed .lg-body{display:none}
+  /* folding, not snapping (owner 2026-10-15): the body shrinks into the corner and fades */
+  .legend{transition:padding .28s ease}
+  .legend .lg-body{overflow:hidden;max-height:80vh;max-width:17.5rem;transition:max-height .28s ease,max-width .28s ease,opacity .2s ease}
+  .legend.collapsed .lg-body{max-height:0;max-width:0;opacity:0;visibility:hidden}
+  /* one width for the content, whatever the fold: a shrinking width rewrapped the text and the box shot up mid-fold */
+  .legend .lg-body > *{width:min(15.7rem, calc(44vw - 1.8rem))}
   .legend h4{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;color:var(--chrome-head);margin-bottom:.6rem;text-transform:uppercase}
   .legend .row{display:flex;align-items:center;gap:.5rem;font-size:.78rem;margin:.25rem 0}
+  /* the legend, compact (owner 2026-10-15) */
+  .legend{padding:.6rem .9rem}
+  .legend .skey{gap:.15rem}
+  .legend .skey-row{min-height:1.55rem}
+  .legend h4{margin-bottom:.35rem}
+  .legend .lg-toggle{margin-bottom:0}
+  .legend .skey-note{margin-top:.3rem}
+  .legend .skey-study{margin-top:.45rem;padding:.3rem .5rem;min-height:1.7rem}
+  .legend .rkey{margin-top:.6rem;padding-top:.55rem}
+  .legend .rkey-row{padding:.05rem .2rem}
   .legend .d{width:10px;height:10px;border-radius:50%;background:var(--c)}
   .legend .lg-toggle{display:flex;align-items:center;justify-content:center;width:1.8rem;height:1.8rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--chrome-fg-solid);cursor:pointer}
   .legend .lg-toggle:hover{background:rgb(var(--chrome-fg) / .1)}
@@ -792,6 +807,7 @@
        Expanded, it takes the corner. One class drives both, so nothing can be
        half-open. */
     .legend{bottom:auto;top:.8rem;right:3.3rem;padding:.7rem .9rem;min-width:0;max-width:min(17.5rem,72vw)}
+    .legend .lg-body > *{width:min(15.7rem, calc(72vw - 1.8rem))}
     .legend.collapsed{top:.8rem;right:3.3rem;padding:.25rem}
   }
 
@@ -800,11 +816,16 @@
      rule the toast and the tooltip follow. bottom clears the attribution strip
      (10px gutter plus up to three wrapped lines of .7rem mono), the same
      clearance as .zoom-hint, so the pill reads above the credits. */
-  .fpill{position:absolute;left:50%;bottom:4.2rem;transform:translateX(-50%);z-index:1200;
+  .fpill{position:absolute;left:.75rem;bottom:7.6rem;z-index:1200;
     display:flex;align-items:center;gap:.6rem;background:var(--ink);color:var(--paper);
-    padding:.4rem .5rem .4rem .9rem;border-radius:30px;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);
+    padding:.3rem;border-radius:30px;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);
     font-size:.78rem;max-width:min(92vw,26rem)}
   .fpill[hidden]{display:none}
+  /* folded: the "!" alone; hover, focus or a click (.open) shows the message */
+  .fpill .fpill-mark{width:26px;height:26px;padding:0;border-radius:50%;background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:800;font-size:.9rem;line-height:1;letter-spacing:0;text-transform:none}
+  .fpill-body{display:none;align-items:center;gap:.6rem;padding-right:.2rem}
+  .fpill:hover .fpill-body,.fpill:focus-within .fpill-body,.fpill.open .fpill-body{display:inline-flex}
+  .fpill:hover,.fpill:focus-within,.fpill.open{padding-left:.3rem}
   .fpill button{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;
     background:var(--trail);color:var(--ink);border:none;border-radius:20px;padding:.35rem .7rem;cursor:pointer;white-space:nowrap}
   .fpill button:hover{background:#ff703d}
@@ -1680,13 +1701,18 @@
   /* Where the climb ENDS. Deliberately not in the purple/amber gradient family
      the two steepness markers use: this one answers "where does it stop", not
      "how steep is it", and a reader must not have to decode a third shade of
-     the same idea. Anchored bottom so the flag sits ON the summit point. */
-  .cc-summit{display:flex;align-items:center;gap:.2rem;background:var(--ink);color:#F3EBD8;
-    font-family:var(--mono);font-weight:700;font-size:.68rem;letter-spacing:.04em;line-height:1;
-    padding:.16rem .44rem;border-radius:3px;border:1.5px solid #F3EBD8;
-    box-shadow:0 2px 7px rgba(0,0,0,.45);cursor:pointer;white-space:nowrap}
-  .cc-summit::before{content:"⚑";font-size:.72rem;color:#FF5A1F}
-  .cc-summit:focus-visible{outline:2px solid #FF5A1F;outline-offset:2px}
+     the same idea. A drawn flag on a peak, 22 px (owner 2026-10-15: an icon,
+     not a word in a pill, so it takes up less space), set beside the summit
+     with a thin leader to a dot on the exact point, so it covers neither the
+     point nor the end of the line (owner 2026-10-15). */
+  .cc-summit{width:34px;height:34px;cursor:pointer;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+  .cc-summit .lead{stroke:var(--ink);stroke-width:1.3;stroke-linecap:round}
+  .cc-summit .tip{fill:var(--trail);stroke:var(--ink);stroke-width:.8}
+  .cc-summit svg{display:block;width:100%;height:100%;overflow:visible}
+  .cc-summit .peak{fill:var(--ink);stroke:#F3EBD8;stroke-width:1.5;stroke-linejoin:round}
+  .cc-summit path{stroke:#F3EBD8;stroke-width:1.6;stroke-linecap:round}
+  .cc-summit .flag{fill:#FF5A1F;stroke:#F3EBD8;stroke-width:.8;stroke-linejoin:round}
+  .cc-summit:focus-visible{outline:2px solid #FF5A1F;outline-offset:2px;border-radius:4px}
   /* The summit and gradient chips show from z11 (icons.js SUMMIT_MIN_ZOOM); wider, the climbs' chips piled up.
      A curator previewing a pending climb shape keeps its marker at every zoom. */
   .cc-z-lt11 .cc-summit,
@@ -1993,7 +2019,9 @@
   .cc-plan-striptab:hover{border-color:var(--trail)}
   .cc-plan-strip-x:hover{background:rgb(var(--chrome-fg) / .12);color:var(--chrome-fg-solid)}
   .map-wrap.cc-strip-on .cc-plan-bar{bottom:calc(140px + 1rem)}
-  .map-wrap.cc-strip-on .legend{bottom:calc(140px + 6.65rem)}
+  /* the bug button sits on the strip, so the legend needs no gap for it here */
+  .map-wrap.cc-strip-on .legend{bottom:calc(140px + .6rem)}
+  .map-wrap.cc-strip-on .fpill{bottom:calc(140px + .6rem)}
   .cc-plan-fig-wide{grid-column:1 / -1}
   .cc-plan-fig-wide span em{font-style:normal;text-transform:none;letter-spacing:0;color:rgb(var(--chrome-fg) / .8)}
   /* the day: the time bar, the date, what makes it tougher (route-planner.md section 4.4) */

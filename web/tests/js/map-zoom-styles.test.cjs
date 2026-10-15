@@ -49,6 +49,16 @@ test('the summit chip shows from z11', () => {
   assert.match(mapCss, /\.cc-z-lt11 \.cc-summit,/);
 });
 
+test('the summit marker is a drawn flag on a peak, not a word in a pill (owner 2026-10-15)', () => {
+  const marker = (render.match(/fEl\.className='cc-summit';[\s\S]*?markers\.push\(fm\);/) || [''])[0];
+  assert.match(marker, /fEl\.innerHTML=`<svg[\s\S]*<polygon[\s\S]*<\/svg>`/, 'the marker is not an inline SVG');
+  assert.doesNotMatch(marker, /fEl\.textContent=/, 'the marker still carries the word');
+  assert.match(marker, /fEl\.title=`\$\{f\.name\} · \$\{D\.climbFinish\|\|'SUMMIT'\}`/, 'the name and the word stay in the tooltip');
+  assert.match(marker, /setAttribute\('aria-label'/, 'the marker still has an accessible name');
+  assert.doesNotMatch(mapCss, /\.cc-summit::before/, 'the glyph pseudo-element is gone');
+  assert.match(mapCss, /\.cc-summit\{[^}]*width:\d+px;height:\d+px/, 'the marker is a fixed small icon');
+});
+
 test('our teardrops grow from 70% at z8 to full size at z14', () => {
   const at = liftPinScale();
   assert.equal(at(6), 0.7);
@@ -74,4 +84,12 @@ test('a shelter glyph is white on its purple', () => {
   const colour = (read('assets/map/catalog.js').match(/key:'shelter'[^}]*color:'(#[0-9A-Fa-f]{6})'/) || [])[1];
   assert.equal(c.txtOn(colour), '#fff', `shelter ${colour}`);
   assert.match(read('src/Api/V1/CategoryTable.php'), new RegExp("'key' => 'shelter'[^\\]]*'color' => '" + colour + "'"), 'the server table carries the same colour');
+});
+
+test('the summit icon sits beside the summit with a thin leader line to the exact point (owner 2026-10-15)', () => {
+  const marker = (render.match(/fEl\.className='cc-summit';[\s\S]*?markers\.push\(fm\);/) || [''])[0];
+  assert.match(marker, /<line x1="2" y1="32" x2="13" y2="21" class="lead"\/>/, 'no leader line from the point to the icon');
+  assert.match(marker, /<circle cx="2" cy="32" r="1\.8" class="tip"\/>/, 'no dot at the exact summit');
+  assert.match(marker, /anchor:'bottom-left',offset:\[-2,2\]/, 'the marker is not pinned by its leader tip');
+  assert.match(mapCss, /\.cc-summit\{width:34px;height:34px;/);
 });

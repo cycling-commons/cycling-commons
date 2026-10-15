@@ -91,11 +91,12 @@ test('the key follows the layer it explains', () => {
     'syncLegend must run on init as well as on every toggle that changes the map');
 });
 
-test('the route rows do not pretend to be filters', () => {
+test('every pressable route row filters: a row that looks pressable and does nothing is worse than plain text', () => {
   const block = keyBlock();
-  assert.doesNotMatch(block, /<button/, 'a row that looks pressable and does nothing is worse than plain text');
-  assert.doesNotMatch(block, /aria-pressed/);
-  // The surface rows above ARE filters, and stay that way.
+  const rows = block.match(/<button[^>]*>/g) || [];
+  assert.ok(rows.length >= 4, 'the route types and the junctions are switches (owner 2026-10-15)');
+  for (const r of rows) assert.match(r, /data-route-grp="[a-z]+" aria-pressed="true"/, `${r} is pressable but names no route group`);
+  // The surface rows above are filters too.
   assert.match(twig, /class="skey-row" data-surf-cls="paved" aria-pressed="true"/);
 });
 

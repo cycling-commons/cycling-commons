@@ -21,7 +21,7 @@ import { modeToShow } from './filters.js';
 import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible,
          toggleSurfaceClass, setStudyMode, studyModeOn,
          setGapsGrid, gapsGridOn, CLASSIFIED_MIN_ZOOM, GAPS_MAX_ZOOM } from './surface-tiles.js';
-import { routesTilesConfigured, setRoutesTiles, routesTilesVisible } from './routes-tiles.js';
+import { routesTilesConfigured, setRoutesTiles, routesTilesVisible, toggleRouteGroup } from './routes-tiles.js';
 import { setFilterDot } from './shell.js';
 import { newestStamp } from './tile-sources.js';
 
@@ -190,6 +190,10 @@ export function initLayerList(){
   document.querySelectorAll('.skey-row[data-surf-cls]').forEach(b=>{
     b.onclick=()=>{ b.setAttribute('aria-pressed', toggleSurfaceClass(b.dataset.surfCls) ? 'true' : 'false'); };
   });
+  // The route rows switch their type the same way (owner 2026-10-15).
+  document.querySelectorAll('.skey-row[data-route-grp]').forEach(b=>{
+    b.onclick=()=>{ b.setAttribute('aria-pressed', toggleRouteGroup(b.dataset.routeGrp) ? 'true' : 'false'); };
+  });
   // syncStudyGate after the toggle: Study hides the basemap, so its key leaves with it.
   if(studyBtn) studyBtn.onclick=()=>{ studyBtn.setAttribute('aria-pressed', setStudyMode(!studyModeOn()) ? 'true' : 'false'); syncStudyGate(); };
   syncStudyGate();
@@ -221,7 +225,10 @@ export function initFilterPill(){
   const pill=document.getElementById('fpill');
   const msg=document.getElementById('fpillMsg');
   const reset=document.getElementById('fpillReset');
+  const mark=document.getElementById('fpillMark');
   if(!pill || !msg || !reset) return;
+  /* The "!" mark: a click opens the message, the next click folds it again (owner 2026-10-15). */
+  if(mark) mark.onclick=()=>{ const open=!pill.classList.contains('open'); pill.classList.toggle('open', open); mark.setAttribute('aria-expanded', String(open)); };
 
   document.addEventListener('cc:filters', e=>{
     const {filters, hidden}=e.detail || {filters:0, hidden:0};
