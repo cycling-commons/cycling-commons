@@ -22,7 +22,7 @@ decisions, taken on the mockup:
 | How many | at most **6** per rider (`MapPresets::MAX_PRESETS`) |
 | What happens when the map opens | the **Default** preset applies every time, over whatever the map remembered; without one, nothing changes |
 | Linked to a tool (owner 2026-10-15: "presets should be linked to Scout, the route planner, Check my ride or general map use") | a preset is used for any of four tools, each tool takes **one** preset: **Default** (the map at open), **Plan a ride** (when the Plan panel opens), **Check my ride** (when the Ride tools panel opens), **Scout review** (when `/scout/review` opens, in place of Default) |
-| Leaving a tool | the switches **go back** to what they were before the tool opened; opening Layers from inside the tool keeps its preset, so it can be tweaked; any other panel, or closing, ends the tool |
+| Leaving a tool | the switches **go back** to what they were before the tool opened; opening Layers from inside the tool keeps its preset, so it can be tweaked, and so does a place drawer closing the panel (owner 2026-10-15: looking at a place is part of planning); any other panel, or closing, ends the tool |
 | Add a climb | **left out for now**: the climb editor is its own page and its map draws only the climb |
 | A visitor without an account | no presets; the Presets group shows one line, "Sign in to save presets" |
 
@@ -101,8 +101,10 @@ by `web/assets/map/presets.js`:
 - **A tool's preset**: on `cc:panel`, opening Plan a ride or Ride tools
   applies the preset used for that tool (`TOOL_OF_PANEL`), and a line under
   the chips says "Plan a ride uses Gravel weekend. Leaving it puts your
-  switches back." Opening Layers from there keeps it; any other panel or
-  closing puts back the switches the map had before the tool opened.
+  switches back." Opening Layers from there keeps it, and so does a place
+  drawer closing the panel (`cc:panel` carries `byDrawer`, set by
+  `closeRailPanel()`); any other panel or closing puts back the switches the
+  map had before the tool opened.
 - **A visitor** sees the group with one line, "Sign in to save presets",
   linking to the login page, and no chips.
 - The chip strings and the bar's copy come through `MapController::mapI18n`

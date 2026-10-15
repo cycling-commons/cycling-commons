@@ -118,11 +118,13 @@ export function initPresets(){
   const def = presets.find(p => p.uses.includes(page));
   if(def) pick(def); else renderChips();
   // Plan a ride and Ride tools switch to their preset when their panel opens; opening Layers from
-  // there keeps it, so it can be tweaked; anything else puts the switches back.
+  // there keeps it, so it can be tweaked, and so does a place drawer closing the panel (looking at
+  // a place is part of planning); anything else puts the switches back.
   document.addEventListener('cc:panel', e => {
     const key = e.detail && e.detail.key;
+    const byDrawer = !!(e.detail && e.detail.byDrawer);
     const next = TOOL_OF_PANEL[key] || null;
-    if(tool && (next === tool || key === 'layers')) return;
+    if(tool && (next === tool || key === 'layers' || byDrawer)) return;
     if(tool){ apply(before.settings); active = before.active; baseline = before.baseline; tool = null; before = null; toolLine(null); renderChips(); }
     const p = next && presets.find(x => x.uses.includes(next));
     if(!p) return;

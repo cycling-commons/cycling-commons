@@ -37,7 +37,6 @@ let gen = 0, routing = false, alongTimer = null, dirty = false;
 let alongRows = null, forecast = null, forecastKey = '', weatherTimer = null;
 const weatherCache = new Map();
 let markers = [], scrubMarker = null;
-let baseSources = null;
 const $ = id => document.getElementById(id);
 const fmtKm = m => uKm(m / 1000);
 
@@ -555,8 +554,9 @@ function addLayers(){
 }
 /* An empty map click is a stop. A click on anything of ours (a pin, a coverage
    point, a route, a surface stretch) is not: the basemap's own sources are
-   remembered when the style loads, and everything else is a feature. */
+   remembered when the style loads (catalog-load.js), and everything else is a feature. */
 function hitsFeature(e){
+  const baseSources = window.__ccBaseSources;
   if(!baseSources) return false;
   return map.queryRenderedFeatures(e.point).some(f => f.source && !baseSources.has(f.source) && f.source !== 'plan' && f.source !== 'plan-straight');
 }
@@ -679,9 +679,7 @@ export function initPlan(){
   const drawer = document.getElementById('drawer');
   if(drawer) new MutationObserver(paintDrawerButtons).observe(drawer, { childList: true, subtree: true });
   document.addEventListener('cc:panel', e => { renderBar(); syncPlanning(); const key = e.detail && e.detail.key; if(key === 'plan' && ride.stops.length >= 2) fitRide(); });
-  // The map: layers once the style is there, the basemap's sources remembered for the click test.
-  const ready = () => { baseSources = new Set(Object.keys((map.getStyle() || {}).sources || {})); };
-  if(map.isStyleLoaded && map.isStyleLoaded()) ready(); else map.once('style.load', ready);
+  // The map: layers once the style is there.
   const onLoad = () => { addLayers(); };
   if(map.loaded && map.loaded()) onLoad(); else map.once('load', onLoad);
   map.on('style.load', () => { if(map.loaded()) addLayers(); });

@@ -29,6 +29,22 @@ test('a click on a stop never adds a stop', () => {
   assert.ok(m[1].indexOf('cc-plan-mk') < m[1].indexOf('addStop('), 'the guard has to come before the add');
 });
 
+/* A coverage pin clicked while planning moved the finish onto it (owner
+   2026-10-15). map.js adds the pin layers at once when the style has already
+   loaded, so a list of "basemap sources" taken at the planner's own start held
+   the pins too, and a pin click read as an empty map click. The list is taken
+   where the map is made, on every style load, before any module adds a source. */
+test('the basemap sources are recorded where the map is made, not when the planner starts', () => {
+  const load = fs.readFileSync(path.join(ROOT, 'assets/map/catalog-load.js'), 'utf8');
+  assert.match(load, /window\.__ccMapInstance = new maplibregl\.Map\(window\.__ccMapOpts\);\n\s*recordBaseSources\(window\.__ccMapInstance\);/,
+    'the listener has to be on the map before any other module can add a source');
+  assert.match(load, /map\.on\('style\.load', \(\) => \{ window\.__ccBaseSources = new Set\(Object\.keys\(\(map\.getStyle\(\) \|\| \{\}\)\.sources \|\| \{\}\)\); \}\);/);
+  const hit = plan.match(/function hitsFeature\(e\)\{([\s\S]*?)\n\}/);
+  assert.ok(hit, 'hitsFeature not found');
+  assert.match(hit[1], /const baseSources = window\.__ccBaseSources;/, 'read live, so a later style load is followed');
+  assert.doesNotMatch(plan, /baseSources = new Set\(Object\.keys/, 'the planner must not take its own snapshot');
+});
+
 test('the rider is told, under the stops and on the stop', () => {
   assert.match(twig, /\{\{ 'map\.plan_remove_hint'\|trans \}\}/);
   assert.match(plan, /el\.title = s\.name \+ '\\n' \+ \(P\(\)\.removeHint \|\| ''\);/);

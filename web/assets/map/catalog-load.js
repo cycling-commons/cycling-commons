@@ -40,6 +40,7 @@
     if (window.CC_I18N && window.CC_I18N.mapUi) window.__ccMapOpts.locale = window.CC_I18N.mapUi;
     try {
       window.__ccMapInstance = new maplibregl.Map(window.__ccMapOpts);
+      recordBaseSources(window.__ccMapInstance);
       answerMissingImages(window.__ccMapInstance);
     } catch (e) {
       // Any constructor failure ends the map, not just a missing GPU: without
@@ -49,6 +50,15 @@
       reportNoGpu();
       console.error('MapLibre could not start.', e);
     }
+  }
+
+  /* The basemap's own sources, for the planner's click test (plan.js
+     hitsFeature): a click on anything else is a click on one of ours. Taken
+     HERE, on every style load, because this listener is on the map before any
+     module can add a source; the module graph may start after the style has
+     loaded and our pin layers are in (map.js bootMap). */
+  function recordBaseSources(map) {
+    map.on('style.load', () => { window.__ccBaseSources = new Set(Object.keys((map.getStyle() || {}).sources || {})); });
   }
 
   /* The basemap asks its sprite for an image named after every point's OSM

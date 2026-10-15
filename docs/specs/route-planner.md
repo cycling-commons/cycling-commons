@@ -140,7 +140,10 @@ figures, the profile bins, the GPX), tested under node
 `rail-shell.test.cjs` pin the wiring. An empty map click is one that hits no
 feature of ours: the basemap's own sources are remembered when the style
 loads, and anything rendered from another source is a pin, a route or a
-stretch. The page hands the script its endpoints and tokens as
+stretch. They are remembered where the map is made (`catalog-load.js`,
+`window.__ccBaseSources`, on every style load), because the map script may
+start after the style has loaded and the pin layers are in (owner
+2026-10-15). The page hands the script its endpoints and tokens as
 `window.CC_PLAN`; a visitor's blob has no save endpoint. The home page link
 is not built yet.
 

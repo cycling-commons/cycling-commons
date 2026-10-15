@@ -52,8 +52,23 @@ test('a preset is used per tool: the page picks map or scout, Plan a ride and Ri
   assert.ok(twig.includes("page: scout_review|default(false) ? 'scout' : 'map'"), 'the page does not tell the script whether it is Scout review');
   assert.match(presets, /const TOOL_OF_PANEL = \{ plan: 'plan', tools: 'ride' \};/);
   assert.match(presets, /document\.addEventListener\('cc:panel'/);
-  assert.match(presets, /if\(tool && \(next === tool \|\| key === 'layers'\)\) return;/, 'opening Layers from a tool must keep its preset');
+  assert.match(presets, /if\(tool && \(next === tool \|\| key === 'layers' \|\| byDrawer\)\) return;/, 'opening Layers, or a place drawer, from a tool must keep its preset');
   assert.match(presets, /apply\(before\.settings\)/, 'leaving a tool does not put the switches back');
   assert.ok(!/isDefault/.test(presets) && !/isDefault/.test(read('assets/settings/map-presets.js')), 'the single default is gone from the scripts');
   assert.ok(settings.includes('id="mpUse"') && !settings.includes('id="mpDefault"'), 'the editor has no Use this preset for chips');
+});
+
+/* A pin clicked while planning opened the place drawer, the drawer closed the
+   Plan panel, and that close read as leaving the planner: every switch was
+   clicked back to the map's own, one redraw each, and the page froze with the
+   planner's hidden routes back on (owner 2026-10-15). Looking at a place is
+   part of planning, so a close made by a place drawer is told apart. */
+test('a place drawer closing the panel does not end the tool', () => {
+  const shell = read('assets/map/shell.js');
+  assert.match(shell, /new CustomEvent\('cc:panel', \{detail: \{key, byDrawer\}\}\)/, 'the panel event does not say the drawer closed it');
+  const m = shell.match(/export function closeRailPanel\(\)\{([\s\S]*?)\n\}/);
+  assert.ok(m, 'closeRailPanel not found');
+  assert.match(m[1], /byDrawer = true;\s*try\s*\{\s*x\.click\(\);\s*\}\s*finally\s*\{\s*byDrawer = false;\s*\}/,
+    'the drawer close is marked only for its own click, and the mark is always cleared');
+  assert.match(presets, /const byDrawer = !!\(e\.detail && e\.detail\.byDrawer\);/);
 });

@@ -20,8 +20,11 @@ const TITLES = () => ({
    whether a map click is a stop. */
 export const activePanel = () => active;
 /* Every open and close is told on the document as `cc:panel` with {key} (null
-   on close), so a module can follow the drawer without owning it. */
-const tell = key => document.dispatchEvent(new CustomEvent('cc:panel', {detail: {key}}));
+   on close), so a module can follow the drawer without owning it. `byDrawer`
+   says a place drawer closed it: the rider is looking at a place, not leaving
+   a tool (presets.js). */
+let byDrawer = false;
+const tell = key => document.dispatchEvent(new CustomEvent('cc:panel', {detail: {key, byDrawer}}));
 
 let active = null;
 
@@ -45,7 +48,7 @@ export function closeRailPanel(){
   const dwr = document.getElementById('dwr');
   if(!dwr || !dwr.classList.contains('open')) return false;
   const x = document.getElementById('dwr-x');
-  if(x){ x.click(); return true; }
+  if(x){ byDrawer = true; try { x.click(); } finally { byDrawer = false; } return true; }
   dwr.classList.remove('open');
   dwr.setAttribute('aria-hidden', 'true');
   return true;
