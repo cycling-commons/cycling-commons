@@ -165,6 +165,14 @@ routes.
   stops whose leg passes it. With fewer than two stops it is added at the end.
   A place already in the ride is not added twice; the button reads "In your
   ride" and removes it.
+- **A right-click on a place's pin**, or a click with the command key on a
+  Mac, does the same while a ride is planned (owner 2026-10-15): in at its
+  km along, or out again when it is in the ride. The rider stays on the map;
+  the numbered stop is the answer. Outside planning the click keeps its usual
+  meaning. One rule says what a place is to the ride (`drawer.js`
+  `planPlace()`), for the drawer button and the pins alike, and one
+  synchronous event carries it from a pin to the planner (`util.js`
+  `offerToRide()`, `cc:place-menu`). The panel says so under the stops.
 - **Reorder** by the row's up and down buttons; **Remove** per row. On a
   pointer device a stop can also be dragged on the map, which re-routes its
   two legs when dropped, and removed on the map by a right-click, or a click

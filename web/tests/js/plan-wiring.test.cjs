@@ -46,7 +46,9 @@ test('the model is a leaf and the entry wires the planner', () => {
 
 test('the drawer writes Add to ride for a place with a point, and the scope click stands aside while planning', () => {
   assert.ok(drawer.includes('data-plan-add'), 'drawer.js writes no Add to ride button');
-  assert.ok(/layer\.key !== 'experience' && layer\.key !== 'surface'/.test(drawer), 'a route or a surface stretch must never become a stop');
+  // planPlace() is the one rule, for the drawer button and a right-click on a pin alike.
+  const rule = (drawer.match(/export function planPlace\(layer, f\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.ok(/layer\.key === 'experience' \|\| layer\.key === 'surface'\) return null;/.test(rule), 'a route or a surface stretch must never become a stop');
   assert.ok(scopeUi.includes("from './plan-state.js'") && /if\(isPlanning\(\)\) return;/.test(scopeUi), 'click-to-scope ignores planning');
 });
 

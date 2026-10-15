@@ -500,6 +500,16 @@ export function commonsPhotoHtml(p, name){
     <figcaption id="cc-d-cap">${photoCap(p)}</figcaption>
   </figure>`;
 }
+/* What a place is to the ride planner (docs/specs/route-planner.md section
+   4.3): any place with a point, a climb at its foot, never a route or a
+   surface stretch. The drawer's Add to ride and a right-click on the pin
+   (render.js, coverage.js) both read it. Null when the place cannot be a stop. */
+export function planPlace(layer, f){
+  const ll = f.route ? f.route[0] : (f.geom && f.geom.ll);
+  const item = f.id != null ? (f.letter || layer.letter) + ':' + f.id : (f.osmRef ? 'osm:' + f.osmRef : null);
+  if(!ll || !item || layer.key === 'experience' || layer.key === 'surface') return null;
+  return { item, letter: f.letter || layer.letter || null, name: f.name || f.osmName || '', lat: ll[0], lng: ll[1] };
+}
 function buildRecord(layer, f){
   const cur = f.cur ? `<div class="cc-d-cur">▲ ${I18N.curated||'Best of'}</div>` : '';
   const pl = photoList(f);
@@ -772,14 +782,12 @@ function buildRecord(layer, f){
       + '</div>')
     : '';
 
-  /* The ride planner's Add to ride (docs/specs/route-planner.md section 4.3):
-     any place with a point, a climb at its foot, never a route or a surface
-     stretch. plan.js binds the click and paints "In your ride"; the group
-     shows while a ride is being planned (body.cc-planning). */
-  const planLL = f.route ? f.route[0] : (f.geom && f.geom.ll);
-  const planItem = f.id != null ? (f.letter || layer.letter) + ':' + f.id : (f.osmRef ? 'osm:' + f.osmRef : null);
-  const plan = (planLL && planItem && layer.key !== 'experience' && layer.key !== 'surface')
-    ? `<button type="button" class="cc-d-act cc-d-plan" data-plan-add data-plan-item="${escPend(planItem)}" data-plan-letter="${escPend(f.letter || layer.letter || '')}" data-plan-name="${escPend(f.name || f.osmName || '')}" data-plan-lat="${planLL[0]}" data-plan-lng="${planLL[1]}">${D.planAdd || '+ Add to ride'}</button>`
+  /* The ride planner's Add to ride (docs/specs/route-planner.md section 4.3),
+     for what planPlace() takes. plan.js binds the click and paints "In your
+     ride"; the group shows while a ride is being planned (body.cc-planning). */
+  const pp = planPlace(layer, f);
+  const plan = pp
+    ? `<button type="button" class="cc-d-act cc-d-plan" data-plan-add data-plan-item="${escPend(pp.item)}" data-plan-letter="${escPend(pp.letter || '')}" data-plan-name="${escPend(pp.name)}" data-plan-lat="${pp.lat}" data-plan-lng="${pp.lng}">${D.planAdd || '+ Add to ride'}</button>`
     : '';
   const grp = (html, cls) => html ? `<div class="cc-d-grp${cls?' '+cls:''}">${html}</div>` : '';
   const act = grp(plan, 'cc-d-grp-plan')

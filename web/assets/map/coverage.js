@@ -8,7 +8,8 @@ import { layerByKey, active, mode, LETTER_KEY, KEY_LETTER } from './catalog.js';
 import { liftScopeForHit } from './scope-ui.js';
 import { mintKindIcons, miniIcon, iconMinZoom, SERVICE_GLYPH, coverageIconId, kindImageId, covIconSizes, DISC_SIZES, DROP_SIZES, witnessCutoff, KIND_ICONS, PLACE_LETTER, PLACE_KIND_LABELS, kindOfLabel } from './icons.js';
 import { updateCounts, applyStaysAccessFilter, liftInfoLayersAboveRoutes } from './render.js';
-import { openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt } from './drawer.js';
+import { openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt, planPlace } from './drawer.js';
+import { offerToRide } from './util.js';
 import { isPicking } from './picking.js';
 import { osmLayers } from './osm-pools.js';
 import { viewDirection, OSM_REF, bikeAccess, ferryFacts, tileTypeLabel, coverageSourceLayers } from './osm-tags.js';
@@ -129,9 +130,19 @@ function covHit(e){
    on the first hit only, so overlapping icons from two countries open one
    drawer, and one hit-test serves each mousemove. */
 let covHovered=false;
+/* A coverage icon as a place for the ride: the record its drawer would show, built from the tile, read by planPlace(). */
+function coveragePlace(f0){
+  const key=iconLayerKey.get(f0.layer.id), layer=layerByKey[key]; if(!layer) return null;
+  const c=f0.geometry.coordinates, ll={lng:c[0], lat:c[1]}, p=covProps(key, f0.properties, null);
+  return planPlace(layer, key==='water' ? waterDrawer(p, ll) : osmDrawer(layer, p, ll, COV_SRC[key]));
+}
 function bindCoverageHandlers(){
   const leave=()=>{ if(!covHovered) return; covHovered=false; map.getCanvas().style.cursor=''; hideTip(); };
+  // While a ride is planned, a right-click or a command-click puts the place in the ride, or takes it out (route-planner.md section 4.3).
+  map.on('contextmenu', e=>{ const f0=covHit(e); if(!f0) return;
+    if(offerToRide(coveragePlace(f0)) && e.originalEvent) e.originalEvent.preventDefault(); });
   map.on('click', e=>{ const f0=covHit(e); if(!f0) return;
+    if(e.originalEvent && e.originalEvent.metaKey && offerToRide(coveragePlace(f0))) return;
     const tp=f0.properties, c=f0.geometry.coordinates;
     openCoverageDrawer(iconLayerKey.get(f0.layer.id), tp, {lng:c[0], lat:c[1]}); flyToPin([c[0],c[1]]); });
   map.on('mousemove', e=>{ const f0=covHit(e); if(!f0){ leave(); return; }

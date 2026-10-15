@@ -5,14 +5,14 @@ import { map, flyToPin, styleReady } from './map-init.js';
 import { showTip, hideTip } from './sheet.js';
 import { I18N, D, LAYER_L10N, tpl, trVal, DIFF_LABELS, CC_SEASON_LABEL } from './i18n.js';
 import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, haversine,
-         featurePoint, pinPoint, currentSeason, ccUrl, featureSummary } from './util.js';
+         featurePoint, pinPoint, currentSeason, ccUrl, featureSummary, offerToRide } from './util.js';
 import { CATALOG, active, layerByKey, mode, LETTER_KEY, KEY_LETTER } from './catalog.js';
 import { inScope, curScope } from './scope-ui.js';
 import { pinEl, miniIcon } from './icons.js';
 import { updateConfMarkers, confShownCount, confTotalCount } from './osm-pools.js';
 import { covShownCount, coverageTotal, syncCoverageLayers, covIconFilter,
          COVERAGE_CCS, COVERAGE_ON, COVERAGE_KEYS } from './coverage.js';
-import { openDrawer } from './drawer.js';
+import { openDrawer, planPlace } from './drawer.js';
 import { NO_VALIDATE } from './tile-sources.js';
 import { attrMatch, narrowingCount, climbChipsMatch, modeShows, placeKey, createShownAnyway } from './filters.js';
 import { fanPin, fanOffsetOf, scheduleFanOut } from './pin-fan.js';
@@ -541,7 +541,9 @@ export function render(){
         const start = pinPoint(f);   // climbs: pin sits at the start (foot) — util.js owns the rule
         const lngLat=[start[1],start[0]];
         // stopPropagation: same click-bleed-through as the steep marker.
-        el.addEventListener('click', e=>{ e.stopPropagation(); openDrawer(layer,f); flyToPin(lngLat); });
+        // While a ride is planned, a right-click or a command-click puts the place in the ride, or takes it out (route-planner.md section 4.3).
+        el.addEventListener('contextmenu', e=>{ if(offerToRide(planPlace(layer,f))){ e.preventDefault(); e.stopPropagation(); } });
+        el.addEventListener('click', e=>{ e.stopPropagation(); if(e.metaKey && offerToRide(planPlace(layer,f))){ e.preventDefault(); return; } openDrawer(layer,f); flyToPin(lngLat); });
         const tipText = summary ? `${f.name} · ${summary}` : f.name;
         // A pin fanned off a shared spot (pin-fan.js) has its tip over its own seat.
         el.addEventListener('mouseenter', ()=>showTip(tipText, lngLat, fanOffsetOf(el)));

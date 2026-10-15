@@ -60,6 +60,15 @@ export const DIFF_PURPLE=['','#D9A6F2','#B25BE8','#8A2BD0','#5E18A0','#3A0A66'];
 export function haversine(a,b){ const R=6371,d=Math.PI/180;
   const x=Math.sin((b[0]-a[0])*d/2)**2 + Math.cos(a[0]*d)*Math.cos(b[0]*d)*Math.sin((b[1]-a[1])*d/2)**2;
   return 2*R*Math.asin(Math.sqrt(x)); }
+/* A place offered to the ride from its pin by a right-click or a command-click
+   (route-planner.md section 4.3): one synchronous event the planner answers,
+   so a pin needs no import of the planner. True when the planner took it. */
+export function offerToRide(place){
+  if(!place) return false;
+  const detail = { place, handled: false };
+  document.dispatchEvent(new CustomEvent('cc:place-menu', {detail}));
+  return detail.handled;
+}
 export function featurePoint(f){ return (f.geom&&f.geom.ll) || (f.route&&f.route[0]) || (f.geom&&f.geom.path&&f.geom.path[0]) || null; }
 // [lat, lng] of a catalogue feature, whichever shape it carries: a pool
 // feature's own point, a GeoJSON point, or featurePoint() for a climb, a

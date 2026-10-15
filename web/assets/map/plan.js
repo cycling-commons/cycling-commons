@@ -676,6 +676,15 @@ export function initPlan(){
     paintDrawerButtons();
     openPanel();
   });
+  // A right-click or a command-click on a place's pin (util.js offerToRide): in at its km along, or out
+  // again, while a ride is planned; the rider stays on the map, the numbered stop is the answer.
+  document.addEventListener('cc:place-menu', e => {
+    if(!planning() || !e.detail.place) return;
+    if(!e.detail.place.name) e.detail.place.name = e.detail.place.letter || (P().mapPoint || 'Map point');
+    togglePlace(e.detail.place);
+    paintDrawerButtons();
+    e.detail.handled = true;
+  });
   const drawer = document.getElementById('drawer');
   if(drawer) new MutationObserver(paintDrawerButtons).observe(drawer, { childList: true, subtree: true });
   document.addEventListener('cc:panel', e => { renderBar(); syncPlanning(); const key = e.detail && e.detail.key; if(key === 'plan' && ride.stops.length >= 2) fitRide(); });
