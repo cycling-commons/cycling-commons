@@ -1,0 +1,31 @@
+web/templates/base.html.twig
+  s_c707f1443f1405::t_5cef02224c87ae 62-63
+web/src/EventSubscriber/SignedOutMarkSubscriber.php
+  s_c707f1443f1405::t_38cb99d942729b 1-44
+web/tests/js/signed-out.test.cjs
+  s_c707f1443f1405::t_fcb0fd0b5b6449 1-59
+web/tests/Auth/LogoutTest.php
+  s_c707f1443f1405::t_1e7fc0b1b1fdcb 81-90,92-103
+  s_c707f1443f1405::t_4569895aa80468 91
+  s_c707f1443f1405::t_93d241d10b3142 80
+web/assets/js/signed-out.js
+  s_c707f1443f1405::t_1b7f57fdd81595 1-15
+docs/specs/route-planner.md
+  s_c707f1443f1405::t_d037c832179309 531-537
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0aa68364aceb7cd4d341fb33d10ca97334831881",
+  "prompts": {},
+  "sessions": {
+    "s_c707f1443f1405": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6b21b1b-dfdf-4cfe-8fa1-eda87e9640b3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
