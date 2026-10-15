@@ -194,6 +194,18 @@ export function initLayerList(){
   document.querySelectorAll('.skey-row[data-route-grp]').forEach(b=>{
     b.onclick=()=>{ b.setAttribute('aria-pressed', toggleRouteGroup(b.dataset.routeGrp) ? 'true' : 'false'); };
   });
+  // The eye on a key's heading switches all its rows (owner 2026-10-15): all off while any is
+  // on, else all on. It clicks the rows, so the map and the presets hear one path, and it
+  // watches their aria-pressed, so a row or a preset changed elsewhere moves it too.
+  document.querySelectorAll('.lg-eye[data-eye-for]').forEach(eye=>{
+    const rows=[...document.querySelectorAll(`#${eye.dataset.eyeFor} .skey-row`)];
+    const anyOn=()=>rows.some(r=>r.getAttribute('aria-pressed')!=='false');
+    const sync=()=>eye.setAttribute('aria-pressed', anyOn()?'true':'false');
+    eye.onclick=()=>{ const on=anyOn(); rows.filter(r=>(r.getAttribute('aria-pressed')!=='false')===on).forEach(r=>r.click()); };
+    const watch=new MutationObserver(sync);
+    rows.forEach(r=>watch.observe(r, { attributes: true, attributeFilter: ['aria-pressed'] }));
+    sync();
+  });
   // syncStudyGate after the toggle: Study hides the basemap, so its key leaves with it.
   if(studyBtn) studyBtn.onclick=()=>{ studyBtn.setAttribute('aria-pressed', setStudyMode(!studyModeOn()) ? 'true' : 'false'); syncStudyGate(); };
   syncStudyGate();
@@ -306,6 +318,14 @@ export function initRailChrome(){
     legend.classList.toggle('collapsed', window.matchMedia('(max-width:760px)').matches);
     sync();
     lgToggle.onclick=()=>{ legend.classList.toggle('collapsed'); sync(); };
+    // L does what the toggle does (owner 2026-10-15); a field keeps its letter, a modifier its shortcut.
+    document.addEventListener('keydown',e=>{
+      if(e.key!=='l'&&e.key!=='L') return;
+      if(e.ctrlKey||e.metaKey||e.altKey||e.repeat||legend.hidden) return;
+      const t=e.target;
+      if(t&&t.closest&&t.closest('input, textarea, select, [contenteditable]')) return;
+      e.preventDefault(); lgToggle.click();
+    });
   }
 
   // Site nav + language + account: the ≡ button opens the rail's bottom flyout.

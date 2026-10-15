@@ -1234,6 +1234,7 @@ map:
   contribute: '+ Bijdragen'
   contribute_aria: 'Draag een plek bij'
   legend_aria: 'Wegdeklegenda'
+  legend_all_aria: 'Alles tonen of verbergen'
   legend_paved: 'Verhard · asfalt'
   legend_gravel: 'Grind'
   legend_cobbles: 'Kasseien'

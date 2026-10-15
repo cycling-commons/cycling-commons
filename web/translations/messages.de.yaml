@@ -1237,6 +1237,7 @@ map:
   contribute: '+ Beitragen'
   contribute_aria: 'Einen Ort beitragen'
   legend_aria: 'Belag-Legende'
+  legend_all_aria: 'Alles ein- oder ausblenden'
   legend_paved: 'Befestigt · Asphalt'
   legend_gravel: 'Schotter'
   legend_cobbles: 'Kopfsteinpflaster'

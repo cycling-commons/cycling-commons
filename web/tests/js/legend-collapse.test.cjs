@@ -129,3 +129,29 @@ test('the panel is capped so one long note cannot set its width', () => {
   assert.match(css, /\.legend\{[^}]*max-width:min\(17\.5rem,44vw\)/s,
     'the quality-ticks sentence was setting the panel width; it must wrap instead');
 });
+
+test('L presses the toggle, but never inside a field or with a modifier', () => {
+  const m = panels.match(/document\.addEventListener\('keydown',e=>\{\n      if\(e\.key!=='l'&&e\.key!=='L'\) return;([\s\S]*?)\n    \}\);/);
+  assert.ok(m, 'the L key handler was not found');
+  assert.match(m[1], /e\.ctrlKey\|\|e\.metaKey\|\|e\.altKey\|\|e\.repeat\|\|legend\.hidden/);
+  assert.match(m[1], /closest\('input, textarea, select, \[contenteditable\]'\)/);
+  assert.match(m[1], /lgToggle\.click\(\)/, 'one path: the key clicks the button, so aria-expanded follows');
+  assert.match(twig, /id="lgToggle"[\s\S]{0,200}aria-keyshortcuts="L"/);
+});
+
+test('the fold button keeps its three stripes; each key heading starts with the eye', () => {
+  const toggle = twig.slice(twig.indexOf('id="lgToggle"'), twig.indexOf('</button>', twig.indexOf('id="lgToggle"')));
+  assert.match(toggle, /<path d="M4 6h16M4 12h16M4 18h16"\/>/, 'the fold button is the three stripes (owner 2026-10-15)');
+  assert.ok(!toggle.includes('ccEye'), 'the eye belongs to the key headings, not the fold button');
+  for (const key of ['surfaceKey', 'routesKey']) {
+    assert.match(twig, new RegExp(`<h4><button type="button" class="lg-eye" data-eye-for="${key}" aria-pressed="true"[^\\n]*\\{\\{ ccEye \\}\\}</button>\\{\\{ '[^']+'\\|trans \\}\\}</h4>`),
+      `the ${key} eye sits before the heading text`);
+  }
+  assert.match(css, /\.legend \.lg-eye\[aria-pressed="false"\] > \.eye-open,\.legend \.lg-eye\[aria-pressed="true"\] > \.eye-shut\{display:none\}/);
+});
+
+test('a key eye switches its rows by clicking them, and follows them', () => {
+  assert.match(panels, /rows\.filter\(r=>\(r\.getAttribute\('aria-pressed'\)!=='false'\)===on\)\.forEach\(r=>r\.click\(\)\)/,
+    'any row on: all off; none on: all on - through the rows, so presets and the map hear one path');
+  assert.match(panels, /watch\.observe\(r, \{ attributes: true, attributeFilter: \['aria-pressed'\] \}\)/);
+});

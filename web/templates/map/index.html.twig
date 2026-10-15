@@ -761,8 +761,12 @@
          real corner of it. One class does it everywhere - `collapsed` on the
          panel, `#lgBody` hidden - so a new key section can never be forgotten
          out of the hide list the way `.rkey` just was. #}
+      {# One eye drawing for each key's heading: open while any row shows,
+         shut while all are hidden (owner 2026-10-15); map.css picks the one
+         that matches aria-pressed. #}
+      {% set ccEye %}<svg class="eye-open" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-shut" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>{% endset %}
       <button class="lg-toggle" id="lgToggle" type="button" aria-controls="lgBody"
-              aria-label="{{ 'map.legend_aria'|trans }}" aria-expanded="true">
+              aria-label="{{ 'map.legend_aria'|trans }}" aria-expanded="true" aria-keyshortcuts="L">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
       <div class="lg-body" id="lgBody">
@@ -776,7 +780,7 @@
          of them on it. #}
       <div class="skey-block" id="surfaceKey" hidden>
       {% set sc = cc_surface_colours() %}
-      <h4>{{ 'item_type.road-surface.label'|trans }}</h4>
+      <h4><button type="button" class="lg-eye" data-eye-for="surfaceKey" aria-pressed="true" aria-label="{{ 'map.legend_all_aria'|trans }}" title="{{ 'map.legend_all_aria'|trans }}">{{ ccEye }}</button>{{ 'item_type.road-surface.label'|trans }}</h4>
       <div class="skey">
         <button type="button" class="skey-row" data-surf-cls="paved" aria-pressed="true"><span class="skey-ln" style="--sc:{{ sc.paved }}"></span>{{ 'map.legend_paved'|trans }}</button>
         <button type="button" class="skey-row" data-surf-cls="gravel" aria-pressed="true"><span class="skey-ln" style="--sc:{{ sc.gravel }}"></span>{{ 'map.legend_gravel'|trans }}</button>
@@ -814,7 +818,7 @@
          2026-10-15); the overlay row in Layers still turns the whole network
          off. routes-tiles.js toggleRouteGroup() owns the state. #}
       <div class="rkey" id="routesKey" hidden>
-        <h4>{{ 'map.route_network'|trans }}</h4>
+        <h4><button type="button" class="lg-eye" data-eye-for="routesKey" aria-pressed="true" aria-label="{{ 'map.legend_all_aria'|trans }}" title="{{ 'map.legend_all_aria'|trans }}">{{ ccEye }}</button>{{ 'map.route_network'|trans }}</h4>
         <div class="skey">
           <button type="button" class="skey-row" data-route-grp="national" aria-pressed="true"><span class="skey-ln" style="--sc:#C84E64"></span>{{ 'map.legend_route_national'|trans }}</button>
           <button type="button" class="skey-row" data-route-grp="regional" aria-pressed="true"><span class="skey-ln" style="--sc:#7A4FCF"></span>{{ 'map.legend_route_regional'|trans }}</button>

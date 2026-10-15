@@ -1852,6 +1852,7 @@ map:
   contribute: '+ Contribute'
   contribute_aria: 'Contribute a place'
   legend_aria: 'Surface legend'
+  legend_all_aria: 'Show or hide all'
   legend_paved: 'Paved · asphalt'
   legend_gravel: 'Gravel'
   legend_cobbles: 'Pavé · cobbles'

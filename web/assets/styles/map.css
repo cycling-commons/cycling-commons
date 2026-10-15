@@ -770,6 +770,12 @@
   .legend .lg-toggle{display:flex;align-items:center;justify-content:center;width:1.8rem;height:1.8rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--chrome-fg-solid);cursor:pointer}
   .legend .lg-toggle:hover{background:rgb(var(--chrome-fg) / .1)}
   .legend .lg-toggle:focus-visible{outline:2px solid var(--trail);outline-offset:1px}
+  /* the eye before each key's heading: open while any row shows, shut while all are hidden */
+  .legend h4{display:flex;align-items:center;gap:.35rem}
+  .legend .lg-eye{flex:none;display:flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;margin-left:-.3rem;padding:0;background:transparent;border:none;border-radius:6px;color:var(--chrome-fg-solid);cursor:pointer}
+  .legend .lg-eye:hover{background:rgb(var(--chrome-fg) / .1)}
+  .legend .lg-eye:focus-visible{outline:2px solid var(--trail);outline-offset:1px}
+  .legend .lg-eye[aria-pressed="false"] > .eye-open,.legend .lg-eye[aria-pressed="true"] > .eye-shut{display:none}
   /* Top-right: two glass icon buttons. The base picker opens a small flyout to
      its left; street-level is a plain toggle. Everything else that used to
      live in this corner is now a layer, in the Layers panel. */

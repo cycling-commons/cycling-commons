@@ -93,9 +93,10 @@ test('the key follows the layer it explains', () => {
 
 test('every pressable route row filters: a row that looks pressable and does nothing is worse than plain text', () => {
   const block = keyBlock();
-  const rows = block.match(/<button[^>]*>/g) || [];
+  // The heading's eye switches the rows below it (legend-collapse.test.cjs); every other button is a row.
+  const rows = (block.match(/<button[^>]*>/g) || []).filter(b => !b.includes('class="lg-eye"'));
   assert.ok(rows.length >= 4, 'the route types and the junctions are switches (owner 2026-10-15)');
-  for (const r of rows) assert.match(r, /data-route-grp="[a-z]+" aria-pressed="true"/, `${r} is pressable but names no route group`);
+  for (const r of rows) assert.match(r, /class="skey-row" data-route-grp="[a-z]+" aria-pressed="true"/, `${r} is pressable but names no route group`);
   // The surface rows above are filters too.
   assert.match(twig, /class="skey-row" data-surf-cls="paved" aria-pressed="true"/);
 });

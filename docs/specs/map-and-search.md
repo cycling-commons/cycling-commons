@@ -353,7 +353,11 @@ map module opens `#drawer` behind its back.
   bug circle at 3.4rem ([contact-and-support.md](contact-and-support.md), the
   floating button) and the overlay key box at 6.65rem (`.legend`), shown
   only while the Road surface or Routes overlay is on, clear of the circle, and
-  compact: rows 1.55rem apart, tight headings and buttons (owner 2026-10-15). Both are visible whether or
+  compact: rows 1.55rem apart, tight headings and buttons (owner 2026-10-15). The L key presses its
+  fold button (the three stripes), except inside a text field or with Ctrl, Alt or the command key
+  held. Each key's heading (Road surface, Routes) starts with an eye, open while any of its rows
+  shows and shut while none does: it switches all that key's rows off while any is on, else all on,
+  by clicking the rows themselves (owner 2026-10-15). Both are visible whether or
   not the drawer is open, which is the point: a rider notices data is missing
   while looking at the MAP. The count is a real tally from the render pass
   (`render.js` `hiddenByFilters()`), incremented at the moment the chips - and

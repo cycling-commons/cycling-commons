@@ -1859,6 +1859,7 @@ map:
   contribute: '+ Aportar'
   contribute_aria: 'Aportar un lugar'
   legend_aria: 'Leyenda de firmes'
+  legend_all_aria: 'Mostrar u ocultar todo'
   legend_paved: 'Pavimentado · asfalto'
   legend_gravel: 'Gravilla'
   legend_cobbles: 'Pavé · adoquines'
