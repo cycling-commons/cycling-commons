@@ -312,6 +312,31 @@ final class CoverageQueryTest extends WebTestCase
         self::assertSame(['Water 1', 'Water 2', 'Water 3'], array_column(\array_slice($group['items'], 1), 'n')); // nearest 3, by distance
     }
 
+    /**
+     * A water-and-food row says which half it is, by the tile's own rules
+     * (pipeline/coverage/tiles.py `food`, `potable`), so the planner can name
+     * a place it offers ("Koning (Food stop)", owner 2026-10-16: "Who is
+     * Koning?").
+     */
+    public function testNearbyWaterRowsSayFoodAndPotable(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, ['ref' => 'node/9701', 'name' => 'Koning', 'lat' => 50.401, 'lng' => 5.8, 'tags' => ['shop' => 'bakery']]);
+        self::insertCoveragePoi($db, ['ref' => 'node/9702', 'name' => 'Kraan', 'lat' => 50.402, 'lng' => 5.8, 'tags' => ['amenity' => 'drinking_water']]);
+        self::insertCoveragePoi($db, ['ref' => 'node/9703', 'name' => 'Bron', 'lat' => 50.403, 'lng' => 5.8, 'tags' => ['amenity' => 'water_point', 'drinking_water' => 'no']]);
+
+        $data = $this->getJson($client, '/map/coverage/nearby?lat=50.4&lng=5.8&km=5');
+
+        $byName = array_column($data['groups'][0]['items'], null, 'n');
+        self::assertTrue($byName['Koning']['food']);
+        self::assertArrayNotHasKey('potable', $byName['Koning']);
+        self::assertSame('yes', $byName['Kraan']['potable']);
+        self::assertArrayNotHasKey('food', $byName['Kraan']);
+        self::assertSame('no', $byName['Bron']['potable']);
+    }
+
     public function testNearbyUntouchedLegacyRowListsAsCommunityNotShadowed(): void
     {
         $client = static::createClient();

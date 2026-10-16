@@ -939,7 +939,12 @@ curated: bool, itemId?}`. A search entry names its region (`region.name`), becau
 places can share one name. Our own item also carries its region id (`rid`), so
 the map can load that region and open the item itself. A P or Q row the pipeline has not stamped with a
 kind yet gets it from its OSM tags (`PlaceKind::fromOsmTags()`), in search and
-in the drawer detail alike (osm-data-architecture.md §5a).
+in the drawer detail alike (osm-data-architecture.md §5a). A community B row
+says which half of water and food it is, by the tiles' own rules
+(`pipeline/coverage/tiles.py`): `food: true` for a shop or an eatery
+(`CoverageRepository::FOOD_AMENITIES`), `potable: "yes"` or `"no"` from its
+drinking-water tags, each left out when it does not apply; the planner names
+a water stop by them (route-planner.md section 4.4, owner 2026-10-16).
 
 | Endpoint | Replaces | Response / caching |
 |---|---|---|

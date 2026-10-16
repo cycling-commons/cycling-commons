@@ -589,8 +589,11 @@ final class CoverageRepository
         return "('".implode("', '", PlaceKind::TYPED_LETTERS)."')";
     }
 
+    /** The eateries a B row is food by, beside any shop: the tile's `food` rule (pipeline/coverage/tiles.py). */
+    private const array FOOD_AMENITIES = ['cafe', 'fast_food', 'restaurant', 'bar', 'pub'];
+
     /**
-     * One search/nearby entry: {ref, letter, n?, kind?, region?, rid?, ll, curated, itemId?}.
+     * One search/nearby entry: {ref, letter, n?, kind?, food?, potable?, region?, rid?, ll, curated, itemId?}.
      *
      * @param array{ref: string, letter: string, name: string|null, kind: string|null, lat: string|float, lng: string|float, ...<array-key, mixed>} $row
      *
@@ -603,13 +606,27 @@ final class CoverageRepository
             $entry['n'] = $row['name'];
         }
         $kind = $row['kind'];
-        if (null === $kind && \is_string($row['tags'] ?? null)) {
-            /** @var array<string, mixed> $tags */
-            $tags = json_decode($row['tags'], true, 512, \JSON_THROW_ON_ERROR);
+        /** @var array<string, mixed>|null $tags */
+        $tags = \is_string($row['tags'] ?? null) ? json_decode($row['tags'], true, 512, \JSON_THROW_ON_ERROR) : null;
+        if (null === $kind && null !== $tags) {
             $kind = self::placeKindOf($row['letter'], $tags);
         }
         if (null !== $kind) {
             $entry['kind'] = $kind;
+        }
+        // Water and food: which half a B row is, by the tile's own rules (pipeline/coverage/tiles.py `food`,
+        // `potable`), so a list can name it (route-planner.md section 4.4, owner 2026-10-16).
+        if ('B' === $row['letter'] && \is_array($tags)) {
+            $amenity = $tags['amenity'] ?? null;
+            if (isset($tags['shop']) || \in_array($amenity, self::FOOD_AMENITIES, true)) {
+                $entry['food'] = true;
+            }
+            $drinking = $tags['drinking_water'] ?? null;
+            if ('yes' === $drinking || ('drinking_water' === $amenity && null === $drinking)) {
+                $entry['potable'] = 'yes';
+            } elseif ('no' === $drinking) {
+                $entry['potable'] = 'no';
+            }
         }
         // Where it is: five castles can share one name (map-and-search.md §7.1).
         if (\is_string($row['region'] ?? null) && '' !== $row['region']) {
