@@ -1,0 +1,39 @@
+docs/specs/privacy-notice.md
+  s_c707f1443f1405::t_225a026efa1a50 296-301
+web/translations/privacy.fr.yaml
+  s_c707f1443f1405::t_8894ca75e769e5 37,184
+docs/specs/README.md
+  s_c707f1443f1405::t_225a026efa1a50 52-53
+web/translations/privacy.en.yaml
+  s_c707f1443f1405::t_8894ca75e769e5 37,184
+web/translations/privacy.de.yaml
+  s_c707f1443f1405::t_8894ca75e769e5 37,71,184
+docs/specs/map-presets.md
+  s_c707f1443f1405::t_1632d20148a9b7 148
+web/tests/Account/DataExportTest.php
+  s_c707f1443f1405::t_a6b93f30cf5632 315-317,319,322,325,327
+web/translations/privacy.es.yaml
+  s_c707f1443f1405::t_8894ca75e769e5 37,71,184
+web/translations/privacy.nl.yaml
+  s_c707f1443f1405::t_8894ca75e769e5 37,184
+web/migrations/Version20261014010000.php
+  s_c707f1443f1405::t_6a7e59fc2aa9d2 27-31
+docs/specs/account-and-auth.md
+  s_c707f1443f1405::t_225a026efa1a50 1231-1233
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a7a5df19a21670d1bcc317ff1d0107611836c609",
+  "prompts": {},
+  "sessions": {
+    "s_c707f1443f1405": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6b21b1b-dfdf-4cfe-8fa1-eda87e9640b3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
