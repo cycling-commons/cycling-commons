@@ -1,0 +1,26 @@
+web/src/Map/MapHint.php
+  s_c707f1443f1405::t_19a547071ce991 13,24-26
+web/tests/Controller/MapHintControllerTest.php
+  s_c707f1443f1405::t_27c6010b0a0f50 88-120
+web/src/Controller/MapHintController.php
+  s_c707f1443f1405::t_19a547071ce991 19-20,45-59
+  s_c707f1443f1405::t_13ac84735401ff 60-62
+web/src/Entity/User.php
+  s_c707f1443f1405::t_19a547071ce991 713-721
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7df66b6fa1ccff3bac09c93e15e53834e912f09d",
+  "prompts": {},
+  "sessions": {
+    "s_c707f1443f1405": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6b21b1b-dfdf-4cfe-8fa1-eda87e9640b3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
