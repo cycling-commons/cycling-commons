@@ -154,7 +154,8 @@ final class PlanController extends AbstractController
             \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION,
         );
 
-        return new JsonResponse($rideCheck->alongLine($geoJson, $lengthM, RideCheckService::DEFAULT_RADIUS));
+        // The regions the line crosses: the planner widens the map's scope to a ride outside it (route-planner.md section 5).
+        return new JsonResponse([...$rideCheck->alongLine($geoJson, $lengthM, RideCheckService::DEFAULT_RADIUS), 'regions' => $rideCheck->crossedRegions($geoJson)]);
     }
 
     /**

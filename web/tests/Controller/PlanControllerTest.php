@@ -235,6 +235,37 @@ final class PlanControllerTest extends WebTestCase
         self::assertContains($tap->getId(), array_column($water[0]['items'], 'id'));
     }
 
+    /**
+     * The along answer names the regions the planned line crosses, in ride
+     * order, as the ride check does (owner 2026-10-16: a GPX of North Holland
+     * opened while the map looked at Wallonia showed no places on the map,
+     * because the map's scope stayed in Wallonia). The planner widens the
+     * scope to them.
+     */
+    public function testAlongNamesTheRegionsTheLineCrosses(): void
+    {
+        $client = static::createClient();
+        $db = static::getContainer()->get(EntityManagerInterface::class)->getConnection();
+        self::ensureCoverageSchema($db);
+        $box = static fn (float $w, float $e): string => sprintf('POLYGON((%1$F 50.3,%1$F 50.5,%2$F 50.5,%2$F 50.3,%1$F 50.3))', $w, $e);
+        $ids = [];
+        foreach ([['plan-west', 'West plan province', 5.75, 5.815], ['plan-east', 'East plan province', 5.815, 5.90], ['plan-away', 'Far plan province', 6.50, 6.60]] as [$slug, $name, $w, $e]) {
+            $db->executeStatement(
+                "INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
+                 VALUES (?, ?, ST_GeomFromText(?, 4326), 1000, 'BE', ?, 4, 'test', NOW(), NOW())",
+                [$slug, $name, $box($w, $e), strtoupper(substr($slug, 0, 7))],
+            );
+            $ids[$slug] = (int) $db->lastInsertId();
+        }
+
+        self::post($client, '/map/plan/along', 'plan-along', ['line' => ['type' => 'LineString', 'coordinates' => [[5.8000, 50.4], [5.8300, 50.4]]]]);
+
+        self::assertResponseIsSuccessful();
+        $regions = self::json($client)['regions'];
+        self::assertSame([$ids['plan-west'], $ids['plan-east']], array_column($regions, 'id'), 'both crossed regions, in ride order, not the far one');
+        self::assertSame(['BE', 'BE'], array_column($regions, 'countryCode'));
+    }
+
     public function testAlongRefusesALineTooShortToRide(): void
     {
         $client = static::createClient();

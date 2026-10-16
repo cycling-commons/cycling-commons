@@ -385,7 +385,7 @@ final class RideCheckService
      *
      * @return list<array{id: int, slug: string, name: string, countryCode: string|null}>
      */
-    private function crossedRegions(string $geoJson): array
+    public function crossedRegions(string $geoJson): array
     {
         /** @var list<array{id: int|string, slug: string, name: string, country_code: string|null}> $rows */
         $rows = $this->db->fetchAllAssociative(
