@@ -1,0 +1,33 @@
+wiki/developers/gis/on-screen.md
+  s_c707f1443f1405::t_a8fc2b81a1f34c 307,311-314
+docs/specs/map-and-search.md
+  s_c707f1443f1405::t_25d8456ff38836 1627-1629
+  s_c707f1443f1405::t_0cb9fac703271b 1630
+web/tests/js/place-kinds.test.cjs
+  s_c707f1443f1405::t_2f657b31447e65 79
+  s_c707f1443f1405::t_d6fcb786396e14 67,70-78
+  s_c707f1443f1405::t_2338487d8e8503 80
+web/assets/map/coverage.js
+  s_c707f1443f1405::t_09338334866325 9
+docs/specs/edit-items/D-bike-services.md
+  s_c707f1443f1405::t_25d8456ff38836 61-64
+web/assets/map/icons.js
+  s_c707f1443f1405::t_09338334866325 237-240,286-289,301,304-308
+  s_c707f1443f1405::t_b1834e0bf03253 309
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f64bff12077db5eaf0012d1b2f8241757c4d489d",
+  "prompts": {},
+  "sessions": {
+    "s_c707f1443f1405": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6b21b1b-dfdf-4cfe-8fa1-eda87e9640b3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
