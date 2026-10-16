@@ -44,6 +44,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
         echo 'opcache.validate_timestamps=0'; \
         echo 'memory_limit=1G'; \
         echo 'zend.exception_ignore_args=On'; \
+        echo "date.timezone=${TZ}"; \
     } > "$PHP_INI_DIR/conf.d/cc-worker.ini"
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
