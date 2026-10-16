@@ -304,15 +304,14 @@ plain-or-badged pair:
 
 <!-- CODE-FROM web/assets/map/coverage.js -->
 ```js
-['match',['get','kind'],
-    'shop', miniPair(),
-    'station', miniPair(SERVICE_GLYPH.station, 'station'),
-    'pump', miniPair(SERVICE_GLYPH.pump, 'pump'),
-    miniPair()]
+? ['match',['get','kind'], ...Object.keys(SERVICE_GLYPH).flatMap(k => [k, servicePair(k)]), servicePair(null)]
 ```
 
 Same shape as the water example, `match` on a tile property, one arm per value, a trailing
-catch-all, just with three named values instead of a yes/no split. One `addLayer()` call still draws
+catch-all, just with three named values instead of a yes/no split. The arms are built from
+`SERVICE_GLYPH`, the same list the DOM pin of our own bike services reads, through
+`serviceIconId()`, so an OpenStreetMap bike shop and one of ours side by side draw the same cog. A
+point with no kind falls to the catch-all, the category's drawn wrench. One `addLayer()` call still draws
 shops, stations and pumps as three visually distinct glyphs, because the branching lives in the
 expression, not in three separate layers.
 

@@ -1624,7 +1624,10 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   services picks a per-`serviceKind` glyph (`SERVICE_GLYPH` in `icons.js`, the
   kind glyph from the `KindIcons` registry, with the plain BMP symbols
   `⚙ / ⚒ / ⊕` only as a fallback; the kind contract lives in
-  [osm-data-architecture.md](osm-data-architecture.md) §5).
+  [osm-data-architecture.md](osm-data-architecture.md) §5). The tile match is
+  built from `SERVICE_GLYPH` itself (`serviceIconId()`), the list the DOM pin
+  reads, so a disc and a pin of one kind never draw two glyphs; no kind is the
+  category's drawn wrench.
   **Confirmed** points (`p.c`) are excluded from the dot layers and promoted to
   clustered DOM icon pins (`setupConfClusters()`: count bubbles at low zoom,
   each for three places or more (`clusterMinPoints`), → leaf pins when spread; cluster/leaf reconciliation runs only on

@@ -64,6 +64,17 @@ test('the tile layer matches the kind, and the drawer reads it as the Type', () 
 test('a pin with no glyph of its own draws the drawn category icon, never the emoji', () => {
   // A shelter pin showed the coloured ⛑ emoji (owner 2026-10-08); type icons are drawn SVG.
   const pin = lift(icons, 'pinEl');
-  assert.match(pin, /if\(layer\.key==='services'\)\{[^\n]*pinGlyph\(layer, props\)/);
+  assert.match(pin, /const svc = layer\.key==='services' \? serviceGlyph\(props\) : '';/);
   assert.match(pin, /color:\$\{white\?'#fff':'#14160e'\}">\$\{layerGlyph\(layer, 15\)\}/);
+});
+
+test('a bike service draws one glyph per kind on every pin: ours, the OSM disc and the selected one', () => {
+  // Our bike shop drew the cog and the OSM bike shop beside it the plain wrench (owner 2026-10-16):
+  // the tile rule had its own list. Now the tile layer, the selected overlay and the DOM pin read SERVICE_GLYPH.
+  const fn = lift(icons, 'serviceIconId');
+  assert.match(fn, /Object\.hasOwn\(SERVICE_GLYPH, kind\) \? miniIcon\('services', SERVICE_GLYPH\[kind\], kind, badge\) : miniIcon\('services', undefined, undefined, badge\)/);
+  assert.match(lift(icons, 'coverageIconId'), /if\(key==='services'\) return serviceIconId\(tp\.kind, badge\);/);
+  assert.match(coverage, /\['match',\['get','kind'\], \.\.\.Object\.keys\(SERVICE_GLYPH\)\.flatMap\(k => \[k, servicePair\(k\)\]\), servicePair\(null\)\]/);
+  assert.doesNotMatch(coverage, /'shop', miniPair\(\)/, 'a bike shop disc draws the shop glyph, not the bare category');
+  assert.match(icons, /return k && Object\.hasOwn\(SERVICE_GLYPH, k\) \? SERVICE_GLYPH\[k\] : '';/);
 });

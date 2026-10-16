@@ -58,9 +58,10 @@ stored `openingHours`, the drawer states the assumed default as a read-only
 "Opening hours · 24/7" value row instead of an "add" prompt (`schemaRows`'
 `fixed` option); a stored value always wins. The localized kind label takes
 precedence over the raw OSM `t` value for the drawer's Type row + headline, and
-each kind renders a distinct marker glyph (shop ⚙, the layer icon, station ⚒,
-pump ⊕; `KindIcons` on the server, `SERVICE_GLYPH` in `icons.js`), on both the unverified symbol-layer discs and the
-confirmed/curated DOM pins.
+each kind renders a distinct marker glyph (shop ⚙, station ⚒, pump ⊕; `KindIcons` on the server, `SERVICE_GLYPH`
+in `icons.js`), the same glyph on the OSM tile discs, the selected overlay and our own DOM pins: all three read
+`SERVICE_GLYPH` through `serviceIconId()` and `serviceGlyph()`, so an OSM bike shop and ours side by side draw the
+same cog. A service with no kind draws the category's drawn wrench (`ItemType::svgPath()`) on every pin.
 
 ## Read view (drawer "current details")
 - Type

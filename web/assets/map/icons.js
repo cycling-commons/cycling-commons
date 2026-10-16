@@ -234,9 +234,10 @@ export function kindGlyphSvg(letter, kind, color, size){
   return `<svg viewBox="4 4 16 16" width="${s}" height="${s}" aria-hidden="true">${paths}</svg>`;
 }
 
-function pinGlyph(layer, props){
-  if(layer.key==='services' && props && props.serviceKind) return SERVICE_GLYPH[props.serviceKind] || layer.icon;
-  return layer.icon;
+// A bike service's kind glyph (SERVICE_GLYPH), or '' for no kind: the pin then draws the category's wrench.
+function serviceGlyph(props){
+  const k=(props||{}).serviceKind;
+  return k && Object.hasOwn(SERVICE_GLYPH, k) ? SERVICE_GLYPH[k] : '';
 }
 /* The two axes of the marker grammar (data-provider-hierarchy.md §6.7).
    Border answers who keeps the record, badge answers whether anybody has
@@ -282,8 +283,10 @@ export function pinEl(layer,props){
   if(layer.key==='climbs'){ d.innerHTML=`<span>${mountainSvg(white?'#fff':'#20241c')}</span>`+badge; return d; }
   // Water & food: the kind IS the glyph, drawn from the registry, not the 💧.
   if(layer.key==='water'){ d.innerHTML=`<span class="kd">${kindSvg('B', waterKind(props), layer.color, 17)}</span>`+badge; return d; }
-  // Bike services draw their kind glyph; every other category its drawn icon, never the emoji (a shelter showed a coloured ⛑).
-  if(layer.key==='services'){ d.innerHTML=`<span${white?' style="filter:brightness(0) invert(1)"':''}>${pinGlyph(layer, props)}</span>`+badge; return d; }
+  // A bike service draws its kind glyph, the one its tile disc draws (serviceIconId); without a kind, and every
+  // other category, the drawn icon below, never the emoji (a shelter showed a coloured ⛑).
+  const svc = layer.key==='services' ? serviceGlyph(props) : '';
+  if(svc){ d.innerHTML=`<span${white?' style="filter:brightness(0) invert(1)"':''}>${svc}</span>`+badge; return d; }
   d.innerHTML=`<span style="display:flex;color:${white?'#fff':'#14160e'}">${layerGlyph(layer, 15)}</span>`+badge; return d;
 }
 
@@ -295,12 +298,14 @@ export function coverageIconId(key, tp){
   if(key==='water') return kindImageId('B', waterKind(tp), badge);
   const place = placeKind(key, tp);
   if(place) return kindImageId(PLACE_LETTER[key], place, badge);
-  if(key==='services'){
-    if(tp.kind==='station') return miniIcon('services', SERVICE_GLYPH.station, 'station', badge);
-    if(tp.kind==='pump') return miniIcon('services', SERVICE_GLYPH.pump, 'pump', badge);
-    return miniIcon('services', undefined, undefined, badge);
-  }
+  if(key==='services') return serviceIconId(tp.kind, badge);
   return miniIcon(key, undefined, undefined, badge);
+}
+/* Tile icon id of a bike service: its kind's glyph (SERVICE_GLYPH), else the category's drawn wrench. The tile
+   layer (coverage.js) and the selected overlay both ask here, and the DOM pin draws the same glyph, so ours and
+   the OSM disc beside it never differ (owner 2026-10-16: a shop drew the cog on one and the wrench on the other). */
+export function serviceIconId(kind, badge){
+  return kind && Object.hasOwn(SERVICE_GLYPH, kind) ? miniIcon('services', SERVICE_GLYPH[kind], kind, badge) : miniIcon('services', undefined, undefined, badge);
 }
 /* icon-size stops at z8/z13/z18 for a coverage icon. Every disc (every
    category, and the food half of letter B) shares one ramp; the drop is

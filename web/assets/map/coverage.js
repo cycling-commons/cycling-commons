@@ -6,7 +6,7 @@ import { map, flyToPin } from './map-init.js';
 import { showTip, hideTip } from './sheet.js';
 import { layerByKey, active, mode, LETTER_KEY, KEY_LETTER } from './catalog.js';
 import { liftScopeForHit } from './scope-ui.js';
-import { mintKindIcons, miniIcon, iconMinZoom, SERVICE_GLYPH, coverageIconId, kindImageId, covIconSizes, DISC_SIZES, DROP_SIZES, witnessCutoff, KIND_ICONS, PLACE_LETTER, PLACE_KIND_LABELS, kindOfLabel } from './icons.js';
+import { mintKindIcons, miniIcon, iconMinZoom, SERVICE_GLYPH, serviceIconId, coverageIconId, kindImageId, covIconSizes, DISC_SIZES, DROP_SIZES, witnessCutoff, KIND_ICONS, PLACE_LETTER, PLACE_KIND_LABELS, kindOfLabel } from './icons.js';
 import { updateCounts, applyStaysAccessFilter, liftInfoLayersAboveRoutes } from './render.js';
 import { openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt, planPlace } from './drawer.js';
 import { offerToRide } from './util.js';
@@ -174,6 +174,7 @@ function addCoverageLayers(cc, src){
     const pick = (plain, badged) => ['case', witnessed, plain, badged];
     const kindPair = (kind, letter='B') => pick(kindImageId(letter,kind,false), kindImageId(letter,kind,true));
     const miniPair = (glyph, suffix) => pick(miniIcon(key, glyph, suffix, false), miniIcon(key, glyph, suffix, true));
+    const servicePair = kind => pick(serviceIconId(kind, false), serviceIconId(kind, true));
     /* P and Q: one glyph per kind, the tile's `kind` (osm-data-architecture.md §5a). */
     const placeLetter = PLACE_LETTER[key];
     const placeKinds = placeLetter ? Object.keys(KIND_ICONS[placeLetter] || {}).flatMap(k => [k, kindPair(k, placeLetter)]) : [];
@@ -183,11 +184,8 @@ function addCoverageLayers(cc, src){
           ['case', isPotable, kindPair('food_water'), kindPair('food')],
           ['case', isPotable, kindPair('tap'), isNotPotable, kindPair('no'), kindPair('unk')]]
       : key==='services'
-        ? ['match',['get','kind'],
-            'shop', miniPair(),
-            'station', miniPair(SERVICE_GLYPH.station, 'station'),
-            'pump', miniPair(SERVICE_GLYPH.pump, 'pump'),
-            miniPair()]
+        // One glyph per kind, the same list as our own pins (serviceIconId); no kind: the category's wrench.
+        ? ['match',['get','kind'], ...Object.keys(SERVICE_GLYPH).flatMap(k => [k, servicePair(k)]), servicePair(null)]
         : placeKinds.length
           // The stamped kind, else the kind the tile's label names (a tile from before the stamp).
           ? ['match', placeLabels.length ? ['coalesce',['get','kind'],['match',['get','t'], ...placeLabels, '']] : ['get','kind'], ...placeKinds, miniPair()]
