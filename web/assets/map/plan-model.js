@@ -7,17 +7,18 @@
    distM, heights} with heights as [metres along, elevation] pairs or null. */
 
 /** A ride holds at most this many stops (route-planner.md section 4.1). */
-export const MAX_STOPS = 25;
+export const MAX_STOPS = 50;
 /** The corridor of the along list, metres (route-planner.md section 5). */
 export const CORRIDOR_M = 250;
 
 /** A stop is known by its place when it has one, else by its rounded point. */
 export const stopKey = s => s.item ? String(s.item) : (s.lat.toFixed(5) + ',' + s.lng.toFixed(5));
 
-/** One key per leg: both stops and the bike, so a bike change re-routes every leg. */
+/** One key per leg: both stops and the bike, so a bike change re-routes every leg; a leg ridden the shortest way
+    (its arriving stop's `way`, route-planner.md section 4.2a) has a key of its own. */
 export function legKeys(stops, bike){
   const out = [];
-  for(let i = 0; i < stops.length - 1; i++) out.push(stopKey(stops[i]) + '|' + stopKey(stops[i + 1]) + '|' + bike);
+  for(let i = 0; i < stops.length - 1; i++) out.push(stopKey(stops[i]) + '|' + stopKey(stops[i + 1]) + '|' + bike + (stops[i + 1].way === 'shortest' ? '|shortest' : ''));
   return out;
 }
 
@@ -103,6 +104,33 @@ export function profileRuns(legs, binM){
   return runs;
 }
 
+/** The part of the ride between two distances along it, [[lng, lat], ...], measured as pointAt() measures: metres along the
+    drawn line scaled to the engine's length. Empty when the span lies past the ride. */
+export function sliceAlong(legs, fromM, toM){
+  const out = [];
+  let off = 0;
+  for(const leg of legs){
+    if(!leg || !leg.routed) continue;
+    const line = leg.line;
+    if(!line || line.length < 2){ off += leg.distM || 0; continue; }
+    const P = proj(line[0]), seg = [];
+    let total = 0;
+    for(let i = 1; i < line.length; i++){ const a = P(line[i - 1]), b = P(line[i]); const len = Math.hypot(b[0] - a[0], b[1] - a[1]); seg.push(len); total += len; }
+    const k = total ? (leg.distM || 0) / total : 0;
+    let at = off;
+    for(let i = 0; i < seg.length; i++){
+      const len = seg[i] * k, a = at, b = at + len;
+      const pt = f => [line[i][0] + (line[i + 1][0] - line[i][0]) * f, line[i][1] + (line[i + 1][1] - line[i][1]) * f];
+      if(b >= fromM && a <= toM && len > 0){
+        if(!out.length) out.push(a >= fromM ? line[i] : pt((fromM - a) / len));
+        out.push(b <= toM ? line[i + 1] : pt((toM - a) / len));
+      }
+      at = b;
+    }
+    off += leg.distM || 0;
+  }
+  return out;
+}
 /** The point on the ride at a distance along it, [lng, lat]; null past its end. */
 export function pointAt(legs, d){
   let off = 0;
@@ -131,10 +159,15 @@ export function pointAt(legs, d){
 const xml = s => String(s ?? '').replace(/[<>&"']/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[c]));
 
 /* The GPX (route-planner.md section 6.3): one track with the elevations the
-   legs carry, one waypoint per stop, a place stop with a link to its page. */
+   legs carry, one waypoint per stop, a place stop with a link to its page.
+   It is also the ride file (section 6.1): our own extensions carry the bike
+   and each stop's place, so opening it again rebuilds the ride. The day is
+   not in it: a kept ride is ridden on many days (section 4.4). */
+const CC_NS = 'https://cyclingcommons.org/xmlns/ride/1';
 export function gpxText(ride, o){
   const name = ride.name || 'Ride';
   const itemUrl = (o && o.itemUrl) || null;
+  const meta = ride.bike ? `<cc:bike>${xml(ride.bike)}</cc:bike>` : '';
   const pts = [];
   (ride.legs || []).forEach((leg, li) => {
     if(!leg || !leg.routed) return;
@@ -152,10 +185,139 @@ export function gpxText(ride, o){
   });
   const wpts = (ride.stops || []).map(s => {
     const link = s.item && itemUrl ? `<link href="${xml(itemUrl(s.item))}"/>` : '';
-    return `<wpt lat="${s.lat.toFixed(6)}" lon="${s.lng.toFixed(6)}"><name>${xml(s.name)}</name>${link}</wpt>`;
+    const parts = (s.item ? `<cc:item>${xml(s.item)}</cc:item>${s.letter ? `<cc:letter>${xml(s.letter)}</cc:letter>` : ''}` : '') + (s.way === 'shortest' ? '<cc:way>shortest</cc:way>' : '');
+    const ext = parts ? `<extensions>${parts}</extensions>` : '';
+    return `<wpt lat="${s.lat.toFixed(6)}" lon="${s.lng.toFixed(6)}"><name>${xml(s.name)}</name>${link}${ext}</wpt>`;
   });
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Cycling Commons" xmlns="http://www.topografix.com/GPX/1/1">\n`
-    + `<metadata><name>${xml(name)}</name></metadata>\n${wpts.join('\n')}\n<trk><name>${xml(name)}</name><trkseg>\n${pts.join('\n')}\n</trkseg></trk>\n</gpx>\n`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Cycling Commons" xmlns="http://www.topografix.com/GPX/1/1" xmlns:cc="${CC_NS}">\n`
+    + `<metadata><name>${xml(name)}</name>${meta ? `<extensions>${meta}</extensions>` : ''}</metadata>\n${wpts.join('\n')}\n<trk><name>${xml(name)}</name><trkseg>\n${pts.join('\n')}\n</trkseg></trk>\n</gpx>\n`;
+}
+
+const unxml = s => String(s).replace(/&(lt|gt|amp|quot|apos|#\d+|#x[0-9a-f]+);/gi, (m, e) => {
+  const named = { lt: '<', gt: '>', amp: '&', quot: '"', apos: "'" }[e.toLowerCase()];
+  if(named) return named;
+  const code = e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+  return Number.isFinite(code) && code > 0 && code < 0x110000 ? String.fromCodePoint(code) : '';
+});
+const tagText = (src, tag) => { const m = src.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</${tag}>`)); return m ? unxml(m[1].trim()) : null; };
+const attr = (tagSrc, a) => { const m = tagSrc.match(new RegExp(`\\s${a}\\s*=\\s*("([^"]*)"|'([^']*)')`)); return m ? (m[2] ?? m[3]) : null; };
+
+/** A ride file back into a ride (route-planner.md section 6.1): the planner's own GPX, the one gpxText()
+    writes, older ones without the extensions included. `{error}` says why a file is refused:
+    not_gpx, no_stops, too_many, bad_point. Names are cut to 80 characters. A GPX from another app is converted
+    (foreignRide()). */
+export function rideFromGpx(text){
+  const src = String(text || '');
+  const root = src.match(/<gpx\b[^>]*>/);
+  if(!root) return { error: 'not_gpx' };
+  if(attr(root[0], 'creator') !== 'Cycling Commons' && !root[0].includes(CC_NS)) return foreignRide(src);
+  const wpts = [...src.matchAll(/<wpt\b([^>]*)>([\s\S]*?)<\/wpt>/g)];
+  if(!wpts.length) return { error: 'no_stops' };
+  if(wpts.length > MAX_STOPS) return { error: 'too_many' };
+  const stops = [];
+  for(const [, attrs, body] of wpts){
+    const lat = Number(attr(' ' + attrs, 'lat')), lng = Number(attr(' ' + attrs, 'lon'));
+    if(!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return { error: 'bad_point' };
+    const stop = { lat, lng, name: (tagText(body, 'name') || '').slice(0, 80) };
+    const item = tagText(body, 'cc:item'), letter = tagText(body, 'cc:letter');
+    if(item){ stop.item = item.slice(0, 80); if(letter) stop.letter = letter.slice(0, 4); }
+    if(tagText(body, 'cc:way') === 'shortest') stop.way = 'shortest';
+    stops.push(stop);
+  }
+  const meta = (src.match(/<metadata\b[^>]*>([\s\S]*?)<\/metadata>/) || [null, ''])[1];
+  return { name: (tagText(meta, 'name') || '').slice(0, 80), bike: tagText(meta, 'cc:bike'), stops };
+}
+
+/* Points of one GPX element, written open (`<trkpt ...>...</trkpt>`) or closed (`<trkpt .../>`), the attributes in
+   any order; a point off the globe is left out, as a device writes one now and then. */
+function gpxPoints(src, tag){
+  const out = [];
+  for(const m of src.matchAll(new RegExp(`<${tag}\\b([^>]*?)(?:/>|>([\\s\\S]*?)</${tag}>)`, 'g'))){
+    const lat = Number(attr(' ' + m[1], 'lat')), lng = Number(attr(' ' + m[1], 'lon'));
+    if(!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) continue;
+    out.push({ lat, lng, name: m[2] ? (tagText(m[2], 'name') || '').slice(0, 80) : '' });
+  }
+  return out;
+}
+/* A GPX from another app as a ride (route-planner.md section 6.1, owner 2026-10-16: "You need to convert it
+   then"): its track, else its route, else its waypoints, as checkpoints the planner routes again for the rider's
+   bike. A route or a list of waypoints that fits is taken as it is, its points being the ones its author chose;
+   a track, or a longer list, keeps the points that hold its shape (simplifyTrack()). The bike stays the rider's;
+   `converted` says what the ride came from. */
+function foreignRide(src){
+  const track = gpxPoints(src, 'trkpt'), route = gpxPoints(src, 'rtept'), marks = gpxPoints(src, 'wpt');
+  const [from, all] = track.length ? ['track', track] : route.length ? ['route', route] : ['waypoints', marks];
+  // A device standing still writes the same place again and again: one checkpoint for it.
+  const line = all.filter((p, i) => i === 0 || metres([all[i - 1].lat, all[i - 1].lng], [p.lat, p.lng]) >= 5);
+  if(!line.length) return { error: 'no_stops' };
+  const kept = from !== 'track' && line.length <= MAX_STOPS ? line : simplifyTrack(line, MAX_STOPS).map(p => Object.assign({}, p, { name: from === 'track' ? '' : p.name }));
+  const meta = (src.match(/<metadata\b[^>]*>([\s\S]*?)<\/metadata>/) || [null, ''])[1];
+  const head = (src.match(from === 'route' ? /<rte\b[^>]*>([\s\S]*?)<rtept\b/ : /<trk\b[^>]*>([\s\S]*?)<trkseg\b/) || [null, ''])[1];
+  return {
+    name: (tagText(meta, 'name') || tagText(head, 'name') || '').slice(0, 80),
+    bike: null,
+    stops: kept.map(p => ({ lat: p.lat, lng: p.lng, name: p.name })),
+    converted: { from, points: all.length },
+  };
+}
+
+/** The most points the along request takes (PlanController::MAX_LINE_POINTS). */
+export const ALONG_MAX_POINTS = 5000;
+/** A line cut to `max` points at most for a request: every k-th point, the first and the last always. A
+    line that fits comes back as it is. A road line's points lie metres apart, so the corridor barely moves. */
+export function thinLine(line, max){
+  if(line.length <= max) return line;
+  const step = Math.ceil((line.length - 1) / (max - 2)), out = [];
+  for(let i = 0; i < line.length; i += step) out.push(line[i]);
+  if(out[out.length - 1] !== line[line.length - 1]) out.push(line[line.length - 1]);
+  return out;
+}
+
+/** Metres a converted line may stray from the straight line between two kept points before the point farthest
+    off becomes a checkpoint too (simplifyTrack()). */
+export const SHAPE_M = 25;
+/** The points of a long line that keep its shape, `max` at most, its first and last always, in line order
+    (route-planner.md section 6.1). Corners first: as Douglas-Peucker splits, the point farthest from the straight
+    line between two kept points, until none lies more than SHAPE_M off. The checkpoints left go to the longest
+    stretches, each split at its middle along the line, so a long straight road is not left to the engine's own
+    choice of road. Points are `{lat, lng}`; a line of `max` points or fewer comes back whole. */
+export function simplifyTrack(points, max){
+  const n = points.length;
+  if(n <= max || max < 2) return points.slice(0, Math.max(max, 0) || n);
+  const P = proj([points[0].lng, points[0].lat]);
+  const xy = points.map(p => P([p.lng, p.lat]));
+  const along = [0];
+  for(let i = 1; i < n; i++) along.push(along[i - 1] + Math.hypot(xy[i][0] - xy[i - 1][0], xy[i][1] - xy[i - 1][1]));
+  // The point between i and j farthest off the line from i to j; for a loop's i = j end, off the point itself.
+  const farthest = (i, j) => {
+    const a = xy[i], b = xy[j], dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy;
+    let k = -1, off = 0;
+    for(let m = i + 1; m < j; m++){
+      const q = xy[m];
+      let t = l2 ? ((q[0] - a[0]) * dx + (q[1] - a[1]) * dy) / l2 : 0;
+      t = Math.max(0, Math.min(1, t));
+      const d = Math.hypot(q[0] - (a[0] + t * dx), q[1] - (a[1] + t * dy));
+      if(d > off){ off = d; k = m; }
+    }
+    return { i, j, k, off };
+  };
+  const keep = new Set([0, n - 1]);
+  let spans = [farthest(0, n - 1)];
+  const split = (s, k) => { keep.add(k); spans = spans.filter(x => x !== s).concat([farthest(s.i, k), farthest(k, s.j)]); };
+  while(keep.size < max){
+    const s = spans.reduce((b, x) => (x.off > (b ? b.off : -1) ? x : b), null);
+    if(!s || s.k < 0 || s.off <= SHAPE_M) break;
+    split(s, s.k);
+  }
+  while(keep.size < max){
+    const s = spans.filter(x => x.j - x.i >= 2).reduce((b, x) => (!b || along[x.j] - along[x.i] > along[b.j] - along[b.i] ? x : b), null);
+    if(!s) break;
+    const half = (along[s.i] + along[s.j]) / 2;
+    let k = s.i + 1;
+    while(k < s.j - 1 && along[k] < half) k++;
+    split(s, k);
+  }
+  return [...keep].sort((a, b) => a - b).map(i => points[i]);
 }
 
 /** The ride bar's line (route-planner.md section 3): distance, climbed, stops, in the rider's units. */
@@ -176,6 +338,9 @@ export function createHistory(limit = 30, redoLimit = 5){
     push(stops){ past.push(copy(stops)); if(past.length > limit) past.shift(); future.length = 0; },
     undo(current){ if(!past.length) return null; future.push(copy(current)); if(future.length > redoLimit) future.shift(); return past.pop(); },
     redo(current){ if(!future.length) return null; past.push(copy(current)); if(past.length > limit) past.shift(); return future.pop(); },
+    /** The newest step taken back without a redo step: a change the planner tried and withdrew (a water stop that
+        did not help) is not the rider's to redo. */
+    discard(){ return past.length ? past.pop() : null; },
     size(){ return past.length; },
     redoSize(){ return future.length; },
     /** The steps as copies, for the browser to keep. */
@@ -346,14 +511,103 @@ export function longestClimb(legs){
 }
 /** The longest stretch along the ride without a letter B place, in km: the gaps between the start, the B rows and the end; null while that letter's list is capped. */
 export function waterGap(rows, distM){
+  const span = waterGapSpan(rows, distM);
+  return span ? Math.round(span.km * 10) / 10 : null;
+}
+/** The ride's own place stops as along rows (route-planner.md section 4.4): their letter at the distance the ride reaches
+    them, so a water stop splits the dry stretch even when its pin lies farther than the corridor from the road its leg
+    ends on. A stop after an unrouted leg has no distance yet. */
+export function stopRows(stops, legs){
+  const out = [];
+  if(stops[0] && stops[0].letter) out.push({ letter: stops[0].letter, alongKm: 0 });
+  let off = 0;
+  for(let i = 1; i < stops.length; i++){
+    const leg = legs[i - 1];
+    if(!leg || !leg.routed) break;
+    off += leg.distM;
+    if(stops[i].letter) out.push({ letter: stops[i].letter, alongKm: off / 1000 });
+  }
+  return out;
+}
+/** Where the longest stretch without water or food lies: from and to as km along the ride; null while the list is capped. */
+export function waterGapSpan(rows, distM){
   const b = rows.filter(r => r.letter === 'B');
   if(b.some(r => r.truncated)) return null;
-  const kms = b.map(r => r.alongKm).sort((x, y) => x - y);
   const total = distM / 1000;
-  let gap = kms.length ? kms[0] : total, prev = kms.length ? kms[0] : 0;
-  for(const k of kms.slice(1)){ gap = Math.max(gap, k - prev); prev = k; }
-  if(kms.length) gap = Math.max(gap, total - prev);
-  return Math.round(gap * 10) / 10;
+  const marks = [0, ...b.map(r => r.alongKm).sort((x, y) => x - y), total];
+  let best = { fromKm: 0, toKm: total, km: total };
+  if(b.length){
+    best = { fromKm: 0, toKm: 0, km: -1 };
+    for(let i = 1; i < marks.length; i++){ const km = marks[i] - marks[i - 1]; if(km > best.km) best = { fromKm: marks[i - 1], toKm: marks[i], km }; }
+  }
+  return best;
+}
+/** The water stop that best fills a dry stretch of the ride (fromM to toM along it), from /map/coverage/nearby's groups,
+    ours or OpenStreetMap's, as a stop for the ride (the drawer's item names: `B:<id>` for ours, `osm:<ref>` for a coverage
+    point). Each place is measured to its nearest point of the stretch (`{lat, lng, alongM}`); the one that leaves the
+    shortest dry part wins: the longer of the stretch before it and after it, plus the way there and back (owner
+    2026-10-15: the nearest one sat at the end of the stretch and its detour made the gap longer). The answer carries the
+    distance off the line, the `alongM` where it belongs in the ride, and `leftM`, the dry part it leaves, which the planner
+    weighs against the stretch. Null when there is none. */
+export function bestWaterStop(groups, points, fromM, toM){
+  const b = (Array.isArray(groups) ? groups : []).find(g => g && g.letter === 'B');
+  let best = null;
+  for(const it of (b && b.items) || []){
+    if(!Array.isArray(it.ll)) continue;
+    let near = null;
+    for(const pt of points || []){ const distM = metres([pt.lat, pt.lng], it.ll); if(!near || distM < near.distM) near = { distM, alongM: pt.alongM }; }
+    if(!near) continue;
+    const left = Math.max(near.alongM - fromM, toM - near.alongM) + 2 * near.distM;
+    if(!best || left < best.leftM) best = { item: it.itemId != null ? 'B:' + it.itemId : 'osm:' + it.ref, letter: 'B', name: it.n || '', lat: it.ll[0], lng: it.ll[1], distM: near.distM, alongM: near.alongM, leftM: left, food: it.food === true, potable: it.potable ?? null };
+  }
+  return best;
+}
+/** The index of the stop after the leg that holds a distance along the ride, where a stop at that distance goes;
+    null past the ride's end. */
+export function stopIndexAt(legs, d){
+  let off = 0;
+  for(let i = 0; i < legs.length; i++){
+    const leg = legs[i];
+    if(!leg || !leg.routed) continue;
+    if(d <= off + leg.distM) return i + 1;
+    off += leg.distM;
+  }
+  return null;
+}
+/** A leg that clearly goes round (route-planner.md section 4.2a): at least 1.3 times the straight distance between its
+    stops and at least 500 m more; only such a leg offers "Why this way?". */
+export function legGoesRound(leg, a, b){
+  if(!leg || !leg.routed || !a || !b) return false;
+  const straight = metres([a.lat, a.lng], [b.lat, b.lng]);
+  return leg.distM >= 1.3 * straight && leg.distM - straight >= 500;
+}
+/** Why the leg takes the way it does, against the shortest way the same bike may ride (`alt`): the main reason, in this
+    order, gravel or dirt the bike avoids, climbing it saves, busy roads it keeps off, cycle paths it keeps to, traffic
+    lights it keeps clear of; `shortest` when the two are about equal; `other` when nothing measured stands out, which
+    claims no reason (owner 2026-10-16: "asphalt vs asphalt"); null with nothing to compare. */
+export function whyThisWay(cur, alt){
+  if(!cur || !cur.routed || !alt || !alt.routed) return null;
+  if(alt.distM >= cur.distM * 0.97 || cur.distM - alt.distM < 200) return { kind: 'shortest' };
+  const surf = l => l.surfaces || {};
+  const unpaved = l => (surf(l).gravel || 0) + (surf(l).rough || 0);
+  const up = l => Array.isArray(l.heights) && l.heights.length > 1 ? climbOf(l.heights).up : 0;
+  const base = { curM: cur.distM, altM: alt.distM };
+  const unpavedM = unpaved(alt) - unpaved(cur);
+  if(unpavedM >= 300) return { kind: 'surface', ...base, unpavedM: Math.round(unpavedM) };
+  const upM = up(alt) - up(cur);
+  if(upM >= 40) return { kind: 'climb', ...base, upM: Math.round(upM) };
+  const busyM = (surf(alt).busy || 0) - (surf(cur).busy || 0);
+  if(busyM >= 500) return { kind: 'busy', ...base, busyM: Math.round(busyM) };
+  // Cycle paths: half a kilometre more of them, and a larger share of the way, not only more road in total.
+  const cyc = l => surf(l).cycle || 0;
+  if(cyc(cur) - cyc(alt) >= 500 && cyc(cur) / cur.distM > cyc(alt) / alt.distM + 0.2) return { kind: 'cycle', ...base, curCycleM: Math.round(cyc(cur)), altCycleM: Math.round(cyc(alt)) };
+  const sig = l => surf(l).signals || 0;
+  if(sig(alt) - sig(cur) >= 4) return { kind: 'signals', ...base, curSignals: sig(cur), altSignals: sig(alt) };
+  return { kind: 'other', ...base };
+}
+function metres(a, b){
+  const r = Math.PI / 180, x = Math.sin((b[0] - a[0]) * r / 2) ** 2 + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin((b[1] - a[1]) * r / 2) ** 2;
+  return 2 * 6371000 * Math.asin(Math.sqrt(x));
 }
 /** Sunrise and sunset at a point on a date (YYYY-MM-DD), as UTC Dates, with the daylight in seconds; NOAA's solar equations, a minute's precision; null for a polar day or night. */
 export function sunTimes(lat, lng, date){
@@ -421,7 +675,8 @@ export function mergeSurfaces(engine, tile, distM){
   const covered = Math.min(seen, distM), scale = covered / seen;
   const engTotal = keys.reduce((t, k) => t + (engine[k] || 0), 0);
   const rest = Math.max(0, distM - covered), engScale = engTotal > 0 ? rest / engTotal : 0;
-  const out = { busy: engine.busy || 0 };
+  // Road facts, not surfaces: the tiles say nothing of them, so the engine's stand.
+  const out = { busy: engine.busy || 0, cycle: engine.cycle || 0, signals: engine.signals || 0 };
   for(const k of keys) out[k] = (tile[k] || 0) * scale + (engine[k] || 0) * engScale;
   return out;
 }

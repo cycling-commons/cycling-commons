@@ -1949,6 +1949,8 @@
   .cc-info-pop{display:none;position:absolute;left:0;right:0;top:calc(100% + .35rem);z-index:5;background:var(--chrome-bg);color:var(--chrome-fg-solid);border:1px solid rgb(var(--chrome-fg) / .2);border-radius:6px;padding:.5rem .65rem;box-shadow:0 8px 22px -10px rgba(0,0,0,.5);font-family:var(--sans);font-size:.8rem;font-weight:400;line-height:1.4;letter-spacing:0;text-transform:none}
   .cc-info-pop:empty{display:none!important}
   .cc-info-src{display:block;margin-bottom:.25rem;color:rgb(var(--chrome-fg) / .75)}
+  .cc-info-list > span{display:block}
+  .cc-info-list > span + span{margin-top:.35rem}
   .cc-info-wrap:hover .cc-info-pop,.cc-info-wrap:focus-within .cc-info-pop,.cc-info-wrap.open .cc-info-pop{display:block}
   .cc-plan-stop{display:flex;align-items:flex-start;gap:.5rem;padding:.5rem 0;border-bottom:1px solid rgb(var(--chrome-fg) / .1)}
   .cc-plan-stop .n{width:22px;height:22px;flex:none;border-radius:50%;background:var(--trail);color:#fff;display:grid;place-items:center;font-family:var(--mono);font-size:.66rem;font-weight:500;margin-top:.1rem}
@@ -1965,6 +1967,16 @@
   .cc-plan-stop .act button:disabled{opacity:.25;cursor:default}
   .cc-plan-leg{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .7);padding:.12rem 0 .12rem 2.3rem}
   .cc-plan-leg.bad{color:var(--chrome-amber)}
+  /* "Why this way?": the question beside the leg, the answer as a plain sentence under it (owner 2026-10-15) */
+  .cc-plan-leg .dl-all{margin-left:.4rem}
+  /* the legs that go round, findable with the stops folded (owner 2026-10-15) */
+  .cc-plan-roundsum{display:block;margin:.35rem 0 0;padding:0;background:none;border:none;color:var(--trail);font:inherit;font-size:.8rem;text-decoration:underline;cursor:pointer}
+  .cc-plan-roundsum[hidden]{display:none}
+  /* the water-gap line: hover shows its stretch, the drop icon adds the nearest place */
+  .cc-plan-gap{cursor:default}
+  .cc-plan-gap:focus-visible{outline:2px solid var(--trail);outline-offset:1px}
+  .cc-plan-fillwater{width:1.45rem;height:1.45rem;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;margin-left:.3rem}
+  .cc-plan-leg.why{font-family:inherit;font-size:.78rem;letter-spacing:0;text-transform:none;line-height:1.35;color:var(--chrome-fg-solid)}
   .cc-plan-figs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem}
   .cc-plan-fig{background:rgb(var(--chrome-fg) / .06);border-radius:8px;padding:.5rem .6rem;min-width:0}
   .cc-plan-fig b{display:block;font-family:var(--serif);font-weight:700;font-size:1.2rem;line-height:1.1;white-space:nowrap}
@@ -1982,9 +1994,30 @@
   .cc-plan-add:hover{border-color:var(--trail);color:var(--trail)}
   .cc-plan-add.in{border-color:transparent;background:rgb(var(--chrome-fg) / .12);color:rgb(var(--chrome-fg) / .7)}
   .cc-plan-acts{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
+  .cc-plan-openrow{margin-top:.5rem}
+  /* The planner's dialogs in the middle of the screen: the question before a ride file replaces the ride
+     (#planReplace) and a notice that something was not done (#planNotice). The global reset takes a
+     <dialog>'s centring away, so margin:auto restates it, as .cc-hist-dlg does. */
+  .cc-plan-dlg{border:1px solid rgb(var(--chrome-fg) / .18);border-radius:12px;margin:auto;
+    width:min(26rem,92vw);padding:1.1rem 1.2rem 1.2rem;background:var(--chrome-bg);color:var(--chrome-fg-solid);
+    box-shadow:0 24px 60px -20px rgba(0,0,0,.7)}
+  .cc-plan-dlg::backdrop{background:rgba(16,30,22,.62)}
+  .cc-plan-dlg h3{margin:0 0 .5rem;font-size:1rem}
+  .cc-plan-dlg p{margin:0 0 .5rem;font-size:.85rem;line-height:1.45}
+  .cc-plan-replace-file{font-family:var(--mono);font-size:.78rem;overflow-wrap:anywhere}
+  .cc-plan-dlg-acts{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:flex-end;margin-top:.8rem}
   .cc-plan-go{background:var(--trail);border-color:var(--trail);color:#fff}
   .cc-plan-go:hover{filter:brightness(1.08);color:#fff}
   .cc-plan-quiet{border-color:transparent;color:rgb(var(--chrome-fg) / .7)}
+  /* the planner's guide (route-planner.md section 3.1): How it works, and the card it opens */
+  .cc-plan-guidebar{display:flex;justify-content:flex-end;margin:0 0 .4rem}
+  .cc-plan-guidebar .dl-all[hidden]{display:none}
+  .cc-plan-guide{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1300;width:min(26rem,calc(100% - 2rem));max-height:calc(100% - 2rem);overflow:auto;padding:1rem 1.1rem;background:var(--chrome-bg);color:var(--chrome-fg-solid);border:1px solid rgb(var(--chrome-fg) / .18);border-radius:10px;box-shadow:0 18px 48px -16px rgba(0,0,0,.6);font-size:.88rem;line-height:1.45}
+  .cc-plan-guide[hidden]{display:none}
+  .cc-plan-guide h3{margin:0 0 .45rem}
+  .cc-plan-guide ol{margin:0 0 .6rem;padding-left:1.2rem}
+  .cc-plan-guide li + li{margin-top:.3rem}
+  .cc-plan-guideshow{display:flex;align-items:center;gap:.45rem;margin:0 0 .6rem;font-size:.8rem}
   /* the start: name, then where (route-planner.md section 4.1) */
   .cc-plan-field{display:block;margin-top:.4rem;max-width:20rem}
   .cc-plan-field:first-child{margin-top:0}
@@ -1993,8 +2026,6 @@
   .cc-plan-startsearch[hidden]{display:none}
   .cc-plan-startsearch{margin-top:.6rem}
   .cc-plan-results{list-style:none;margin:.3rem 0 0;padding:0;max-width:20rem}
-  .cc-plan-save{display:flex;gap:.4rem;margin-top:.5rem}
-  .cc-plan-save input{flex:1;min-width:0;background:var(--chrome-field);border:1px solid rgb(var(--chrome-fg) / .25);color:var(--chrome-fg-solid);border-radius:6px;padding:.45rem .6rem;font:inherit}
   /* stops on the map */
   .cc-plan-mk{width:24px;height:24px;border-radius:50%;background:var(--trail);color:#fff;border:2px solid #F3EBD8;box-shadow:0 2px 6px rgba(0,0,0,.35);display:grid;place-items:center;font-family:var(--mono);font-size:.64rem;font-weight:500;cursor:grab}
   .cc-plan-mk.start{background:#1E7A46} .cc-plan-mk.end{background:var(--ink);color:#fff}

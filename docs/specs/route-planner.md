@@ -13,8 +13,8 @@ bike (section 4), what is listed along it (section 5), saving and the GPX
 decisions the owner still takes (section 11). The map shell is
 [map-and-search.md](map-and-search.md)'s; the routing engine and the heights
 are [climb-elevation.md](climb-elevation.md) section 2's; the bike vocabulary
-is [route-domain.md](route-domain.md) section 8.3's; a saved ride's place in
-the account is [account-and-auth.md](account-and-auth.md) section 8's.
+is [route-domain.md](route-domain.md) section 8.3's. A ride the rider keeps
+is a file of their own (section 6.1), never a row of ours.
 
 ## 1. What it is, and what it will never be
 
@@ -34,8 +34,8 @@ different product and stays out.
 | The line follows roads, chosen by our routing engine for the rider's bike type | Alternatives, "avoid this area", "prefer quiet roads" sliders |
 | Distance, metres climbed, metres descended, and the height profile | Calories, training figures, a personal pace or level |
 | The riding time of one general reference rider per bike type, the flat-equivalent distance, and what makes the day tougher: steepness, water gaps, busy roads, daylight, the forecast (section 4.4) | Comparing a ride against the rider's own history or fitness; there is no usage data and none is collected for it |
-| What the Commons has along the ride (a tap, a toilet, a climb, a view), each addable as a stop | Multi-day plans, round-trip generation, a route from a GPS file to edit |
-| Save the ride under a name in the account, reopen it on the map, delete it | Public or shared plans, comments, ratings, a feed |
+| What the Commons has along the ride (a tap, a toilet, a climb, a view), each addable as a stop | Multi-day plans, round-trip generation |
+| Keep the ride as a file on the rider's own device, the GPX, and open it again to carry on; open another app's GPX, converted to checkpoints (section 6.1) | A copy of a ride on our server; public or shared plans, comments, ratings, a feed |
 | Download the ride as a GPX (GPS Exchange Format) file for a device or another planner | Sending to a device or an app for the rider |
 
 The ride check (map-and-search.md section 9) stays what it is: a file a
@@ -93,13 +93,16 @@ shows, which is the point.
   (section 4.2), one instruction line ("Click the map to set a start, then
   click again for each stop"), the stops (section 4.1), the figures
   (section 4.4), the profile (section 4.5), what is along the ride
-  (section 5), then Save, Download GPX and Clear (section 6).
+  (section 5), then Download GPX and Clear (section 6). **Open a GPX** sits
+  under the ride's name, there from the empty planner on (owner 2026-10-16).
 - **The line on the map** sits above every other line layer, the routes, the
   surfaces, the climbs, and below the place icons, in the one stacking order
   of map-and-search.md section 4.1 (owner 2026-10-15: "these routes must go
   over any other layer, but stay below spot icons"). It is thin, 1.8 px at zoom 10
   to 3 px at zoom 18 over a faint cream edge, so the surface band under it
-  stays readable on both sides (owner 2026-10-15).
+  stays readable on both sides (owner 2026-10-15). Chevrons along it, from
+  zoom 11, show which way the ride goes (`plan-arrows`, owner 2026-10-15);
+  the line's eye hides them with it.
 - **Show or hide the line** (owner 2026-10-15): an eye beside "Your ride"
   in the panel (`#planLineToggle`) hides the ride line and shows it again,
   so the surface under it can be read on its own; the stops, the profile and
@@ -112,8 +115,8 @@ shows, which is the point.
   list opens on it (owner 2026-10-15). Folded, that line is a tinted card
   with a chevron, a click on it opens the list, and the open list sits in
   the same tint, so the stops read as one block (owner 2026-10-15).
-- **One save**: Save to my rides saves under the name at the top of the
-  panel; there is no second name field (owner 2026-10-15).
+- **One name**: the name at the top of the panel names the GPX; there is no
+  second name field (owner 2026-10-15).
 - **The ride outlives the panel.** Closing the panel keeps the line and the
   stops on the map. While a ride with at least two stops is on the map and the
   panel is closed, a **ride bar** sits at the foot of the map: "42.3 km ·
@@ -122,11 +125,8 @@ shows, which is the point.
   **Add to ride** (section 4.3), and that button reopens the panel.
 - **On a phone** the panel is the sheet (map-and-search.md section 6.6) and
   the ride bar sits above it.
-- **Deep link:** `/map?ride=<id>` opens a saved ride of the signed-in rider
-  on its line, with the panel open; another rider's id or a visitor gets the
-  map without a ride, and no error that tells them the id exists.
-- **Leaving the page** with an unsaved ride of two stops or more asks once
-  ("Your ride is not saved"), the browser's own prompt, nothing custom.
+- **Leaving the page** asks nothing: the draft stays in the browser for
+  seven days (section 6.0), and the file is how a ride is kept longer.
 
 **As built.** The rail button `ib-plan` (`data-panel="plan"`) and the panel
 `p-plan` sit in `templates/map/index.html.twig`; `shell.js` titles it and
@@ -144,8 +144,29 @@ stretch. They are remembered where the map is made (`catalog-load.js`,
 `window.__ccBaseSources`, on every style load), because the map script may
 start after the style has loaded and the pin layers are in (owner
 2026-10-15). The page hands the script its endpoints and tokens as
-`window.CC_PLAN`; a visitor's blob has no save endpoint. The home page link
+`window.CC_PLAN`; it has no save endpoint, for anyone: nothing of a ride is
+stored on our server (section 6). The home page link
 is not built yet.
+
+### 3.1 The guide
+
+When the planner opens, once a page, a short guide sits in the middle of
+the map (owner 2026-10-15; the close button takes the keyboard, Escape
+closes it): naming the ride and finding the start, clicking
+stops, dragging and right-clicking them, places and Add to ride, undo and
+redo with the Mac's keys, and the seven days in the browser with the GPX to
+keep a ride. **Show this guide when I open the planner** is ticked; unticking
+it keeps the guide closed. Signed in, the choice is a closed map hint on the
+account (`MapHint::PlanGuide`, `POST /map/hint/plan_guide/close`, and
+`POST /map/hint/plan_guide/open` to tick it on again), so it holds on every
+device; a visitor's browser keeps it (`localStorage` `cc-plan-guide`).
+**How it works** at the top of the panel opens the guide at any time.
+
+**The map's credits stay visible** (owner 2026-10-16): while the height strip
+is open, the map's attribution (OpenStreetMap, the elevation notice, Esri on
+the satellite map) and the zoom buttons sit on top of the strip, and the ride
+bar, the legend and the filter mark move up to clear them. Redo
+is named as Ctrl+Shift+Z, the usual key, with Ctrl+Y beside it.
 
 ## 4. Drawing the ride
 
@@ -172,29 +193,43 @@ routes.
   meaning. One rule says what a place is to the ride (`drawer.js`
   `planPlace()`), for the drawer button and the pins alike, and one
   synchronous event carries it from a pin to the planner (`util.js`
-  `offerToRide()`, `cc:place-menu`). The panel says so under the stops.
+  `offerToRide()`, `cc:place-menu`). The stops' info box says so (below).
+  A right-click on a tile pin looks 10 px round the pointer (owner
+  2026-10-16: the narrow tip of a drop fell through), and a right-click the
+  planner takes shows no coordinates popup: the pin's handler marks the click
+  `ccTaken`, which the popup reads (MapLibre cancels every right-click's
+  default itself, so `defaultPrevented` says nothing).
 - **Reorder** by the row's up and down buttons; **Remove** per row. On a
   pointer device a stop can also be dragged on the map, which re-routes its
   two legs when dropped, and removed on the map by a right-click, or a click
   with the command key on a Mac (owner 2026-10-15); undo brings it back. A
-  click on a stop never adds a stop. The panel says so under the stops, and
-  the stop's tooltip says it too.
-- **At most 25 stops** (owner decision, section 11). The 26th click is
+  click on a stop never adds a stop. The stops' info box says so, and the
+  stop's tooltip says it too.
+- **At most 50 stops** (owner decision, section 11; 25 until 2026-10-16). The 51st click is
   refused with the reason.
 - **Undo**: Ctrl+Z, or the command key with Z on a Mac (owner 2026-10-14),
   restores the stops as they were before the last change (a stop added,
   removed, moved, dragged, a place added, a clear), up to 30 steps back, while
   a ride is being planned; inside a text field the key keeps its own meaning.
   Each step is a full copy of the stops before the change; undo puts them
-  back and the legs are routed again from them. A change to the stops takes
+  back and the legs are routed again from them. Opening a ride file and
+  Clear replace the whole ride, so their step keeps the name and the bike
+  too; a stop change keeps the stops alone, so undo never takes back a bike
+  the rider picked. A change to the stops takes
   the keyboard off a text field first (owner 2026-10-15): a drag or a
   right-click on the map leaves the focus where it was, and Ctrl+Z in the
   ride's name would otherwise undo the name, not the ride.
 - **Redo**: Ctrl+Shift+Z or Ctrl+Y, or the command key with shift and Z on a
   Mac (owner 2026-10-15), puts back what undo took, one step at a time, the
   five steps nearest the ride at most; a new change to the stops forgets
-  them, as in any editor. The same hint under the stops says so.
-  The panel says so under the stops.
+  them, as in any editor.
+- **The stops' info box** (owner 2026-10-15): an info icon beside Stops
+  (`#planHelpWrap`, the pattern of the bike's explanation: hover shows it,
+  a click keeps it, the next closes it) holds how to plan with the mouse and
+  the keys: a click on the map adds a stop; a right-click on a stop removes
+  it; a click on a place opens it, with Add to ride; a right-click on a place
+  adds it at once; Ctrl+Z and Ctrl+Shift+Z or Ctrl+Y; and on a Mac the command
+  key with a click for a right-click and in place of Ctrl.
 - **Clear** empties the ride after a confirmation, and undo brings it back.
 
 **A new ride starts with its name** (owner 2026-10-15: "first step a user
@@ -203,7 +238,7 @@ start town and we pan/zoom to that location; there the user sets the first
 location"). The first block of the panel (`#planStart`):
 
 1. **Name your ride** (`#planRideName`, up to 80 characters, kept with the
-   draft and offered again by Save). The map takes no first stop without
+   draft and written into the GPX). The map takes no first stop without
    it: a click, or Add to ride on a drawer, opens the panel on the name with
    "Give your ride a name first."
 2. **Where do you start?** (`#planStartSearch`), shown once the ride has a
@@ -270,13 +305,13 @@ weigh roads a cyclist may use, never roads they may not. Measured on the dev
 engine on 2026-10-14: a road-bike leg across the E42 near Francorchamps uses
 no motorway or trunk edge, and a stop dropped on the E42 carriageway starts
 on the nearest ordinary road. The only line on the map that is not a road is
-the "no road found" marker below, and it can never be saved or downloaded.
+the "no road found" marker below, and it can never be downloaded.
 
 **When the engine finds no road** (unreachable, or no connection between the
 two points: an island, a motorway-only stretch), the leg is a **straight
 dashed line** on the map, its row reads "No road found between these stops",
 its distance and heights are left out of the figures and the profile shows a
-gap there. A ride with a straight leg **cannot be saved or downloaded** until
+gap there. A ride with a straight leg **cannot be downloaded** until
 the leg routes (owner decision, section 11): a GPX with a straight line across
 a lake is a lie a device would follow.
 
@@ -286,6 +321,46 @@ for the routed line resampled every 30 m, with the distance along
 returning zeros, not errors (climb-elevation.md section 2d), so a leg whose
 samples are less than 90 % non-zero has no heights: the line stays, the
 figures and the profile leave it out, and the row says "No heights here".
+
+#### 4.2a Why this way?
+
+A leg that clearly goes round, at least 1.3 times the straight distance
+between its stops and at least 500 m more (`legGoesRound()`), carries **Why
+this way?** beside its distance in the stops list (owner 2026-10-15: a road
+bike went round a forest track and the rider could not see why). A click
+asks the leg endpoint once more with `shortest: true`: the engine's shortest
+way for the same bike, its `shortest` on top of the bike's own costing block,
+so it still never takes a road a cyclist may not use. `whyThisWay()` compares
+the two and one sentence under the leg names the main reason, in this order:
+gravel or dirt the bike avoids ("The shortest way is 4.4 km, with 3.1 km of
+gravel or dirt. Your bike avoids that, so this way is 7.6 km."), climbing it
+saves (40 m or more), busy roads it keeps off (500 m or more), cycle paths
+it keeps to (500 m more and a 20-point larger share: "The shortest way is
+5.3 km, only 0.6 km of it on cycle paths. This way is 6.6 km, 5.4 km of it
+on cycle paths, away from cars."), or traffic lights it keeps clear of (4 or
+more fewer); within 3 % or 200 m it says this is about the shortest way
+already. When nothing measured stands out it claims no reason: it says the
+planner weighs the kind of road, not only the distance, and offers both on
+the map (owner 2026-10-16: the old fallback, "roads or paths that suit your
+bike less", named asphalt against asphalt through Hoorn). The cycle path
+metres (a cycleway, or a road with a separated lane; a painted lane is not
+one) and the traffic lights (on the edge that ends at them, now and then on
+the node) come from the same engine walk as the surfaces
+(`LegSurfaces`), as `surfaces.cycle` and `surfaces.signals`. The answer is kept per leg and bike in the tab, so a
+second click asks nothing; a failed ask is not kept and the question comes
+back. Nothing of it is stored on our server. With the stops folded, one line
+under their summary says how many legs go round ("2 legs go round: see
+why", `#planRoundSum`); a click opens the list and asks the first answer.
+
+**See the shorter way and choose it** (owner 2026-10-15). The answer keeps
+the shorter leg it compared with. Hovering the answer draws that way on the
+map, dark and dashed (layer `plan-alt`); **Show on map** keeps it drawn and
+frames both ways; **Ride the shortest way** makes the leg take it: the stop
+it arrives at carries `way: 'shortest'`, the leg key carries it, the leg is
+routed with `shortest: true`, the line already fetched is reused, and the
+ride file keeps it (`<cc:way>shortest</cc:way>` on that waypoint). The leg
+row then says "shortest way" with **Back to your bike's way**. Both are
+changes to the stops, so undo takes them back.
 
 ### 4.3 "Add to ride" on the place drawer
 
@@ -385,14 +460,50 @@ no account data: the pace is general, and it stays general (section 1).
   - **Longest stretch without water or food**, `waterGap()`: from the along
     list (section 5), the largest gap along the ride between the start, the
     letter B places and the end, from 15 km; not shown while that letter's
-    list is capped, since the gap could be smaller than it looks.
+    list is capped, since the gap could be smaller than it looks. The line
+    carries **Add the nearest place for water or food** (owner 2026-10-15):
+    the middle of that stretch (`waterGapSpan()`) asks `/map/coverage/nearby`
+    for letter B within 5 km, ours or OpenStreetMap's, and the nearest
+    (`nearestWaterStop()`)
+    goes into the ride where the dry stretch is: the stretch is sampled every
+    200 m and each place measured to its nearest sample; the one that leaves
+    the shortest dry part wins, the longer of the stretch before and after it
+    plus the way there and back (`bestWaterStop()`; the nearest one could sit
+    at an end and make the gap longer), and it goes in after the leg that
+    holds its sample (`stopIndexAt()`), not into the leg it happens to lie
+    nearest; none within 5 km says so, a place that would not leave a
+    shorter dry part than the stretch is not added, nor one already in the
+    ride, nor any on a ride that holds its 50 checkpoints: each says why.
+    Reaching a place off the line can change the route itself, so once the
+    new route and its along list are in, the planner checks: shorter, it
+    says how long the longest dry stretch is now, in the status line; not
+    shorter, it takes the stop out again and says why. Every "not added"
+    shows in a dialog in the middle of the screen, "No water stop added"
+    with the reason and OK (`#planNotice`, owner 2026-10-16: not a small
+    line in the drawer). A place it names says what it is and where
+    (`fillWhere()`, owner 2026-10-16: "Who is Koning?"): "Koning (Food stop)
+    is 2.1 km from your ride, level with 74 km along it", its kind in the
+    legend's words from the nearby answer's `food` and `potable`
+    (`waterKind()`), with **Show on map**, which closes the dialog and flies
+    to the place. A dry stretch runs from the last water or food the ride
+    passes to the next one, so a water point stands at each end of it. The check takes back only the fill's own stop, and
+    only while it is still the newest change (`pendingFill` holds the stop
+    and the history size), without a redo step (`history.discard()`): a
+    check left behind by a stop that never went in undid the rider's own
+    last change, and the next Ctrl+Z took the opened file away (owner
+    2026-10-16). The ride's own place stops
+    count at the distance the ride reaches them (`stopRows()`), so a water
+    stop whose pin lies off the road its leg ends on still splits the gap. The button is a drop with a plus, its words in its
+    title and accessible name, and the line itself, hovered or focused,
+    paints that stretch on the map as a yellow highlighter band under the
+    ride (`sliceAlong()`, layer `plan-gap`; blue read as a river).
   - **Busy roads**: the kilometres on trunk, primary and secondary roads
     without a dedicated or separated cycle lane, from 1 km, read per edge
     from the engine (`LegSurfaces`: `road_class` and `cycle_lane`), carried
     with the leg as `surfaces.busy` metres.
   - **Daylight** for the ride's date: a date field under the figures, today
-    by default, kept with the browser's draft and never with a saved ride
-    (a saved ride is ridden on many days). Sunrise and sunset at the start
+    by default, kept with the browser's draft and never in the ride file
+    (a kept ride is ridden on many days). Sunrise and sunset at the start
     are computed in the browser (`sunTimes()`, the NOAA solar equations, a
     minute's precision), shown in the rider's clock: "daylight 10 h 40,
     08:12 to 18:52". When the riding time is longer than the daylight the
@@ -506,6 +617,19 @@ the ride check's picker: the planner's question is "what can I stop at",
 not "how wide shall I look". The letter B rows also feed the longest
 stretch without water or food (section 4.4).
 
+**The ride moves the map's scope when it leaves it** (owner 2026-10-16: a
+GPX of North Holland opened while the map looked at Wallonia showed no
+places on the map). The answer also names the regions the line crosses, in
+ride order (`regions`, `RideCheckService::crossedRegions()`, the ride
+check's own list). When the scope does not already show every one of them
+(`scopeCovers()` in `ride-scope.js`: a region scope holding them all, their
+country, or Everywhere), the planner sets the scope to the ride's regions
+(`rideScopeFor()`), never stored as the rider's own, the camera kept on the
+ride, and the scope chip says "from your ride", as the ride check does.
+Clearing the ride gives the rider's scope back, unless they picked another
+since. A file just opened is framed by its checkpoints at once, before any
+leg is routed (`fitRide()`).
+
 The list renders with `along-list.js` as the ride check renders it, one
 group per letter with its count, the first rows shown and the rest folded,
 each row the name on its own line and "12.4 km along · 40 m off" under it
@@ -516,17 +640,19 @@ place on the map, as the ride check's rows do; the planner writes its own
 rows (`plan.js`) because an add button cannot sit inside the row button
 `along-list.js` writes.
 
-## 6. Saving, the account, and the GPX
+## 6. Keeping a ride: the browser and the file
 
 ### 6.0 Work in progress, in the browser
 
-The ride being planned lives in the rider's browser, never on our server
-until they save it: the draft (`localStorage` `cc-plan-draft`: name, bike,
+The ride being planned lives in the rider's browser, never on our server:
+the draft (`localStorage` `cc-plan-draft`: name, bike,
 stops, the day) and its undo and redo steps (`cc-plan-history`), each with
 the time of the last change. Both are kept **seven days after the last
 change** (owner 2026-10-15, `plan-model.js` `WORK_KEEP_MS`, `workFresh()`),
 so a closed tab or browser loses nothing; on the first visit after that the
-browser forgets them. A cleared ride keeps its steps, so undo still brings it
+browser forgets them; the panel says so under Keep it ("A ride you are
+working on is kept in this browser for 7 days, including its history of
+changes."). A cleared ride keeps its steps, so undo still brings it
 back. A draft from before the time stamp is kept and stamped at its next
 change. **Signing out forgets both** (owner 2026-10-15): the redirect home
 after a sign-out carries `#signed-out` (`SignedOutMarkSubscriber`, on the
@@ -536,112 +662,109 @@ preferences stay. A fragment never reaches a server, so the mark is in no
 log. This answers a shared computer: the next person finds an empty
 planner. The privacy notice's local storage paragraph says so.
 
-**Owner decision, 2026-10-15, not built yet.** The Commons is a data system,
-not a users system: a ride to keep becomes a file the rider downloads and
-opens again, and saved rides leave our server (6.1 and 6.2 below describe
-what is built today). A share system, where the rider keeps a ride somewhere
-remote of their own choosing, may come later.
+**A data system, not a users system** (owner 2026-10-15): nothing of a
+ride is stored on our server. A ride to keep is a file the rider downloads
+and opens again (6.1); no account is needed for it and no account holds
+one. A share system, where the rider keeps a ride somewhere remote of their
+own choosing, may come later.
 
-### 6.1 Saved rides
+### 6.1 The ride file
 
-A signed-in rider saves the ride under a name, `POST /map/plan/save`
-(section 8). Saving a ride opened from the account updates it; saving a
-new one adds it. A rider holds **at most 100 rides** (owner decision,
-section 11); the 101st save is refused with the reason and a link to the
-list.
+The GPX (6.2) is the ride file. **Download GPX** writes it from the ride on
+screen. **Open a GPX** (`#planOpen`, a file picker for `.gpx`, under the
+ride's name so an empty planner can open a file) reads one back in the
+browser with `rideFromGpx()` (`plan-model.js`) and puts its name, bike and
+stops on the map. **Over a ride being planned it asks first** (owner
+2026-10-16), because the file replaces that ride: a modal dialog
+(`#planReplace`) names the file and says so, with three answers, *Keep my
+ride* (the focused one; Escape and a click beside the dialog answer the
+same), *Download GPX* (the ride on screen, the dialog stays open) and *Open
+the file*. A file that cannot open says why before anything is asked. Undo
+and redo wait while the dialog is open. The legs are routed again under that bike,
+because the line and the heights are not taken from the file: a road the
+engine no longer knows shows as a "no road" leg, never as a silently
+different ride. Opening is a change to the stops, so undo goes back to the
+ride that was on the map before. The file never reaches our server; only
+the leg requests every ride makes do.
 
-| Column | Holds |
-|---|---|
-| `planned_ride.id` | the id in `/map?ride=<id>` |
-| `user_id` | the rider, `ON DELETE CASCADE` |
-| `name` | 1 to 80 characters |
-| `bike` | one `BikeType` value |
-| `stops` | JSONB, the stops in order: `{lat, lng, item?, name?}` |
-| `line` | `geometry(LineString, 4326)`, the routed line as saved |
-| `distance_m`, `ascent_m`, `descent_m` | the figures as saved |
-| `created_at`, `updated_at` | |
+A GPX this planner wrote (`creator="Cycling Commons"` or our namespace)
+opens as it was written: its waypoints are the stops. It is refused with the
+reason when it has no stops, more than 50, or a point off the globe.
 
-The stored line is what the rider saw when saving. Opening a saved ride
-(`/map?ride=<id>`) frames and draws that line at once, then routes its legs
-again under the ride's bike, because the heights are not stored and the
-profile needs them; a road the engine no longer knows then shows as a "no
-road" leg in the stops list, never as a silently different ride.
+**Another app's GPX is converted** (owner 2026-10-16, "You need to convert
+it then"; `foreignRide()` in `plan-model.js`). Its track, else its route,
+else its waypoints, becomes the stops, at most 50 (`MAX_STOPS`):
 
-**As built (2026-10-14).** The table is `planned_ride` as above, by migration
-`Version20261014020000`, with an index on `(user_id, updated_at)`. The entity
-is `App\Planner\Entity\PlannedRide`; `App\Planner\RideInput` checks the
-body's shape and bounds before any budget is spent (section 8) and
-`App\Planner\PlannedRides` saves, opens, lists, deletes and counts, every
-call for one rider, so another rider's ride is a missing ride. The endpoints
-are in `App\Controller\PlanRideController`: `POST /map/plan/save`
-(`map_plan_save`, token id `plan-save`, limiter `plan_save`),
-`GET /map/plan/ride/{id}` (`map_plan_ride`, the line as a GeoJSON LineString
-and the stops as stored), `GET /map/plan/rides` (`map_plan_rides`, newest
-updated first, without the lines) and `POST /map/plan/ride/{id}/delete`
-(`map_plan_ride_delete`, token id `plan-delete`, answers 204). The list and
-the delete live under `/map/plan/`, not `/account/rides` as the table in
-section 8 says: the Rides tab reads the same JSON the planner does. A line
-over 400 km answers `length_range`, as `/map/plan/along` does; a claimed
-distance more than 5 % off the line's measured length answers
-`length_mismatch`; the 101st ride answers `too_many_rides` (409). The
-export's `rides.geojson` carries every ride as a GeoJSON feature with its
-name, bike, stops, figures and dates; `ascent_m` and `descent_m` are the
-figures as saved, with no separate mark on them.
+- A route or a list of waypoints that fits is taken as it is, names
+  included: its points are the ones its author chose.
+- A track, or a longer list, keeps the points that hold its shape
+  (`simplifyTrack()`): first and last always; then, as Douglas-Peucker
+  splits, the point farthest off the straight line between two kept points,
+  until none lies more than `SHAPE_M` (25 m) off; the stops left go to the
+  longest stretches, split at their middle along the line, so a long straight
+  road is not left to the engine's own choice.
+- A point repeated within 5 m (a device standing still) is one point; a point
+  off the globe is left out; a file with no usable point is refused
+  (`no_stops`).
+- The name is the file's own (`<metadata>`), else the track's or the route's.
+  The bike stays the rider's. Converted track points are map points.
+- The legs are routed again for the rider's bike, as for every ride, and the
+  status line says so: "Opened {name}, made in another app, as {n}
+  checkpoints. The planner routes between them for your bike, so a road can
+  differ from the file."
 
-### 6.2 The account's Rides tab
+Measured on five Strava tracks (2026-10-16, road bike, dev engine): 3,315 to
+13,024 points converted in 8 to 30 ms. Within 50 m, the routed ride covers
+the track of a 51 km and a 78 km ride for 85 % and 79 % with 25 stops, 95 %
+and 96 % with 50, 99.9 % and 99 % with 100. The owner chose 50 (2026-10-16):
+a converted file spends at most 49 of a visitor's 100 legs a day. A file of
+up to 25 MB opens.
 
-The personal shell (account-and-auth.md section 8) gains a **Rides** tab
-after Contributions, `/account/rides`: the rider's rides, newest first,
-each with its name, bike, distance, metres climbed, the date saved, and
-three actions: **Open on the map** (`/map?ride=<id>`), **Download GPX**
-and **Delete** (a confirmation, then `POST /account/rides/{id}/delete`).
-The empty state says what a ride is and links to `/map?panel=plan`. This is
-the Saved tab that waited for a backend. As built (2026-10-14,
-`AccountRidesController`, `templates/account/rides.html.twig`): the row
-carries the name, bike, distance, metres climbed, stop count and the date
-saved, **Open on the map** (`/map?ride=<id>`) and **Delete** (a form with the
-`plan-delete` token, a confirmation, then `POST /account/rides/{id}/delete`,
-404 for another rider's ride); the GPX is downloaded from the map, where the
-ride opens with its line, so one writer serves both. A ride is the rider's alone: no
-curator desk lists it, no public page or API serves it, and it never feeds
-the heat layer (map-and-search.md section 11).
+**What is along a long ride.** The along request takes 5,000 line points at
+most (`PlanController::MAX_LINE_POINTS`, `ALONG_MAX_POINTS` in
+`plan-model.js`); a ride past about 110 km has more. `thinLine()` keeps every
+k-th point, the first and the last, before the line is sent, so the corridor
+of a ride up to the 400 km route cap is read.
 
-### 6.3 The GPX
+Our extensions, which GPX 1.1 allows, in the namespace
+`https://cyclingcommons.org/xmlns/ride/1` (prefix `cc`): the bike type in
+`<metadata><extensions><cc:bike>`, and per stop the place in
+`<wpt><extensions><cc:item>` (`B:123`, `osm:node/…`) with its letter in
+`<cc:letter>`. A GPX the planner wrote before the extensions opens without
+its bike, every stop a map point. Names are cut to 80 characters. The day
+is not written (section 4.4).
+
+### 6.2 The GPX
 
 The GPX is written **in the browser** from the ride on screen, by one
-writer used both from the panel and from the Rides tab (which loads the
-ride's stops and line through the same JSON the map uses): a GPX 1.1 file
-with one `<trk>` whose points carry the elevations, and one `<wpt>` per
+writer (`gpxText()`): a GPX 1.1 file with one `<trk>` whose points carry the elevations, and one `<wpt>` per
 stop, named by the stop's name, a place stop with a `<link>` to its page on
 the Commons. The file is named after the ride ("La Redoute loop.gpx";
-"Ride.gpx" when unnamed). No server endpoint writes a planned ride's GPX:
+"Ride.gpx" when unnamed), and carries the extensions of 6.1. No server
+endpoint writes a planned ride's GPX:
 the public API's `/v1/routes/{id}.gpx` is for recommended routes and stays
 what it is.
 
 ## 7. Personal data: privacy notice version 3
 
-A saved ride is personal data: a line the rider drew, with the places they
-chose, linked to their account. What the notice says about it, in the words
-the privacy spec requires (privacy-notice.md section 2: every claim has a
-source of truth in code):
+A planned ride is personal data: a line the rider drew, with the places
+they chose, and where they mean to ride. What the notice says about it, in
+the words the privacy spec requires (privacy-notice.md section 2: every
+claim has a source of truth in code):
 
-- **What we keep:** the table in section 6.1, for each ride the rider saved.
-  An unsaved ride exists only in the browser; the leg requests reach our own
-  routing engine and are not kept beyond the server's ordinary request logs
-  (privacy-notice.md section 3).
-- **Who sees it:** the rider, nobody else. Not curators, not the public
-  pages, not the API, not the tiles.
-- **How long:** until the rider deletes the ride, or deletes the account.
-  Deletion is immediate (privacy-notice.md section 5); nothing public
-  derives from a ride, so there is nothing to anonymise.
-- **Export:** the data export (account-and-auth.md section 11) carries every
-  ride as GeoJSON with its name, bike, figures and dates.
+- **What we keep:** nothing. The ride lives in the rider's browser for
+  seven days (6.0) and in the files they download (6.1). The leg, along
+  and forecast requests reach our server to be answered and are not kept
+  beyond the server's ordinary request logs (privacy-notice.md section 3).
+- **Who sees it:** the rider, nobody else.
+- **Export and deletion:** there is no copy, so there is nothing of a ride
+  in the data export (account-and-auth.md section 11) and nothing to delete.
 
-Keys, five locales: `privacy.collect_rides`, `privacy.retention_rides`,
-`privacy.change.v5_rides`. **Not significant**: the processing is optional
-and only happens when a rider saves a ride; nothing changes for data already
-given. It ships in privacy notice version 3, the one version that holds
-everything since the published version 2 (privacy-notice.md section 7a).
+Keys, five locales: `privacy.collect_rides`, `privacy.change.v5_rides`, and
+the sentence on the ride in `privacy.cookies_local_body`. **Not
+significant**: no personal data is kept. It ships in privacy notice
+version 3, the one version that holds everything since the published
+version 2 (privacy-notice.md section 7a).
 
 **The forecast** (section 4.4), the change key `v6_forecast` in the same
 version 3: for the ride's date our server
@@ -659,12 +782,9 @@ one of those.
 
 | Endpoint | Who | CSRF id | Limiter |
 |---|---|---|---|
-| `POST /map/plan/leg` `{a: [lng, lat], b: [lng, lat], bike}` (GeoJSON order, as `/contribute/route`) → `{routed, coordinates, distanceM, heights, surfaces, streets}`; `routed: false` carries no line, so nothing that is not a road ever comes from the server | everyone (owner decision, section 11) | `plan-leg` | `plan_leg` 600 per 10 minutes keyed `user-<id>`; `plan_leg_anon` 100 per day keyed on the salted address hash, the ride check's pattern |
-| `POST /map/plan/along` `{line: GeoJSON LineString}` → `{radiusM, climbs, groups, coverage}`, the ride check's lists; 2 to 5000 points, 500 m to 400 km, else 400 (`bad_request`, `length_range`) | everyone | `plan-along` | `plan_along` 60 per 10 minutes per user; `plan_along_anon` 20 per day |
+| `POST /map/plan/leg` `{a: [lng, lat], b: [lng, lat], bike, shortest?}` (`shortest: true` asks the shortest way of that bike, section 4.2a) (GeoJSON order, as `/contribute/route`) → `{routed, coordinates, distanceM, heights, surfaces, streets}`; `routed: false` carries no line, so nothing that is not a road ever comes from the server | everyone (owner decision, section 11) | `plan-leg` | `plan_leg` 600 per 10 minutes keyed `user-<id>`; `plan_leg_anon` 100 per day keyed on the salted address hash, the ride check's pattern |
+| `POST /map/plan/along` `{line: GeoJSON LineString}` → `{radiusM, climbs, groups, coverage, regions}`, the ride check's lists and the regions the line crosses (section 5); 2 to 5000 points, 500 m to 400 km, else 400 (`bad_request`, `length_range`) | everyone | `plan-along` | `plan_along` 60 per 10 minutes per user; `plan_along_anon` 20 per day |
 | `POST /map/plan/weather` `{lat, lng, date}` → `{forecast: {date, windKmh, windFromDeg, tempMaxC, rainMm} \| null}`; `null` when the service is off (`FORECAST_URL` empty), does not answer, or the date is past its 16 days; a malformed point or date is 400 | everyone | `plan-weather` | `plan_weather` 60 per 10 minutes per user; `plan_weather_anon` 30 per day |
-| `POST /map/plan/save` `{id?, name, bike, stops, line, figures}` → `{id}` | signed in | `plan-save` | `plan_save` 30 per 10 minutes |
-| `GET /map/plan/ride/{id}` → the saved ride's JSON | its rider | | `coverage_read`'s budget |
-| `GET /account/rides`, `POST /account/rides/{id}/delete` | its rider | `plan-delete` | |
 
 - The two open endpoints follow the stateless-JSON pattern (security-architecture.md
   section 5.1): a bad or cross-site token is 403, a malformed body is 400
@@ -684,30 +804,21 @@ one of those.
   three hours in the `cache.forecast` pool under the rounded point and the
   date, so a ride dragged around a town costs one request an afternoon.
   Nothing of the rider reaches the service (section 7).
-- The line sent to `save` is checked against the stops it claims: at most
-  25 stops, the line within 400 km (the route-domain cap), the figures
-  recomputed server-side from the line's length and refused when they differ
-  from the claimed ones by more than 5 %; the ascent is stored as claimed
-  (the server holds no heights) and marked as the rider's figure in the
-  export.
 
 ## 9. Testing
 
-Scope first (the project's rule for anything with a rider's rows): a test
-that `/account/rides` and `/map/plan/ride/{id}` of one rider never show or
-open another rider's ride, before any other test.
+No rider's rows: nothing of a ride is stored, so there is no scope to leak.
 
 - **PHP.** `BikeCosting`: every `BikeType` has a block, an unknown value
   throws. The leg endpoint: the costing block sent per bike, `routed: false`
   with no heights when the engine answers nothing, heights dropped under the
-  90 % rule, the 401 for a visitor on save, the limiters asserted against the
-  config. `/map/plan/along` answers the same groups as the ride check for the
-  same line. Save: name length, the 25-stop and 100-ride caps, the 5 % figure
-  check, update versus insert. Delete cascades with the account; the export
-  carries the rides.
+  90 % rule, the limiters asserted against the config. `/map/plan/along`
+  answers the same groups as the ride check for the same line.
 - **Node** (`web/tests/js`): inserting a place at its km along; the climbed
   and descended rule on a known sample; the profile's gap for a leg without
-  heights; the GPX writer's output on a two-leg ride; the ride bar's text.
+  heights; the GPX writer's output on a two-leg ride; the ride file written
+  and read back, a GPX from before the extensions, and every refusal; the
+  ride bar's text.
   The day (section 4.4): the flat speed of each reference rider at its
   power, a 6 % climb at about 9 km/h for the road rider, a descent at its
   cap, gravel slower than asphalt, a leg without heights as flat, the flat
@@ -741,8 +852,9 @@ commit as the code they describe.
 4. **Map.** The rail section and panel, the ride layers, stops and legs,
    figures, profile, the along list, Add to ride on the drawer, the ride
    bar, the GPX writer, five locales. Node tests first. Built 2026-10-14.
-5. **Saving.** `planned_ride`, save and open, the Rides tab, delete, the
-   export, the privacy notice change `v5_rides`, five locales.
+5. **Keeping a ride.** First built as a server table with an account tab
+   (2026-10-14); replaced the next day by the browser's draft and the ride
+   file, nothing kept on our server (owner 2026-10-15).
 6. **Ship.** The three wiki passages (section 2), the changelog note, the
    roadmap item marked shipped on the desk.
 
@@ -753,9 +865,8 @@ replaces the proposal in the section it belongs to.
 
 | # | Decision | Proposal | Why |
 |---|---|---|---|
-| 1 | Who may draw a ride | Everyone; only an account saves | The ride check's reasoning: it answers a question before a rider has a reason to trust us. The engine's cost is bounded by the anonymous limiter |
+| 1 | Who may draw a ride | Everyone, and anyone keeps a ride as a file | The ride check's reasoning: it answers a question before a rider has a reason to trust us. The engine's cost is bounded by the anonymous limiter |
 | 2 | The bike costing table (section 4.2) | As tabled | The road, gravel and mountain profiles are the engine's own; E-bike and the specialty bikes are our reading |
-| 3 | Caps | 25 stops; 100 rides per account | A one-day ride needs few stops; 100 rides is a year of weekends |
-| 4 | A leg the engine cannot route | Refuse save and GPX until it routes | A straight line in a GPX is a lie a device follows |
+| 3 | Caps | 50 stops (25 until 2026-10-16) | A one-day ride needs few stops; a long ride converted from another app's GPX keeps its roads with 50 (section 6.1) |
+| 4 | A leg the engine cannot route | Refuse the GPX until it routes | A straight line in a GPX is a lie a device follows |
 | 5 | The corridor along the ride | Fixed 250 m | "What can I stop at", not "how wide shall I look" |
-| 6 | The Rides tab's place | After Contributions | The rider's own things, next to the other things they made |

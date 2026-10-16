@@ -7,7 +7,7 @@
 // along rather than one winning and the rest of the ride going unscoped.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { rideScopeFor, scopeKey } from '../../assets/map/ride-scope.js';
+import { rideScopeFor, scopeKey, scopeCovers } from '../../assets/map/ride-scope.js';
 
 const VAUCLUSE = { id: 11, slug: 'vaucluse', countryCode: 'FR' };
 const DROME = { id: 12, slug: 'drome', countryCode: 'FR' };
@@ -41,4 +41,20 @@ test('scopeKey ignores region order, so re-loading the same ride is not a change
   assert.notEqual(scopeKey({ kind: 'region', regionIds: [11], countryCode: 'FR' }),
                   scopeKey({ kind: 'region', regionIds: [11, 12], countryCode: 'FR' }));
   assert.equal(scopeKey(null), '');
+});
+
+/* A planned ride moves the scope only when it leaves it (owner 2026-10-16): a GPX of North Holland opened while the
+   map looked at Wallonia showed no places. A ride inside a wider scope (its country, Everywhere) keeps that scope:
+   narrowing it to the ride's regions would hide what the rider chose to see. */
+test('a scope covers a ride when every region it crosses is inside it', () => {
+  const region = ids => ({ kind: 'region', regionIds: ids, countryCode: null });
+  assert.equal(scopeCovers(region([11, 12]), [VAUCLUSE, DROME]), true);
+  assert.equal(scopeCovers(region([11]), [VAUCLUSE, DROME]), false, 'the ride runs on into a region outside');
+  assert.equal(scopeCovers(region([21]), [VAUCLUSE]), false, 'Wallonia does not cover a ride elsewhere');
+  assert.equal(scopeCovers({ kind: 'country', regionIds: [], countryCode: 'FR' }, [VAUCLUSE, DROME]), true);
+  assert.equal(scopeCovers({ kind: 'country', regionIds: [], countryCode: 'FR' }, [DROME, LIEGE]), false);
+  assert.equal(scopeCovers({ kind: 'everywhere', regionIds: [], countryCode: null }, [LIEGE]), true);
+  assert.equal(scopeCovers({ kind: 'myArea', regionIds: [21], countryCode: null }, [LIEGE]), true);
+  assert.equal(scopeCovers(region([21]), []), true, 'a ride outside every region asks nothing');
+  assert.equal(scopeCovers(null, [LIEGE]), true, 'no scope yet: nothing to move');
 });

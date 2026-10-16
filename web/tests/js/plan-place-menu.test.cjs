@@ -54,9 +54,9 @@ test('the offer is one synchronous event the planner answers', () => {
   assert.match(m[1], /e\.detail\.handled = true;/);
 });
 
-test('the rider is told under the stops, in all five languages', () => {
-  assert.match(twig, /\{\{ 'map\.plan_place_hint'\|trans \}\}/);
+test('the rider is told in the stops\' info box, in all five languages', () => {
+  assert.match(twig, /\{\{ 'map\.plan_help_place'\|trans\|rich \}\}/);
   for (const l of ['en', 'fr', 'nl', 'de', 'es']) {
-    assert.match(read(`translations/messages.${l}.yaml`), /^ {2}plan_place_hint: "/m, `messages.${l}.yaml lacks map.plan_place_hint`);
+    assert.match(read(`translations/messages.${l}.yaml`), /^ {2}plan_help_place: "/m, `messages.${l}.yaml lacks map.plan_help_place`);
   }
 });

@@ -17,8 +17,10 @@ import { activePanel } from './shell.js';
 import { isPicking } from './picking.js';
 import { setPlanning } from './plan-state.js';
 import { CATALOG } from './catalog.js';
-import { layerGlyph } from './icons.js';
-import { MAX_STOPS, CORRIDOR_M, workFresh, legKeys, insertIndex, figures, profileRuns, pointAt, gpxText, barText, createHistory, tickStepKm, rideTime, surfaceBars, gradientBars, roundedHm, tileSurfaceClass, mergeSurfaces, streetAt, stopStreet, roadAt, steepestKm, longestClimb, waterGap, sunTimes, windShares } from './plan-model.js';
+import { layerGlyph, waterKind } from './icons.js';
+import { rideScopeFor, scopeKey, scopeCovers } from './ride-scope.js';
+import { keepCameraForNextScope } from './scope-ui.js';
+import { MAX_STOPS, ALONG_MAX_POINTS, thinLine, CORRIDOR_M, workFresh, rideFromGpx, waterGapSpan, bestWaterStop, stopRows, legGoesRound, whyThisWay, sliceAlong, stopIndexAt, legKeys, insertIndex, figures, profileRuns, pointAt, gpxText, barText, createHistory, tickStepKm, rideTime, surfaceBars, gradientBars, roundedHm, tileSurfaceClass, mergeSurfaces, streetAt, stopStreet, roadAt, steepestKm, longestClimb, waterGap, sunTimes, windShares } from './plan-model.js';
 
 const CC_PLAN = window.CC_PLAN || {};
 const P = () => I18N.plan || {};
@@ -28,25 +30,30 @@ const HISTORY_KEY = 'cc-plan-history';
 /* Whether the ride line shows (owner 2026-10-15): a per-browser convenience, the stops stay either way. */
 const LINE_KEY = 'cc-plan-line';
 let lineShown = (() => { try { return localStorage.getItem(LINE_KEY) !== 'off'; } catch(e){ return true; } })();
+/* How far from the middle of a stretch without water the nearest water stop is looked for (route-planner.md section 4.4). */
+const FILL_WATER_KM = 5;
 const BIKES = ['Road', 'Gravel', 'MTB', 'E-bike', 'Handbike', 'Recumbent', 'Trike', 'Tandem'];
 
-let ride = { id: null, name: '', bike: 'Road', stops: [], legs: [] };
+let ride = { name: '', bike: 'Road', stops: [], legs: [] };
 const history = createHistory(30, 5);
 const legCache = new Map();
-let gen = 0, routing = false, alongTimer = null, dirty = false;
+let gen = 0, routing = false, alongTimer = null;
 /* The day (route-planner.md section 4.4): the along rows once fetched (null until then), the forecast for the ride's date, and what was last asked. */
 let alongRows = null, forecast = null, forecastKey = '', weatherTimer = null;
 const weatherCache = new Map();
 let markers = [], scrubMarker = null;
 const $ = id => document.getElementById(id);
 const fmtKm = m => uKm(m / 1000);
+/* "Why this way?" answers, one per leg key (stops and bike), so a second click asks the engine nothing. */
+const whyCache = new Map();
 
 /* ---------- the engine, through our server ---------- */
-async function routeLeg(a, b, bike){
+/* `shortest` asks the shortest way the same bike may ride: the comparison of "Why this way?" (route-planner.md section 4.2a). */
+async function routeLeg(a, b, bike, shortest){
   try {
     const r = await fetch(CC_PLAN.leg, { method: 'POST', credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CC-Token': CC_PLAN.legToken || '' },
-      body: JSON.stringify({ a: [a.lng, a.lat], b: [b.lng, b.lat], bike }) });
+      body: JSON.stringify({ a: [a.lng, a.lat], b: [b.lng, b.lat], bike, ...(shortest ? { shortest: true } : {}) }) });
     if(r.status === 429) return { routed: false, limited: true };
     if(!r.ok) return { routed: false, down: true };
     const d = await r.json();
@@ -80,14 +87,16 @@ function syncPlanning(){
 
 /* The name comes first (owner 2026-10-15): no first stop without it. */
 function askName(){ openPanel(); const n = $('planRideName'); if(n) n.focus(); setStatus(P().nameFirst || 'Give your ride a name first.'); }
+/* A stop into the ride at `at`, or at the end; true when it went in. */
 function addStop(stop, at){
-  if(!ride.stops.length && !(ride.name || '').trim()){ askName(); return; }
-  if(ride.stops.length >= MAX_STOPS){ setStatus(tpl(P().maxStops || 'A ride holds at most {n} stops.', { n: MAX_STOPS })); return; }
-  if(stop.item && ride.stops.some(s => s.item === stop.item)){ setStatus(P().already || 'That place is already in your ride.'); return; }
+  if(!ride.stops.length && !(ride.name || '').trim()){ askName(); return false; }
+  if(ride.stops.length >= MAX_STOPS){ setStatus(tpl(P().maxStops || 'A ride holds at most {n} checkpoints.', { n: MAX_STOPS })); return false; }
+  if(stop.item && ride.stops.some(s => s.item === stop.item)){ setStatus(P().already || 'That place is already in your ride.'); return false; }
   if(at == null || at < 0 || at > ride.stops.length) at = ride.stops.length;
   remember();
   ride.stops.splice(at, 0, stop);
   afterChange();
+  return true;
 }
 function removeStop(i){ remember(); ride.stops.splice(i, 1); afterChange(); }
 function moveStop(i, d){ const j = i + d; if(j < 0 || j >= ride.stops.length) return; remember(); const s = ride.stops.splice(i, 1)[0]; ride.stops.splice(j, 0, s); afterChange(); }
@@ -98,7 +107,10 @@ function stopTitle(i){ const s = ride.stops[i]; if(!s) return ''; return s.item 
 function roadLabel(kind){ return kind ? ((P().roads || {})[kind] || null) : null; }
 /* Opening the planner with a ride on the map takes the map to the ride (owner 2026-10-15), clear of the drawer and the strip. */
 function fitRide(){
-  const pts = rideLine(); if(pts.length < 2) return;
+  // Before any leg is routed (a file just opened), the checkpoints frame the ride.
+  const line = rideLine(), pts = line.length >= 2 ? line : ride.stops.map(s => [s.lng, s.lat]);
+  if(pts.length === 1){ map.easeTo({ center: pts[0], duration: 600 }); return; }
+  if(pts.length < 2) return;
   let w = 180, s = 90, e = -180, n = -90;
   for(const [x, y] of pts){ if(x < w) w = x; if(x > e) e = x; if(y < s) s = y; if(y > n) n = y; }
   const narrow = window.innerWidth < 820;
@@ -143,34 +155,73 @@ function togglePlace(place){
 }
 function clearRide(){
   if(ride.stops.length && !window.confirm(P().clearConfirm || 'Clear this ride? Ctrl+Z brings it back.')) return;
-  remember();
-  ride = { id: null, name: '', bike: ride.bike, stops: [], legs: [] };
-  dirty = false;
+  remember(true);
+  ride = { name: '', bike: ride.bike, stops: [], legs: [] };
   afterChange();
+  restoreRideScope();
+}
+/* A ride outside the map's scope widens it to the regions the ride crosses, for as long as it is planned
+   (route-planner.md section 5, owner 2026-10-16: a GPX of North Holland opened while the map looked at Wallonia
+   showed no places), as the ride check does. Never stored as the rider's own scope; the chip says it comes from
+   the ride. A scope that already shows the whole ride, its country or Everywhere, stays. */
+let scopeBefore = null, scopeSet = null;
+function followRideScope(regions){
+  const S = window.CCScope;
+  if(!S || !Array.isArray(regions) || !regions.length) return;
+  const cur = S.get();
+  if(scopeCovers(cur, regions)) return;
+  const next = rideScopeFor(regions); if(!next) return;
+  if(scopeBefore == null) scopeBefore = cur;
+  // The ride's own framing stays the last word; the scope change would otherwise move the camera.
+  keepCameraForNextScope();
+  S.set(next, { persist: false });
+  scopeSet = next;
+  if(window.CCScopeHeader) window.CCScopeHeader.paint(window.CC_I18N || {});
+  const line = document.getElementById('regionLine');
+  if(line) line.textContent = line.textContent + ' · ' + (I18N.rcScopeFromRide || 'from your ride');
+}
+/* The rider's own scope back when the ride is cleared, unless they picked another since. */
+function restoreRideScope(){
+  const S = window.CCScope, prev = scopeBefore;
+  scopeBefore = null;
+  if(S && prev && scopeSet && scopeKey(S.get()) === scopeKey(scopeSet)) S.set(prev, { persist: false });
+  scopeSet = null;
 }
 /* The stops as they are now, kept for the undo key (route-planner.md section 4.1). */
 /* Every change to the stops is kept for undo, as a full copy of the stops before it; the legs are routed
    again from them. The change also takes the keyboard off a text field: a drag or a right-click on the map
    leaves the focus where it was, and Ctrl+Z in the ride's name would undo the name, not the ride. */
-function remember(){
+function remember(whole){
   const a = document.activeElement; if(a && a.blur && a.matches && a.matches('input, textarea, select, [contenteditable]')) a.blur();
-  history.push(ride.stops);
+  history.push(step(whole));
 }
-/* Ctrl+Z, or the command key with Z on a Mac: the stops before the last change. */
-function undo(){ const prev = history.undo(ride.stops); if(!prev) return; ride.stops = prev; afterChange(); }
-function redo(){ const next = history.redo(ride.stops); if(!next) return; ride.stops = next; afterChange(); }
-function afterChange(){ dirty = ride.stops.length >= 2; alongRows = null; syncStart(); renderStops(); drawRide(); routeAll(); saveDraft(); syncPlanning(); paintDrawerButtons(); }
+/* A step for undo: the stops, or the whole ride (its name and bike too) for a change that replaces it, opening a
+   file or clearing; a stop change keeps the stops alone, so undo never takes back a bike the rider picked. */
+function step(whole){ return whole ? { stops: ride.stops, name: ride.name, bike: ride.bike, whole: true } : { stops: ride.stops }; }
+function applyStep(st){
+  if(Array.isArray(st)) st = { stops: st };
+  ride.stops = Array.isArray(st.stops) ? st.stops : [];
+  if(st.whole){
+    ride.name = st.name || '';
+    if(BIKES.includes(st.bike)){ ride.bike = st.bike; if(!document.querySelector(`#planBikes .chip[data-bike="${ride.bike}"]`)) showAllBikes(); paintBikes(); }
+  }
+  afterChange();
+}
+/* Ctrl+Z, or the command key with Z on a Mac: the ride before the last change. */
+function undo(){ const prev = history.undo(step(true)); if(prev) applyStep(prev); }
+function redo(){ const next = history.redo(step(true)); if(next) applyStep(next); }
+function afterChange(){ pendingFill = null; if(altPinned && !legKeys(ride.stops, ride.bike).includes(altPinned)){ altPinned = null; paintAlt(null); } alongRows = null; syncStart(); renderStops(); drawRide(); routeAll(); saveDraft(); syncPlanning(); paintDrawerButtons(); }
 
 async function routeAll(){
   const myGen = ++gen;
   const keys = legKeys(ride.stops, ride.bike);
   const needed = [];
   ride.legs = keys.map((key, i) => { const c = legCache.get(key); if(!c) needed.push([i, key]); return c || null; });
-  if(!needed.length){ finishRouting(); return; }
+  if(!needed.length){ drawRide(); renderStops(); finishRouting(); return; }
   routing = true;
   setStatus(tpl(P().routing || 'Routing the legs for a {bike} bike…', { bike: ride.bike }), true);
   for(const [i, key] of needed){
-    const leg = await routeLeg(ride.stops[i], ride.stops[i + 1], ride.bike);
+    const leg = await routeLeg(ride.stops[i], ride.stops[i + 1], ride.bike, ride.stops[i + 1].way === 'shortest');
     if(myGen !== gen) return;
     leg.key = key;
     if(!leg.limited && !leg.down) legCache.set(key, leg);
@@ -186,7 +237,7 @@ function finishRouting(){
   const legs = ride.legs.filter(Boolean);
   if(legs.some(l => l.limited)) setStatus(P().rateLimited || 'Too many legs in a short time. Wait a minute, then try again.');
   else if(legs.some(l => l.down)) setStatus(P().engineDown || 'The routing engine did not answer. Try again in a moment.');
-  else if(legs.some(l => !l.routed)) setStatus(P().noRoad || 'No road found between these stops');
+  else if(legs.some(l => !l.routed)) setStatus(P().noRoad || 'No road found between these checkpoints');
   else setStatus(ride.stops.length < 2 ? '' : (P().routed || 'Routed.'));
   renderFigures(); renderProfile(); scheduleAlong(); scheduleWeather(); scheduleTileRead(); renderBar(); saveDraft();
 }
@@ -226,10 +277,15 @@ function renderStops(){
   // Folded by default once the ride has a start and an end (owner 2026-10-15): one line says what it holds.
   const tgl = $('planStopsToggle'), sum = $('planStopsSum'), folded = n >= 2 && !stopsOpen;
   if(tgl){ tgl.hidden = n < 2; tgl.setAttribute('aria-expanded', String(!folded)); tgl.textContent = folded ? (P().stopsShow || 'show') : (P().stopsHide || 'hide'); }
-  if(sum){ sum.hidden = !folded; if(folded) sum.textContent = tpl(P().stopsSum || '{n} stops, {from} to {to}', { n, from: stopTitle(0), to: stopTitle(n - 1) }); }
+  if(sum){ sum.hidden = !folded; if(folded) sum.textContent = tpl(P().stopsSum || '{n} checkpoints, {from} to {to}', { n, from: stopTitle(0), to: stopTitle(n - 1) }); }
   ul.hidden = folded;
-  if(!n){ ul.innerHTML = `<li class="cc-near-empty">${escPend(P().noStops || 'No stops yet.')}</li>`; return; }
+  // With the stops folded, the legs that go round stay findable (owner 2026-10-15): one line opens the list and the first answer.
+  const round = ride.legs.map((leg, i) => i < n - 1 && legGoesRound(leg, ride.stops[i], ride.stops[i + 1]) ? i : -1).filter(i => i >= 0);
+  const rs = $('planRoundSum');
+  if(rs){ rs.hidden = !folded || !round.length; if(round.length){ rs.textContent = tpl(round.length === 1 ? (P().wayRoundOne || '1 leg goes round: see why') : (P().wayRoundMany || '{n} legs go round: see why'), { n: round.length }); rs.dataset.first = String(round[0]); } }
+  if(!n){ ul.innerHTML = `<li class="cc-near-empty">${escPend(P().noStops || 'No checkpoints yet.')}</li>`; return; }
   let html = '';
+  const keys = legKeys(ride.stops, ride.bike);
   ride.stops.forEach((s, i) => {
     const cls = i === 0 ? 'start' : (i === n - 1 && n > 1 ? 'end' : '');
     const lbl = i === 0 ? 'S' : (i === n - 1 && n > 1 ? FINISH_FLAG : String(i));
@@ -243,12 +299,84 @@ function renderStops(){
       + `<span class="act"><button type="button" data-up title="${escPend(P().up || 'Move up')}" ${i === 0 ? 'disabled' : ''}>↑</button><button type="button" data-down title="${escPend(P().down || 'Move down')}" ${i === n - 1 ? 'disabled' : ''}>↓</button><button type="button" data-rm title="${escPend(P().remove || 'Remove')}">✕</button></span></li>`;
     if(i < n - 1){
       const leg = ride.legs[i];
-      if(leg && !leg.routed && !leg.limited && !leg.down) html += `<li class="cc-plan-leg bad">${escPend(P().noRoad || 'No road found between these stops')}</li>`;
-      else if(leg && leg.routed && !leg.heights) html += `<li class="cc-plan-leg bad">${escPend(fmtKm(leg.distM))} · ${escPend(P().noHeights || 'no heights here')}</li>`;
-      else if(leg && leg.routed) html += `<li class="cc-plan-leg">${escPend(fmtKm(leg.distM))}</li>`;
+      if(leg && !leg.routed && !leg.limited && !leg.down) html += `<li class="cc-plan-leg bad">${escPend(P().noRoad || 'No road found between these checkpoints')}</li>`;
+      else if(leg && leg.routed){
+        // A leg that clearly goes round offers "Why this way?" (owner 2026-10-15); its answer sits under it, with the
+        // shorter way to see on the map and to ride. A leg ridden the shortest way says so and offers the way back.
+        const way = ride.stops[i + 1].way === 'shortest';
+        const why = way ? null : whyCache.get(keys[i]);
+        const ask = !way && !why && legGoesRound(leg, ride.stops[i], ride.stops[i + 1]) ? ` <button type="button" class="dl-all" data-why="${i}">${escPend(P().wayAsk || 'Why this way?')}</button>` : '';
+        const back = way ? ` · ${escPend(P().wayTaken || 'shortest way')} <button type="button" class="dl-all" data-way-back="${i}">${escPend(P().wayBack || "Back to your bike's way")}</button>` : '';
+        html += leg.heights
+          ? `<li class="cc-plan-leg">${escPend(fmtKm(leg.distM))}${back}${ask}</li>`
+          : `<li class="cc-plan-leg bad">${escPend(fmtKm(leg.distM))} · ${escPend(P().noHeights || 'no heights here')}${back}${ask}</li>`;
+        if(why){
+          const acts = why.alt ? ` <button type="button" class="dl-all" data-way-show="${i}">${escPend(altPinned === keys[i] ? (P().wayHide || 'Hide from map') : (P().wayShow || 'Show on map'))}</button> <button type="button" class="dl-all" data-way-take="${i}">${escPend(P().wayTake || 'Ride the shortest way')}</button>` : '';
+          html += `<li class="cc-plan-leg why" data-way-leg="${i}">${escPend(why.text)}${acts}</li>`;
+        }
+      }
     }
   });
   ul.innerHTML = html;
+}
+
+/* Why this way? (route-planner.md section 4.2a): the shortest way the same bike may ride, asked once per leg on a click,
+   and one line on why the leg goes round. A failed ask is not kept, so the question comes back. */
+async function explainLeg(i){
+  const a = ride.stops[i], b = ride.stops[i + 1], cur = ride.legs[i]; if(!a || !b || !cur || !cur.routed) return;
+  const key = legKeys(ride.stops, ride.bike)[i];
+  if(whyCache.has(key)) return;
+  whyCache.set(key, { text: P().wayAsking || 'Comparing with the shortest way…', alt: null }); renderStops();
+  const alt = await routeLeg(a, b, ride.bike, true);
+  const w = whyThisWay(cur, alt);
+  if(!w){ whyCache.delete(key); renderStops(); setStatus(P().wayFailed || 'Could not compare this leg now. Try again in a moment.'); return; }
+  whyCache.set(key, { text: wayText(w), alt: w.kind === 'shortest' ? null : alt }); renderStops();
+}
+/* The shorter way on the map: drawn while its answer is hovered, kept while pinned by Show on map (owner 2026-10-15). */
+let altPinned = null;
+function paintAlt(key){
+  const src = map.getSource('plan-alt'); if(!src) return;
+  const w = key ? whyCache.get(key) : null, line = w && w.alt && w.alt.line;
+  src.setData({ type: 'FeatureCollection', features: line && line.length > 1 ? [{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: line } }] : [] });
+}
+function toggleAltPin(i){
+  const key = legKeys(ride.stops, ride.bike)[i];
+  altPinned = altPinned === key ? null : key;
+  paintAlt(altPinned);
+  const w = altPinned ? whyCache.get(altPinned) : null, leg = ride.legs[i];
+  if(w && w.alt && w.alt.line && leg && leg.line){
+    const pts = w.alt.line.concat(leg.line), b = new maplibregl.LngLatBounds(pts[0], pts[0]);
+    pts.forEach(p => b.extend(p)); map.fitBounds(b, { padding: 80, duration: 600 });
+  }
+  renderStops();
+}
+/* Ride the shortest way on this leg (owner 2026-10-15): undoable, kept in the ride file, the line already fetched reused. */
+function takeShortest(i){
+  const w = whyCache.get(legKeys(ride.stops, ride.bike)[i]); if(!ride.stops[i + 1]) return;
+  remember();
+  ride.stops[i + 1] = { ...ride.stops[i + 1], way: 'shortest' };
+  const key = legKeys(ride.stops, ride.bike)[i];
+  if(w && w.alt && w.alt.routed) legCache.set(key, { ...w.alt, key });
+  altPinned = null; paintAlt(null);
+  afterChange();
+}
+function backToBikeWay(i){
+  if(!ride.stops[i + 1]) return;
+  remember();
+  const s = { ...ride.stops[i + 1] }; delete s.way;
+  ride.stops[i + 1] = s;
+  afterChange();
+}
+function wayText(w){
+  const d = { cur: fmtKm(w.curM), alt: fmtKm(w.altM) };
+  if(w.kind === 'shortest') return P().wayShortest || 'This is about the shortest way your bike may ride here.';
+  if(w.kind === 'surface') return tpl(P().waySurface || 'The shortest way is {alt}, with {unpaved} of gravel or dirt. Your bike avoids that, so this way is {cur}.', { ...d, unpaved: fmtKm(w.unpavedM) });
+  if(w.kind === 'climb') return tpl(P().wayClimb || 'The shortest way is {alt}, but climbs {m} more. This way is {cur}.', { ...d, m: uElev(w.upM) });
+  if(w.kind === 'busy') return tpl(P().wayBusy || 'The shortest way is {alt}, with {busy} on busy roads without a cycle lane. This way is {cur}.', { ...d, busy: fmtKm(w.busyM) });
+  if(w.kind === 'cycle') return tpl(P().wayCycle || 'The shortest way is {alt}, only {alt_cycle} of it on cycle paths. This way is {cur}, {cur_cycle} of it on cycle paths, away from cars.', { ...d, alt_cycle: fmtKm(w.altCycleM), cur_cycle: fmtKm(w.curCycleM) });
+  if(w.kind === 'signals') return tpl(P().waySignals || 'The shortest way is {alt}, past {alt_n} traffic lights. This way is {cur}, past {cur_n}.', { ...d, alt_n: w.altSignals, cur_n: w.curSignals });
+  // Nothing measured stands out: say what the planner weighs, never a reason it did not find.
+  return tpl(P().wayOther || 'The shortest way is {alt}; this way is {cur}. The planner weighs the kind of road, not only the distance, and no single reason stands out here. Show both on the map to compare.', d);
 }
 
 /* ---------- panel: figures, profile ---------- */
@@ -271,8 +399,7 @@ function renderFigures(){
   renderDayGraphic(day);
   renderTougher(day, f);
   const wait = unrouted() || routing;
-  const save = $('planSave'), gpx = $('planGpx');
-  if(save) save.disabled = wait;
+  const gpx = $('planGpx');
   if(gpx) gpx.disabled = wait;
   const hint = $('planSaveHint'); if(hint && (unrouted() && !routing)) hint.textContent = P().saveWait || 'Save and GPX wait until every leg has a road.';
 }
@@ -359,7 +486,8 @@ function renderTougher(day, f){
   if(steep) lines.push(tpl(P().steepest || 'Steepest km: {g} % at km {at}', { g: steep.grad.toFixed(0), at: steep.atKm.toFixed(0) }));
   const climb = longestClimb(ride.legs);
   if(climb) lines.push(tpl(P().longestClimb || 'Longest climb: {d}, {m} up, {g} %', { d: uKm(climb.km, 1), m: uElev(climb.upM), g: climb.grad.toFixed(1) }));
-  if(alongRows){ const gap = waterGap(alongRows, f.distM); if(gap != null && gap >= 15) lines.push(tpl(P().waterGap || '{d} without water or food along the way', { d: uKm(gap, 0) })); }
+  let waterAt = -1;
+  if(alongRows){ const gap = waterGap(alongRows.concat(stopRows(ride.stops, ride.legs)), f.distM); if(gap != null && gap >= 15){ waterAt = lines.length; lines.push(tpl(P().waterGap || '{d} without water or food along the way', { d: uKm(gap, 0) })); } }
   const busyM = ride.legs.reduce((t, l) => t + (l && l.routed && l.surfaces ? (l.surfaces.busy || 0) : 0), 0);
   if(busyM >= 1000) lines.push(tpl(P().busy || '{d} on busy roads without a cycle lane', { d: fmtKm(busyM) }));
   const start = ride.stops[0];
@@ -376,8 +504,80 @@ function renderTougher(day, f){
     if(forecast.rainMm >= 2) lines.push(tpl(P().rain || '{r} mm of rain', { r: Math.round(forecast.rainMm) }));
     credit = `<li class="cc-plan-credit">${escPend(P().forecastBy || 'Forecast: Open-Meteo')}</li>`;
   }
-  ul.innerHTML = lines.map(l => `<li>${escPend(l)}</li>`).join('') + credit;
+  // The water-gap line offers the nearest water stop in one click (owner 2026-10-15).
+  // The water-gap line (owner 2026-10-15): hovered or focused it shows its stretch on the map; its icon adds the nearest place for water or food.
+  const label = P().fillWater || 'Add the nearest place for water or food';
+  ul.innerHTML = lines.map((l, i) => i === waterAt
+    ? `<li class="cc-plan-gap" tabindex="0">${escPend(l)} <button type="button" class="cc-info cc-plan-fillwater" data-plan-fill-water title="${escPend(label)}" aria-label="${escPend(label)}"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5c3 3.6 5.5 6.6 5.5 9.5a5.5 5.5 0 0 1-11 0c0-2.9 2.5-5.9 5.5-9.5z"/><path d="M12 10.5v5M9.5 13h5"/></svg></button></li>`
+    : `<li>${escPend(l)}</li>`).join('') + credit;
   grp.hidden = !lines.length;
+}
+/* The water stop nearest the middle of the longest stretch without water or food (route-planner.md section 4.4), from our
+   own data through /map/coverage/nearby, in at its km along as Add to ride puts a place. */
+/* The longest stretch without water or food on the map while its line in the panel is hovered or focused (owner 2026-10-15). */
+function showGap(on){
+  const src = map.getSource('plan-gap'); if(!src) return;
+  const span = on && alongRows ? waterGapSpan(alongRows.concat(stopRows(ride.stops, ride.legs)), figures(ride.legs).distM) : null;
+  const coords = span ? sliceAlong(ride.legs, span.fromKm * 1000, span.toKm * 1000) : [];
+  src.setData({ type: 'FeatureCollection', features: coords.length > 1 ? [{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coords } }] : [] });
+}
+/* The water stop just added, checked once the new route and its along list are in (owner 2026-10-15): reaching a place off
+   the line can change the route itself, so the dry stretch may not shrink. Shorter: say so. Not shorter: take it out. */
+let pendingFill = null;
+/* Something the planner could not do, said in the middle of the screen (#planNotice, owner 2026-10-16); without
+   the dialog, the status line. */
+let noticePlace = null;
+function notice(title, text, place){
+  const dlg = $('planNotice');
+  if(!dlg || typeof dlg.showModal !== 'function'){ setStatus(text); return; }
+  $('planNoticeH').textContent = title;
+  $('planNoticeText').textContent = text;
+  // A place the notice names can be shown on the map ({lat, lng}).
+  noticePlace = place || null;
+  $('planNoticeShow').hidden = !place;
+  if(!dlg.open) dlg.showModal();
+}
+/* What a water stop is and where it lies, for the notice (owner 2026-10-16: "Who is Koning?"): its name, its kind in
+   the rider's words, how far it lies off the ride and level with which distance along it. */
+function fillWhere(s){
+  return { name: s.name || P().fillWaterName || 'Water', kind: (P().waterKinds || {})[waterKind({ food: s.food, potable: s.potable })] || P().fillWaterName || 'Water', off: uKm(s.distM / 1000, 1), at: uKm(s.alongM / 1000, 0) };
+}
+/* Whether the water stop the fill added shortened the dry stretch, once its legs are routed and the along rows read.
+   Only the fill's own stop, while it is still the newest change, is ever taken back (owner 2026-10-16: a check left
+   behind by a stop that never went in undid the rider's own last change), and without a redo step. */
+function checkFill(){
+  const p = pendingFill; pendingFill = null;
+  if(!p || history.size() !== p.steps || !ride.stops.some(s => s.item === p.item)) return;
+  const f = figures(ride.legs), gap = waterGap(alongRows.concat(stopRows(ride.stops, ride.legs)), f.distM);
+  if(gap != null && gap < p.beforeKm - 0.5){ setStatus(tpl(P().fillWaterDone || 'Added {name}. The longest stretch without water or food is now {d}.', { name: p.name, d: uKm(gap, 0) })); return; }
+  const prev = history.discard(); if(prev) applyStep(prev);
+  notice(P().fillWaterH || 'No water stop added', tpl(P().fillWaterUndone || '{name}, {kind}, is {off} from your ride, level with {at} along it. The way there changes the route, so the dry stretch would not get shorter. It is not added.', fillWhere(p.stop)), p.stop);
+}
+async function fillWater(){
+  if(!alongRows || !CC_PLAN.nearby) return;
+  const f = figures(ride.legs), span = waterGapSpan(alongRows.concat(stopRows(ride.stops, ride.legs)), f.distM); if(!span) return;
+  const fromM = span.fromKm * 1000, toM = span.toKm * 1000;
+  const mid = pointAt(ride.legs, (fromM + toM) / 2); if(!mid) return;
+  // The stretch every 200 m: the place that leaves the shortest dry part wins, and goes into the ride where its nearest
+  // point of the stretch is (owner 2026-10-15).
+  const points = [];
+  for(let d = fromM; d <= toM; d += 200){ const p = pointAt(ride.legs, d); if(p) points.push({ lat: p[1], lng: p[0], alongM: d }); }
+  const none = () => notice(P().fillWaterH || 'No water stop added', tpl(P().fillWaterNone || 'No water or food within {d} of the middle of this stretch.', { d: uKm(FILL_WATER_KM, 0) }));
+  try {
+    const r = await fetch(`${CC_PLAN.nearby}?lat=${mid[1]}&lng=${mid[0]}&km=${FILL_WATER_KM}`, { headers: { 'Accept': 'application/json' } });
+    if(!r.ok){ none(); return; }
+    const d = await r.json();
+    const stop = bestWaterStop(d.groups, points, fromM, toM);
+    if(!stop){ none(); return; }
+    // A place that would not make the dry part shorter is not added: its detour costs more than it gives (owner 2026-10-15).
+    if(stop.leftM >= toM - fromM){ notice(P().fillWaterH || 'No water stop added', P().fillWaterUseless || 'No water or food near this stretch would make it shorter.'); return; }
+    const place = { item: stop.item, letter: 'B', name: stop.name || P().fillWaterName || 'Water', lat: stop.lat, lng: stop.lng };
+    if(ride.stops.some(s => s.item === place.item)){ notice(P().fillWaterH || 'No water stop added', tpl(P().fillWaterAlready || '{name}, {kind}, is already in your ride, {off} from it at {at}.', fillWhere(stop)), stop); return; }
+    const at = stopIndexAt(ride.legs, stop.alongM); if(at == null){ none(); return; }
+    if(ride.stops.length >= MAX_STOPS){ notice(P().fillWaterH || 'No water stop added', tpl(P().fillWaterFull || 'Your ride has {n} checkpoints, the most it holds. Remove one, then try again.', { n: MAX_STOPS })); return; }
+    if(!addStop(place, at)) return;
+    pendingFill = { beforeKm: span.km, name: place.name, item: place.item, steps: history.size(), stop };
+  } catch(e){ none(); }
 }
 /* The forecast for the ride's date at the ride's middle, through our server, once the legs settle; one ask per 0.1° cell and date. */
 function scheduleWeather(){ clearTimeout(weatherTimer); weatherTimer = setTimeout(fetchWeather, 1200); }
@@ -479,8 +679,9 @@ async function renderAlong(){
   const line = rideLine();
   if(line.length < 2 || unrouted()){ g.hidden = true; return; }
   const myGen = gen;
-  const d = await fetchAlong(line);
+  const d = await fetchAlong(thinLine(line, ALONG_MAX_POINTS));
   if(myGen !== gen || !d) return;
+  followRideScope(d.regions);
   const rows = [];
   (d.climbs || []).forEach(c => rows.push({ letter: 'N', ridden: true, item: 'N:' + c.id, name: c.name, ll: c.ll, alongKm: c.alongKm, distM: c.distM || 0 }));
   (d.groups || []).forEach(gr => gr.items.forEach(it => rows.push({ letter: gr.letter, item: gr.letter + ':' + it.id, name: it.name, ll: it.ll, alongKm: it.alongKm, distM: it.distM, truncated: gr.truncated })));
@@ -499,7 +700,7 @@ async function renderAlong(){
     const row = r => {
       const inRide = ride.stops.some(s => s.item === r.item);
       const place = JSON.stringify({ item: r.item, letter: r.letter, name: r.name || meta.label, lat: r.ll[0], lng: r.ll[1] });
-      return `<li class="cc-plan-row"><button type="button" class="cc-near" data-plan-ll="${r.ll[0]},${r.ll[1]}" data-plan-key="${escPend(r.item)}"><span class="cc-near-nm">${escPend(r.name || meta.label)}</span><em>${escPend(tpl(D.kmOff || '{a} along · {b} off', { a: uKm(r.alongKm), b: uM(r.distM) }))}</em></button><button type="button" class="cc-plan-add${inRide ? ' in' : ''}" data-plan-place="${escPend(place)}">${escPend(inRide ? (P().inRide || 'In your ride') : (P().addStop || 'Add as stop'))}</button></li>`;
+      return `<li class="cc-plan-row"><button type="button" class="cc-near" data-plan-ll="${r.ll[0]},${r.ll[1]}" data-plan-key="${escPend(r.item)}"><span class="cc-near-nm">${escPend(r.name || meta.label)}</span><em>${escPend(tpl(D.kmOff || '{a} along · {b} off', { a: uKm(r.alongKm), b: uM(r.distM) }))}</em></button><button type="button" class="cc-plan-add${inRide ? ' in' : ''}" data-plan-place="${escPend(place)}">${escPend(inRide ? (P().inRide || 'In your ride') : (P().addStop || 'Add as checkpoint'))}</button></li>`;
     };
     html += items.slice(0, ALONG_VISIBLE).map(row).join('');
     if(items.length > ALONG_VISIBLE) html += `<li class="cc-near-rest" id="${id}" hidden><ul class="cc-near-list">${items.slice(ALONG_VISIBLE).map(row).join('')}</ul></li>`;
@@ -507,6 +708,7 @@ async function renderAlong(){
   if(!html) html = `<li class="cc-near-empty">${escPend(tpl(P().alongEmpty || 'Nothing the Commons knows within {d} of this ride yet.', { d: uM(CORRIDOR_M) }))}</li>`;
   ul.innerHTML = html;
   alongRows = rows; renderFigures();   // the water gap reads the rows
+  if(pendingFill) checkFill();
   ul.querySelectorAll('.cc-near-more[aria-controls]').forEach(b => {
     const rest = ul.querySelector('#' + b.getAttribute('aria-controls')); if(!rest) return;
     b.onclick = () => { const open = b.getAttribute('aria-expanded') !== 'true'; rest.hidden = !open; b.setAttribute('aria-expanded', String(open)); b.textContent = open ? b.dataset.fewer : b.dataset.more; };
@@ -541,20 +743,41 @@ function drawRide(){
   });
 }
 function applyLineShown(){
-  ['plan-casing', 'plan-line', 'plan-straight'].forEach(id => { if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', lineShown ? 'visible' : 'none'); });
+  ['plan-casing', 'plan-line', 'plan-straight', 'plan-arrows'].forEach(id => { if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', lineShown ? 'visible' : 'none'); });
   const b = $('planLineToggle'); if(!b) return;
   const label = lineShown ? (P().lineHide || 'Hide the ride line') : (P().lineShow || 'Show the ride line');
   b.setAttribute('aria-pressed', lineShown ? 'true' : 'false'); b.title = label; b.setAttribute('aria-label', label);
   b.classList.toggle('off', !lineShown);
 }
+/* A chevron for the ride's direction, orange on a cream edge as the line is, pointing along the line; drawn once per style. */
+function addArrowImage(){
+  if(map.hasImage && map.hasImage('plan-arrow')) return;
+  const S = 2, D = 14, c = document.createElement('canvas'); c.width = c.height = D * S;
+  const x = c.getContext('2d'); if(!x) return;
+  x.scale(S, S); x.lineCap = 'round'; x.lineJoin = 'round';
+  const path = () => { x.beginPath(); x.moveTo(4.5, 3); x.lineTo(10, 7); x.lineTo(4.5, 11); };
+  x.strokeStyle = '#F3EBD8'; x.lineWidth = 4; path(); x.stroke();
+  x.strokeStyle = '#FF5A1F'; x.lineWidth = 2; path(); x.stroke();
+  map.addImage('plan-arrow', { width: D * S, height: D * S, data: new Uint8Array(x.getImageData(0, 0, D * S, D * S).data.buffer) }, { pixelRatio: S });
+}
 function addLayers(){
   if(map.getSource('plan')) return;
   map.addSource('plan', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   map.addSource('plan-straight', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  // The longest stretch without water or food, while its line in the panel is hovered (owner 2026-10-15), under the ride;
+  // a yellow highlighter, because blue next to a river read as the river.
+  map.addSource('plan-gap', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  // The shortest way of a leg, from "Why this way?" (owner 2026-10-15): dark and dashed, so it reads as a choice, not the ride.
+  map.addSource('plan-alt', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  map.addLayer({ id: 'plan-alt', type: 'line', source: 'plan-alt', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#1F2A44', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 2.5, 18, 5], 'line-dasharray': [1.6, 1.4] } });
+  map.addLayer({ id: 'plan-gap', type: 'line', source: 'plan-gap', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#F5C518', 'line-opacity': 0.55, 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 9, 18, 18] } });
   // Thin, so the surface band under the ride stays readable on both sides of it (owner 2026-10-15).
   map.addLayer({ id: 'plan-casing', type: 'line', source: 'plan', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#F3EBD8', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 18, 4.5], 'line-opacity': .7 } });
   map.addLayer({ id: 'plan-line', type: 'line', source: 'plan', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#FF5A1F', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1.8, 18, 3] } });
   map.addLayer({ id: 'plan-straight', type: 'line', source: 'plan-straight', paint: { 'line-color': '#E8A33D', 'line-width': 3, 'line-dasharray': [1.5, 1.5] } });
+  // Which way the ride goes (owner 2026-10-15): chevrons along the routed line, from zoom 11.
+  addArrowImage();
+  map.addLayer({ id: 'plan-arrows', type: 'symbol', source: 'plan', minzoom: 11, layout: { 'symbol-placement': 'line', 'symbol-spacing': 90, 'icon-image': 'plan-arrow', 'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.75, 16, 1], 'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
   // Into the one stacking order (map-and-search.md section 4.1): over every other line, under the icons.
   liftInfoLayersAboveRoutes();
   applyLineShown();
@@ -572,7 +795,7 @@ function renderBar(){
   const bar = $('planBar'); if(!bar) return;
   const show = activePanel() !== 'plan' && ride.stops.length >= 2;
   bar.hidden = !show;
-  if(show){ const day = rideTime(dayLegs(), ride.bike); $('planBarText').textContent = barText(figures(ride.legs), ride.stops.length, { km: fmtKm, m: uElev, stops: n => tpl(P().barStops || '{n} stops', { n }) }, day ? hmText(day.seconds) : ''); }
+  if(show){ const day = rideTime(dayLegs(), ride.bike); $('planBarText').textContent = barText(figures(ride.legs), ride.stops.length, { km: fmtKm, m: uElev, stops: n => tpl(P().barStops || '{n} checkpoints', { n }) }, day ? hmText(day.seconds) : ''); }
 }
 function openPanel(){ const b = document.getElementById('ib-plan'); if(b && activePanel() !== 'plan') b.click(); }
 
@@ -595,7 +818,7 @@ function paintDrawerButtons(){
    steps, so undo still brings it back. */
 function saveDraft(){
   try {
-    if(ride.stops.length) localStorage.setItem(DRAFT_KEY, JSON.stringify({ bike: ride.bike, stops: ride.stops, id: ride.id, name: ride.name, date: rideDate(), at: Date.now() }));
+    if(ride.stops.length) localStorage.setItem(DRAFT_KEY, JSON.stringify({ bike: ride.bike, stops: ride.stops, name: ride.name, date: rideDate(), at: Date.now() }));
     else localStorage.removeItem(DRAFT_KEY);
     if(history.size() || history.redoSize()) localStorage.setItem(HISTORY_KEY, JSON.stringify(Object.assign({ at: Date.now() }, history.state())));
     else localStorage.removeItem(HISTORY_KEY);
@@ -616,47 +839,86 @@ function loadHistory(){
     return h;
   } catch(e){ return null; }
 }
-function suggestName(){ const a = ride.stops[0], b = ride.stops[ride.stops.length - 1]; const nm = s => s && s.letter ? s.name : ''; return [nm(a), nm(b)].filter(Boolean).join(' · ') || ''; }
-async function doSave(){
-  const name = (ride.name || '').trim(); if(!name){ askName(); return; }
-  const f = figures(ride.legs);
-  const body = { id: ride.id, name, bike: ride.bike, stops: ride.stops, line: { type: 'LineString', coordinates: rideLine() }, distanceM: Math.round(f.distM), ascentM: Math.round(f.upM), descentM: Math.round(f.downM) };
-  const hint = $('planSaveHint');
-  try {
-    const r = await fetch(CC_PLAN.save, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CC-Token': CC_PLAN.saveToken || '' }, body: JSON.stringify(body) });
-    if(r.status === 409){ hint.textContent = P().tooMany || 'You hold 100 rides already. Delete one first.'; return; }
-    if(!r.ok){ hint.textContent = P().saveFailed || 'Could not save the ride.'; return; }
-    const d = await r.json();
-    ride.id = d.id; ride.name = name; dirty = false;
-    $('planSaveRow').hidden = true;
-    hint.innerHTML = escPend(tpl(P().saved || 'Saved as {name}.', { name })) + (CC_PLAN.rides ? ` <a href="${escPend(CC_PLAN.rides)}">${escPend(P().myRides || 'My rides')}</a>` : '');
-    saveDraft();
-  } catch(e){ hint.textContent = P().saveFailed || 'Could not save the ride.'; }
-}
 function downloadGpx(){
-  const text = gpxText({ name: ride.name, stops: ride.stops, legs: ride.legs }, { itemUrl: item => item.startsWith('osm:') ? null : (location.origin + (CC_PLAN.item || '/map?item=') + item) });
+  const text = gpxText({ name: ride.name, bike: ride.bike, stops: ride.stops, legs: ride.legs }, { itemUrl: item => item.startsWith('osm:') ? null : (location.origin + (CC_PLAN.item || '/map?item=') + item) });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([text], { type: 'application/gpx+xml' }));
   a.download = (ride.name || 'Ride') + '.gpx';
   document.body.appendChild(a); a.click(); a.remove();
 }
-/* A saved ride (?ride=<id>): its stops and bike, drawn at once from the stored
-   line, then its legs routed again under its bike so the heights come back. */
-async function openSaved(id){
-  if(!CC_PLAN.ride) return;
-  try {
-    const r = await fetch(CC_PLAN.ride + encodeURIComponent(id), { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
-    if(!r.ok) return;
-    const d = await r.json();
-    ride = { id: d.id, name: d.name, bike: d.bike, stops: d.stops, legs: [] };
-    if(!document.querySelector(`#planBikes .chip[data-bike="${ride.bike}"]`)) showAllBikes();
-    paintBikes();
-    afterChange();
-    dirty = false;
-    const line = d.line && d.line.coordinates;
-    if(line && line.length){ const b = new maplibregl.LngLatBounds(line[0], line[0]); line.forEach(p => b.extend(p)); map.fitBounds(b, { padding: 60, duration: 700 }); }
-    openPanel();
-  } catch(e){ /* a missing ride opens the map without one */ }
+/* Open a GPX (route-planner.md section 6.1): the planner's own ride file, read in this browser and never sent.
+   A file that cannot open says why; over a ride being planned the rider is asked first, because the file
+   replaces that ride (owner 2026-10-16); an empty planner opens it straight away. */
+function openRideFile(file){
+  if(!file) return;
+  const refused = P().openRefused || {};
+  // A long track from a GPS device runs to several megabytes; past 25 it is not a one-day ride.
+  if(file.size > 25 * 1024 * 1024){ setStatus(refused.not_gpx || 'This file holds no ride we can open.'); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const r = rideFromGpx(String(reader.result || ''));
+    if(r.error){ setStatus(tpl(refused[r.error] || refused.not_gpx || 'This file holds no ride we can open.', { n: MAX_STOPS })); return; }
+    if(!ride.stops.length){ applyRideFile(r, file.name); return; }
+    askReplace(file.name).then(ok => { if(ok) applyRideFile(r, file.name); });
+  };
+  reader.onerror = () => setStatus(refused.not_gpx || 'This file holds no ride we can open.');
+  reader.readAsText(file);
+}
+/* The file's name, bike and stops go on the map and the legs are routed again; undo goes back to the ride before. */
+function applyRideFile(r, fileName){
+  remember(true);
+  if(r.bike && BIKES.includes(r.bike)){ ride.bike = r.bike; if(!document.querySelector(`#planBikes .chip[data-bike="${ride.bike}"]`)) showAllBikes(); paintBikes(); }
+  ride.name = r.name || ride.name;
+  // A point converted from another app's track is a map point, as a click on the map makes one.
+  ride.stops = r.stops.map(s => s.name ? s : Object.assign({}, s, { name: P().mapPoint || 'Map point' }));
+  ride.legs = [];
+  afterChange();
+  openPanel();
+  fitRide();
+  const name = ride.name || fileName;
+  setStatus(r.converted
+    ? tpl(P().converted || 'Opened {name}, made in another app, as {n} checkpoints. The planner routes between them for your bike, so a road can differ from the file.', { name, n: r.stops.length })
+    : tpl(P().opened || 'Opened {name}.', { name }));
+}
+/* The question before a file replaces the ride being planned (#planReplace): true for "Open the file". The
+   dialog's close value is the answer, so Escape, the backdrop and "Keep my ride" all keep the ride. Download
+   GPX keeps the dialog open; it waits, as the panel's own does, until every leg has a road. */
+function askReplace(fileName){
+  const dlg = $('planReplace');
+  if(!dlg || typeof dlg.showModal !== 'function') return Promise.resolve(window.confirm(($('planReplaceH') || {}).textContent || 'Open this file instead of your ride?'));
+  $('planReplaceFile').textContent = fileName;
+  const gpx = $('planReplaceGpx'); if(gpx) gpx.disabled = routing || unrouted();
+  return new Promise(resolve => {
+    dlg.returnValue = '';
+    dlg.addEventListener('close', () => resolve(dlg.returnValue === 'open'), { once: true });
+    dlg.showModal();
+  });
+}
+
+/* ---------- the guide (route-planner.md section 3.1) ---------- */
+/* Shown when the planner opens, once a page, until the rider unticks "Show this guide"; How it works opens it at any
+   time (owner 2026-10-15). Signed in, the account holds the choice (a closed map hint), so it holds on every device;
+   a visitor's browser holds it. */
+const GUIDE_KEY = 'cc-plan-guide';
+let guideShownOnce = false;
+function guideOff(){
+  const h = window.CC_HINTS || {};
+  if(h.url) return (h.closed || []).includes('plan_guide');
+  try { return localStorage.getItem(GUIDE_KEY) === 'off'; } catch(e){ return false; }
+}
+function showGuide(show){
+  const g = $('planGuide'); if(!g) return;
+  g.hidden = !show;
+  const c = $('planGuideShow'); if(c) c.checked = !guideOff();
+  const o = $('planGuideOpen'); if(o) o.hidden = show;
+  // In the middle of the map: the close button takes the keyboard, and Escape closes it.
+  if(show){ const x = $('planGuideClose'); if(x) x.focus(); }
+}
+function setGuideShown(show){
+  try { if(show) localStorage.removeItem(GUIDE_KEY); else localStorage.setItem(GUIDE_KEY, 'off'); } catch(e){}
+  const h = window.CC_HINTS || {};
+  h.closed = show ? (h.closed || []).filter(x => x !== 'plan_guide') : [...new Set([...(h.closed || []), 'plan_guide'])];
+  if(h.url && h.open && h.token) fetch((show ? h.open : h.url).replace('HINT', 'plan_guide'), { method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-Token': h.token } }).catch(() => {});
 }
 
 /* ---------- wiring ---------- */
@@ -668,6 +930,10 @@ export function initPlan(){
   const all = $('planBikesAll'); if(all) all.addEventListener('click', e => { e.preventDefault(); toggleAllBikes(); });
   paintBikes();
   $('planStops').addEventListener('click', e => {
+    const why = e.target.closest('[data-why]'); if(why){ explainLeg(Number(why.dataset.why)); return; }
+    const show = e.target.closest('[data-way-show]'); if(show){ toggleAltPin(Number(show.dataset.wayShow)); return; }
+    const take = e.target.closest('[data-way-take]'); if(take){ takeShortest(Number(take.dataset.wayTake)); return; }
+    const back = e.target.closest('[data-way-back]'); if(back){ backToBikeWay(Number(back.dataset.wayBack)); return; }
     const li = e.target.closest('.cc-plan-stop'); if(!li) return;
     const i = Number(li.dataset.i);
     if(e.target.closest('[data-up]')) moveStop(i, -1);
@@ -677,6 +943,8 @@ export function initPlan(){
   });
   $('planStops').addEventListener('mouseover', e => { const li = e.target.closest('.cc-plan-stop'); if(!li) return; const s = ride.stops[Number(li.dataset.i)]; if(s) highlightAt([s.lat, s.lng], [0, 0], null); });
   $('planStops').addEventListener('mouseleave', clearHighlight);
+  $('planStops').addEventListener('mouseover', e => { const r = e.target.closest('[data-way-leg]'); if(r) paintAlt(legKeys(ride.stops, ride.bike)[Number(r.dataset.wayLeg)]); });
+  $('planStops').addEventListener('mouseout', e => { const r = e.target.closest('[data-way-leg]'); if(r && !r.contains(e.relatedTarget)) paintAlt(altPinned); });
   const along = $('planAlong');
   along.addEventListener('click', e => {
     const add = e.target.closest('[data-plan-place]'); if(add){ togglePlace(JSON.parse(add.dataset.planPlace)); renderAlong(); return; }
@@ -684,13 +952,28 @@ export function initPlan(){
   });
   along.addEventListener('mouseover', e => { const row = e.target.closest('.cc-near[data-plan-ll]'); if(!row) return; const [lat, lng] = row.dataset.planLl.split(',').map(Number); /* A drawn pin stands on its tip: the ring goes onto its body (owner 2026-10-15). */ highlightAt([lat, lng], pinElFor(row.dataset.planKey) ? [0, -16] : [0, 0], row.dataset.planKey); });
   along.addEventListener('mouseleave', clearHighlight);
-  // One save: the name is the one at the top of the panel (owner 2026-10-15).
-  const save = $('planSave'); if(save) save.addEventListener('click', doSave);
   { const t = $('planStopsToggle'); if(t) t.addEventListener('click', () => { stopsOpen = !stopsOpen; renderStops(); }); }
   { const sm = $('planStopsSum'); if(sm) sm.addEventListener('click', () => { stopsOpen = true; renderStops(); }); }
-  { const w = $('planWhyWrap'), b = $('planWhyBtn'); if(w && b) b.addEventListener('click', () => { const open = !w.classList.contains('open'); w.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open)); }); }
+  { const rs = $('planRoundSum'); if(rs) rs.addEventListener('click', () => { stopsOpen = true; renderStops(); const first = Number(rs.dataset.first); if(Number.isFinite(first)) explainLeg(first); }); }
+  // Every info box of the panel: hover shows it, a click keeps it, the next closes it (owner 2026-10-15).
+  document.querySelectorAll('#p-plan .cc-info-wrap').forEach(w => { const b = w.querySelector('.cc-info'); if(b) b.addEventListener('click', () => { const open = !w.classList.contains('open'); w.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open)); }); });
   { const u = $('planDayUnit'); if(u) u.addEventListener('click', e => { const b = e.target.closest('button[data-u]'); if(!b) return; dayUnit = b.dataset.u; u.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderFigures(); }); }
   $('planGpx').addEventListener('click', downloadGpx);
+  { const t = $('planTougher'); if(t){
+    t.addEventListener('click', e => { if(e.target.closest('[data-plan-fill-water]')) fillWater(); });
+    const leave = e => { const g = e.target.closest('.cc-plan-gap'); if(g && !g.contains(e.relatedTarget)) showGap(false); };
+    t.addEventListener('mouseover', e => { if(e.target.closest('.cc-plan-gap')) showGap(true); });
+    t.addEventListener('focusin', e => { if(e.target.closest('.cc-plan-gap')) showGap(true); });
+    t.addEventListener('mouseout', leave);
+    t.addEventListener('focusout', leave);
+  } }
+  { const o = $('planOpen'), f = $('planOpenFile'); if(o && f){ o.addEventListener('click', () => f.click()); f.addEventListener('change', () => { openRideFile(f.files && f.files[0]); f.value = ''; }); } }
+  { const g = $('planReplaceGpx'); if(g) g.addEventListener('click', downloadGpx); }
+  { const b = $('planNoticeShow'); if(b) b.addEventListener('click', () => { const d = $('planNotice'); if(d && d.open) d.close('ok'); if(noticePlace){ flyToPin([noticePlace.lng, noticePlace.lat]); highlightAt([noticePlace.lat, noticePlace.lng], [0, 0], null); } }); }
+  // The planner's dialogs: a click beside one closes it, and the replace question then keeps the ride.
+  for(const id of ['planReplace', 'planNotice']){ const d = $(id); if(d) d.addEventListener('click', e => { if(e.target === d) d.close('keep'); }); }
+  // Escape closes the open dialog only: caught first, so the panel's own Escape does not close the planner.
+  document.addEventListener('keydown', e => { if(e.key !== 'Escape') return; const open = ['planReplace', 'planNotice'].map($).find(d => d && d.open); if(open){ e.preventDefault(); e.stopImmediatePropagation(); open.close('keep'); } }, true);
   { const n = $('planRideName'); if(n) n.addEventListener('input', () => { ride.name = n.value.slice(0, 80); saveDraft(); syncStart(); if((ride.name || '').trim()) setStatus(''); }); }
   { const q = $('planStartSearch'); if(q) q.addEventListener('input', () => { clearTimeout(startTimer); startTimer = setTimeout(() => searchStart(q.value.trim()), 350); }); }
   $('planClear').addEventListener('click', clearRide);
@@ -719,7 +1002,13 @@ export function initPlan(){
   });
   const drawer = document.getElementById('drawer');
   if(drawer) new MutationObserver(paintDrawerButtons).observe(drawer, { childList: true, subtree: true });
-  document.addEventListener('cc:panel', e => { renderBar(); syncPlanning(); const key = e.detail && e.detail.key; if(key === 'plan' && ride.stops.length >= 2) fitRide(); });
+  document.addEventListener('cc:panel', e => { renderBar(); syncPlanning(); const key = e.detail && e.detail.key; if(key === 'plan' && ride.stops.length >= 2) fitRide(); if(key === 'plan' && !guideShownOnce && !guideOff()){ guideShownOnce = true; showGuide(true); } });
+  { const o = $('planGuideOpen'), c = $('planGuideClose'), s = $('planGuideShow');
+    if(o) o.addEventListener('click', () => showGuide(true));
+    if(c) c.addEventListener('click', () => showGuide(false));
+    if(s) s.addEventListener('change', () => setGuideShown(s.checked));
+    // Escape closes the guide and nothing else: caught first, so the panel's own Escape does not close the planner.
+    document.addEventListener('keydown', e => { const g = $('planGuide'); if(e.key === 'Escape' && g && !g.hidden){ e.preventDefault(); e.stopImmediatePropagation(); showGuide(false); } }, true); }
   // The map: layers once the style is there.
   const onLoad = () => { addLayers(); };
   if(map.loaded && map.loaded()) onLoad(); else map.once('load', onLoad);
@@ -740,13 +1029,14 @@ export function initPlan(){
     const k = String(e.key).toLowerCase();
     const isUndo = k === 'z' && !e.shiftKey, isRedo = (k === 'z' && e.shiftKey) || (k === 'y' && !e.shiftKey && !e.metaKey);
     if(!isUndo && !isRedo) return;
+    // Not under the replace question: the ride behind it would change while the rider is asked about it.
+    if(['planReplace', 'planNotice'].some(id => { const d = $(id); return d && d.open; })) return;
     const t = e.target;
     if(t && t.closest && t.closest('input, textarea, select, [contenteditable]')) return;   // a field keeps its own undo
     if(!planning() && !history.size() && !history.redoSize()) return;
     e.preventDefault();
     if(isRedo) redo(); else undo();
   });
-  window.addEventListener('beforeunload', e => { if(dirty && ride.stops.length >= 2 && !ride.id){ e.preventDefault(); e.returnValue = P().leave || ''; } });
   // The day of the ride: today unless the draft holds a later date; a change redraws the daylight and asks the forecast.
   const dateIn = $('planDate'), draft = loadDraft();
   if(dateIn){
@@ -754,15 +1044,11 @@ export function initPlan(){
     dateIn.value = draft && typeof draft.date === 'string' && draft.date >= todayIso() ? draft.date : todayIso();
     dateIn.addEventListener('change', () => { saveDraft(); renderFigures(); scheduleWeather(); });
   }
-  // A saved ride by its link, else the draft from the last visit with its undo and redo steps. The steps are
-  // read first: restoring the draft saves, and an empty history would overwrite the kept one.
+  // The draft from the last visit with its undo and redo steps. The steps are read first: restoring the
+  // draft saves, and an empty history would overwrite the kept one.
   const keptHistory = loadHistory();
-  const wanted = new URLSearchParams(location.search).get('ride');
-  if(wanted && CC_PLAN.ride) openSaved(wanted);
-  else {
-    const d = draft; if(d && Array.isArray(d.stops) && d.stops.length){ ride = { id: d.id || null, name: d.name || '', bike: d.bike || ride.bike, stops: d.stops, legs: [] }; if(!document.querySelector(`#planBikes .chip[data-bike="${ride.bike}"]`)) showAllBikes(); paintBikes(); afterChange(); dirty = false; }
-    if(keptHistory){ history.restore(keptHistory); saveDraft(); }
-  }
+  const d = draft; if(d && Array.isArray(d.stops) && d.stops.length){ ride = { name: d.name || '', bike: d.bike || ride.bike, stops: d.stops, legs: [] }; if(!document.querySelector(`#planBikes .chip[data-bike="${ride.bike}"]`)) showAllBikes(); paintBikes(); afterChange(); }
+  if(keptHistory){ history.restore(keptHistory); saveDraft(); }
   syncStart();
   syncPlanning();
 }

@@ -26,3 +26,15 @@ export function rideScopeFor(regions){
   const ccs = [...new Set(regions.map(r => r && r.countryCode).filter(Boolean))];
   return { kind:'region', regionIds:ids, countryCode: ccs.length === 1 ? ccs[0] : null };
 }
+
+/**
+ * Whether a scope already shows every region a ride crosses, so the ride need not move it (route-planner.md
+ * section 5, owner 2026-10-16). A wider scope, the ride's country or Everywhere, covers it: narrowing that to the
+ * ride's regions would hide what the rider chose to see. No scope, or a ride outside every region, asks nothing.
+ */
+export function scopeCovers(scope, regions){
+  if(!scope || scope.kind === 'everywhere' || !Array.isArray(regions)) return true;
+  return regions.every(r => !r || (scope.kind === 'country'
+    ? r.countryCode === scope.countryCode
+    : (scope.regionIds || []).includes(r.id)));
+}

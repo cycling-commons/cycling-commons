@@ -46,6 +46,6 @@ test('the basemap sources are recorded where the map is made, not when the plann
 });
 
 test('the rider is told, under the stops and on the stop', () => {
-  assert.match(twig, /\{\{ 'map\.plan_remove_hint'\|trans \}\}/);
+  assert.match(twig, /\{\{ 'map\.plan_help_remove'\|trans \}\}/);
   assert.match(plan, /el\.title = s\.name \+ '\\n' \+ \(P\(\)\.removeHint \|\| ''\);/);
 });
