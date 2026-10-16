@@ -710,6 +710,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
         return $this;
     }
 
+    /** A closed hint shown again: the planner's guide ticked on once more. */
+    public function reopenHint(MapHint $hint): static
+    {
+        $values = array_map(static fn (MapHint $h): string => $h->value, $this->getClosedHints());
+        $this->closedHints = array_values(array_filter($values, static fn (string $v): bool => $v !== $hint->value));
+
+        return $this;
+    }
+
     /** @return list<string> */
     public function getBaseCountryCodes(): array
     {

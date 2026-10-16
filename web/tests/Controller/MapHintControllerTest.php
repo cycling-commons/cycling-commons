@@ -85,6 +85,39 @@ final class MapHintControllerTest extends WebTestCase
         self::assertSame([MapHint::PendingYoursAnywhere], $reloaded->getClosedHints());
     }
 
+    /**
+     * The planner's guide (route-planner.md section 3.1, owner 2026-10-15): a
+     * rider who unticks "Show this guide" closes it on the account, and who
+     * ticks it again opens it; opening is as guarded as closing.
+     */
+    public function testThePlannerGuideClosesAndOpensAgainOnTheAccount(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $rider = (new User())->setEmail('map-hint-guide@example.test')->setPassword('x');
+        $em->persist($rider);
+        $em->flush();
+        $client->loginUser($rider);
+
+        $this->close($client, MapHint::PlanGuide->value);
+        self::assertResponseStatusCodeSame(204);
+        $em->clear();
+        self::assertSame([MapHint::PlanGuide], $em->getRepository(User::class)->find($rider->getId())?->getClosedHints());
+
+        $client->request('POST', '/map/hint/plan_guide/open', [], [], ['HTTP_X_CSRF_TOKEN' => 'nope', 'HTTP_SEC_FETCH_SITE' => 'same-origin']);
+        self::assertResponseStatusCodeSame(403);
+        $client->request('POST', '/map/hint/plan_guide/open', [], [], ['HTTP_X_CSRF_TOKEN' => $this->token(), 'HTTP_SEC_FETCH_SITE' => 'same-origin']);
+        self::assertResponseStatusCodeSame(204);
+        $em->clear();
+        self::assertSame([], $em->getRepository(User::class)->find($rider->getId())?->getClosedHints());
+
+        $client->request('POST', '/map/hint/nothing_here/open', [], [], ['HTTP_X_CSRF_TOKEN' => $this->token(), 'HTTP_SEC_FETCH_SITE' => 'same-origin']);
+        self::assertResponseStatusCodeSame(404);
+        $client->restart();
+        $client->request('POST', '/map/hint/plan_guide/open', [], [], ['HTTP_X_CSRF_TOKEN' => $this->token(), 'HTTP_SEC_FETCH_SITE' => 'same-origin']);
+        self::assertResponseStatusCodeSame(401);
+    }
+
     public function testClosingTwiceStoresItOnce(): void
     {
         $client = static::createClient();
