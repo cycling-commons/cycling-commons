@@ -1,0 +1,38 @@
+web/assets/map/coverage.js
+  s_c707f1443f1405::t_b51b64b2c44f13 146-148
+  s_c707f1443f1405::t_bfa67f2e45181a 123,126-129,145
+web/assets/map/map-init.js
+  s_c707f1443f1405::t_b51b64b2c44f13 205-207
+  s_c707f1443f1405::t_bfa67f2e45181a 208-209,215
+web/tests/js/plan-place-menu.test.cjs
+  s_c707f1443f1405::t_bfa67f2e45181a 37-39
+  s_c707f1443f1405::t_b51b64b2c44f13 40-41
+web/assets/styles/map.css
+  s_c707f1443f1405::t_bfa67f2e45181a 825,2033
+  s_c707f1443f1405::t_8f45d2022fc540 2027-2032
+  s_c707f1443f1405::t_5443de7fba3fa4 2034-2035
+docs/specs/map-and-search.md
+  s_c707f1443f1405::t_bfa67f2e45181a 345-346
+web/tests/js/filter-pill-mark.test.cjs
+  s_c707f1443f1405::t_8f45d2022fc540 34
+  s_c707f1443f1405::t_118f333d6be965 33
+  s_c707f1443f1405::t_bfa67f2e45181a 35-37
+web/tests/js/per-country-mounting.test.mjs
+  s_c707f1443f1405::t_118f333d6be965 36-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2438c23ccb42cca1221b1584f670743ec5dd353f",
+  "prompts": {},
+  "sessions": {
+    "s_c707f1443f1405": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6b21b1b-dfdf-4cfe-8fa1-eda87e9640b3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
