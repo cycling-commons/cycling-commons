@@ -1,0 +1,19 @@
+Dockerfile.worker
+  s_78d2363aefba25::t_957f12e62904fd 47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "623d3f0134fe6599a4dd78c259695302bed79820",
+  "prompts": {},
+  "sessions": {
+    "s_78d2363aefba25": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "239df49c-569a-40c1-a0e4-f8cef63057e3",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
