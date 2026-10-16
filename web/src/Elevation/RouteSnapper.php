@@ -16,7 +16,9 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  *
  * With a bike (docs/specs/route-planner.md section 4.2) the request carries
  * that bike's costing block, so the planner's leg follows the roads that suit
- * the bike; without one the request is exactly the climb editor's.
+ * the bike; without one the request is exactly the climb editor's. With
+ * `shortest` the engine looks for the shortest way the same bike may ride, its
+ * `shortest` on top of the bike's block, for "Why this way?" (section 4.2a).
  *
  * @api
  */
@@ -37,7 +39,7 @@ final class RouteSnapper
      * @return array{coordinates: list<array{0: float, 1: float}>, distanceM: float}|null
      *                                                                                    [lng, lat] GeoJSON; null when unset or unreachable
      */
-    public function snap(array $a, array $b, ?BikeType $bike = null): ?array
+    public function snap(array $a, array $b, ?BikeType $bike = null, bool $shortest = false): ?array
     {
         if ('' === $this->valhallaUrl) {
             return null;   // same master switch as elevation: unset = no routing
@@ -55,7 +57,7 @@ final class RouteSnapper
             'directions_type' => 'none',
         ];
         if (null !== $bike) {
-            $json['costing_options'] = ['bicycle' => BikeCosting::options($bike)];
+            $json['costing_options'] = ['bicycle' => BikeCosting::options($bike) + ($shortest ? ['shortest' => true] : [])];
         }
         try {
             $res = $this->http->request('POST', rtrim($url, '/').'/route', [

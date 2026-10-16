@@ -141,8 +141,38 @@ final class PlanControllerTest extends WebTestCase
         // JSON carries a whole number without its fraction; the values are what count.
         self::assertEqualsWithDelta(2400.0, $json['distanceM'], 1e-6);
         self::assertEquals([[0, 300], [30, 305], [60, 311]], $json['heights']);
-        self::assertSame(['paved' => 2000, 'gravel' => 400, 'rough' => 0, 'unknown' => 0, 'busy' => 0], $json['surfaces']);
+        self::assertSame(['paved' => 2000, 'gravel' => 400, 'rough' => 0, 'unknown' => 0, 'busy' => 0, 'cycle' => 0, 'signals' => 0], $json['surfaces']);
         self::assertSame([[0, 'Avenue Reine Astrid', 'road'], [2000, 'Chemin du Thier', 'road']], $json['streets'], 'the leg carries its street names, from our own engine');
+    }
+
+    /** The comparison leg of "Why this way?" asks the engine for the shortest way of the same bike; anything but `true` asks nothing extra. */
+    public function testShortestTrueAsksTheEngineForTheShortestWayOfTheSameBike(): void
+    {
+        foreach ([[true, true], ['yes', false], [null, false]] as [$sent, $asked]) {
+            $client = static::createClient();
+            $bodies = [];
+            $shape = self::encode([[50.4925, 5.8633], [50.4745, 5.8627]]);
+            $engine = new MockHttpClient(static function (string $method, string $url, array $options) use (&$bodies, $shape): MockResponse {
+                $bodies[] = json_decode((string) ($options['body'] ?? '{}'), true);
+
+                return new MockResponse((string) json_encode(str_ends_with($url, '/route')
+                    ? ['trip' => ['legs' => [['shape' => $shape, 'summary' => ['length' => 2.0]]]]]
+                    : []));
+            });
+            static::getContainer()->set(RouteSnapper::class, new RouteSnapper($engine, new NullLogger(), 'http://valhalla.test'));
+
+            $body = self::leg('Road');
+            if (null !== $sent) {
+                $body['shortest'] = $sent;
+            }
+            self::post($client, '/map/plan/leg', 'plan-leg', $body);
+
+            self::assertResponseIsSuccessful();
+            $options = $bodies[0]['costing_options']['bicycle'] ?? [];
+            self::assertSame('Road', $options['bicycle_type'] ?? null);
+            self::assertSame($asked, $options['shortest'] ?? false, 'shortest sent as '.var_export($sent, true));
+            static::ensureKernelShutdown();
+        }
     }
 
     public function testAVisitorOverTheDailyBudgetIs429(): void

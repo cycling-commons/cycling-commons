@@ -145,7 +145,7 @@ rather than described:
             'directions_type' => 'none',
         ];
         if (null !== $bike) {
-            $json['costing_options'] = ['bicycle' => BikeCosting::options($bike)];
+            $json['costing_options'] = ['bicycle' => BikeCosting::options($bike) + ($shortest ? ['shortest' => true] : [])];
         }
 ```
 
@@ -153,9 +153,11 @@ Two locations, one costing, and `directions_type: none`, because both callers wa
 turn-by-turn prose would be dead weight. The planner's leg adds one thing: the bike's costing
 block, which `web/src/Elevation/BikeCosting.php` builds from the rider's bike type (a road bike
 rides the engine's road profile, a gravel bike the cyclocross one, a mountain bike the mountain
-one; an e-bike, a handbike and the wide or long bikes tune hills and rough surfaces on top). That
-is the entire vocabulary of routing this project speaks: two points and a bike, no alternatives,
-no avoid-list.
+one; an e-bike, a handbike and the wide or long bikes tune hills and rough surfaces on top). The
+planner's "Why this way?" asks once more with `shortest` set on that same block: the shortest way
+the same bike may ride, so a rider can compare it with the way the profile picked. That is the
+entire vocabulary of routing this project speaks: two points, a bike and that one switch, no
+avoid-list.
 
 The reply is a trip whose legs each carry an encoded `shape`, which the class decodes into
 coordinate pairs:

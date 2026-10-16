@@ -141,6 +141,24 @@ final class RouteSnapperTest extends TestCase
         self::assertSame(['bicycle' => ['bicycle_type' => 'Cross']], $this->lastBody['costing_options']);
     }
 
+    /**
+     * "Why this way?" (route-planner.md section 4.2a, owner 2026-10-15): the
+     * shortest way the same bike may ride, the engine's `shortest` on top of
+     * the bike's own block, so it still never takes a road a cyclist may not use.
+     */
+    public function testTheShortestWayKeepsTheBikeCostingAndAddsShortest(): void
+    {
+        $shape = self::encode([[50.0, 5.0], [50.001, 5.001]]);
+        $client = $this->recording(new MockResponse(json_encode([
+            'trip' => ['legs' => [['shape' => $shape, 'summary' => ['length' => 0.1]]]],
+        ], \JSON_THROW_ON_ERROR)));
+        $snapper = new RouteSnapper($client, new NullLogger(), 'http://valhalla.test');
+
+        self::assertNotNull($snapper->snap([50.0, 5.0], [50.001, 5.001], BikeType::Road, shortest: true));
+
+        self::assertSame(['bicycle' => ['bicycle_type' => 'Road', 'shortest' => true]], $this->lastBody['costing_options']);
+    }
+
     public function testTheClimbEditorSnapSendsNoCostingOptions(): void
     {
         // The editor's snap stays exactly what it was: no bike, no costing

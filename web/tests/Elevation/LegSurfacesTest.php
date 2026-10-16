@@ -50,12 +50,37 @@ final class LegSurfacesTest extends TestCase
 
         $mix = $client->along([[50.49, 5.86], [50.47, 5.86]]);
 
-        self::assertSame(['paved' => 2500, 'gravel' => 500, 'rough' => 200, 'unknown' => 400, 'busy' => 2400], $mix);
-        self::assertSame(['edge.surface', 'edge.length', 'edge.road_class', 'edge.cycle_lane', 'edge.names', 'edge.use'], $this->lastBody['filters']['attributes']);
+        self::assertSame(['paved' => 2500, 'gravel' => 500, 'rough' => 200, 'unknown' => 400, 'busy' => 2400, 'cycle' => 500, 'signals' => 0], $mix);
+        self::assertSame(['edge.surface', 'edge.length', 'edge.road_class', 'edge.cycle_lane', 'edge.names', 'edge.use', 'edge.traffic_signal', 'node.traffic_signal'], $this->lastBody['filters']['attributes']);
         // The leg's own line, walked edge by edge, under the bicycle costing.
         self::assertSame('edge_walk', $this->lastBody['shape_match']);
         self::assertSame('bicycle', $this->lastBody['costing']);
         self::assertSame([['lat' => 50.49, 'lon' => 5.86], ['lat' => 50.47, 'lon' => 5.86]], $this->lastBody['shape']);
+    }
+
+    /**
+     * The metres on a cycle path, away from cars, and the traffic lights passed
+     * (route-planner.md section 4.2a, owner 2026-10-16): "Why this way?" said a
+     * shortest way through Hoorn "suits your bike less", asphalt against
+     * asphalt, where the bike's way kept to cycle paths. A cycleway, or a road
+     * with a separated lane, is a cycle path; a painted lane is not. The engine
+     * marks a light on the edge that ends at it, now and then on the node.
+     */
+    public function testItMeasuresTheCyclePathsAndCountsTheTrafficLights(): void
+    {
+        $client = $this->client(new MockResponse((string) json_encode(['units' => 'kilometers', 'edges' => [
+            ['surface' => 'paved', 'length' => 1.2, 'use' => 'cycleway', 'road_class' => 'service_other'],
+            ['surface' => 'paved', 'length' => 0.4, 'use' => 'road', 'road_class' => 'secondary', 'cycle_lane' => 'separated', 'traffic_signal' => true],
+            ['surface' => 'paved', 'length' => 0.3, 'use' => 'road', 'road_class' => 'tertiary', 'cycle_lane' => 'dedicated'],
+            ['surface' => 'paved', 'length' => 0.6, 'use' => 'road', 'road_class' => 'residential', 'end_node' => ['traffic_signal' => true]],
+            ['surface' => 'paved', 'length' => 0.1, 'use' => 'road', 'road_class' => 'residential', 'traffic_signal' => false],
+        ]])));
+
+        $mix = $client->along([[52.64, 5.05], [52.66, 5.09]]);
+
+        self::assertNotNull($mix);
+        self::assertSame(1600, $mix['cycle'], 'the cycleway and the separated lane, not the painted lane');
+        self::assertSame(2, $mix['signals']);
     }
 
     public function testNoEdgesOrNoEngineIsNoAnswer(): void

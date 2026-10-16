@@ -86,7 +86,8 @@ final class PlanController extends AbstractController
             return new JsonResponse(['error' => 'rate_limited'], 429);
         }
 
-        $snapped = $snapper->snap($points['a'], $points['b'], $bike);
+        // `shortest: true` is the comparison leg of "Why this way?" (route-planner.md section 4.2a).
+        $snapped = $snapper->snap($points['a'], $points['b'], $bike, true === ($payload['shortest'] ?? null));
         if (null === $snapped) {
             // No road is an answer, not an error, and it carries no line: nothing that is not a road leaves this server.
             return new JsonResponse(['routed' => false]);
