@@ -3057,15 +3057,6 @@ account:
   mod_more_open: 'Openstaand werk onder Meer'
   mod_room_new: 'Berichten in de kamer die je nog niet hebt geopend'
   tab_contributions: 'Bijdragen'
-  tab_rides: "Ritten"
-  rides_lede: "De ritten die je op de kaart plande en bewaarde. Alleen jij ziet ze. Open er een op de kaart om hem te veranderen of mee te nemen als GPX."
-  rides_empty: "Nog geen ritten. Een rit is een lijn die je op de kaart tekent, van een start langs een paar stops naar een eindpunt, voor de fiets waarop je rijdt."
-  rides_empty_link: "Plan er een op de kaart"
-  rides_open: "Openen op de kaart"
-  rides_delete: "Verwijderen"
-  rides_delete_confirm: "Deze rit verwijderen? Dit kan niet ongedaan worden gemaakt."
-  rides_saved: "bewaard op {date}"
-  rides_stops: "{n} stops"
   tab_votes: 'Stemmen'
   tab_confirmations: 'Bevestigingen'
   tab_saved: 'Opgeslagen regio''s'

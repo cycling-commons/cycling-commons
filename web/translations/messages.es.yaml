@@ -3080,15 +3080,6 @@ account:
   mod_more_open: 'Trabajo pendiente en Más'
   mod_room_new: 'Entradas de la sala que aún no has abierto'
   tab_contributions: 'Aportaciones'
-  tab_rides: "Salidas"
-  rides_lede: "Las salidas que planificaste en el mapa y guardaste. Solo tú las ves. Abre una en el mapa para cambiarla o llevártela como GPX."
-  rides_empty: "Aún no hay salidas. Una salida es una línea que dibujas en el mapa, de un inicio a un final pasando por unas paradas, para la bici que usas."
-  rides_empty_link: "Planifica una en el mapa"
-  rides_open: "Abrir en el mapa"
-  rides_delete: "Borrar"
-  rides_delete_confirm: "¿Borrar esta salida? No se puede deshacer."
-  rides_saved: "guardada el {date}"
-  rides_stops: "{n} paradas"
   tab_votes: 'Votos'
   tab_confirmations: 'Confirmaciones'
   tab_saved: 'Regiones guardadas'

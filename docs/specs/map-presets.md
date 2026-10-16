@@ -145,7 +145,7 @@ profile.
 | `POST /map/presets/{id}/use` `{context}` → 204; the tool moves to this preset; 400 for an unknown tool, 404 when it is not the rider's | signed in | `map-preset` | |
 
 `App\Controller\MapPresetController`, the stateless-JSON pattern of
-security-architecture.md section 5.1, as `PlanRideController`. The map page
+security-architecture.md section 5.1, as `PlanController`. The map page
 hands `presets.js` the list, the endpoint and the token as
 `window.CC_PRESETS`; the settings page hands the same to its script, plus
 the catalogue.

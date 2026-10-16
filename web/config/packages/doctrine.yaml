@@ -80,11 +80,6 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Roadmap/Entity'
                 prefix: 'App\Roadmap\Entity'
                 alias: Roadmap
-            Planner:
-                is_bundle: false
-                dir: '%kernel.project_dir%/src/Planner/Entity'
-                prefix: 'App\Planner\Entity'
-                alias: Planner
             Map:
                 is_bundle: false
                 dir: '%kernel.project_dir%/src/Map/Entity'

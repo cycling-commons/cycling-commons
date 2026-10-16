@@ -3053,15 +3053,6 @@ account:
   mod_more_open: 'Travail en attente sous Plus'
   mod_room_new: 'Messages de la salle que vous n''avez pas encore ouverts'
   tab_contributions: 'Contributions'
-  tab_rides: "Sorties"
-  rides_lede: "Les sorties que vous avez planifiées sur la carte et enregistrées. Vous seul les voyez. Ouvrez-en une sur la carte pour la modifier ou l'emporter en GPX."
-  rides_empty: "Pas encore de sortie. Une sortie est une ligne que vous tracez sur la carte, d'un départ à une arrivée en passant par quelques étapes, pour le vélo que vous roulez."
-  rides_empty_link: "Planifiez-en une sur la carte"
-  rides_open: "Ouvrir sur la carte"
-  rides_delete: "Supprimer"
-  rides_delete_confirm: "Supprimer cette sortie ? Il n'y a pas de retour en arrière."
-  rides_saved: "enregistrée le {date}"
-  rides_stops: "{n} étapes"
   tab_votes: 'Votes'
   tab_confirmations: 'Confirmations'
   tab_saved: 'Régions sauvegardées'

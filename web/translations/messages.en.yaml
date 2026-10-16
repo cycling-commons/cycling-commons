@@ -3072,15 +3072,6 @@ account:
   mod_more_open: 'Open work under More'
   mod_room_new: 'Room posts you have not opened yet'
   tab_contributions: 'Contributions'
-  tab_rides: "Rides"
-  rides_lede: "The rides you planned on the map and saved. Only you see them. Open one on the map to change it or take it with you as a GPX."
-  rides_empty: "No rides yet. A ride is a line you draw on the map, from a start past a few stops to an end, for the bike you ride."
-  rides_empty_link: "Plan one on the map"
-  rides_open: "Open on the map"
-  rides_delete: "Delete"
-  rides_delete_confirm: "Delete this ride? There is no undo."
-  rides_saved: "saved {date}"
-  rides_stops: "{n} stops"
   tab_votes: 'Votes'
   tab_confirmations: 'Confirmations'
   tab_saved: 'Saved regions'

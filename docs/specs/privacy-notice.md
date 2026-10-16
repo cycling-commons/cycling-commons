@@ -293,12 +293,12 @@ which version each account has seen is kept.
   (roadmap votes, follows and proposals, with what is kept, what becomes
   public after review and without a name, and for how long;
   `privacy.collect_contribute_roadmap`, `privacy.retention_roadmap`,
-  roadmap-and-changelog.md section 8.8); `privacy.change.v5_rides` (the rides
-  a rider plans on the map and saves: name, bike type, stops, line, figures,
-  nobody but the rider sees one, an unsaved ride stays in the browser and
-  its leg requests reach only our own routing engine, kept until deleted and
-  in the export; `privacy.collect_rides`, `privacy.retention_rides`,
-  [route-planner.md](route-planner.md) section 7); `privacy.change.v6_forecast`
+  roadmap-and-changelog.md section 8.8); `privacy.change.v5_rides` (the ride
+  planner on the map: a ride stays in the rider's browser for seven days and
+  in the GPX they download, we keep no copy, and its leg requests reach only
+  our own routing engine; `privacy.collect_rides` and the sentence on the
+  ride in `privacy.cookies_local_body`, [route-planner.md](route-planner.md)
+  section 7); `privacy.change.v6_forecast`
   (the forecast service our server asks for a planned ride's date,
   Open-Meteo, which sees our server's address, one point rounded to about
   10 km and the date, nothing about the rider, cached three hours;

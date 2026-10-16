@@ -19,9 +19,7 @@ framework:
             - plan-leg
             - plan-along
             - plan-weather
-            - plan-save
             - map-preset
-            - plan-delete
             - scout-tags
             - scout-traffic
             - time-zone

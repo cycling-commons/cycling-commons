@@ -1228,9 +1228,9 @@ Admin (ochre, one "Admin panel" link). `atlas.css` and the map's own copy in
 
 - **Personal mode** tabs: Dashboard · Contributions · Votes · Confirmations ·
   Scout · Translate · Messages · My bugs · Settings, under a "Personal" label (Saved
-  stays hidden until it has a backend; the rides a rider plans and saves
-  have their own **Rides** tab after Contributions, `/account/rides`,
-  [route-planner.md](route-planner.md) section 6.2). The account chip lists Dashboard first
+  stays hidden until it has a backend; a ride planned on the map is no part
+  of the account: it stays in the browser and in the GPX the rider keeps,
+  [route-planner.md](route-planner.md) section 6). The account chip lists Dashboard first
   too. A rider's proposed routes have no tab of their own: they are
   contributions, so the Contributions tab lists them, and its kind filter
   carries a **Routes** chip (`?letter=R`, first after All) that shows only

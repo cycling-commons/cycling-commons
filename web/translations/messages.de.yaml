@@ -3058,15 +3058,6 @@ account:
   mod_more_open: 'Offene Arbeit unter Mehr'
   mod_room_new: 'Beiträge im Raum, die du noch nicht geöffnet hast'
   tab_contributions: 'Beiträge'
-  tab_rides: "Fahrten"
-  rides_lede: "Die Fahrten, die du auf der Karte geplant und gespeichert hast. Nur du siehst sie. Öffne eine auf der Karte, um sie zu ändern oder als GPX mitzunehmen."
-  rides_empty: "Noch keine Fahrten. Eine Fahrt ist eine Linie, die du auf der Karte zeichnest, vom Start über ein paar Stopps zum Ziel, für das Rad, das du fährst."
-  rides_empty_link: "Plane eine auf der Karte"
-  rides_open: "Auf der Karte öffnen"
-  rides_delete: "Löschen"
-  rides_delete_confirm: "Diese Fahrt löschen? Das lässt sich nicht rückgängig machen."
-  rides_saved: "gespeichert am {date}"
-  rides_stops: "{n} Stopps"
   tab_votes: 'Stimmen'
   tab_confirmations: 'Bestätigungen'
   tab_saved: 'Gespeicherte Regionen'

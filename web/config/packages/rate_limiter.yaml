@@ -37,8 +37,6 @@ framework:
             cache.forecast:
                 adapter: cache.app
                 default_lifetime: 10800
-            cache.plan_save_limiter:
-                adapter: cache.app
             cache.map_preset_save_limiter:
                 adapter: cache.app
             cache.coverage_read_limiter:
@@ -218,15 +216,6 @@ framework:
             limit: 30
             interval: '1 day'
             cache_pool: cache.plan_weather_anon_limiter
-        # Saving a planned ride (route-planner.md section 6.1): one row per
-        # save, after the body's shape is checked and before the line is
-        # measured in PostGIS. Signed in only, so no visitor limiter; a rider
-        # saves a handful of times an afternoon, a loop fills a hundred rows.
-        plan_save:
-            policy: sliding_window
-            limit: 30
-            interval: '10 minutes'
-            cache_pool: cache.plan_save_limiter
         # Saving a map preset (map-presets.md section 5): one row per save,
         # after the body's shape is checked. Signed in only, so no visitor
         # limiter; a rider keeps six at most.
@@ -517,8 +506,6 @@ when@test:
                 cache.plan_weather_anon_limiter:
                     adapter: cache.adapter.array
                 cache.forecast:
-                    adapter: cache.adapter.array
-                cache.plan_save_limiter:
                     adapter: cache.adapter.array
                 cache.map_preset_save_limiter:
                     adapter: cache.adapter.array
