@@ -1,0 +1,25 @@
+web/src/Controller/PlanController.php
+  s_c707f1443f1405::t_d962223426f27f 157-158
+web/tests/Controller/PlanControllerTest.php
+  s_c707f1443f1405::t_55d93259d68963 238-248,250-266
+  s_c707f1443f1405::t_a5360b90e338d5 249
+  s_c707f1443f1405::t_202c79f9639ab6 267-268
+web/src/Catalog/RideCheckService.php
+  s_c707f1443f1405::t_d962223426f27f 388
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "39722116918c9859001ba8a11c268814dfa5bbc7",
+  "prompts": {},
+  "sessions": {
+    "s_c707f1443f1405": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6b21b1b-dfdf-4cfe-8fa1-eda87e9640b3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
