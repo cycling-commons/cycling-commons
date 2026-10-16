@@ -36,6 +36,10 @@ final readonly class ItemFeature
         // `?hydrate=osm`: the cached OpenStreetMap subset, null when the item has none.
         public ?array $osm = null,
         public bool $hydrated = false,
+        // The item's kind (PublicFields::kindOf), carried by a search result; the one-item answer and the bulk
+        // export place or leave it themselves.
+        public ?string $kind = null,
+        public bool $carriesKind = false,
     ) {
     }
 
@@ -59,6 +63,9 @@ final readonly class ItemFeature
                 'region_id' => $this->regionId,
             ],
         ];
+        if ($this->carriesKind) {
+            $geoJson['properties']['kind'] = $this->kind;
+        }
         if ($this->hydrated) {
             $geoJson['properties']['osm'] = $this->osm;
         }
@@ -73,6 +80,6 @@ final readonly class ItemFeature
      */
     public function withOsm(?array $osm): self
     {
-        return new self($this->id, $this->letter, $this->name, $this->tier, $this->geometry, $this->evidence, $this->regionId, $osm, true);
+        return new self($this->id, $this->letter, $this->name, $this->tier, $this->geometry, $this->evidence, $this->regionId, $osm, true, $this->kind, $this->carriesKind);
     }
 }

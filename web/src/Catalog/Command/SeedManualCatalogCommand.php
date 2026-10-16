@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Catalog\Command;
 
+use App\Catalog\ServiceKind;
 use App\Catalog\ClimbFoot;
 use App\Catalog\Import\AttributeVocabulary;
 use App\Catalog\Import\DuplicateGuard;
@@ -415,6 +416,14 @@ final class SeedManualCatalogCommand extends Command
                 $foot = 'N' === $pin['letter'] ? ClimbFoot::of($pin['attributes']['route'] ?? null) : null;
                 if (null !== $foot) {
                     [$pin['lat'], $pin['lng']] = $foot;
+                }
+                // A service row carries its kind, from its label by the catalogue import's rule (owner 2026-10-16:
+                // a seeded repair station without one drew the shop icon).
+                if ('D' === $pin['letter'] && !isset($pin['attributes']['serviceKind'])) {
+                    $serviceKind = ServiceKind::fromLegacyLabel(\is_string($pin['attributes']['t'] ?? null) ? $pin['attributes']['t'] : null);
+                    if (null !== $serviceKind) {
+                        $pin['attributes']['serviceKind'] = $serviceKind->value;
+                    }
                 }
                 $sifted = PhotoValidator::sift($pin['attributes'], new PhotoPlace($pin['letter'], $pin['lat'], $pin['lng']));
                 $pin['attributes'] = $sifted['attributes'];

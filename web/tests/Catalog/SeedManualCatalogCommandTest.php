@@ -81,6 +81,27 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
         self::assertSame('Tough', $redoute->getAttributes()['effort']);
     }
 
+    /**
+     * A seeded service row carries its kind (owner 2026-10-16): the seed wrote
+     * only the label, so a repair station drew the shop icon on every map. The
+     * kind comes from the label by the rule the catalogue import uses.
+     */
+    public function testEverySeededServiceRowCarriesItsKind(): void
+    {
+        $this->runSeed()->assertCommandIsSuccessful();
+        $kinds = [];
+        foreach ($this->em->getRepository(Item::class)->findBy(['source' => ItemSource::Manual, 'letter' => 'D']) as $item) {
+            $kinds[$item->getSourceRef()] = $item->getAttributes()['serviceKind'] ?? null;
+        }
+        ksort($kinds);
+        self::assertSame([
+            'manual:ardennes-bike-spa' => 'shop',
+            'manual:e-bike-charging-botrange' => 'station',
+            'manual:north-bike-stavelot' => 'shop',
+            'manual:repair-station-malmedy' => 'station',
+        ], $kinds);
+    }
+
     public function testSeededSelectValuesAreValidRegistryChoices(): void
     {
         // A typo'd choice in the seed (e.g. severity 'Modrate') would

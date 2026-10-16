@@ -182,7 +182,9 @@ and `ContributionApiController`, all in `App\Controller\Api\V1`.
   `item_name_fold_trgm_idx` and `recommended_route_name_fold_trgm_idx`;
   three letters because a trigram is three, and shorter words would read
   every row), names that start with it first. Every feature carries
-  `region_id`, the region's public slug or null. Recommended routes (letter
+  `region_id`, the region's public slug or null, and `kind`, the item's
+  kind by the rule below (`PublicFields::kindOf()`), so a consumer draws
+  the same icon for a search result as for its one-item answer. Recommended routes (letter
   R) join only when asked for, `routes=include` beside the items or
   `letter=R` alone, each as one point on the route with `distance_m` and
   `ascent_m` (`RouteFeature`). `letter` accepts any catalogue letter;
@@ -199,7 +201,9 @@ and `ContributionApiController`, all in `App\Controller\Api\V1`.
   letter's form whose value is picked from a list, measured, or the place's
   own `web` address (`App\Api\V1\PublicFields`, an allowlist); text a
   person wrote never leaves. `kind` is `serviceKind` (D) or `type` (O, G, P,
-  Q). `photos` are the photos the map shows (`PhotoValidator::sift()`),
+  Q); a row without a stored kind gives the one its type label `t` names, by
+  the catalogue import's rule (`ServiceKind::fromLegacyLabel()`,
+  `PlaceKind::fromLabel()`), else null. `photos` are the photos the map shows (`PhotoValidator::sift()`),
   each `{url, thumb, licence, credit, credit_url, source}` (§5).
 - **`?hydrate=osm`** (`App\Api\V1\OsmSubsets`): `{ref, name, tags}` from
   `coverage_poi`, tags limited to `CoverageRepository::TAG_WHITELIST` minus

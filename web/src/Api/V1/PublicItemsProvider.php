@@ -176,8 +176,7 @@ final class PublicItemsProvider
         }
         // The photos the map shows, minus the keys no public payload carries.
         $shown = PublicPhotos::of(PhotoValidator::sift($stored, PhotoPlace::of($row['letter'], $row['pin_lat'], $row['pin_lng']))['attributes']);
-        $kindField = null !== $type ? PublicFields::kindField($type) : null;
-        $kind = null !== $kindField && \is_string($stored[$kindField] ?? null) && '' !== $stored[$kindField] ? $stored[$kindField] : null;
+        $kind = null !== $type ? PublicFields::kindOf($type, $stored) : null;
         $osmRef = self::osmRefOf($row['osm_ref'], $row['source'], $row['source_ref']);
 
         $feature = new ItemFeature(
@@ -260,6 +259,25 @@ final class PublicItemsProvider
      * The OpenStreetMap object an item stands for: its own answer, or the
      * ref a copy taken from OpenStreetMap was filed under.
      */
+    /**
+     * The kind of a search row, by PublicFields::kindOf from the three attributes the query reads.
+     *
+     * @param array<string, mixed> $row
+     */
+    private static function kindOfRow(array $row): ?string
+    {
+        $type = ItemType::fromLetter((string) $row['letter']);
+        if (null === $type) {
+            return null;
+        }
+
+        return PublicFields::kindOf($type, array_filter([
+            PublicFields::KIND_SERVICE => $row['kind_service'] ?? null,
+            'type' => $row['kind_type'] ?? null,
+            't' => $row['kind_label'] ?? null,
+        ], static fn (mixed $v): bool => \is_string($v)));
+    }
+
     private static function osmRefOf(?string $osmRef, string $source, ?string $sourceRef): ?string
     {
         if (null !== $osmRef && '' !== $osmRef) {
@@ -381,7 +399,8 @@ final class PublicItemsProvider
         // The region by its public slug, the key /v1/regions uses: a
         // consumer, and the map, can load the region a hit lies in.
         $sql = 'SELECT i.id, i.name, i.letter, ST_AsGeoJSON(i.geom) AS geom, '.$verified.' AS verified,
-                       i.state, i.source, i.imported_at, r.slug AS region, '.ItemEvidenceResolver::selectSql('i').'
+                       i.state, i.source, i.imported_at, r.slug AS region, '.ItemEvidenceResolver::selectSql('i').',
+                       i.attributes->>\'serviceKind\' AS kind_service, i.attributes->>\'type\' AS kind_type, i.attributes->>\'t\' AS kind_label
                 FROM item i
                 LEFT JOIN region r ON r.id = i.region_id
                 WHERE i.state IN '.ItemState::servedSqlTuple();
@@ -442,6 +461,8 @@ final class PublicItemsProvider
                 $geometry,
                 $this->evidence->fromRow($row, $now),
                 $row['region'],
+                kind: self::kindOfRow($row),
+                carriesKind: true,
             );
         }
 

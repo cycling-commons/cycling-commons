@@ -10,6 +10,8 @@ use App\Catalog\CatalogField;
 use App\Catalog\CatalogFormRegistry;
 use App\Catalog\FieldKind;
 use App\Catalog\ItemType;
+use App\Catalog\PlaceKind;
+use App\Catalog\ServiceKind;
 
 /**
  * Which of an item's attributes the API serves, and which a partner app may
@@ -137,6 +139,28 @@ final readonly class PublicFields
             ItemType::WhereToSleep, ItemType::Shelter, ItemType::ScenicViews, ItemType::HistoryCulture => self::KIND_TYPE,
             default => null,
         };
+    }
+
+    /**
+     * An item's kind in the read API (public-api.md section 2.2): the stored one (kindField()), else the one its
+     * type label `t` names, by the rule the catalogue import uses (ServiceKind::fromLegacyLabel, PlaceKind::fromLabel),
+     * else null. A consumer draws its icon from it: a repair station without a stored kind drew the shop icon.
+     *
+     * @param array<string, mixed> $attributes
+     */
+    public static function kindOf(ItemType $type, array $attributes): ?string
+    {
+        $field = self::kindField($type);
+        if (null === $field) {
+            return null;
+        }
+        $stored = $attributes[$field] ?? null;
+        if (\is_string($stored) && '' !== $stored) {
+            return $stored;
+        }
+        $label = \is_string($attributes['t'] ?? null) ? $attributes['t'] : null;
+
+        return self::KIND_SERVICE === $field ? ServiceKind::fromLegacyLabel($label)?->value : PlaceKind::fromLabel($type->letter(), $label);
     }
 
     private static function served(CatalogField $field): bool

@@ -164,7 +164,7 @@ GET https://cyclingcommons.org/v1/search?q=spa&limit=30
         "id": 1042, "letter": "B", "name": "Fontaine du Parc", "tier": "curated",
         "grade": "minimum", "custody": "ours", "confirmations": 2,
         "last_confirmed": "2026-08-22", "last_seen_upstream": null, "verified_by": "riders",
-        "region_id": "brussels"
+        "region_id": "brussels", "kind": null
       }
     }
   ],
@@ -176,8 +176,10 @@ GET https://cyclingcommons.org/v1/search?q=spa&limit=30
 The response is a standard GeoJSON `FeatureCollection` with two foreign members, `licence` and
 `attribution`, following the drafted v1 convention. Feature properties are deliberately few:
 `id`, `letter`, `name`, `tier` (`community` or `curated`, so you can rank or style verified
-items differently), the trust envelope below, and `region_id`: the slug of the Commons region the
-item lies in, or `null` outside every region. The content type is `application/geo+json`.
+items differently), the trust envelope below, `region_id`: the slug of the Commons region the
+item lies in, or `null` outside every region, and `kind`: the item's kind from `/v1/catalog`
+(`shop`, `station` or `pump` for a bike service), or `null` for a letter without kinds. Draw
+your icon from `kind`, so a repair station looks the same wherever it comes from. The content type is `application/geo+json`.
 
 A route hit is smaller than an item: one point on the route, and `id`, `letter` (`R`), `name`,
 `tier`, `distance_m`, `ascent_m` and `region_id`. The line itself belongs to the route's own

@@ -89,7 +89,8 @@ final class PublicApiV1Test extends WebTestCase
             self::assertSame('Point', $feature['geometry']['type']);
             // The personal-data boundary, as a closed property list: a new
             // SELECT column cannot reach the response without failing here.
-            self::assertSame(['id', 'letter', 'name', 'tier', 'grade', 'custody', 'confirmations', 'last_confirmed', 'last_seen_upstream', 'verified_by', 'region_id'], array_keys($feature['properties']));
+            // `kind` (2026-10-16) is the item's kind, shop, station or pump: a classification, nothing of a person.
+            self::assertSame(['id', 'letter', 'name', 'tier', 'grade', 'custody', 'confirmations', 'last_confirmed', 'last_seen_upstream', 'verified_by', 'region_id', 'kind'], array_keys($feature['properties']));
             self::assertSame('D', $feature['properties']['letter']);
             self::assertContains($feature['properties']['tier'], ['community', 'curated']);
         }

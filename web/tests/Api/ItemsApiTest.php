@@ -125,6 +125,36 @@ final class ItemsApiTest extends WebTestCase
         self::assertSame('invalid_hydrate', $this->getJson($client, '/v1/items/'.$id.'?hydrate=wiki', 400)['error']);
     }
 
+    /**
+     * Every search result says its kind (public-api.md section 2.2, owner
+     * 2026-10-16): a consumer drew a repair station with the bike-shop icon,
+     * because only the one-item answer carried the kind. A row without a
+     * stored kind gives the one its type label names, the rule the catalogue
+     * import uses (ServiceKind::fromLegacyLabel); a letter with no kinds gives
+     * null.
+     */
+    public function testEverySearchResultSaysItsKind(): void
+    {
+        $client = static::createClient();
+        $stored = $this->item('D', 'Repair stand on the square', 4.2, 50.5, 'verified', ['serviceKind' => 'station']);
+        $byLabel = $this->item('D', 'Repair station', 4.3, 50.5, 'unverified', ['t' => 'Public repair station']);
+        $shop = $this->item('D', 'Bike shop', 4.4, 50.5, 'unverified', ['t' => 'Bike shop']);
+        $water = $this->item('B', 'Fountain', 4.5, 50.5);
+
+        $page = $this->getJson($client, '/v1/search?bbox=4.0,50.0,5.0,51.0&limit=50');
+        $kinds = [];
+        foreach ($page['features'] as $f) {
+            self::assertArrayHasKey('kind', $f['properties'], 'a search result without its kind');
+            $kinds[$f['properties']['id']] = $f['properties']['kind'];
+        }
+        self::assertSame('station', $kinds[$stored]);
+        self::assertSame('station', $kinds[$byLabel], 'a row without a stored kind gives the kind its label names');
+        self::assertSame('shop', $kinds[$shop]);
+        self::assertNull($kinds[$water], 'a letter with no kinds has none');
+
+        self::assertSame('station', $this->getJson($client, '/v1/items/'.$byLabel)['properties']['kind'], 'the one-item answer reads the same rule');
+    }
+
     public function testAnItemTheMapDoesNotServeIsNotFound(): void
     {
         $client = static::createClient();

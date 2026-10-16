@@ -671,7 +671,7 @@ components:
         A closed list, in this order; no other key appears. The trust
         envelope (`grade` to `verified_by`) is computed by the same code
         that colours a pin on the map, so the two never disagree.
-      required: [id, letter, name, tier, grade, custody, confirmations, last_confirmed, last_seen_upstream, verified_by, region_id]
+      required: [id, letter, name, tier, grade, custody, confirmations, last_confirmed, last_seen_upstream, verified_by, region_id, kind]
       properties:
         id: { type: integer, example: 4512 }
         letter: { type: string, example: B }
@@ -702,6 +702,13 @@ components:
           type: [string, 'null']
           description: The slug of the region the item lies in (`/v1/regions/{id}`), or null.
           example: brussels
+        kind:
+          type: [string, 'null']
+          description: >-
+            The item's kind (see `/v1/catalog`, `kinds`), for letters that have one: `serviceKind` for D,
+            `type` for O, G, P and Q. A row without a stored kind gives the one its type label names.
+            Null for a letter without kinds. Draw the icon from it.
+          example: station
         osm: { $ref: '#/components/schemas/OsmSubset' }
 
     ItemFeature:
