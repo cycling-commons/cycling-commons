@@ -202,10 +202,15 @@ export function markStyleReady(){ _styleReady=true; }
 export function initCoordPopup(){
   let _coordPopup=null;
   map.on('contextmenu', e=>{
+    // After every other right-click handler: one that took the click (a place into the ride) marks it `ccTaken`.
+    // Not `defaultPrevented`: MapLibre cancels every right-click's default itself.
+    setTimeout(()=>{ if(!(e.originalEvent && e.originalEvent.ccTaken)) showCoords(e); }, 0);
+  });
+  function showCoords(e){
     const c = `${e.lngLat.lat.toFixed(6)}, ${e.lngLat.lng.toFixed(6)}`;
     if(!_coordPopup) _coordPopup=new maplibregl.Popup({closeButton:true,className:'pop'});
     const label=ok=>_coordPopup.setHTML(`<div class="pop"><div class="pop-co">Coordinates${ok?' · copied':' — select to copy'}</div>${c}</div>`);
     label(false); _coordPopup.setLngLat(e.lngLat).addTo(map);
     if(navigator.clipboard) navigator.clipboard.writeText(c).then(()=>label(true)).catch(()=>{});
-  });
+  }
 }

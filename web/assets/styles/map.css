@@ -822,7 +822,7 @@
      rule the toast and the tooltip follow. bottom clears the attribution strip
      (10px gutter plus up to three wrapped lines of .7rem mono), the same
      clearance as .zoom-hint, so the pill reads above the credits. */
-  .fpill{position:absolute;left:.75rem;bottom:7.6rem;z-index:1200;
+  .fpill{position:absolute;left:.75rem;bottom:9.2rem;z-index:1200;
     display:flex;align-items:center;gap:.6rem;background:var(--ink);color:var(--paper);
     padding:.3rem;border-radius:30px;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);
     font-size:.78rem;max-width:min(92vw,26rem)}
@@ -2024,10 +2024,15 @@
   .cc-plan-striptab[hidden]{display:none}
   .cc-plan-striptab:hover{border-color:var(--trail)}
   .cc-plan-strip-x:hover{background:rgb(var(--chrome-fg) / .12);color:var(--chrome-fg-solid)}
-  .map-wrap.cc-strip-on .cc-plan-bar{bottom:calc(140px + 1rem)}
-  /* the bug button sits on the strip, so the legend needs no gap for it here */
-  .map-wrap.cc-strip-on .legend{bottom:calc(140px + .6rem)}
-  .map-wrap.cc-strip-on .fpill{bottom:calc(140px + .6rem)}
+  /* The strip covers the map's foot, so the map's credits (OpenStreetMap, the elevation notice, the
+     imagery provider) and the zoom buttons sit on top of it, never under it (owner 2026-10-16: the legal
+     text was missing in the planner). What sat above them moves up with them: the ride bar and the
+     legend clear the credits line, the filter mark clears the zoom column. */
+  .map-wrap.cc-strip-on .maplibregl-ctrl-bottom-right,.map-wrap.cc-strip-on .maplibregl-ctrl-bottom-left{bottom:140px}
+  .map-wrap .maplibregl-ctrl-bottom-right,.map-wrap .maplibregl-ctrl-bottom-left{transition:bottom .3s ease}
+  .map-wrap.cc-strip-on .cc-plan-bar{bottom:calc(140px + 3.4rem)}
+  .map-wrap.cc-strip-on .legend{bottom:calc(140px + 3.4rem)}
+  .map-wrap.cc-strip-on .fpill{bottom:calc(140px + 9.2rem)}
   .cc-plan-fig-wide{grid-column:1 / -1}
   .cc-plan-fig-wide span em{font-style:normal;text-transform:none;letter-spacing:0;color:rgb(var(--chrome-fg) / .8)}
   /* the day: the time bar, the date, what makes it tougher (route-planner.md section 4.4) */

@@ -34,7 +34,11 @@ test('a pin drawn on the page offers itself on a right-click or a command-click'
 });
 
 test('a coverage icon offers itself the same way', () => {
-  assert.match(coverage, /map\.on\('contextmenu', e=>\{ const f0=covHit\(e\); if\(!f0\) return;/);
+  assert.match(coverage, /map\.on\('contextmenu', e=>\{ const f0=covHit\(e, 10\); if\(!f0\) return;/, 'a right-click on the tip of a drop misses the pin');
+  assert.match(coverage, /const at=pad \? \[\[e\.point\.x-pad, e\.point\.y-pad\], \[e\.point\.x\+pad, e\.point\.y\+pad\]\] : e\.point;/);
+  // The coordinates popup gives way to a right-click the planner took (owner 2026-10-16).
+  assert.match(read('assets/map/map-init.js'), /setTimeout\(\(\)=>\{ if\(!\(e\.originalEvent && e\.originalEvent\.ccTaken\)\) showCoords\(e\); \}, 0\);/, 'MapLibre cancels every right-click itself, so only our own mark says the planner took it');
+  assert.match(coverage, /e\.originalEvent\.preventDefault\(\); e\.originalEvent\.ccTaken = true;/);
   assert.match(coverage, /if\(e\.originalEvent && e\.originalEvent\.metaKey && offerToRide\(coveragePlace\(f0\)\)\) return;/,
     'a command-click on an icon adds it instead of opening the drawer');
 });

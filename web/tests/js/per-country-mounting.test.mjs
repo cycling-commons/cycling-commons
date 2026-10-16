@@ -33,7 +33,8 @@ test('one coverage handler set, bound once, acting on the first rendered hit', (
   assert.doesNotMatch(coverage, /map\.on\('(click|mousemove|mouseenter|mouseleave)',\s*ids/);
   const layers = body(coverage, 'function addCoverageLayers(cc, src){');
   assert.doesNotMatch(layers, /bindCoverageHandlers/);
-  assert.match(coverage, /queryRenderedFeatures\(e\.point,\s*\{layers/);
+  // The pointer, or a small box round it for a right-click (owner 2026-10-16).
+  assert.match(coverage, /queryRenderedFeatures\(at,\s*\{layers/);
   const add = body(coverage, 'export function addCoverage(){');
   assert.match(add, /bindCoverageHandlers\(\);/);
 });

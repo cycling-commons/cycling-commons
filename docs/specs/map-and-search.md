@@ -342,7 +342,8 @@ map module opens `#drawer` behind its back.
   orange **"!"** mark (owner 2026-10-15): hover or focus opens it, a click on
   the mark keeps it open, and the next click folds it back into the "!"
   (`#fpillMark`, `aria-expanded`; `filter-pill-mark.test.cjs`). It sits at
-  the map's left edge above the zoom buttons (7.6rem up), and just above the
+  the map's left edge above the zoom buttons and their zoom-level badge (9.2rem
+  up; owner 2026-10-16: at 7.6rem it sat on the badge), and just above the
   ride's profile strip while that is open, opening to the right (owner
   2026-10-15: centred, it covered the strip). The Plan icon wears the
   same dot while a stop of a ride is on the map

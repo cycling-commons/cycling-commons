@@ -109,7 +109,7 @@ test('the ride line lies over every other line layer and under the icons (owner 
 
 test('with the profile strip open, the surface legend sits just above it, not a bug-button gap higher (owner 2026-10-15)', () => {
   const css = read('assets/styles/map.css');
-  assert.match(css, /\.map-wrap\.cc-strip-on \.legend\{bottom:calc\(140px \+ \.6rem\)\}/);
+  assert.match(css, /\.map-wrap\.cc-strip-on \.legend\{bottom:calc\(140px \+ 3\.4rem\)\}/, 'the legend does not clear the credits line on the strip');
 });
 
 test('the surface legend is compact vertically (owner 2026-10-15)', () => {

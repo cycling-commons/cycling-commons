@@ -120,10 +120,13 @@ const iconLayerKey=new Map();
 const COV_SEL_LAYER='cov-sel-icon';
 /* The coverage icon under the pointer: the top-most hit across every mounted
    icon layer, or null. */
-function covHit(e){
+function covHit(e, pad){
   const layers=[...iconLayerKey.keys()].filter(id=>map.getLayer(id));
   if(!layers.length) return null;
-  const hits=map.queryRenderedFeatures(e.point, {layers});
+  // A right-click searches a few pixels round the pointer (owner 2026-10-16): the tip of a drop is narrow, and a
+  // click on it fell through to the coordinates popup.
+  const at=pad ? [[e.point.x-pad, e.point.y-pad], [e.point.x+pad, e.point.y+pad]] : e.point;
+  const hits=map.queryRenderedFeatures(at, {layers});
   return hits.length ? hits[0] : null;
 }
 /* One handler set for every icon layer of every country, bound once. It acts
@@ -139,8 +142,10 @@ function coveragePlace(f0){
 function bindCoverageHandlers(){
   const leave=()=>{ if(!covHovered) return; covHovered=false; map.getCanvas().style.cursor=''; hideTip(); };
   // While a ride is planned, a right-click or a command-click puts the place in the ride, or takes it out (route-planner.md section 4.3).
-  map.on('contextmenu', e=>{ const f0=covHit(e); if(!f0) return;
-    if(offerToRide(coveragePlace(f0)) && e.originalEvent) e.originalEvent.preventDefault(); });
+  map.on('contextmenu', e=>{ const f0=covHit(e, 10); if(!f0) return;
+    // Taken: the browser's menu stays shut and the coordinates popup is told (map-init.js), by a mark of our own,
+    // because MapLibre cancels every right-click's default itself.
+    if(offerToRide(coveragePlace(f0)) && e.originalEvent){ e.originalEvent.preventDefault(); e.originalEvent.ccTaken = true; } });
   map.on('click', e=>{ const f0=covHit(e); if(!f0) return;
     if(e.originalEvent && e.originalEvent.metaKey && offerToRide(coveragePlace(f0))) return;
     const tp=f0.properties, c=f0.geometry.coordinates;

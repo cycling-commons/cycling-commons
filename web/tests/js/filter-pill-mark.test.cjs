@@ -30,7 +30,10 @@ test('a click on the mark opens the pill, the next click folds it again', () => 
 });
 
 test('the ! sits at the left edge above the zoom buttons, and above the profile strip when it is open (owner 2026-10-15)', () => {
-  assert.match(css, /\.fpill\{position:absolute;left:\.75rem;bottom:7\.6rem;z-index:1200;/);
-  assert.match(css, /\.map-wrap\.cc-strip-on \.fpill\{bottom:calc\(140px \+ \.6rem\)\}/);
+  assert.match(css, /\.fpill\{position:absolute;left:\.75rem;bottom:9\.2rem;z-index:1200;/);
+  // Above the zoom column, which sits on the strip with the map's credits (owner 2026-10-16).
+  assert.match(css, /\.map-wrap\.cc-strip-on \.fpill\{bottom:calc\(140px \+ 9\.2rem\)\}/);
+  // Above the zoom-level badge too: the zoom column is 137 px tall with it (owner 2026-10-16: the mark sat on the badge).
+  assert.match(css, /\.fpill\{position:absolute;left:\.75rem;bottom:9\.2rem;/);
   assert.ok(!/\.fpill\{[^}]*translateX\(-50%\)/.test(css), 'the pill is still centred');
 });
