@@ -1,0 +1,33 @@
+web/tests/Elevation/RouteSnapperTest.php
+  s_c707f1443f1405::t_4cc03272e23ba4 144-161
+web/src/Elevation/LegSurfaces.php
+  s_c707f1443f1405::t_c59abb04299ade 19-23,43-45,63-64,80,96-97,111-112,127-134,137,146
+web/src/Elevation/RouteSnapper.php
+  s_c707f1443f1405::t_12be1840164d09 19-21,42,60
+web/tests/Elevation/LegSurfacesTest.php
+  s_c707f1443f1405::t_84d4c2518f8d60 53-54,61-83
+  s_c707f1443f1405::t_945721f63edbd7 84-85
+wiki/developers/gis-beyond/routing.md
+  s_c707f1443f1405::t_2e6754e9ab4b20 148,156-160
+web/src/Controller/PlanController.php
+  s_c707f1443f1405::t_12be1840164d09 89-90
+web/tests/Controller/PlanControllerTest.php
+  s_c707f1443f1405::t_072db796571613 144
+  s_c707f1443f1405::t_4cc03272e23ba4 148-177
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e4283110bff5d6466afb8a4868b50e52f97d55db",
+  "prompts": {},
+  "sessions": {
+    "s_c707f1443f1405": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f6b21b1b-dfdf-4cfe-8fa1-eda87e9640b3",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
