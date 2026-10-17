@@ -1,0 +1,25 @@
+web/src/Links/Command/CheckWebsitesCommand.php
+  s_123df5f50d8dd2::t_b6f2fc99a77b8f 21-22
+web/src/Controller/MapPresetController.php
+  s_123df5f50d8dd2::t_d6985c02759e7d 28-29
+web/src/Elevation/LegSurfaces.php
+  s_123df5f50d8dd2::t_da5a52fd6f657b 146-149
+web/src/EventSubscriber/SignedOutMarkSubscriber.php
+  s_123df5f50d8dd2::t_22bc71a3250636 29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "49de9f1a55aba9538646a09ec05c250e4fd75de5",
+  "prompts": {},
+  "sessions": {
+    "s_123df5f50d8dd2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "85fbaa43-da21-4c2f-b88d-163d1042aba8",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
