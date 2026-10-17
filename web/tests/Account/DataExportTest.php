@@ -37,7 +37,6 @@ use Symfony\Component\Uid\Uuid;
  */
 final class DataExportTest extends WebTestCase
 {
-
     private const string PASSWORD = 'securepass12345!';
 
     /**

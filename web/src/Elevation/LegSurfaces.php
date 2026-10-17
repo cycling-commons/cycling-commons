@@ -61,7 +61,7 @@ final class LegSurfaces
      * @param list<array{0: float, 1: float}> $coords [lat, lng] pairs, the routed line
      *
      * @return array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, signals: int}|null metres per class, on busy
-     *                                                                                                              roads and on cycle paths, and the traffic lights passed
+     *                                                                                                            roads and on cycle paths, and the traffic lights passed
      */
     public function along(array $coords): ?array
     {

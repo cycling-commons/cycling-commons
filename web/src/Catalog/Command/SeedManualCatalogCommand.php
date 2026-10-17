@@ -6,13 +6,13 @@ declare(strict_types=1);
 
 namespace App\Catalog\Command;
 
-use App\Catalog\ServiceKind;
 use App\Catalog\ClimbFoot;
 use App\Catalog\Import\AttributeVocabulary;
 use App\Catalog\Import\DuplicateGuard;
 use App\Catalog\Import\ItemUpsert;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemType;
+use App\Catalog\ServiceKind;
 use App\Media\Commons\CommonsFile;
 use App\Media\PhotoPlace;
 use App\Media\PhotoValidator;
