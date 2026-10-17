@@ -18,6 +18,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * `app:websites:check` (docs/specs/website-liveness.md section 2): the sweep
  * over the website hosts that are due, on the worker, daily within a limit
  * and after each coverage harvest.
+ *
+ * @api
  */
 #[AsCommand(name: 'app:websites:check', description: 'Check the websites behind coverage points and items: live, parked, dead or unknown')]
 final class CheckWebsitesCommand extends Command

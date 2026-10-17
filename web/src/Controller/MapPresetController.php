@@ -25,6 +25,8 @@ use Symfony\Component\Routing\Attribute\Route;
  * stateless-JSON pattern (security-architecture.md section 5.1): a clean 401
  * for a visitor, a stateless `X-CC-Token` on every write, the shape checked
  * before the budget is spent.
+ *
+ * @api
  */
 final class MapPresetController extends AbstractController
 {

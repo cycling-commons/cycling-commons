@@ -143,6 +143,9 @@ final class LegSurfaces
             $at += $length;
         }
 
-        return ['surfaces' => [...array_map(static fn (float $m): int => (int) round($m), $metres), 'signals' => $signals], 'streets' => $streets];
+        $surfaces = array_map(static fn (float $m): int => (int) round($m), $metres);
+        $surfaces['signals'] = $signals;
+
+        return ['surfaces' => $surfaces, 'streets' => $streets];
     }
 }

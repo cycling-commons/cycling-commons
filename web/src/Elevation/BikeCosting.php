@@ -23,10 +23,6 @@ use App\Catalog\BikeType;
  */
 final class BikeCosting
 {
-    private function __construct()
-    {
-    }
-
     /** @return array<string, float|string> */
     public static function options(BikeType $bike): array
     {

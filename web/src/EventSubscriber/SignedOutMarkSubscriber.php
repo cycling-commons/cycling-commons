@@ -26,6 +26,7 @@ final readonly class SignedOutMarkSubscriber implements EventSubscriberInterface
 {
     public const string MARK = 'signed-out';
 
+    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [LogoutEvent::class => ['onLogout', -64]];
