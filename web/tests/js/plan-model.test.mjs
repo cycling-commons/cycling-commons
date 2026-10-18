@@ -5,9 +5,12 @@
 // figures, the profile bins, and the GPX writer. A leaf: no map, no DOM.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const HEIGHTS = JSON.parse(readFileSync(new URL('./fixtures/plan-heights.json', import.meta.url), 'utf8'));
 import {
-  MAX_STOPS, WORK_KEEP_MS, workFresh, rideFromGpx, simplifyTrack, SHAPE_M, thinLine, ALONG_MAX_POINTS, waterGapSpan, bestWaterStop, legGoesRound, whyThisWay, sliceAlong, stopIndexAt, stopRows, stopKey, legKeys, nearLine, insertIndex, figures, profileRuns, pointAt, gpxText, barText, createHistory, tickStepKm, surfaceMix,
+  MAX_STOPS, WORK_KEEP_MS, workFresh, rideFromGpx, simplifyTrack, SHAPE_M, thinLine, ALONG_MAX_POINTS, waterGapSpan, bestWaterStop, legGoesRound, whyThisWay, sliceAlong, stopIndexAt, stopRows, stopKey, legKeys, nearLine, insertIndex, figures, cleanHeights, HEIGHT_NOISE_M, profileRuns, pointAt, gpxText, barText, createHistory, tickStepKm, surfaceMix,
   PACE, flatSpeed, rideTime, surfaceBars, gradientBars, roundedHm, steepestKm, longestClimb, waterGap, sunTimes, windShares,
+  durationText, TOUGHER, tougherLines, forecastPageUrl, FORECAST, forecastPoint, heightTicks,
 } from '../../assets/map/plan-model.js';
 
 // A straight 2 km leg east along lat 50.4 (0.001 deg lng is about 71 m), 30 m samples.
@@ -71,6 +74,29 @@ test('figures: distance is the routed legs, climbed and descended come from smoo
   assert.equal(f.distM, 600);
   assert.ok(Math.abs(f.upM - 100) < 7, `up ${f.upM}`);
   assert.ok(Math.abs(f.downM - 100) < 7, `down ${f.downM}`);
+});
+
+test('a flat polder climbs tens of metres, not hundreds, and is ridden flat', () => {
+  // Real legs around Hoorn (fixtures/plan-heights.json): whole metres between -4 and 6 over 53 km.
+  const legs = HEIGHTS.polder.map(l => ({ routed: true, line: [], ...l }));
+  const f = figures(legs);
+  assert.ok(f.upM < 60, `polder climbed ${Math.round(f.upM)} m, the old rule said 245`);
+  const t = rideTime(legs, 'Road');
+  assert.ok(t.parts.climb < 5 * 60, `polder climbing ${Math.round(t.parts.climb)} s`);
+});
+
+test('hills keep most of their climbing through the noise rule', () => {
+  // Real legs Stavelot-Spa (fixtures/plan-heights.json): the old rule said 1159 m.
+  const f = figures(HEIGHTS.ardennes.map(l => ({ routed: true, line: [], ...l })));
+  assert.ok(f.upM > 900 && f.upM < 1100, `ardennes climbed ${Math.round(f.upM)} m`);
+});
+
+test('a bump under the noise threshold is not climbed, one over it is', () => {
+  const bump = rise => [10, 10, 10, 10 + rise, 10 + rise, 10 + rise, 10, 10, 10].map((h, i) => [i * 30, h]);
+  assert.equal(HEIGHT_NOISE_M, 3);
+  assert.equal(figures([{ routed: true, line: [], distM: 240, heights: bump(2) }]).upM, 0);
+  assert.ok(figures([{ routed: true, line: [], distM: 240, heights: bump(8) }]).upM >= 5);
+  assert.equal(cleanHeights(bump(2)).length, 9);
 });
 
 test('a leg without heights leaves a gap in the profile and counts no climbing', () => {
@@ -758,4 +784,270 @@ test('the best water stop carries whether it is food and whether its water is dr
   assert.equal(best.name, 'Koning');
   assert.equal(best.food, true);
   assert.equal(best.potable, null);
+});
+
+/* ---------- durations and what makes it tougher (route-planner.md section 4.4) ---------- */
+const EN = { hm: '{h}h {m}m', h: '{h}h', min: '{m}m' };
+const FR = { hm: '{h} h {m} min', h: '{h} h', min: '{m} min' };
+
+test('a duration reads "3h 50m", "50m" under an hour and "3h" on the hour, in the page\'s words', () => {
+  assert.equal(durationText(3 * 3600 + 50 * 60, EN, 5), '3h 50m');
+  assert.equal(durationText(3 * 3600 + 52 * 60, EN, 5), '3h 50m', 'the riding time rounds to five minutes');
+  assert.equal(durationText(50 * 60, EN, 5), '50m');
+  assert.equal(durationText(3 * 3600 + 60, EN, 5), '3h');
+  assert.equal(durationText(3 * 3600 + 5 * 60, EN, 5), '3h 5m', 'the minutes are not padded');
+  assert.equal(durationText(3 * 3600 + 50 * 60, FR, 5), '3 h 50 min');
+  assert.equal(durationText(50 * 60, FR, 5), '50 min');
+  assert.equal(durationText(59 * 60 + 40, EN, 1), '1h', '59.7 minutes is an hour, never "0h 60m" or "60m"');
+  assert.equal(durationText(3600 + 59 * 60 + 50, EN, 1), '2h');
+  assert.equal(durationText(3600 + 7 * 60, EN, 1), '1h 7m');
+  assert.equal(durationText(3 * 3600 + 50 * 60, {}, 5), '3h 50m', 'without words it falls back to English');
+  // The daylight reads in the same words, to the minute (owner 2026-10-17).
+  assert.equal(durationText(10 * 3600 + 32 * 60, EN, 1), '10h 32m');
+  assert.equal(durationText(10 * 3600 + 32 * 60, FR, 1), '10 h 32 min');
+  assert.equal(durationText(10 * 3600 + 32 * 60, { hm: '{h} Std. {m} Min.' }, 1), '10 Std. 32 Min.');
+});
+
+// An ordinary ride: under every baseline, so nothing out of the ordinary.
+const ordinary = () => ({
+  distM: 60000, steep: { grad: 5, atKm: 12 }, climb: { km: 2, upM: 120, grad: 6 }, roughM: 1000, waterKm: 23, busyM: 2000,
+  sun: { daylightS: 10 * 3600 + 32 * 60, sunrise: new Date(0), sunset: new Date(0) }, rideS: 3 * 3600 + 50 * 60,
+  forecast: { date: '2026-10-17', windKmh: 22, gustKmh: 40, windFromDeg: 0, tempMaxC: 16, rainMm: 0.4 },
+});
+const kinds = o => tougherLines(o).map(x => x.kind);
+
+test('an ordinary ride, every factor under its baseline, is nothing out of the ordinary', () => {
+  assert.deepEqual(kinds(ordinary()), []);
+  assert.deepEqual(kinds({}), [], 'no figures, no lines');
+  // The owner's 17 October ride: 23 km dry, daylight 10h 32m for 3h 50m, 22 km/h of wind; only its 4 mm of rain stays.
+  assert.deepEqual(kinds(Object.assign(ordinary(), { forecast: { ...ordinary().forecast, gustKmh: null, rainMm: 4 } })), ['rain']);
+});
+
+test('each factor gets its line only past its baseline', () => {
+  const at = (patch) => kinds(Object.assign(ordinary(), patch));
+  assert.deepEqual(at({ distM: 100000 }), [], '100 km is not longer than 100 km');
+  assert.deepEqual(at({ distM: 100100 }), ['long']);
+  assert.deepEqual(at({ steep: { grad: 7.9, atKm: 3 } }), []);
+  assert.deepEqual(at({ steep: { grad: 8, atKm: 3 } }), ['steep']);
+  assert.deepEqual(at({ steep: null }), []);
+  assert.deepEqual(at({ climb: { km: 4.9, upM: 299, grad: 6 } }), []);
+  assert.deepEqual(at({ climb: { km: 5, upM: 150, grad: 3 } }), ['climb'], 'a 5 km climb counts');
+  assert.deepEqual(at({ climb: { km: 3, upM: 300, grad: 10 } }), ['climb'], 'so does 300 m up');
+  assert.deepEqual(at({ roughM: 4999 }), []);
+  assert.deepEqual(at({ roughM: 5000 }), ['rough']);
+  assert.deepEqual(at({ waterKm: 40 }), [], '40 km is not longer than 40 km');
+  assert.deepEqual(at({ waterKm: 40.1 }), ['water']);
+  assert.deepEqual(at({ waterKm: null }), [], 'a capped list gives no water line');
+  assert.deepEqual(at({ busyM: 4999 }), []);
+  assert.deepEqual(at({ busyM: 5000 }), ['busy']);
+  assert.deepEqual(at({ forecast: { ...ordinary().forecast, windKmh: 29.9 } }), []);
+  assert.deepEqual(at({ forecast: { ...ordinary().forecast, windKmh: 30 } }), ['wind']);
+  assert.deepEqual(at({ forecast: { ...ordinary().forecast, gustKmh: 49.9 } }), []);
+  assert.deepEqual(at({ forecast: { ...ordinary().forecast, gustKmh: 50 } }), ['wind'], 'gusts alone bring the wind line');
+  assert.deepEqual(at({ forecast: { ...ordinary().forecast, gustKmh: null, windKmh: 25 } }), [], 'no gusts in the answer, the speed decides');
+  assert.deepEqual(at({ forecast: { ...ordinary().forecast, tempMaxC: 29.9 } }), []);
+  assert.deepEqual(at({ forecast: { ...ordinary().forecast, tempMaxC: 30 } }), ['heat']);
+  assert.deepEqual(at({ forecast: { ...ordinary().forecast, rainMm: 0.9 } }), []);
+  assert.deepEqual(at({ forecast: { ...ordinary().forecast, rainMm: 1 } }), ['rain']);
+  assert.deepEqual(at({ forecast: null }), []);
+});
+
+test('daylight: shown when the ride does not fit with an hour to spare, or the day is under 10 hours', () => {
+  const sun = s => ({ daylightS: s, sunrise: new Date(0), sunset: new Date(0) });
+  const day = (daylightS, rideS) => tougherLines(Object.assign(ordinary(), { sun: sun(daylightS), rideS })).find(x => x.kind === 'daylight') || null;
+  assert.equal(day(11 * 3600, 10 * 3600), null, 'exactly an hour to spare fits');
+  assert.equal(day(11 * 3600, 10 * 3600 + 60).over, 'tight');
+  assert.equal(day(11 * 3600, 11 * 3600 + 60).over, 'over');
+  assert.equal(day(10 * 3600, 3 * 3600), null, '10 hours of daylight is not short');
+  const winter = day(10 * 3600 - 60, 3 * 3600);
+  assert.ok(winter && winter.over === null, 'under 10 hours shows the daylight, without a spare-time line');
+});
+
+test('the lines come in the panel\'s order, with what each line says', () => {
+  const all = tougherLines({
+    distM: 120000, steep: { grad: 11, atKm: 31 }, climb: { km: 6.2, upM: 410, grad: 6.6 }, roughM: 7000, waterKm: 45, busyM: 6000,
+    sun: { daylightS: 9 * 3600, sunrise: new Date(0), sunset: new Date(0) }, rideS: 8.5 * 3600,
+    forecast: { date: '2026-10-17', windKmh: 35, gustKmh: 62, windFromDeg: 225, tempMaxC: 31, rainMm: 6 },
+  });
+  assert.deepEqual(all.map(x => x.kind), ['long', 'steep', 'climb', 'rough', 'water', 'busy', 'daylight', 'wind', 'heat', 'rain']);
+  assert.deepEqual(all.find(x => x.kind === 'wind'), { kind: 'wind', windKmh: 35, gustKmh: 62, fromDeg: 225 });
+  assert.equal(all.find(x => x.kind === 'daylight').over, 'tight');
+  assert.equal(TOUGHER.longKm, 100);
+  assert.equal(TOUGHER.windKmh, 30);
+});
+
+test('the forecast credit links Open-Meteo\'s page for the rounded point the server asked for, and that day', () => {
+  const url = forecastPageUrl({ date: '2026-10-17', lat: 50.5, lng: 5.9 });
+  assert.ok(url.startsWith('https://open-meteo.com/en/docs?latitude=50.5&longitude=5.9&start_date=2026-10-17&end_date=2026-10-17&'), url);
+  assert.match(url, /&timezone=auto$/);
+  assert.equal(forecastPageUrl({ date: '2026-10-17', lat: -0.1, lng: 120 }).includes('latitude=-0.1&longitude=120.0'), true);
+  assert.equal(forecastPageUrl({ date: '2026-10-17' }), null, 'no rounded point, no link');
+  assert.equal(forecastPageUrl(null), null);
+});
+
+// Forecast point (route-planner.md section 4.4). At lat 50.4, 10 km is 0.1408 deg of longitude and 0.0905 deg of latitude.
+const leg10 = (from, to) => ({ routed: true, line: [from, to], distM: 10000 });
+const HOME = [5.80, 50.4], EAST = [5.80 + 0.1408, 50.4], NORTH = [5.80, 50.4 + 0.0905];
+
+test('a ride under 20 km asks no forecast', () => {
+  assert.equal(FORECAST.minRideKm, 20);
+  assert.equal(forecastPoint([{ ...leg10(HOME, EAST), distM: 19999 }]), null);
+  assert.equal(forecastPoint([]), null);
+});
+
+test('a straight ride asks at its middle, rounded to a tenth of a degree', () => {
+  const far = [5.80 + 0.5634, 50.4];               // 40 km east
+  assert.deepEqual(forecastPoint([{ routed: true, line: [HOME, far], distM: 40000 }]), [6.1, 50.4]);
+});
+
+test('an out-and-back asks at the turn, far from home', () => {
+  assert.deepEqual(forecastPoint([leg10(HOME, EAST), leg10(EAST, HOME)]), [5.9, 50.4]);
+});
+
+test('a loop that passes home halfway asks in its middle third, away from home', () => {
+  // East and back, then north and back: the halfway point is home itself.
+  const legs = [leg10(HOME, EAST), leg10(EAST, HOME), leg10(HOME, NORTH), leg10(NORTH, HOME)];
+  const at = forecastPoint(legs);
+  assert.notEqual(at, null);
+  assert.notDeepEqual(at, [5.8, 50.4], 'never the cell of the start');
+  // About 6.7 km out on either arm, the farthest the middle third gets from home.
+  assert.ok([[5.9, 50.4], [5.8, 50.5]].some(c => c[0] === at[0] && c[1] === at[1]), String(at));
+});
+
+test('laps of a short circuit near home ask nothing', () => {
+  const lap = [5.80 + 0.0141, 50.4];                // 1 km out, 1 km back, twelve times: 24 km
+  const legs = [];
+  for(let i = 0; i < 12; i++) legs.push({ routed: true, line: [HOME, lap], distM: 1000 }, { routed: true, line: [lap, HOME], distM: 1000 });
+  assert.equal(forecastPoint(legs), null);
+});
+
+test("the height scale takes round steps in the rider's unit, about four lines", () => {
+  assert.deepEqual(heightTicks(-2, 58), [0, 20, 40]);          // near Hoorn, metres
+  assert.deepEqual(heightTicks(210, 480), [250, 300, 350, 400, 450]);
+  assert.deepEqual(heightTicks(0, 3500, 4), [0, 1000, 2000, 3000]);
+  assert.deepEqual(heightTicks(656, 1312), [800, 1000, 1200]);   // the same 200 to 400 m, in feet
+  assert.deepEqual(heightTicks(5, 5), []);
+});
+
+import { coverPadding } from '../../assets/map/plan-model.js';
+test('a fitted ride keeps clear of the key in its corner and the strip at the foot, and of nothing else', () => {
+  const box = { left: 360, top: 0, right: 2000, bottom: 1350 };
+  const pad = coverPadding(box, [
+    { left: 1720, top: 860, right: 1990, bottom: 1300 },   // the key, bottom right: cheaper on the right
+    { left: 360, top: 1355, right: 2000, bottom: 1490 },  // the strip, below the map box: covers nothing
+    { left: 370, top: 10, right: 600, bottom: 100 },      // the area card, top left: cheaper on top
+    { left: 0, top: 0, right: 355, bottom: 1490 },        // the drawer beside the map, not over it
+  ], 30);
+  assert.equal(pad.right, 2000 - 1720 + 30);
+  assert.equal(pad.top, 100 + 30);
+  assert.equal(pad.left, 30, 'the drawer beside the map takes no room from the ride');
+  assert.equal(pad.bottom, 30);
+});
+test('a drawer over the map pushes the ride right, and a small map keeps half of itself', () => {
+  const box = { left: 0, top: 0, right: 1000, bottom: 800 };
+  assert.equal(coverPadding(box, [{ left: 0, top: 0, right: 380, bottom: 800 }], 30).left, 410);
+  const tight = coverPadding({ left: 0, top: 0, right: 400, bottom: 800 }, [{ left: 0, top: 0, right: 380, bottom: 800 }], 30);
+  assert.ok(tight.left + tight.right <= 200 + 1e-9, `kept ${400 - tight.left - tight.right} px`);
+});
+
+import { rideHours, defaultStartMin, tougherLines as tougherAt } from '../../assets/map/plan-model.js';
+test('the forecast reads the hours ridden: highest wind and gust, rain summed, wind direction by speed', () => {
+  const hours = Array.from({ length: 24 }, (_, h) => ({ windKmh: h === 10 ? 40 : 10, gustKmh: h === 18 ? 70 : 20, fromDeg: h === 10 ? 90 : 0, tempC: 10 + h / 2, rainMm: h >= 9 && h <= 11 ? 0.5 : 0 }));
+  const fc = { date: '2026-10-18', windKmh: 40, gustKmh: 70, windFromDeg: 0, tempMaxC: 21.5, rainMm: 1.5, hours };
+  const w = rideHours(fc, 9 * 60, 2.5 * 3600);   // 09:00 to 11:30
+  assert.equal(w.fromH, 9); assert.equal(w.toH, 11);
+  assert.equal(w.windKmh, 40, 'the 10:00 hour is ridden');
+  assert.equal(w.gustKmh, 20, 'the 18:00 gust is not');
+  assert.equal(w.rainMm, 1.5);
+  assert.equal(w.tempMaxC, 15.5);
+  assert.ok(w.windFromDeg > 45 && w.windFromDeg < 90, `the strong east wind weighs most: ${w.windFromDeg}`);
+  assert.equal(rideHours({ ...fc, hours: null }, 540, 3600).windKmh, 40, 'without hours the day stands');
+  assert.equal(rideHours(fc, 23 * 60, 4 * 3600).toH, 23, 'past midnight reads to the last hour');
+});
+test('the start offered is 09:00, or the next half hour later today, never past 22:00', () => {
+  assert.equal(defaultStartMin(null), 540);
+  assert.equal(defaultStartMin(7 * 60), 540);
+  assert.equal(defaultStartMin(13 * 60 + 39), 14 * 60);
+  assert.equal(defaultStartMin(14 * 60), 14 * 60 + 30);
+  assert.equal(defaultStartMin(23 * 60), 22 * 60);
+});
+test('with a start time, the daylight line says the rider starts or finishes in the dark', () => {
+  const sun = { sunrise: new Date('2026-10-18T06:12:00Z'), sunset: new Date('2026-10-18T16:52:00Z'), daylightS: 38400 };
+  const at = iso => tougherAt({ distM: 0, roughM: 0, busyM: 0, sun, rideS: 3 * 3600, startAt: new Date(iso) }).find(x => x.kind === 'daylight');
+  assert.equal(at('2026-10-18T05:30:00Z').over, 'darkStart');
+  assert.equal(at('2026-10-18T14:30:00Z').over, 'darkEnd');
+  assert.equal(at('2026-10-18T13:30:00Z').over, 'tight');
+  assert.equal(at('2026-10-18T09:00:00Z'), undefined, 'a ride well inside the day of 10h 40m says nothing');
+});
+
+import { gradientSpans, surfaceSpans } from '../../assets/map/plan-model.js';
+test('the stats light their stretches: a climb in the middle of a flat leg, and the surface runs with the map reading winning', () => {
+  // 3 km flat, 1 km at 6 %, 3 km flat, sampled every 30 m.
+  const heights = Array.from({ length: 234 }, (_, i) => { const d = i * 30; return [d, d < 3000 ? 10 : d < 4000 ? 10 + (d - 3000) * 0.06 : 70]; });
+  const leg = { routed: true, line: [], distM: 233 * 30, heights, runs: [[0, 'paved'], [2000, 'gravel'], [2500, 'paved']] };
+  const climb = gradientSpans([leg], 'climb');
+  assert.equal(climb.length, 1);
+  assert.ok(Math.abs(climb[0][0] - 3000) < 100 && Math.abs(climb[0][1] - 4000) < 100, `climb ${climb[0]}`);
+  assert.equal(gradientSpans([leg], 'descend').length, 0);
+  assert.deepEqual(surfaceSpans([leg], 'gravel', () => null, 50), [[2000, 2500]]);
+  // The map's own line read gravel at the sample of 5000-5050 m: that reading wins over the engine's paved.
+  assert.deepEqual(surfaceSpans([leg], 'gravel', () => new Map([[100, 'gravel']]), 50), [[2000, 2500], [5000, 5050]]);
+  assert.deepEqual(surfaceSpans([{ routed: true, line: [], distM: 1000, heights: null }], 'unknown', () => null, 50), [[0, 1000]], 'a leg without runs is unknown');
+});
+
+import { windSpans, windShares as sharesOf } from '../../assets/map/plan-model.js';
+test('the wind stretches add up to the wind shares: north into a north wind, south with it', () => {
+  const north = { routed: true, distM: 1110, line: [[5.0, 52.00], [5.0, 52.01]] };
+  const south = { routed: true, distM: 1110, line: [[5.0, 52.01], [5.0, 52.00]] };
+  const into = windSpans([north, south], 0, 'into'), withW = windSpans([north, south], 0, 'with');
+  assert.equal(into.length, 1); assert.equal(withW.length, 1);
+  assert.ok(Math.abs(into[0][1] - 1110) < 1 && Math.abs(withW[0][0] - 1110) < 1, `into ${into} with ${withW}`);
+  const s = sharesOf([north, south], 0);
+  assert.ok(Math.abs(s.headM - (into[0][1] - into[0][0])) < 15);
+  assert.equal(windSpans([north, south], 0, 'side').length, 0);
+});
+
+import { windChillC, heatIndexC, rideFeel, tougherLines as linesOf, TOUGHER as BASE } from '../../assets/map/plan-model.js';
+test('wind chill and heat index follow the published tables, only inside their reach', () => {
+  assert.equal(Math.round(windChillC(0, 20)), -5, 'Environment Canada: 0 °C at 20 km/h feels like -5');
+  assert.equal(Math.round(windChillC(-10, 30)), -20);
+  assert.equal(windChillC(12, 30), 12, 'above 10 °C the air is the air');
+  assert.equal(Math.round(heatIndexC(32, 60)), 37, 'NOAA: 90 °F at 60 % is about 100 °F');
+  assert.equal(heatIndexC(25, 90), 25, 'below 27 °C the air is the air');
+});
+test('the hours ridden: coldest wind chill at riding pace into the wind, hottest heat index, first chance of ice', () => {
+  const base = { windKmh: 10, gustKmh: null, fromDeg: 0, tempC: 4, rainMm: 0, humidity: 80, dewC: 1, groundC: 3, snowCm: 0, code: 3 };
+  const hours = Array.from({ length: 24 }, () => ({ ...base }));
+  hours[7] = { ...base, tempC: 1, groundC: -0.5, rainMm: 0.3 };   // rain on a frozen ground
+  hours[9] = { ...base, tempC: 0, windKmh: 20 };
+  const f = rideFeel({ hours, fromH: 7, toH: 10 }, 25);
+  assert.equal(f.cold.hour, 9);
+  assert.equal(Math.round(f.cold.feelC), Math.round(windChillC(0, 45)), 'the wind plus the pace');
+  assert.deepEqual(f.ice, { hour: 7, why: 'frost' });
+  assert.equal(f.hot, null);
+  hours[8] = { ...base, code: 66 };
+  assert.deepEqual(rideFeel({ hours, fromH: 8, toH: 10 }, 25).ice, { hour: 8, why: 'freezing' }, 'freezing rain by its code');
+  const summer = Array.from({ length: 24 }, () => ({ ...base, tempC: 31, humidity: 65, dewC: 23, groundC: 30 }));
+  const hot = rideFeel({ hours: summer, fromH: 12, toH: 14 }, 25).hot;
+  assert.ok(hot.feelC >= BASE.heatFeelC, `31 °C at 65 % feels ${hot.feelC}`);
+  const lines = linesOf({ distM: 0, roughM: 0, busyM: 0, feel: { cold: { feelC: -4 }, ice: { hour: 7, why: 'frost' }, hot: null }, forecast: null });
+  assert.deepEqual(lines.map(x => x.kind), ['cold', 'ice']);
+});
+
+import { hourSpan } from '../../assets/map/plan-model.js';
+test('an hour of the day lies on the ride where the rider is then, at the average pace', () => {
+  // 09:00 start, 2 h riding, 60 km.
+  assert.deepEqual(hourSpan(540, 7200, 60000, 9), [0, 30000]);
+  assert.deepEqual(hourSpan(540, 7200, 60000, 10), [30000, 60000]);
+  assert.equal(hourSpan(540, 7200, 60000, 8), null, 'before the start');
+  assert.equal(hourSpan(540, 7200, 60000, 11), null, 'after the finish');
+  assert.deepEqual(hourSpan(570, 7200, 60000, 9), [0, 15000], 'a 09:30 start rides half of the 09:00 hour');
+});
+
+import { longestClimb as climbOf2 } from '../../assets/map/plan-model.js';
+test('the longest climb says where it starts', () => {
+  const heights = Array.from({ length: 234 }, (_, i) => { const d = i * 30; return [d, d < 3000 ? 10 : d < 5000 ? 10 + (d - 3000) * 0.05 : 110]; });
+  const c = climbOf2([{ routed: true, line: [], distM: 233 * 30, heights }]);
+  assert.ok(Math.abs(c.fromM - 3000) <= 100, `from ${c.fromM}`);
+  assert.ok(Math.abs(c.km - 2) < 0.2, `km ${c.km}`);
 });

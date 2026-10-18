@@ -60,11 +60,31 @@ export function insertIndex(stops, legs, place){
   return bestLeg + 1;
 }
 
-/* Climbed and descended, one rule for every ride (route-planner.md section
-   4.4): a three-sample moving average, then every rise and every drop. */
-function climbOf(heights){
+/** A rise or drop smaller than this, metres, is noise of the elevation model: whole-metre heights, trees and roofs
+    in a surface model (route-planner.md section 4.4). */
+export const HEIGHT_NOISE_M = 3;
+
+/** A leg's heights as the figures read them, one rule for every ride (route-planner.md section 4.4): a three-sample
+    moving average, then a height counts only once it is HEIGHT_NOISE_M or more from the last height that counted,
+    and the heights between two that count lie on the straight line from one to the other. One elevation per sample. */
+export function cleanHeights(heights){
   const h = heights.map(x => x[1]);
   const sm = h.map((v, i) => (h[Math.max(0, i - 1)] + v + h[Math.min(h.length - 1, i + 1)]) / 3);
+  const keep = [0];
+  for(let i = 1; i < sm.length; i++){ if(Math.abs(sm[i] - sm[keep[keep.length - 1]]) >= HEIGHT_NOISE_M) keep.push(i); }
+  if(keep[keep.length - 1] !== sm.length - 1) keep.push(sm.length - 1);
+  const out = new Array(sm.length);
+  for(let k = 1; k < keep.length; k++){
+    const a = keep[k - 1], b = keep[k], d0 = heights[a][0], span = heights[b][0] - d0;
+    for(let i = a; i <= b; i++) out[i] = sm[a] + (sm[b] - sm[a]) * (span > 0 ? (heights[i][0] - d0) / span : (i - a) / Math.max(1, b - a));
+  }
+  if(sm.length === 1) out[0] = sm[0];
+  return out;
+}
+
+/* Climbed and descended over the cleaned heights: every rise and every drop. */
+function climbOf(heights){
+  const sm = cleanHeights(heights);
   let up = 0, down = 0;
   for(let i = 1; i < sm.length; i++){ const d = sm[i] - sm[i - 1]; if(d > 0) up += d; else down -= d; }
   return { up, down };
@@ -376,6 +396,82 @@ export function surfaceMix(legs){
   return mix;
 }
 
+/** The padding that keeps a fitted ride clear of what covers the map (route-planner.md section 3): `box` is the map's
+    rectangle, `covers` the rectangles over it ({left, top, right, bottom}, page pixels), `gap` the margin on every side.
+    A cover counts on the edge it touches; one in a corner counts on the edge where it costs the smaller share of the map. */
+export function coverPadding(box, covers, gap){
+  const pad = { top: gap, right: gap, bottom: gap, left: gap };
+  const W = box.right - box.left, H = box.bottom - box.top, EDGE = 24;
+  if(!(W > 0) || !(H > 0)) return pad;
+  for(const c of covers || []){
+    if(!c || c.right <= box.left || c.left >= box.right || c.bottom <= box.top || c.top >= box.bottom) continue;
+    const opts = [];
+    if(c.left <= box.left + EDGE) opts.push(['left', c.right - box.left, (c.right - box.left) / W]);
+    if(c.right >= box.right - EDGE) opts.push(['right', box.right - c.left, (box.right - c.left) / W]);
+    if(c.top <= box.top + EDGE) opts.push(['top', c.bottom - box.top, (c.bottom - box.top) / H]);
+    if(c.bottom >= box.bottom - EDGE) opts.push(['bottom', box.bottom - c.top, (box.bottom - c.top) / H]);
+    if(!opts.length) continue;
+    opts.sort((a, b) => a[2] - b[2]);
+    const [side, px] = opts[0];
+    pad[side] = Math.max(pad[side], px + gap);
+  }
+  // A map too small for the padding keeps half of each axis for the ride.
+  if(pad.left + pad.right > W / 2){ const k = W / 2 / (pad.left + pad.right); pad.left *= k; pad.right *= k; }
+  if(pad.top + pad.bottom > H / 2){ const k = H / 2 / (pad.top + pad.bottom); pad.top *= k; pad.bottom *= k; }
+  return pad;
+}
+
+/* Overlapping or touching stretches, [fromM, toM], as one; short gaps under `joinM` closed. */
+function joinSpans(spans, joinM){
+  const out = [];
+  for(const s of spans.sort((a, b) => a[0] - b[0])){
+    const last = out[out.length - 1];
+    if(last && s[0] - last[1] <= joinM) last[1] = Math.max(last[1], s[1]); else out.push([s[0], s[1]]);
+  }
+  return out;
+}
+/** The stretches of the ride, [fromM, toM] in metres along it, ridden at a gradient class (route-planner.md section
+    4.4): `climb` steeper than 2 %, `descend` steeper than -2 %, `flat` between, over the cleaned heights as the day's
+    split reads them, so the stretches lit on the map are the minutes of the bar. */
+export function gradientSpans(legs, cls){
+  const spans = []; let off = 0;
+  for(const leg of legs){
+    if(!leg || !leg.routed) continue;
+    const hs = leg.heights;
+    if(!Array.isArray(hs) || hs.length < 2){ if(cls === 'flat') spans.push([off, off + (leg.distM || 0)]); off += leg.distM || 0; continue; }
+    const sm = cleanHeights(hs), sum = hs[hs.length - 1][0] - hs[0][0], k = sum > 0 ? leg.distM / sum : 1;
+    for(let i = 1; i < hs.length; i++){
+      const len = hs[i][0] - hs[i - 1][0]; if(!(len > 0)) continue;
+      const g = (sm[i] - sm[i - 1]) / len;
+      const c = g >= 0.02 ? 'climb' : g <= -0.02 ? 'descend' : 'flat';
+      if(c === cls) spans.push([off + (hs[i - 1][0] - hs[0][0]) * k, off + (hs[i][0] - hs[0][0]) * k]);
+    }
+    off += leg.distM || 0;
+  }
+  return joinSpans(spans, 1);
+}
+/** The stretches of the ride on a surface class (`paved`, `gravel`, `rough`, `unknown`), [fromM, toM] in metres along
+    it: the engine's runs of each leg ([start metre, class]), where the map's own surface line was read at a sample
+    (`seenOf(leg)`, sample index to class, every `sampleM`) that reading winning, as the day's split counts it. A leg
+    without runs is unknown. */
+export function surfaceSpans(legs, cls, seenOf, sampleM){
+  const spans = []; let off = 0;
+  for(const leg of legs){
+    if(!leg || !leg.routed) continue;
+    const runs = Array.isArray(leg.runs) && leg.runs.length ? leg.runs : [[0, 'unknown']];
+    const seen = (seenOf && seenOf(leg)) || new Map();
+    const runAt = d => { let c = runs[0][1]; for(const r of runs){ if(r[0] <= d) c = r[1]; else break; } return c; };
+    const step = sampleM || 50, n = Math.ceil((leg.distM || 0) / step);
+    for(let i = 0; i < n; i++){
+      const a = i * step, b = Math.min(leg.distM, a + step);
+      const c = seen.has(i) ? seen.get(i) : runAt(a + (b - a) / 2);
+      if(c === cls) spans.push([off + a, off + b]);
+    }
+    off += leg.distM || 0;
+  }
+  return joinSpans(spans, 1);
+}
+
 /** The distance axis's tick step in km: the largest of 1, 2, 5 and their tens at or under a tenth-and-a-half of the ride, so the axis keeps about ten ticks at any length. */
 export function tickStepKm(totalKm){
   const ladder = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
@@ -423,12 +519,11 @@ function sharesOf(leg){
   if(!(total > 0)) return { paved: 1, gravel: 0, rough: 0, unknown: 0 };
   return { paved: (s.paved || 0) / total, gravel: (s.gravel || 0) / total, rough: (s.rough || 0) / total, unknown: (s.unknown || 0) / total };
 }
-/* The steps of a leg as [metres, gradient]: the smoothed heights (the climbed rule's smoothing), scaled to the leg's length; a leg without heights is one flat step. */
+/* The steps of a leg as [metres, gradient]: the cleaned heights (the climbed rule's), scaled to the leg's length; a leg without heights is one flat step. */
 function stepsOf(leg){
   const hs = leg.heights;
   if(!Array.isArray(hs) || hs.length < 2) return [[leg.distM, 0]];
-  const h = hs.map(x => x[1]);
-  const sm = h.map((v, i) => (h[Math.max(0, i - 1)] + v + h[Math.min(h.length - 1, i + 1)]) / 3);
+  const sm = cleanHeights(hs);
   const steps = []; let sum = 0;
   for(let i = 1; i < hs.length; i++){ const len = hs[i][0] - hs[i - 1][0]; if(!(len > 0)) continue; steps.push([len, Math.max(-0.3, Math.min(0.3, (sm[i] - sm[i - 1]) / len))]); sum += len; }
   if(!steps.length || !(sum > 0)) return [[leg.distM, 0]];
@@ -475,6 +570,217 @@ export function surfaceBars(parts){ return barsOf(parts, ['paved', 'gravel', 'ro
 export function gradientBars(parts){ return barsOf(parts, ['climb', 'flat', 'descend']); }
 /** Seconds as hours and minutes, rounded to five minutes. */
 export function roundedHm(seconds){ const m = Math.round(seconds / 300) * 5; return { h: Math.floor(m / 60), m: m % 60 }; }
+/** Seconds as a duration in the page's words (route-planner.md section 4.4), to `stepMin` minutes: `words.hm` for
+    hours and minutes ("{h}h {m}m", "3h 50m"), `words.h` on the hour ("{h}h"), `words.min` under an hour ("{m}m").
+    The minutes are counted first, so 59.6 minutes is "1h", never "0h 60m". */
+export function durationText(seconds, words, stepMin = 1){
+  const w = words || {};
+  const total = Math.max(0, Math.round(seconds / 60 / stepMin) * stepMin), h = Math.floor(total / 60), m = total % 60;
+  const fill = (s, v) => String(s).replace(/\{(\w+)\}/g, (x, k) => (k in v ? String(v[k]) : x));
+  if(!h) return fill(w.min || '{m}m', { m });
+  if(!m) return fill(w.h || '{h}h', { h });
+  return fill(w.hm || '{h}h {m}m', { h, m });
+}
+
+/** What makes a ride tougher than an ordinary one (route-planner.md section 4.4): a factor gets its line in
+    the panel only from these. The one place the baselines are set. */
+export const TOUGHER = {
+  /** The ride is longer than this, km: a long day. */
+  longKm: 100,
+  /** The steepest kilometre averages this or more, percent. */
+  steepGrad: 8,
+  /** The longest climb is this long or more, km ... */
+  climbKm: 5,
+  /** ... or climbs this much or more, metres. */
+  climbUpM: 300,
+  /** This much or more on rough surface (cobbles, dirt and the like), km. */
+  roughKm: 5,
+  /** The longest stretch without water or food is longer than this, km. */
+  waterKm: 40,
+  /** This much or more on busy roads without a cycle lane, km. */
+  busyKm: 5,
+  /** The riding time plus this does not fit in the daylight, seconds: an hour to spare. */
+  daylightSpareS: 3600,
+  /** Daylight under this is short whatever the ride, seconds: 10 hours. */
+  daylightMinS: 10 * 3600,
+  /** The day's highest wind speed is this or more, km/h: Beaufort 5 and up ... */
+  windKmh: 30,
+  /** ... or its gusts reach this or more, km/h, when the forecast has them. */
+  gustKmh: 50,
+  /** The day's highest temperature is this or more, °C. */
+  heatC: 30,
+  /** The day's rain is this or more, mm. */
+  rainMm: 1,
+  /** The wind chill on the bike, riding into the wind, is this or colder, °C. */
+  coldFeelC: 0,
+  /** The heat with its humidity feels this hot or hotter, °C (NOAA's "extreme caution" from 32). */
+  heatFeelC: 32,
+};
+
+/** Below this the wind chill is read, °C: the formula's own reach (Environment Canada and the US weather service). */
+export const CHILL_FROM_C = 10;
+/** From this the heat with its humidity is read, °C: the heat index's own reach (about 80 °F). */
+export const HUMID_FROM_C = 27;
+/** The wind chill, °C, of air at `tC` moving past at `kmh` (the 2001 North American formula); the air itself outside
+    its reach (above 10 °C or under 4.8 km/h). */
+export function windChillC(tC, kmh){
+  if(!(tC <= CHILL_FROM_C) || !(kmh >= 4.8)) return tC;
+  const v = Math.pow(kmh, 0.16);
+  return 13.12 + 0.6215 * tC - 11.37 * v + 0.3965 * tC * v;
+}
+/** The heat index, °C, of air at `tC` with `rh` % humidity (NOAA's Rothfusz regression with its two adjustments); the
+    air itself below its reach. */
+export function heatIndexC(tC, rh){
+  if(!(tC >= HUMID_FROM_C) || !Number.isFinite(rh)) return tC;
+  const T = tC * 9 / 5 + 32, R = rh;
+  let hi = -42.379 + 2.04901523 * T + 10.14333127 * R - 0.22475541 * T * R - 0.00683783 * T * T - 0.05481717 * R * R
+    + 0.00122874 * T * T * R + 0.00085282 * T * R * R - 0.00000199 * T * T * R * R;
+  if(R < 13 && T >= 80 && T <= 112) hi -= (13 - R) / 4 * Math.sqrt((17 - Math.abs(T - 95)) / 17);
+  else if(R > 85 && T >= 80 && T <= 87) hi += (R - 85) / 10 * (87 - T) / 5;
+  return Math.max(tC, (hi - 32) * 5 / 9);
+}
+/* Weather codes of freezing drizzle or rain and of snow (WMO 4677, as Open-Meteo gives them). */
+const FREEZING_CODES = new Set([56, 57, 66, 67]), SNOW_CODES = new Set([71, 73, 75, 77, 85, 86]);
+/** How the hours ridden feel (route-planner.md section 4.4): `cold`, the coldest wind chill on the bike riding into
+    the wind (the wind plus `paceKmh`), with its hour, when an hour is at 10 °C or under; `hot`, the hottest heat index
+    with its humidity and hour, when an hour is at 27 °C or over and the humidity is known; `ice`, the first hour with a
+    chance of ice and why: freezing rain or drizzle, snow, or frost on a damp road (the ground at 0 °C or under, or the
+    air at 1 °C or under without a ground figure, with rain in that hour or the three before, or the air within 1 °C of
+    its dew point). Each null when it does not apply. Needs the forecast's hours, from rideHours(). */
+export function rideFeel(fc, paceKmh){
+  const out = { cold: null, hot: null, ice: null };
+  if(!fc || !Array.isArray(fc.hours) || !Number.isFinite(fc.fromH) || !Number.isFinite(fc.toH)) return out;
+  for(let h = fc.fromH; h <= fc.toH; h++){
+    const x = fc.hours[h]; if(!x) continue;
+    if(x.tempC <= CHILL_FROM_C){
+      const c = windChillC(x.tempC, x.windKmh + (Number.isFinite(paceKmh) ? paceKmh : 0));
+      if(!out.cold || c < out.cold.feelC) out.cold = { feelC: c, tempC: x.tempC, hour: h };
+    }
+    if(x.tempC >= HUMID_FROM_C && Number.isFinite(x.humidity)){
+      const f = heatIndexC(x.tempC, x.humidity);
+      if(!out.hot || f > out.hot.feelC) out.hot = { feelC: f, tempC: x.tempC, humidity: x.humidity, hour: h };
+    }
+    if(!out.ice){
+      const cold = Number.isFinite(x.groundC) ? x.groundC <= 0 : x.tempC <= 1;
+      const wetBefore = [0, 1, 2, 3].some(k => { const y = fc.hours[h - k]; return y && y.rainMm > 0; });
+      const damp = Number.isFinite(x.dewC) && x.tempC - x.dewC <= 1;
+      if(FREEZING_CODES.has(x.code)) out.ice = { hour: h, why: 'freezing' };
+      else if(SNOW_CODES.has(x.code) || x.snowCm > 0) out.ice = { hour: h, why: 'snow' };
+      else if(cold && (wetBefore || damp)) out.ice = { hour: h, why: 'frost' };
+    }
+  }
+  return out;
+}
+
+/** The lines of "What makes it tougher" (route-planner.md section 4.4), each factor only past its TOUGHER baseline, in
+    the panel's order: distance, steepest kilometre, longest climb, rough surface, water, busy roads, daylight, wind,
+    heat, rain. Every input may be missing; a missing one gives no line. `o`: distM, steep (steepestKm()), climb
+    (longestClimb()), roughM, waterKm (waterGap()), busyM, sun (sunTimes()), rideS (the riding time), forecast (the
+    weather answer for the ride's day). An empty list is a ride with nothing out of the ordinary. */
+export function tougherLines(o){
+  const t = TOUGHER, out = [];
+  if(o.distM > t.longKm * 1000) out.push({ kind: 'long', distM: o.distM });
+  if(o.steep && o.steep.grad >= t.steepGrad) out.push({ kind: 'steep', grad: o.steep.grad, atKm: o.steep.atKm });
+  if(o.climb && (o.climb.km >= t.climbKm || o.climb.upM >= t.climbUpM)) out.push({ kind: 'climb', km: o.climb.km, upM: o.climb.upM, grad: o.climb.grad });
+  if(o.roughM >= t.roughKm * 1000) out.push({ kind: 'rough', roughM: o.roughM });
+  if(o.waterKm != null && o.waterKm > t.waterKm) out.push({ kind: 'water', km: o.waterKm });
+  if(o.busyM >= t.busyKm * 1000) out.push({ kind: 'busy', busyM: o.busyM });
+  if(o.sun){
+    const ride = Number.isFinite(o.rideS) ? o.rideS : 0;
+    // With a start time the ride sits in the day: starting before sunrise or arriving after sunset is riding in the dark.
+    const startMs = o.startAt instanceof Date ? o.startAt.getTime() : NaN;
+    let over = null, arrive = null;
+    if(ride > o.sun.daylightS) over = 'over';
+    else if(Number.isFinite(startMs)){
+      arrive = new Date(startMs + ride * 1000);
+      if(startMs < o.sun.sunrise.getTime()) over = 'darkStart';
+      else if(arrive.getTime() > o.sun.sunset.getTime()) over = 'darkEnd';
+      else if(arrive.getTime() + t.daylightSpareS * 1000 > o.sun.sunset.getTime()) over = 'tight';
+    }
+    else if(ride + t.daylightSpareS > o.sun.daylightS) over = 'tight';
+    if(over || o.sun.daylightS < t.daylightMinS) out.push({ kind: 'daylight', sun: o.sun, over, arrive });
+  }
+  const fc = o.forecast, feel = o.feel || {};
+  if(feel.cold && feel.cold.feelC <= t.coldFeelC) out.push({ kind: 'cold', feelC: feel.cold.feelC });
+  if(feel.ice) out.push({ kind: 'ice', hour: feel.ice.hour, why: feel.ice.why });
+  if(fc){
+    const gust = Number.isFinite(fc.gustKmh) && fc.gustKmh >= t.gustKmh ? fc.gustKmh : null;
+    if(fc.windKmh >= t.windKmh || gust != null) out.push({ kind: 'wind', windKmh: fc.windKmh, gustKmh: gust, fromDeg: fc.windFromDeg });
+    const hot = feel.hot && feel.hot.feelC >= t.heatFeelC ? feel.hot : null;
+    if(fc.tempMaxC >= t.heatC || hot) out.push({ kind: 'heat', tempC: fc.tempMaxC, feelC: hot ? hot.feelC : null, humidity: hot ? hot.humidity : null });
+    if(fc.rainMm >= t.rainMm) out.push({ kind: 'rain', mm: fc.rainMm });
+  }
+  return out;
+}
+
+/** The forecast for the hours the rider rides (route-planner.md section 4.4): from the hour of `startMin` (minutes
+    after local midnight) to the hour the riding time ends, the highest wind and gust, the wind's direction weighted by
+    its speed, the highest temperature and the rain of those hours; the day's figures without hours or a start. A ride
+    past midnight reads to the day's last hour. */
+export function rideHours(forecast, startMin, rideS){
+  if(!forecast || !Array.isArray(forecast.hours) || forecast.hours.length !== 24 || !Number.isFinite(startMin)) return forecast;
+  const from = Math.max(0, Math.min(23, Math.floor(startMin / 60)));
+  const endMin = startMin + (Number.isFinite(rideS) ? rideS : 0) / 60;
+  const to = Math.max(from, Math.min(23, Math.ceil(endMin / 60) - 1));
+  const hs = forecast.hours.slice(from, to + 1);
+  const gusts = hs.map(h => h.gustKmh).filter(Number.isFinite);
+  let x = 0, y = 0;
+  for(const h of hs){ const r = h.fromDeg * Math.PI / 180; x += Math.sin(r) * h.windKmh; y += Math.cos(r) * h.windKmh; }
+  const fromDeg = x === 0 && y === 0 ? hs[0].fromDeg : Math.round((Math.atan2(x, y) * 180 / Math.PI + 360) % 360);
+  return { ...forecast, windKmh: Math.max(...hs.map(h => h.windKmh)), gustKmh: gusts.length ? Math.max(...gusts) : null, windFromDeg: fromDeg,
+    tempMaxC: Math.max(...hs.map(h => h.tempC)), rainMm: Math.round(hs.reduce((t, h) => t + h.rainMm, 0) * 10) / 10, fromH: from, toH: to };
+}
+
+/** The start time offered for a day (route-planner.md section 4.4), minutes after midnight: 09:00, or on today past
+    09:00 the next half hour, never past 22:00. `nowMin` is the minutes of now on today, null on another day. */
+export function defaultStartMin(nowMin){
+  if(!Number.isFinite(nowMin) || nowMin < 9 * 60) return 9 * 60;
+  return Math.min(22 * 60, Math.ceil((nowMin + 1) / 30) * 30);
+}
+
+/** Where the forecast is asked (route-planner.md section 4.4): only rides this long or longer, km; a point this far
+    or farther in a straight line from the start and from the finish, km; rounded to this, degrees, before it leaves
+    the browser. The start or the finish is often a home, so neither is ever near the point asked. */
+export const FORECAST = { minRideKm: 20, minFromEndsKm: 5, cellDeg: 0.1 };
+
+/** The point the forecast is asked for, [lng, lat] rounded to FORECAST.cellDeg, or null when none is asked: a ride
+    under FORECAST.minRideKm, or one with no point in its middle third FORECAST.minFromEndsKm from both its start and
+    its finish (laps of a short circuit). The point halfway along the ride when that is far enough from both ends;
+    otherwise the point of the middle third farthest from the nearer end, as a loop comes back past home. The ride
+    as it is now: a ride still being drawn asks for its own middle, and a later ask follows the ride. */
+export function forecastPoint(legs){
+  const total = figures(legs).distM;
+  if(!(total >= FORECAST.minRideKm * 1000)) return null;
+  const start = pointAt(legs, 0), end = pointAt(legs, total);
+  if(!start || !end) return null;
+  const fromEnds = p => Math.min(metres([p[1], p[0]], [start[1], start[0]]), metres([p[1], p[0]], [end[1], end[0]]));
+  const need = FORECAST.minFromEndsKm * 1000;
+  let best = pointAt(legs, total / 2), bestM = best ? fromEnds(best) : -1;
+  if(bestM < need){
+    for(let i = 0; i <= 60; i++){
+      const p = pointAt(legs, total / 3 + total / 3 * i / 60); if(!p) continue;
+      const m = fromEnds(p); if(m > bestM){ best = p; bestM = m; }
+    }
+  }
+  if(!best || bestM < need) return null;
+  const cell = v => Math.round(v / FORECAST.cellDeg) * FORECAST.cellDeg;
+  return [Number(cell(best[0]).toFixed(1)), Number(cell(best[1]).toFixed(1))];
+}
+
+/** Open-Meteo's own page for the forecast the panel shows (route-planner.md section 4.4): the rounded point our server
+    asked for (`forecast.lat`, `forecast.lng`) and the ride's day, the same daily figures, by the hour too. The rider
+    opens it with a click; the browser never fetches it. Null without the point or a date. */
+export function forecastPageUrl(forecast){
+  if(!forecast || !Number.isFinite(forecast.lat) || !Number.isFinite(forecast.lng) || !/^\d{4}-\d{2}-\d{2}$/.test(String(forecast.date || ''))) return null;
+  const q = [
+    'latitude=' + forecast.lat.toFixed(1), 'longitude=' + forecast.lng.toFixed(1),
+    'start_date=' + forecast.date, 'end_date=' + forecast.date,
+    'daily=wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,temperature_2m_max,precipitation_sum',
+    'hourly=temperature_2m,precipitation,wind_speed_10m,wind_gusts_10m,wind_direction_10m',
+    'timezone=auto',
+  ];
+  return 'https://open-meteo.com/en/docs?' + q.join('&');
+}
 /** The 1 km window of the profile with the highest average gradient, from 4 %: {grad, atKm}; null below that. */
 export function steepestKm(legs){
   let best = null;
@@ -497,7 +803,7 @@ export function longestClimb(legs){
       if(start < 0) return;
       const len = run[end].d1 - run[start].d0; let up = 0;
       for(let k = start; k <= end; k++){ const d = run[k].h1 - run[k].h0; if(d > 0) up += d; }
-      if(len >= 1000 && (!best || len > best.km * 1000)) best = { km: len / 1000, upM: up, grad: up / len * 100 };
+      if(len >= 1000 && (!best || len > best.km * 1000)) best = { km: len / 1000, upM: up, grad: up / len * 100, fromM: run[start].d0 };
       start = -1; end = -1; dip = 0;
     };
     for(let i = 0; i < run.length; i++){
@@ -633,6 +939,41 @@ export function sunTimes(lat, lng, date){
   const noon = 720 - 4 * lng - eqTime;
   const at = min => new Date(Date.UTC(y, mo - 1, d, 0, 0, Math.round(min * 60)));
   return { sunrise: at(noon - 4 * ha), sunset: at(noon + 4 * ha), daylightS: Math.round(8 * ha * 60) };
+}
+/** The stretches ridden into the wind (`into`), with it (`with`) or across it (`side`), [fromM, toM] in metres along the
+    ride, by windShares()'s rule; the drawn line's metres are scaled to the engine's length, as sliceAlong() reads them. */
+export function windSpans(legs, windFromDeg, kind){
+  const rad = x => x * Math.PI / 180, spans = [];
+  let off = 0;
+  for(const leg of legs){
+    if(!leg || !leg.routed || !Array.isArray(leg.line)) continue;
+    const steps = []; let lineM = 0;
+    for(let i = 1; i < leg.line.length; i++){
+      const [x1, y1] = leg.line[i - 1], [x2, y2] = leg.line[i];
+      const dLng = rad(x2 - x1), p1 = rad(y1), p2 = rad(y2);
+      const yv = Math.sin(dLng) * Math.cos(p2), xv = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dLng);
+      const bearing = (Math.atan2(yv, xv) * 180 / Math.PI + 360) % 360;
+      const h = Math.sin((p2 - p1) / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dLng / 2) ** 2;
+      const len = 2 * 6371000 * Math.asin(Math.sqrt(h));
+      const diff = Math.abs(((bearing - windFromDeg) % 360 + 540) % 360 - 180);
+      steps.push([lineM, lineM + len, diff <= 60 ? 'into' : diff >= 120 ? 'with' : 'side']);
+      lineM += len;
+    }
+    const k = lineM > 0 ? (leg.distM || lineM) / lineM : 1;
+    for(const [a, b, c] of steps) if(c === kind) spans.push([off + a * k, off + b * k]);
+    off += leg.distM || lineM;
+  }
+  return joinSpans(spans, 1);
+}
+/** Where the rider is during one hour of the day (route-planner.md section 4.4): [fromM, toM] along the ride at the
+    average pace, from the start at `startMin` (minutes after midnight) over `rideS` seconds of riding; null when the
+    hour falls before the start or after the finish. */
+export function hourSpan(startMin, rideS, totalM, hour){
+  const rideMin = rideS / 60;
+  if(!(rideMin > 0) || !(totalM > 0)) return null;
+  const a = Math.max(0, hour * 60 - startMin), b = Math.min(rideMin, hour * 60 + 60 - startMin);
+  if(b <= a) return null;
+  return [a / rideMin * totalM, b / rideMin * totalM];
 }
 /** Metres ridden into the wind and with it: a step whose bearing is within 60° of where the wind comes from is headwind, within 60° of where it goes is tailwind. */
 export function windShares(legs, windFromDeg){

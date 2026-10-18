@@ -77,7 +77,7 @@ final class LegSurfaces
      *
      * @param list<array{0: float, 1: float}> $coords [lat, lng] pairs, the routed line
      *
-     * @return array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>}|null
+     * @return array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>}|null
      */
     public function read(array $coords): ?array
     {
@@ -111,6 +111,11 @@ final class LegSurfaces
         $metres = ['paved' => 0.0, 'gravel' => 0.0, 'rough' => 0.0, 'unknown' => 0.0, 'busy' => 0.0, 'cycle' => 0.0];
         $signals = 0;
         $streets = [];
+        // Where each surface class starts along the leg, one run per class change (route-planner.md section 4.4a): the
+        // panel lights up the stretches of one class on the map when the rider points at it.
+        $runs = [];
+        // The busy stretches, [from, to] metres along the leg: what makes it tougher lights them up (section 4.4).
+        $busyRuns = [];
         $at = 0.0;
         foreach ($edges as $edge) {
             if (!\is_array($edge) || !isset($edge['length']) || !is_numeric($edge['length'])) {
@@ -119,10 +124,20 @@ final class LegSurfaces
             $length = (float) $edge['length'] * 1000.0;
             $class = self::CLASS_OF[\is_string($edge['surface'] ?? null) ? $edge['surface'] : ''] ?? 'unknown';
             $metres[$class] += $length;
+            $lastRun = [] === $runs ? null : end($runs);
+            if (null === $lastRun || $lastRun[1] !== $class) {
+                $runs[] = [(int) round($at), $class];
+            }
             $road = \is_string($edge['road_class'] ?? null) ? $edge['road_class'] : '';
             $lane = \is_string($edge['cycle_lane'] ?? null) ? $edge['cycle_lane'] : 'none';
             if (\in_array($road, self::BUSY_CLASSES, true) && !\in_array($lane, self::OWN_LANES, true)) {
                 $metres['busy'] += $length;
+                $last = array_key_last($busyRuns);
+                if (null !== $last && $busyRuns[$last][1] >= (int) round($at)) {
+                    $busyRuns[$last][1] = (int) round($at + $length);
+                } else {
+                    $busyRuns[] = [(int) round($at), (int) round($at + $length)];
+                }
             }
             $use = \is_string($edge['use'] ?? null) ? $edge['use'] : '';
             if (self::CYCLEWAY_USE === $use || self::APART_LANE === $lane) {
@@ -146,6 +161,6 @@ final class LegSurfaces
         $surfaces = array_map(static fn (float $m): int => (int) round($m), $metres);
         $surfaces['signals'] = $signals;
 
-        return ['surfaces' => $surfaces, 'streets' => $streets];
+        return ['surfaces' => $surfaces, 'streets' => $streets, 'runs' => $runs, 'busyRuns' => $busyRuns];
     }
 }

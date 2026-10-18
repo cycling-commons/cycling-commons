@@ -154,6 +154,11 @@ services:
             $valhallaUrl: '%env(ELEVATION_URL)%'
             $endpoints: '@App\Elevation\ElevationEndpoints'
     App\Contribution\BikeWayLocator: '@App\Contribution\ValhallaBikeWayLocator'
+    # The planner's map points on the road a bike would take (route-planner.md section 4.1): the same engine's /locate.
+    App\Elevation\PointSnapper:
+        arguments:
+            $valhallaUrl: '%env(ELEVATION_URL)%'
+            $endpoints: '@App\Elevation\ElevationEndpoints'
 
     App\Elevation\RouteSnapper:
         arguments:

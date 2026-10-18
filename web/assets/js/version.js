@@ -28,7 +28,7 @@
       var r = document.createElement('span');
       r.className = 'cc-ver';
       r.innerHTML = (T('build', 'Build') + ' ' + V.number).toUpperCase() + (when ? '<br>' + when : '');
-      r.style.cssText = 'font-family:var(--mono,monospace);font-size:.58rem;letter-spacing:.08em;opacity:.7;line-height:1.35;text-align:right';
+      r.style.cssText = 'font-family:var(--mono,monospace);font-size:.58rem;letter-spacing:.08em;opacity:.7;line-height:1.35;text-align:left';
       rail.appendChild(r);
       return;
     }

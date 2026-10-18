@@ -25,8 +25,10 @@ test('Open a GPX stands in the start group, so an empty planner can open a file'
   const start = block(twig, /<div class="grp cc-plan" id="planStart">/, /\n      <\/div>\n/);
   assert.match(start, /id="planOpen"/);
   assert.match(start, /<input type="file" id="planOpenFile" accept="\.gpx,application\/gpx\+xml" hidden>/);
-  const acts = block(twig, /id="planActsGrp"/, /\n      <\/div>\n/);
-  assert.doesNotMatch(acts, /id="planOpen"/, 'one Open button, not two');
+  // The ride file in one place (owner 2026-10-17): Download GPX and Clear share the row with Open a GPX.
+  assert.match(start, /id="planGpx"/);
+  assert.match(start, /id="planClear"/);
+  assert.equal((twig.match(/id="planOpen"/g) || []).length, 1, 'one Open button, not two');
 });
 
 test('the replace question is a modal dialog: keep the ride, download it first, or open the file', () => {

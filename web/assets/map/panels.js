@@ -298,9 +298,10 @@ export function initRailChrome(){
        ['mode',mode()||'—',false],
       ].forEach(([k,v,bad],i)=>{
         if(i) dv.appendChild(document.createTextNode(' · '));
-        dv.appendChild(document.createTextNode(k+' '));
+        // One pair never breaks across lines: "surface 20260814-1512" stays whole.
+        const p=document.createElement('span'); p.className='dv-i'; p.textContent=k+' ';
         const s=document.createElement('span'); if(bad) s.className='dv-bad';
-        s.textContent=v; dv.appendChild(s);
+        s.textContent=v; p.appendChild(s); dv.appendChild(p);
       });
     };
     renderVersions();

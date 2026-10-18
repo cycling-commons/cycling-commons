@@ -162,7 +162,7 @@ export function liftInfoLayersAboveRoutes(){
   dynamicIds.filter(id=>id.startsWith('route-climbs-')).forEach(liftGroup);
   ['mly-cov','mly-img'].forEach(id=>{ if(map.getLayer(id)) map.moveLayer(id); });
   // The planned ride over every other line (owner 2026-10-15), under the icons that are the stops a rider picks.
-  ['plan-gap','plan-alt','plan-casing','plan-line','plan-straight','plan-arrows'].forEach(id=>{ if(map.getLayer(id)) map.moveLayer(id); });
+  ['plan-gap','plan-alt','plan-casing','plan-line','plan-straight','plan-hl-casing','plan-hl','plan-rain','plan-wind','plan-arrows'].forEach(id=>{ if(map.getLayer(id)) map.moveLayer(id); });
   // The coverage icons over every line (owner 2026-10-08), the selected icon on top of them.
   coverageIconLayerIds(map.getStyle().layers.map(l=>l.id)).forEach(id=>map.moveLayer(id));
   if(map.getLayer('cov-sel-icon')) map.moveLayer('cov-sel-icon');

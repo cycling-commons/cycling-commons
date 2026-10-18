@@ -266,6 +266,62 @@ final class PlanControllerTest extends WebTestCase
         self::assertSame(['BE', 'BE'], array_column($regions, 'countryCode'));
     }
 
+    /**
+     * How far the along list looks is the rider's pick, 250 m to 5 km
+     * (route-planner.md section 5, owner 2026-10-17): a tap 700 m off the
+     * line is outside the 250 m default and inside 1 km; a distance not on
+     * the list is refused.
+     */
+    public function testAlongLooksAsFarAsTheRiderPicksAndOnlyFromTheList(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        self::ensureCoverageSchema($em->getConnection());
+        $tap = (new Item())->setLetter('B')->setName('Fontaine 700 m off the plan')
+            ->setGeom(json_encode(['type' => 'Point', 'coordinates' => [5.8150, 50.4063]], \JSON_THROW_ON_ERROR))
+            ->setCountryCode('BE')->setState(ItemState::Verified)->setSource(ItemSource::Osm)
+            ->setSourceRef('node/plan-tap-far')->setAttributes([]);
+        $em->persist($tap);
+        $em->flush();
+        $line = ['type' => 'LineString', 'coordinates' => [[5.8000, 50.4], [5.8300, 50.4]]];
+        $ids = static function (array $json): array {
+            $water = array_values(array_filter($json['groups'], static fn (array $g): bool => 'B' === $g['letter']));
+
+            return $water ? array_column($water[0]['items'], 'id') : [];
+        };
+
+        self::post($client, '/map/plan/along', 'plan-along', ['line' => $line]);
+        self::assertResponseIsSuccessful();
+        self::assertSame(250, self::json($client)['radiusM']);
+        self::assertNotContains($tap->getId(), $ids(self::json($client)));
+
+        self::post($client, '/map/plan/along', 'plan-along', ['line' => $line, 'radius' => 1000]);
+        self::assertResponseIsSuccessful();
+        self::assertSame(1000, self::json($client)['radiusM']);
+        self::assertContains($tap->getId(), $ids(self::json($client)));
+
+        foreach ([777, 10000, '1000', 2.5] as $bad) {
+            self::post($client, '/map/plan/along', 'plan-along', ['line' => $line, 'radius' => $bad]);
+            self::assertResponseStatusCodeSame(400, 'radius '.var_export($bad, true));
+        }
+    }
+
+    /**
+     * A map point onto the road (route-planner.md section 4.1): the test environment has no
+     * engine, so the point is not moved; a bad point or an unknown bike is refused.
+     */
+    public function testSnapLeavesThePointWithoutAnEngineAndRefusesABadAsk(): void
+    {
+        $client = static::createClient();
+        self::post($client, '/map/plan/snap', 'plan-leg', ['point' => [5.18, 52.699], 'bike' => 'Road']);
+        self::assertResponseIsSuccessful();
+        self::assertSame(['snapped' => false], self::json($client));
+        foreach ([['point' => [5.18, 52.699], 'bike' => 'Unicycle'], ['point' => 'here', 'bike' => 'Road'], ['bike' => 'Road']] as $bad) {
+            self::post($client, '/map/plan/snap', 'plan-leg', $bad);
+            self::assertResponseStatusCodeSame(400);
+        }
+    }
+
     public function testAlongRefusesALineTooShortToRide(): void
     {
         $client = static::createClient();
@@ -351,7 +407,7 @@ final class PlanControllerTest extends WebTestCase
         self::post($client, '/map/plan/weather', 'plan-weather', self::weatherAsk());
 
         self::assertResponseIsSuccessful();
-        self::assertSame(['date' => self::weatherAsk()['date'], 'windKmh' => 28.1, 'windFromDeg' => 225, 'tempMaxC' => 31.4, 'rainMm' => 6.2], self::json($client)['forecast']);
+        self::assertSame(['date' => self::weatherAsk()['date'], 'lat' => 50.5, 'lng' => 5.9, 'windKmh' => 28.1, 'gustKmh' => null, 'windFromDeg' => 225, 'tempMaxC' => 31.4, 'rainMm' => 6.2, 'hours' => null], self::json($client)['forecast'], 'the answer names the rounded point, never the one asked');
         self::assertCount(1, $asked);
         self::assertStringContainsString('latitude=50.5&longitude=5.9', $asked[0], 'the point leaves our server rounded to a tenth of a degree');
         self::assertStringNotContainsString('50.48', $asked[0]);

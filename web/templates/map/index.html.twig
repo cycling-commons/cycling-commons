@@ -120,6 +120,8 @@
     <div class="dwr-in">
       <div class="dwr-head">
         <h2 id="dwr-title"></h2>
+        {# How it works for the planner sits in the title row (owner 2026-10-17); CSS shows it only with the planner open. #}
+        <button type="button" class="dl-all cc-head-plan" id="planGuideOpen">{{ 'map.plan_guide_open'|trans }}</button>
         <button class="dwr-x" id="dwr-x" type="button" aria-label="{{ 'map.panel_close'|trans }}">✕</button>
       </div>
       <div class="dwr-body">
@@ -498,29 +500,48 @@
       {# The planner's guide (route-planner.md section 3.1, owner 2026-10-15): shown in the middle
          of the map when the planner opens, until the rider unticks it; the choice is kept on the
          account and in the browser. How it works opens it at any time. plan.js drives it. #}
-      <div class="cc-plan-guidebar"><button type="button" class="dl-all" id="planGuideOpen">{{ 'map.plan_guide_open'|trans }}</button></div>
       {# A new ride starts with its name, then where it starts (owner 2026-10-15,
          route-planner.md section 4.1): the map takes no stop before a name, and
          the start search takes the map to a town or a street. plan.js fills it. #}
       <div class="grp cc-plan" id="planStart">
         <label class="cc-plan-field" for="planRideName"><span>{{ 'map.plan_name_h'|trans }}</span>
           <input type="text" id="planRideName" maxlength="80" autocomplete="off" placeholder="{{ 'map.plan_name_ph_start'|trans }}"></label>
-        {# A ride file opens from the empty planner on (owner 2026-10-16); over a ride being planned it asks first (#planReplace). #}
+        {# Everything about the ride file in one place (owner 2026-10-17): open one, download this one, clear it. A file
+           opens from the empty planner on (owner 2026-10-16); over a ride being planned it asks first (#planReplace). The
+           GPX is the ride file: nothing of a ride is kept on our server (route-planner.md section 6.1). #}
         <div class="cc-plan-openrow"><button type="button" class="cc-ride-btn" id="planOpen">{{ 'map.plan_open'|trans }}</button>
+          <span class="cc-plan-acts" id="planActs" hidden><button type="button" class="cc-ride-btn cc-plan-go" id="planGpx">{{ 'map.plan_gpx'|trans }}</button><button type="button" class="cc-ride-btn cc-plan-quiet" id="planClear">{{ 'map.plan_clear'|trans }}</button></span>
           <input type="file" id="planOpenFile" accept=".gpx,application/gpx+xml" hidden></div>
-        <div class="cc-plan-startsearch" id="planStartBox" hidden>
-          <label class="cc-plan-field" for="planStartSearch"><span>{{ 'map.plan_start_h'|trans }}</span>
+        <div class="hint" id="planSaveHint"></div>
+      </div>
+      {# When: the day and the start time, the ride's base facts beside its name (owner 2026-10-17); the day is mostly ahead,
+         any date from today on, and the forecast reaches 16 days (route-planner.md section 4.4). #}
+      <div class="grp cc-plan cc-plan-when" id="planWhen">
+        {# The date reads in the page's language on a button that opens our own calendar (date-pick.js); the field holds
+           the value, unseen under the button (route-planner.md section 4.4). #}
+        <div class="cc-plan-date"><span id="planDateLbl">{{ 'map.plan_date'|trans }}</span><span class="cc-plan-datebox"><button type="button" class="cc-plan-dateshow" id="planDateShow" aria-describedby="planDateLbl" hidden></button><input type="date" id="planDate" aria-labelledby="planDateLbl"></span></div>
+        {# The start time: a list of half hours in 24-hour clock, as a time field would read the browser's clock; plan.js fills it.
+           With it the panel says when the ride finishes and reads the forecast for the hours ridden (route-planner.md section 4.4). #}
+        <div class="cc-plan-date"><label for="planStartTime">{{ 'map.plan_start_time'|trans }}</label><select id="planStartTime"></select></div>
+      </div>
+      {# The place search, a card of its own after the day (owner 2026-10-18): where the ride starts while it has no
+         checkpoint, then a way to any place on the map ("Go to a place"). Shown once the ride has a name. #}
+      <div class="grp cc-plan" id="planSearchGrp" hidden>
+        <div class="cc-plan-startsearch" id="planStartBox" >
+          <label class="cc-plan-field" for="planStartSearch"><span id="planStartLbl" data-start="{{ 'map.plan_start_h'|trans }}" data-goto="{{ 'map.plan_goto_h'|trans }}">{{ 'map.plan_start_h'|trans }}</span>
             <input type="search" id="planStartSearch" autocomplete="off" placeholder="{{ 'map.plan_start_ph'|trans }}"></label>
           <ul class="cc-plan-results" id="planStartResults" role="listbox" aria-label="{{ 'map.plan_start_h'|trans }}"></ul>
         </div>
       </div>
-      <div class="grp cc-plan">
+      <div class="grp cc-plan cc-plan-bike">
         {# The bike's explanation behind an info icon (owner 2026-10-15): hover shows it, a click keeps it, the next closes it. #}
         <h3>{{ 'map.plan_bike_h'|trans }} <span class="cc-info-wrap" id="planWhyWrap"><button type="button" class="cc-info" id="planWhyBtn" aria-expanded="false" aria-controls="planWhy" aria-label="{{ 'map.plan_why_aria'|trans }}">i</button><span class="cc-info-pop" id="planWhy" role="tooltip">{% if app.user and app.user.bikeTypes is not empty %}<span class="cc-info-src">{{ 'map.plan_bike_settings'|trans }}</span> {% endif %}<span id="planWhyText"></span></span></span></h3>
-        <div class="chips" id="planBikes" role="group" aria-label="{{ 'map.plan_bike_h'|trans }}">
-          {% for bike in plan_bikes %}<button type="button" class="chip{{ loop.first ? ' on' : '' }}" data-bike="{{ bike }}" aria-pressed="{{ loop.first ? 'true' : 'false' }}">{{ ('map.bike_' ~ (bike|lower|replace({'-': ''})))|trans }}</button>{% endfor %}
+        <div class="cc-plan-bikerow">
+          <div class="chips" id="planBikes" role="group" aria-label="{{ 'map.plan_bike_h'|trans }}">
+            {% for bike in plan_bikes %}<button type="button" class="chip{{ loop.first ? ' on' : '' }}" data-bike="{{ bike }}" aria-pressed="{{ loop.first ? 'true' : 'false' }}">{{ ('map.bike_' ~ (bike|lower|replace({'-': ''})))|trans }}</button>{% endfor %}
+          </div>
+          <div class="hint" id="planBikeHint">{% if app.user and app.user.bikeTypes is empty %}<a href="{{ path('settings') }}">{{ 'map.plan_bike_set'|trans }}</a> {% endif %}<a href="#" id="planBikesAll">{{ 'map.plan_bike_all'|trans }}</a></div>
         </div>
-        <div class="hint" id="planBikeHint">{% if app.user and app.user.bikeTypes is empty %}<a href="{{ path('settings') }}">{{ 'map.plan_bike_set'|trans }}</a> {% endif %}<a href="#" id="planBikesAll">{{ 'map.plan_bike_all'|trans }}</a></div>
       </div>
       <div class="grp cc-plan">
         {# How to plan with the mouse and the keys, behind an info icon as the bike's explanation is (owner 2026-10-15). #}
@@ -533,12 +554,15 @@
       </div>
       <div class="grp cc-plan" id="planFigsGrp" hidden>
         {# Show or hide the ride line (owner 2026-10-15); the stops stay. plan.js keeps the choice. #}
-        <h3>{{ 'map.plan_ride_h'|trans }} <button type="button" class="dl-all ico" id="planLineToggle" aria-pressed="true" title="{{ 'map.plan_line_hide'|trans }}" aria-label="{{ 'map.plan_line_hide'|trans }}"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></h3>
+        <h3>{{ 'map.plan_ride_h'|trans }} <button type="button" class="dl-all ico" id="planLineToggle" aria-pressed="true" title="{{ 'map.plan_line_hide'|trans }}" aria-label="{{ 'map.plan_line_hide'|trans }}"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button> <button type="button" class="dl-all ico" id="planSideBack" hidden title="{{ 'map.plan_side_show'|trans }}" aria-label="{{ 'map.plan_side_show'|trans }}"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h12M11 7l5 5-5 5M20 5v14"/></svg></button> <button type="button" class="dl-all ico cc-side-x" id="planSideX" hidden title="{{ 'map.plan_side_hide'|trans }}" aria-label="{{ 'map.plan_side_hide'|trans }}"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></h3>
         <div class="cc-plan-figs" id="planFigs">
-          <div class="cc-plan-fig"><b id="planDist">0</b><span>{{ 'map.plan_distance'|trans }}</span></div>
-          <div class="cc-plan-fig"><b id="planUp">0</b><span>{{ 'map.plan_climbed'|trans }}</span></div>
-          <div class="cc-plan-fig"><b id="planDown">0</b><span>{{ 'map.plan_descended'|trans }}</span></div>
-          <div class="cc-plan-fig cc-plan-fig-wide"><b id="planTime"></b><span>{{ 'map.plan_time'|trans }} · <em id="planTimeSub"></em></span></div>
+          {# Pointed at, a figure lights its stretches on the map (route-planner.md section 4.4). #}
+          <div class="cc-plan-fig" data-part="all" tabindex="0"><b id="planDist">0</b><span>{{ 'map.plan_distance'|trans }}</span></div>
+          <div class="cc-plan-fig" data-part="climb" tabindex="0"><b id="planUp">0</b><span>{{ 'map.plan_climbed'|trans }}</span></div>
+          <div class="cc-plan-fig" data-part="descend" tabindex="0"><b id="planDown">0</b><span>{{ 'map.plan_descended'|trans }}</span></div>
+          {# The riding time and the finish side by side, each with its explanation behind an info icon (owner 2026-10-17). #}
+          <div class="cc-plan-fig cc-plan-fig-half" data-part="all" tabindex="0"><b id="planTime"></b><span>{{ 'map.plan_time_h'|trans }} <span class="cc-info-wrap"><button type="button" class="cc-info" aria-expanded="false" aria-controls="planTimeTip" aria-label="{{ 'map.plan_time_h'|trans }}">i</button><span class="cc-info-pop" id="planTimeTip" role="tooltip">{{ 'map.plan_time_tip'|trans }}</span></span><em id="planTimeSub"></em></span></div>
+          <div class="cc-plan-fig cc-plan-fig-half" id="planArrive" hidden><b id="planArriveT"></b><span>{{ 'map.plan_finish_h'|trans }} <span class="cc-info-wrap"><button type="button" class="cc-info" aria-expanded="false" aria-controls="planFinishTip" aria-label="{{ 'map.plan_finish_h'|trans }}">i</button><span class="cc-info-pop" id="planFinishTip" role="tooltip">{{ 'map.plan_finish_note'|trans }}</span></span></span></div>
         </div>
         {# The day (route-planner.md section 4.4): the time bar by what the rider
            is doing, the day of the ride, and what makes it tougher. plan.js
@@ -549,26 +573,22 @@
           <div class="cc-plan-dayunit" id="planDayUnit" role="group" aria-label="{{ 'map.plan_unit_aria'|trans }}"><button type="button" data-u="time" class="on">{{ 'map.plan_unit_time'|trans }}</button><button type="button" data-u="dist">{{ 'map.plan_unit_dist'|trans }}</button></div>
           <div class="cc-plan-daybars" id="planDaySvg"></div>
         </div>
-        <label class="cc-plan-date" for="planDate"><span>{{ 'map.plan_date'|trans }}</span><input type="date" id="planDate"></label>
         <div class="cc-plan-tougher" id="planTougherGrp" hidden>
           <h4>{{ 'map.plan_tougher_h'|trans }}</h4>
           <ul id="planTougher"></ul>
         </div>
+        {# The forecast for the hours ridden that is not already a line above: each fact shows once (route-planner.md section 4.4). #}
+        <div class="cc-plan-tougher" id="planWeatherGrp" hidden>
+          <h4>{{ 'map.plan_weather_h'|trans }}</h4>
+          {# What is watched in the hours ridden (owner 2026-10-17): each icon struck through while there is nothing to warn about. #}
+          <div class="cc-wx-watch" id="planWatch"></div>
+          <ul id="planWeather"></ul>
+        </div>
       </div>
       <div class="grp cc-plan" id="planAlongGrp" hidden>
-        <h3>{{ 'map.plan_along_h'|trans }} <span class="cc-plan-within">· {{ 'map.plan_within'|trans({'{d}': 250|cc_m}) }}</span></h3>
+        {# How far it looks, 250 m to 5 km (route-planner.md section 5); plan.js fills the list in the rider's units. #}
+        <div class="cc-plan-alongh"><h3>{{ 'map.plan_along_h'|trans }}</h3><select id="planAlongR" class="cc-plan-reach" aria-label="{{ 'map.plan_along_reach'|trans }}"></select></div>
         <ul class="cc-near-list" id="planAlong"></ul>
-      </div>
-      <div class="grp cc-plan" id="planActsGrp" hidden>
-        <h3>{{ 'map.plan_keep_h'|trans }}</h3>
-        <div class="cc-plan-acts" id="planActs">
-          {# The GPX is the ride file: nothing of a ride is kept on our server (route-planner.md section 6.1). #}
-          <button type="button" class="cc-ride-btn cc-plan-go" id="planGpx">{{ 'map.plan_gpx'|trans }}</button>
-          <button type="button" class="cc-ride-btn cc-plan-quiet" id="planClear">{{ 'map.plan_clear'|trans }}</button>
-        </div>
-        <div class="hint" id="planSaveHint"></div>
-        <div class="hint">{{ 'map.plan_keep_hint'|trans|rich }}</div>
-        <div class="hint">{{ 'map.plan_keep_days'|trans }}</div>
       </div>
       </section>
       <section class="panel" id="p-key">
@@ -729,15 +749,26 @@
        4.5): the panel's profile, the map's width wide. plan.js draws it. #}
     <div class="cc-plan-strip" id="planStrip" hidden><svg id="planStripSvg" viewBox="0 0 800 140" aria-hidden="true"></svg><div class="cc-plan-cursor" id="planStripCur"></div><div class="cc-plan-tip" id="planStripTip"></div><button type="button" class="cc-plan-strip-x" id="planStripX" aria-label="{{ 'map.plan_strip_hide'|trans }}" title="{{ 'map.plan_strip_hide'|trans }}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
     {# The planner's guide in the middle of the map (owner 2026-10-15); plan.js opens and closes it. #}
+    {# The veil under the guide (owner 2026-10-17): the map fades and blurs, and a click lands here, never as a checkpoint. #}
+    <div class="cc-plan-veil" id="planGuideVeil" hidden></div>
     <div class="cc-plan-guide" id="planGuide" role="dialog" aria-modal="false" aria-labelledby="planGuideH" hidden>
       <h3 id="planGuideH">{{ 'map.plan_guide_h'|trans }}</h3>
-      <ol>
-        <li>{{ 'map.plan_guide_1'|trans|rich }}</li>
-        <li>{{ 'map.plan_guide_2'|trans }}</li>
-        <li>{{ 'map.plan_guide_3'|trans }}</li>
-        <li>{{ 'map.plan_guide_4'|trans|rich }}</li>
-        <li>{{ 'map.plan_guide_5'|trans }}</li>
-        <li>{{ 'map.plan_guide_6'|trans|rich }}</li>
+      {# Privacy first, on its own (owner 2026-10-17): what passes our server and what stays in the browser (route-planner.md section 7). #}
+      <div class="cc-plan-guide-privacy">
+        <h4>{{ 'map.plan_guide_privacy_h'|trans }}</h4>
+        <p>{{ 'map.plan_guide_privacy'|trans|rich }}</p>
+      </div>
+      {# One box per step, as the privacy block (owner 2026-10-18), in the order a ride is made. #}
+      <ol class="cc-plan-guide-steps">
+        <li data-guide="1" tabindex="0">{{ 'map.plan_guide_1'|trans|rich }}</li>
+        <li data-guide="2" tabindex="0">{{ 'map.plan_guide_2'|trans }}</li>
+        <li data-guide="3" tabindex="0">{{ 'map.plan_guide_3'|trans }}</li>
+        <li data-guide="4" tabindex="0">{{ 'map.plan_guide_4'|trans }}</li>
+        <li data-guide="5" tabindex="0">{{ 'map.plan_guide_5'|trans }}</li>
+        <li data-guide="6" tabindex="0">{{ 'map.plan_guide_6'|trans }}</li>
+        <li data-guide="7" tabindex="0">{{ 'map.plan_guide_7'|trans }}</li>
+        <li data-guide="8" tabindex="0">{{ 'map.plan_guide_8'|trans|rich }}</li>
+        <li data-guide="9" tabindex="0">{{ 'map.plan_guide_9'|trans }}</li>
       </ol>
       <label class="cc-plan-guideshow"><input type="checkbox" id="planGuideShow" checked> {{ 'map.plan_guide_show'|trans }}</label>
       <button type="button" class="cc-ride-btn cc-plan-go" id="planGuideClose">{{ 'map.plan_guide_close'|trans }}</button>
@@ -948,6 +979,12 @@
       <button type="button" id="fpillReset">{{ 'map.filters_show_all'|trans }}</button></span>
     </div>
     <a class="contrib-fab" href="{{ path('contribute') }}" aria-label="{{ 'map.contribute_aria'|trans }}"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
+    {# The ride's details on the right of a wide screen (route-planner.md section 3, owner 2026-10-17: a desktop
+       screen is wider than high). plan.js moves #planFigsGrp in here above 820 px and back into the panel below it;
+       a place's drawer takes this side while it is open, and the details come back when it closes. #}
+    <aside class="cc-ride-side" id="planSide" hidden aria-label="{{ 'map.plan_ride_h'|trans }}">
+      <div class="cc-ride-side-body" id="planSideBody"><div class="cc-ride-side-key" id="planSideKey"></div></div>
+    </aside>
     <aside class="cc-drawer" id="drawer" tabindex="-1" aria-hidden="true" aria-label="{{ 'map.drawer_aria'|trans }}">
       <button class="cc-d-grab" id="drawerGrab" type="button" aria-label="{{ 'map.drawer_grab'|trans }}"><span></span></button>
       {# Collapse, not close: the map's own top-right controls sit under this
@@ -1088,7 +1125,7 @@ window.CC_VENDOR = {{ {
     save: path('map_presets_save'), token: csrf_token('map-preset')
   } : {}))|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT') b-or constant('JSON_UNESCAPED_SLASHES'))|raw }};
   window.CC_PLAN = {{ ({
-    leg: path('map_plan_leg'), legToken: csrf_token('plan-leg'),
+    leg: path('map_plan_leg'), legToken: csrf_token('plan-leg'), snap: path('map_plan_snap'),
     along: path('map_plan_along'), alongToken: csrf_token('plan-along'),
     weather: path('map_plan_weather'), weatherToken: csrf_token('plan-weather'),
     nearby: path('map_coverage_nearby'),

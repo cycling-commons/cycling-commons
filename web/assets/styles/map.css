@@ -172,7 +172,7 @@
   .panel{display:none}
   .panel.on{display:block}
   .dwr-foot{flex:none;padding:.7rem 1.1rem;border-top:1px solid rgb(var(--chrome-fg) / .14);
-    display:flex;align-items:flex-start;justify-content:space-between;gap:.6rem}
+    display:flex;flex-direction:column;align-items:flex-start;gap:.35rem}
   /* The places count reads as a headline number wherever it sits. */
   .panel .res{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:rgb(var(--chrome-fg) / .7)}
   .panel .res b{color:var(--trail);font-size:1.15rem}
@@ -185,6 +185,9 @@
   .panel .grp{margin:0 -1.1rem;padding:1rem 1.1rem 1.15rem}
   .panel .grp:nth-of-type(even){background:rgb(var(--chrome-fg) / .05)}
   .panel .grp + .grp{border-top:1px solid rgb(var(--chrome-fg) / .14)}
+  /* The planner packs tiles, bars and lists into 320 px: its bands keep a narrower gutter (owner 2026-10-17). */
+  .dwr-body:has(#p-plan.on){padding-left:.6rem;padding-right:.6rem}
+  #p-plan .grp{margin-left:-.6rem;margin-right:-.6rem;padding-left:.6rem;padding-right:.6rem}
 
   /* Sub-header inside a group. Quieter than the group's own mono heading,
      because it names one facet of the thing the heading already named. */
@@ -495,6 +498,7 @@
   .data-versions{font-family:var(--mono);font-size:.68rem;letter-spacing:.04em;
     color:rgb(var(--chrome-fg) / .65);word-break:break-word;user-select:text;flex:1;min-width:0}
   .data-versions .dv-bad{color:var(--trail)}
+  .data-versions .dv-i{white-space:nowrap}
   /* CURATOR MODE. The pending queue deliberately ignores the map's region scope
      (render.js featureVisible), so a curator scoped to one region legitimately
      sees pins in another - which reads as a scope leak until you know. The hint
@@ -881,6 +885,7 @@
     border-color:rgba(90,93,77,.25);border-top-color:#5a5d4d}
   .map-top .add-climb{display:inline-block;margin-top:.6rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--trail);padding:.4rem .7rem;border-radius:5px;font-weight:500}
   .map-top .add-climb:hover{background:#ff703d}
+  body.cc-plan-on .map-top .add-climb{display:none}
   .contrib-fab{display:none}
   /* placed AFTER the desktop .map-top block so these win the cascade on mobile */
   @media(max-width:760px){
@@ -1913,6 +1918,7 @@
   .cc-ride-radius select,.cc-ride-radius .cc-sel-btn{background:var(--chrome-field);color:var(--chrome-fg-solid);border:1px solid rgb(var(--chrome-fg) / .25);border-radius:6px;font-size:.78rem;padding:.25rem .35rem}
   .cc-ride-status{margin-top:.5rem;font-size:.8rem;color:var(--ochre)}
   .cc-ride-status.is-busy{display:flex;align-items:center;gap:.5rem}
+  .cc-ride-status.is-done{color:rgb(var(--chrome-fg) / .68)}
   .cc-ride-status .cc-ride-lnk{color:var(--trail);text-decoration:underline;cursor:pointer}
   .cc-ride-note{margin:.55rem 0 .15rem;font-size:.72rem;line-height:1.4;color:rgb(var(--chrome-fg) / .68)}
   /* results live in the standard drawer (.cc-near list styles); just the Clear action */
@@ -1998,14 +2004,33 @@
   .cc-plan-prof .stopmark{fill:var(--trail)}
   .cc-plan-cursor{position:absolute;top:0;bottom:0;width:1px;background:var(--trail);pointer-events:none;display:none}
   .cc-plan-tip{position:absolute;top:4px;font-family:var(--mono);font-size:.62rem;background:var(--ink);color:var(--paper);padding:.15rem .4rem;border-radius:3px;pointer-events:none;display:none;white-space:nowrap}
-  .cc-plan-within{color:rgb(var(--chrome-fg) / .7);letter-spacing:.04em;text-transform:none}
+  /* The along list's heading with how far it looks, 250 m to 5 km. */
+  .cc-plan-alongh{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.8rem}
+  .cc-plan-alongh h3{margin:0}
   .cc-plan-row{display:flex;align-items:flex-end;gap:.4rem}
   .cc-plan-row .cc-near{flex:1;min-width:0}
+  /* The distances wrap beside the button rather than run under it: each half stays whole. */
+  .cc-plan-row .cc-near em{flex:0 1 auto;min-width:0;white-space:normal}
+  .cc-plan-row .cc-near em span{white-space:nowrap}
   .cc-plan-add{flex:none;margin-bottom:.55rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;border:1px solid rgb(var(--chrome-fg) / .3);border-radius:20px;padding:.25rem .55rem;color:var(--chrome-fg-solid);background:none;cursor:pointer;white-space:nowrap}
   .cc-plan-add:hover{border-color:var(--trail);color:var(--trail)}
   .cc-plan-add.in{border-color:transparent;background:rgb(var(--chrome-fg) / .12);color:rgb(var(--chrome-fg) / .7)}
   .cc-plan-acts{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
-  .cc-plan-openrow{margin-top:.5rem}
+  /* The ride file's row (owner 2026-10-17): Open a GPX, Download GPX and Clear at the right, under the name. */
+  .cc-plan-openrow{margin-top:.5rem;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:.35rem}
+  .cc-plan-openrow .cc-plan-acts{display:contents}
+  .cc-plan-openrow .cc-plan-acts[hidden]{display:none}
+  .cc-plan-openrow .cc-ride-btn{font-size:.66rem;padding:.35rem .55rem}
+  /* The planner's buttons are squarish, as How it works is (owner 2026-10-17: "buttons must be squarish"). */
+  #p-plan .cc-ride-btn,#planSide .cc-ride-btn,#planBar .cc-ride-btn,.cc-plan-dlg .cc-ride-btn,.cc-plan-add{border-radius:4px}
+  /* The bike block, compact: the heading, then the chips with Show every bike type at the row's end. */
+  #p-plan .grp.cc-plan-bike{padding-top:.7rem;padding-bottom:.75rem}
+  .cc-plan-bike h3{margin-bottom:.45rem}
+  .cc-plan-bikerow{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem .5rem}
+  .cc-plan-bikerow .hint{margin:0 0 0 auto;font-size:.74rem}
+  /* How it works in the drawer's title row, only while the planner is the open panel. */
+  .dwr-head .cc-head-plan{display:none;margin-left:0}
+  .dwr:has(#p-plan.on) .dwr-head .cc-head-plan:not([hidden]){display:inline-block}
   /* The planner's dialogs in the middle of the screen: the question before a ride file replaces the ride
      (#planReplace) and a notice that something was not done (#planNotice). The global reset takes a
      <dialog>'s centring away, so margin:auto restates it, as .cc-hist-dlg does. */
@@ -2023,11 +2048,16 @@
   /* the planner's guide (route-planner.md section 3.1): How it works, and the card it opens */
   .cc-plan-guidebar{display:flex;justify-content:flex-end;margin:0 0 .4rem}
   .cc-plan-guidebar .dl-all[hidden]{display:none}
-  .cc-plan-guide{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1300;width:min(26rem,calc(100% - 2rem));max-height:calc(100% - 2rem);overflow:auto;padding:1rem 1.1rem;background:var(--chrome-bg);color:var(--chrome-fg-solid);border:1px solid rgb(var(--chrome-fg) / .18);border-radius:10px;box-shadow:0 18px 48px -16px rgba(0,0,0,.6);font-size:.88rem;line-height:1.45}
+  .cc-plan-guide{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1300;width:min(39rem,calc(100% - 2rem));max-height:calc(100% - 2rem);overflow:auto;padding:1rem 1.1rem;background:var(--chrome-bg);color:var(--chrome-fg-solid);border:1px solid rgb(var(--chrome-fg) / .18);border-radius:10px;box-shadow:0 18px 48px -16px rgba(0,0,0,.6);font-size:.88rem;line-height:1.5}
   .cc-plan-guide[hidden]{display:none}
   .cc-plan-guide h3{margin:0 0 .45rem}
-  .cc-plan-guide ol{margin:0 0 .6rem;padding-left:1.2rem}
-  .cc-plan-guide li + li{margin-top:.3rem}
+  .cc-plan-guide ol{margin:0 0 .9rem;padding-left:1.2rem}
+  .cc-plan-guide-privacy{margin:0 0 .9rem;padding:.6rem .75rem;border-radius:6px;background:rgb(var(--chrome-fg) / .07)}
+  .cc-plan-guide-privacy h4{margin:0 0 .25rem;font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase}
+  .cc-plan-guide-privacy p{margin:0}
+  .cc-plan-guide li + li{margin-top:.75rem}
+  /* An italic button name leans into the space after it ("Open a GPX loads"). */
+  .cc-plan-guide li i{margin-right:.12em}
   .cc-plan-guideshow{display:flex;align-items:center;gap:.45rem;margin:0 0 .6rem;font-size:.8rem}
   /* the start: name, then where (route-planner.md section 4.1) */
   .cc-plan-field{display:block;margin-top:.4rem;max-width:20rem}
@@ -2041,6 +2071,8 @@
   .cc-plan-mk{width:24px;height:24px;border-radius:50%;background:var(--trail);color:#fff;border:2px solid #F3EBD8;box-shadow:0 2px 6px rgba(0,0,0,.35);display:grid;place-items:center;font-family:var(--mono);font-size:.64rem;font-weight:500;cursor:grab}
   .cc-plan-mk.start{background:#1E7A46} .cc-plan-mk.end{background:var(--ink);color:#fff}
   .cc-plan-mk svg{display:block}
+  /* A round ride zoomed out: the start carries the finish flag beside its S. */
+  .cc-plan-mk.start.loop{width:auto;padding:0 .35rem;border-radius:12px;display:flex;gap:.25rem;align-items:center}
   .cc-plan-mk.scrub{width:14px;height:14px;background:#fff;border:3px solid var(--trail);cursor:default}
   /* the ride bar at the foot of the map while the panel is closed */
   .cc-plan-bar{position:absolute;left:50%;bottom:1.1rem;transform:translateX(-50%);z-index:3;display:flex;align-items:center;gap:.6rem;background:rgb(var(--chrome-glass) / .92);color:var(--chrome-fg-solid);backdrop-filter:blur(8px);border-radius:12px;padding:.55rem .8rem .55rem 1rem;box-shadow:0 6px 24px rgba(0,0,0,.25);max-width:calc(100% - 2rem)}
@@ -2056,7 +2088,14 @@
   /* the strip slides down into its tab and back up (owner 2026-10-15); what sits above it follows */
   .cc-plan-strip.folded{transform:translateY(100%)}
   .map-wrap .legend,.map-wrap .fpill,.map-wrap .cc-plan-bar{transition:bottom .3s ease}
-  @media (prefers-reduced-motion: reduce){ .cc-plan-strip,.legend,.legend .lg-body,.map-wrap .legend,.map-wrap .fpill,.map-wrap .cc-plan-bar{transition:none} }
+  /* Reduced motion keeps a short soft change, never a jump (owner 2026-10-18: "a tiny smooth change over a flicker"):
+     0.12 s, over the page-wide rule that stops every transition. */
+  @media (prefers-reduced-motion: reduce){
+    .cc-plan-strip{transition:transform .12s ease!important}
+    .legend .lg-body{transition:max-height .12s ease,max-width .12s ease,opacity .12s ease!important}
+    .map-wrap .legend{transition:bottom .12s ease,padding .12s ease!important}
+    .map-wrap .fpill,.map-wrap .cc-plan-bar{transition:bottom .12s ease!important}
+  }
   .cc-plan-strip[hidden]{display:none}
   .cc-plan-strip svg{display:block;width:100%;height:100%}
   .cc-plan-strip text{font-family:var(--mono);font-size:10px;fill:rgb(var(--chrome-fg) / .7)}
@@ -2094,10 +2133,181 @@
   .cc-plan-dayunit button{background:transparent;border:none;color:var(--chrome-fg-solid);font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;padding:.25rem .55rem;cursor:pointer}
   .cc-plan-dayunit button.on{background:var(--chrome-lift)}
   .cc-plan-date{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.5rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .7)}
-  .cc-plan-date input{font:inherit;font-size:.8rem;letter-spacing:0;text-transform:none;background:rgb(var(--chrome-fg) / .06);color:var(--chrome-fg-solid);border:1px solid rgb(var(--chrome-fg) / .15);border-radius:6px;padding:.25rem .4rem}
+  .cc-plan-date input,.cc-plan-dateshow,.cc-plan-date select,.cc-plan-reach{font:inherit;font-size:.8rem;letter-spacing:0;text-transform:none;background:rgb(var(--chrome-fg) / .06);color:var(--chrome-fg-solid);border:1px solid rgb(var(--chrome-fg) / .15);border-radius:6px;padding:.25rem .4rem}
+  /* A list's open choices are drawn by the browser on the field's own background: a see-through field gave a
+     see-through list over the map, so the fields that open a list stand on the drawer's solid colour. */
+  .cc-plan-date select,.cc-plan-reach{background:color-mix(in srgb, var(--chrome-bg) 94%, rgb(var(--chrome-fg)));font-family:var(--mono);font-size:.78rem;letter-spacing:0;text-transform:none;color:var(--chrome-fg-solid);border:1px solid rgb(var(--chrome-fg) / .15);border-radius:6px;padding:.25rem .4rem;cursor:pointer}
+  .cc-plan-date select option,.cc-plan-reach option{background:var(--chrome-bg);color:var(--chrome-fg-solid)}
+  .cc-plan-datebox{position:relative;display:inline-flex}
+  .cc-plan-dateshow{cursor:pointer}
+  .cc-plan-dateshow:hover{border-color:var(--trail)}
+  /* Under its button: the calendar opens where the button is, and the field's own order is never seen. */
+  .cc-plan-date input.under{position:absolute;inset:0;width:100%;height:100%;opacity:0;pointer-events:none}
   .cc-plan-tougher{margin-top:.5rem}
   .cc-plan-tougher[hidden]{display:none}
   .cc-plan-tougher h4{margin:0 0 .2rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;font-weight:500;color:rgb(var(--chrome-fg) / .7)}
   .cc-plan-tougher ul{list-style:none;margin:0;padding:0;font-size:.8rem;line-height:1.35}
   .cc-plan-tougher li{padding:.18rem 0;border-top:1px solid rgb(var(--chrome-fg) / .08)}
   .cc-plan-tougher li.cc-plan-credit{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:rgb(var(--chrome-fg) / .7)}
+
+  /* The ride's details on the right of a wide screen (route-planner.md section 3, owner 2026-10-17): the drawer's width,
+     the drawer's colours, under a place's drawer (1200), which takes this side while it is open. What sits on the right
+     of the map steps aside: the top-right buttons, the key, the profile strip and the map credits. */
+  .map-wrap{--side-w:320px}
+  .cc-ride-side{position:absolute;top:0;right:0;bottom:0;width:var(--side-w);z-index:1150;display:flex;flex-direction:column;background:var(--chrome-bg);color:var(--chrome-fg-solid);border-left:1px solid rgb(var(--chrome-fg) / .14);box-shadow:-6px 0 24px rgba(0,0,0,.12)}
+  .cc-ride-side[hidden]{display:none}
+  /* Room at the foot for the bug button, which sits over the bottom right corner. */
+  .cc-ride-side-body{flex:1;overflow-y:auto;padding:0 .8rem 4.5rem;scrollbar-width:thin;scrollbar-color:rgb(var(--chrome-fg) / .55) transparent}
+  .cc-ride-side-body .grp{margin:0;padding:1rem 0 0}
+  .map-wrap.cc-side-on .tr{transform:translateX(calc(-1 * var(--side-w)))}
+  .map-wrap.cc-side-on .legend{right:calc(var(--side-w) + 1.2rem)}
+  .map-wrap.cc-side-on .cc-plan-strip{right:var(--side-w)}
+  .map-wrap.cc-side-on .maplibregl-ctrl-bottom-right{right:var(--side-w)}
+  /* The right side breathes (owner 2026-10-17: "now that we have more space let it breathe"). */
+  .cc-ride-side-body{padding:0 1.1rem 4.5rem}
+  .cc-ride-side-body .grp{padding-top:1.2rem}
+  #planSide .cc-plan-figs{gap:.6rem}
+  #planSide .cc-plan-fig{padding:.65rem .75rem}
+  #planSide .cc-plan-dayfx{margin-top:.9rem;padding:.7rem .8rem .5rem}
+  #planSide .cc-plan-date{margin-top:1.1rem}
+  #planSide .cc-plan-tougher{margin-top:1.3rem}
+  #planSide .cc-plan-tougher h4{margin-bottom:.4rem}
+  #planSide .cc-plan-tougher li{padding:.35rem 0}
+  /* A stat that lights its stretches on the map says so under the pointer. */
+  .cc-plan-fig[data-part],.cc-plan-daylegend li[data-part]{cursor:default;transition:background .15s}
+  .cc-plan-fig[data-part]:hover,.cc-plan-fig[data-part]:focus-visible{background:rgb(var(--chrome-fg) / .11)}
+  .cc-plan-daylegend li[data-part]{border-radius:4px;padding:0 .2rem;margin:0 -.2rem}
+  .cc-plan-daylegend li[data-part]:hover,.cc-plan-daylegend li[data-part]:focus-visible{background:rgb(var(--chrome-fg) / .09)}
+  /* The day by the hour (route-planner.md section 4.4). Colours validated for both themes (dataviz validator,
+     2026-10-17): temperature, wind and rain each its own small chart, so each colour names one chart only. */
+  :root{--wx-temp:#D96A33;--wx-wind:#2AA57C;--wx-rain:#7579E0;--wx-into:#D96A33;--wx-with:#5B9BD5;--wx-side:rgb(var(--chrome-fg) / .35)}
+  html[data-map-theme="light"]{--wx-temp:#C0561E;--wx-wind:#21946F;--wx-rain:#5B5FC7;--wx-into:#B8501A;--wx-with:#2E78C2}
+  .cc-plan-tougher li.cc-wx{position:relative;border-top:none;padding:.2rem 0 .4rem}
+  .cc-wx-svg{display:block;width:100%;height:auto;overflow:visible}
+  .cc-wx-svg .wx-temp{fill:none;stroke:var(--wx-temp);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+  .cc-wx-svg .wx-dot{fill:var(--wx-temp);stroke:var(--chrome-bg);stroke-width:2}
+  .cc-wx-svg .wx-wind{fill:var(--wx-wind)}
+  .cc-wx-svg .wx-gust{stroke:var(--wx-wind);stroke-width:1.5;opacity:.6}
+  .cc-wx-svg .wx-arrow{fill:rgb(var(--chrome-fg) / .6)}
+  .cc-wx-svg .wx-rain{fill:var(--wx-rain)}
+  .cc-wx-svg .wx-base{stroke:rgb(var(--chrome-fg) / .18);stroke-width:1;shape-rendering:crispEdges}
+  .cc-wx-svg .wx-band{fill:rgb(var(--chrome-fg) / .07)}
+  .cc-wx-svg text{font-family:var(--mono);font-size:8.5px;fill:rgb(var(--chrome-fg) / .72)}
+  .cc-wx-svg .wx-v{fill:var(--chrome-fg-solid);font-size:9px}
+  .cc-wx-svg .wx-band-t{letter-spacing:.06em}
+  .cc-wx-svg .wx-hit{fill:transparent}
+  .cc-wx-svg .wx-x{stroke:rgb(var(--chrome-fg) / .45);stroke-width:1}
+  .cc-wx-tip{position:absolute;top:-1.4rem;z-index:2;white-space:nowrap;font-size:.7rem;padding:.2rem .45rem;border-radius:4px;background:var(--chrome-fg-solid);color:var(--chrome-bg);pointer-events:none}
+  .cc-wx-tip[hidden]{display:none}
+  .cc-wx-words{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .cc-plan-tougher li.cc-wx-share{border-top:none;padding:.3rem 0 .4rem}
+  .cc-wx-share svg{display:block;width:100%;height:8px;border-radius:3px}
+  .cc-wx-share .wx-share-into,.cc-wx-share-l i.wx-share-into{fill:var(--wx-into);background:var(--wx-into)}
+  .cc-wx-share .wx-share-with,.cc-wx-share-l i.wx-share-with{fill:var(--wx-with);background:var(--wx-with)}
+  .cc-wx-share .wx-share-side,.cc-wx-share-l i.wx-share-side{fill:var(--wx-side);background:var(--wx-side)}
+  .cc-wx-share-l{display:flex;flex-wrap:wrap;gap:.15rem .7rem;margin-top:.35rem;font-size:.74rem}
+  .cc-wx-share-l span{display:inline-flex;align-items:center;gap:.3rem;border-radius:4px;padding:0 .2rem;margin:0 -.2rem}
+  .cc-wx-share-l span:hover,.cc-wx-share-l span:focus-visible{background:rgb(var(--chrome-fg) / .09)}
+  .cc-wx-share-l i{width:10px;height:10px;border-radius:2px;flex:none}
+  /* The key's grip (route-planner.md section 3): drag the key into the ride's side, where it snaps in at the foot.
+     Shown only while the side is. Docked, the key is one more block of the side, no glass, no corner. */
+  /* A handle centred on the key's top edge, over its own strip of room: at the top left the eye button covered it. */
+  .legend .lg-grip{position:absolute;top:.15rem;left:50%;transform:translateX(-50%);z-index:2;display:grid;place-items:center;width:2.4rem;height:.9rem;padding:0;border:none;border-radius:4px;background:none;color:rgb(var(--chrome-fg) / .7);cursor:grab;touch-action:none}
+  .legend:has(> .lg-grip:not([hidden])){padding-top:1.05rem}
+  .legend .lg-grip[hidden]{display:none}
+  .legend .lg-grip:hover,.legend .lg-grip:focus-visible{color:var(--chrome-fg-solid);background:rgb(var(--chrome-fg) / .1)}
+  .legend.lg-dragging{z-index:1700;transition:none;box-shadow:0 12px 32px rgba(0,0,0,.3);opacity:.92}
+  .legend.lg-dragging .lg-grip{cursor:grabbing}
+  #planSide.cc-drop{box-shadow:inset 0 0 0 2px var(--trail),-6px 0 24px rgba(0,0,0,.12)}
+  #planSide .legend.docked{position:relative;right:auto;bottom:auto;z-index:auto;max-width:none;margin-top:1.4rem;padding:1rem 0 0;background:none;border-radius:0;border-top:1px solid rgb(var(--chrome-fg) / .14);box-shadow:none}
+  #planSide .legend.docked .lg-body > *{width:auto}
+  #planSide .legend.docked .lg-body{max-width:none}
+  #planSide .legend.docked:has(> .lg-grip:not([hidden])){padding-top:1.3rem}
+  #planSide .legend.docked .lg-grip{top:.25rem}
+  .legend.collapsed .lg-grip{display:none}
+  .cc-wx-svg .wx-ice path{stroke:var(--wx-rain);stroke-width:1.6;stroke-linecap:round;fill:none}
+  /* When: the day and the start time under the name, the ride's base facts. */
+  #p-plan .grp.cc-plan-when{padding-top:.7rem;padding-bottom:.8rem}
+  .cc-plan-when .cc-plan-date:first-of-type{margin-top:0}
+  .cc-plan-when .cc-plan-date + .cc-plan-date{margin-top:.55rem}
+  /* The day graphic with more air and larger words (owner 2026-10-17). */
+  #planSide .cc-plan-dayfx,#p-plan .cc-plan-dayfx{padding:.85rem .9rem .6rem}
+  .cc-plan-daybars svg{height:12px}
+  .cc-plan-daylegend{font-size:.84rem;line-height:1.4;gap:.25rem .8rem;margin:.55rem 0 .9rem}
+  .cc-plan-dayunit{margin-bottom:.7rem}
+  /* The figures on a six-column grid: three small tiles over the riding time and the finish, side by side. */
+  .cc-plan-figs{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .cc-plan-fig{grid-column:span 2}
+  .cc-plan-fig-half{grid-column:span 3}
+  .cc-plan-fig-half[hidden]{display:none}
+  .cc-plan-fig-half span em{display:block;font-style:normal;text-transform:none;letter-spacing:0;color:rgb(var(--chrome-fg) / .8);margin-top:.15rem}
+  .cc-plan-fig-half span em:empty{display:none}
+  .cc-plan-fig .cc-info-wrap{position:relative;text-transform:none;letter-spacing:0}
+  /* What makes it tougher and Weather are headings like Your ride (owner 2026-10-17). */
+  .cc-plan-tougher h4,#planSide .cc-plan-tougher h4{font-family:var(--mono);font-size:.74rem;letter-spacing:.18em;font-weight:700;color:var(--chrome-head);text-transform:uppercase;margin:0 0 .7rem}
+  #planSide .cc-plan-tougher,#p-plan .cc-plan-tougher{margin-top:1.6rem}
+  /* The guide reads on a blurred map (owner 2026-10-17). */
+  #map{transition:filter .25s ease}
+  .map-wrap:has(#planGuide:not([hidden])) #map{filter:blur(3px) saturate(.85)}
+  @media (prefers-reduced-motion: reduce){ #map{transition:filter .12s ease!important} }
+  .cc-plan h3 .cc-side-x[hidden]{display:none}
+  /* The veil under the guide: the whole map fades, blurred under it (map-wrap's own blur), and takes every click. */
+  .cc-plan-veil{position:absolute;inset:0;z-index:1290;background:rgb(var(--chrome-glass) / .45)}
+  .cc-plan-veil[hidden]{display:none}
+  /* The watch row: wind chill, humidity, ice; struck through and quiet while there is nothing to say. */
+  .cc-wx-watch{display:flex;flex-wrap:wrap;gap:.35rem .9rem;margin:0 0 .7rem}
+  .cc-wx-w{display:inline-flex;align-items:center;gap:.3rem;font-size:.76rem;color:rgb(var(--chrome-fg) / .68);cursor:help}
+  .cc-wx-w svg{flex:none}
+  .cc-wx-w .cc-wx-strike{stroke:rgb(var(--chrome-fg) / .68)}
+  .cc-wx-w.on{color:var(--chrome-fg-solid)}
+  .cc-wx-w.on svg{color:var(--trail)}
+  .cc-wx-w b{font-weight:600}
+  /* The day and the start time, readable at a glance (owner 2026-10-18: "too small"). */
+  /* The labels larger and on one line; the fields keep their size (owner 2026-10-18). */
+  .cc-plan-when .cc-plan-date{font-size:.76rem}
+  .cc-plan-when .cc-plan-date > span:first-child,.cc-plan-when .cc-plan-date > label{white-space:nowrap}
+  .cc-plan-when .cc-plan-date + .cc-plan-date{margin-top:.7rem}
+  /* The details' heading as one row: the eye beside the words, the side's close button at the right edge, both one
+     size (owner 2026-10-18: "not aligned, and on the right of the drawer"). */
+  #planFigsGrp > h3{display:flex;align-items:center}
+  #planSideX,#planSideBack{padding:.2rem .35rem;display:inline-flex;align-items:center}
+  /* The id rules above outrank the hidden attribute's display:none, so it is said again here: one of the two shows at a time. */
+  #planSideX[hidden],#planSideBack[hidden]{display:none}
+  #planSideX{margin-left:auto}
+  #planSideBack{margin-left:.45rem}
+  /* The closed strip's tab centres on the map the side leaves free, never under the side (owner 2026-10-18). */
+  .map-wrap.cc-side-on .cc-plan-striptab{left:calc((100% - var(--side-w)) / 2)}
+  /* The guide's steps, each a numbered box like the privacy block (owner 2026-10-18). */
+  .cc-plan-guide ol.cc-plan-guide-steps{list-style:none;padding:0;counter-reset:step}
+  .cc-plan-guide-steps li{counter-increment:step;position:relative;padding:.5rem .7rem .5rem 2.1rem;border-radius:6px;background:rgb(var(--chrome-fg) / .07)}
+  .cc-plan-guide .cc-plan-guide-steps li + li{margin-top:.4rem}
+  .cc-plan-guide-steps li::before{content:counter(step);position:absolute;left:.75rem;top:.5rem;font-family:var(--mono);font-weight:700;color:var(--trail)}
+  /* The planner's own calendar (route-planner.md section 4.4): the drawer's colours, square corners, the picked day in
+     the accent, a dot on the days the forecast reaches. */
+  .cc-cal{position:absolute;top:calc(100% + .35rem);right:0;z-index:40;width:16.5rem;padding:.6rem;background:var(--chrome-bg);color:var(--chrome-fg-solid);border:1px solid rgb(var(--chrome-fg) / .18);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.22);font-family:var(--sans);text-transform:none;letter-spacing:0}
+  .cc-cal[hidden]{display:none}
+  .cc-cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem}
+  .cc-cal-m{font-weight:600;font-size:.88rem;text-transform:capitalize}
+  .cc-cal-nav{width:1.8rem;height:1.8rem;border:1px solid rgb(var(--chrome-fg) / .2);border-radius:4px;background:none;color:var(--chrome-fg-solid);font-size:1rem;line-height:1;cursor:pointer}
+  .cc-cal-nav:hover:not(:disabled){border-color:var(--trail);color:var(--trail)}
+  .cc-cal-nav:disabled{opacity:.35;cursor:default}
+  .cc-cal-w,.cc-cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:.15rem}
+  .cc-cal-w span{text-align:center;font-family:var(--mono);font-size:.62rem;letter-spacing:.04em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .7);padding:.15rem 0}
+  .cc-cal-d{position:relative;height:2rem;border:none;border-radius:4px;background:none;color:var(--chrome-fg-solid);font-size:.82rem;cursor:pointer}
+  .cc-cal-d:hover:not(:disabled),.cc-cal-d:focus-visible{background:rgb(var(--chrome-fg) / .1);outline:none}
+  .cc-cal-d.out{color:rgb(var(--chrome-fg) / .68)}
+  .cc-cal-d:disabled{color:rgb(var(--chrome-fg) / .68);text-decoration:line-through;opacity:.55;cursor:default}
+  .cc-cal-d.today{box-shadow:inset 0 0 0 1px rgb(var(--chrome-fg) / .45)}
+  .cc-cal-d.sel{background:var(--trail);color:#fff;font-weight:600}
+  .cc-cal-d.fc::after{content:'';position:absolute;left:50%;bottom:.2rem;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--wx-wind)}
+  .cc-cal-d.sel.fc::after{background:#fff}
+  .cc-cal-f{display:flex;align-items:center;gap:.35rem;margin-top:.45rem;font-size:.7rem;color:rgb(var(--chrome-fg) / .72)}
+  .cc-cal-f i{width:5px;height:5px;border-radius:50%;background:var(--wx-wind)}
+  /* The guide's step frames what it speaks of: an orange glow over the veil (1290) and under the guide (1300), which
+     stays the top layer (owner 2026-10-18); never in the way of the pointer. */
+  .cc-guide-glow{position:fixed;z-index:1295;pointer-events:none;border:2px solid rgb(255 90 31 / .6);border-radius:8px;box-shadow:0 0 0 4px rgb(255 90 31 / .11),0 0 22px 6px rgb(255 90 31 / .22)}   /* half as bright (owner 2026-10-18) */
+  .cc-plan-guide-steps li[data-guide]{cursor:default}
+  .cc-plan-guide-steps li[data-guide]:hover,.cc-plan-guide-steps li[data-guide]:focus-visible{background:rgb(var(--chrome-fg) / .12);outline:none}
+  /* Over the ride line a click inserts a checkpoint: the insert cursor beats any layer's hover pointer. */
+  .cc-insert .maplibregl-canvas{cursor:copy!important}
+  .cc-guide-glow.spot{border-radius:50%}

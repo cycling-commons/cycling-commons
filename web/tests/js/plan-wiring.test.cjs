@@ -78,7 +78,14 @@ test('the day: the time tile, the time bar, the date and what makes it tougher, 
   assert.ok(/rideTime\(dayLegs\(\), ride\.bike\)/.test(plan), 'the figures do not run the day\'s model');
   for (const needle of ['steepestKm(', 'longestClimb(', 'waterGap(', 'sunTimes(', 'windShares(']) assert.ok(plan.includes(needle), `plan.js does not use ${needle}`);
   assert.ok(plan.includes('CC_PLAN.weather'), 'the forecast is not asked through our server');
-  assert.ok(!/open-meteo\.com|api\.open-meteo|fetch\(['"]https?:/i.test(plan + model), 'the browser reaches the forecast service itself: it must only ever talk to our server');
+  assert.ok(!/api\.open-meteo|fetch\(['"`]https?:/i.test(plan + model), 'the browser reaches the forecast service itself: it must only ever talk to our server');
+  // open-meteo.com appears once, as the page the rider opens from the credit, never fetched.
+  assert.deepEqual((plan + model).match(/open-meteo\.com[^'"`]*/gi), ['open-meteo.com/en/docs?'], 'open-meteo.com is named anywhere but the credit\'s link');
+  assert.match(plan, /<a href="\$\{escPend\(href\)\}" target="_blank" rel="noopener noreferrer">Open-Meteo<\/a>/, 'the credit does not link Open-Meteo in a new tab');
+  // Every planner duration reads through durationText(): the riding time, the parts and the daylight.
+  assert.match(plan, /tpl\(P\(\)\.daylight \|\| 'Daylight \{d\}, \{from\} to \{to\}', \{ d: durationText\(x\.sun\.daylightS, durWords\(\), 1\)/, 'the daylight has a duration format of its own');
+  assert.ok(!/String\(m\)\.padStart|\{h\} h \{m\}/.test(plan), 'a duration is still written "h mm"');
+  for (const l of ['en', 'fr', 'nl', 'de', 'es']) assert.match(read(`translations/messages.${l}.yaml`), /^ {2}plan_daylight: ".*\{d\}.*"$/m, `messages.${l}.yaml writes the daylight in hours and minutes of its own`);
   for (const needle of ["path('map_plan_weather')", "csrf_token('plan-weather')"]) assert.ok(twig.includes(needle), `the CC_PLAN blob lacks ${needle}`);
   assert.ok(!twig.includes('id="planTough"') && !twig.includes('planToughFx'), 'the 1 to 5 level is gone from the template');
 });
@@ -103,7 +110,7 @@ test('the rail shows the Plan icon with the dot while a ride is on the map, as L
 test('the ride line lies over every other line layer and under the icons (owner 2026-10-15)', () => {
   const render = read('assets/map/render.js');
   const lift = (render.match(/export function liftInfoLayersAboveRoutes\(\)\{[\s\S]*?\n\}/) || [''])[0];
-  const planAt = lift.indexOf("['plan-gap','plan-alt','plan-casing','plan-line','plan-straight','plan-arrows']");
+  const planAt = lift.indexOf("['plan-gap','plan-alt','plan-casing','plan-line','plan-straight','plan-hl-casing','plan-hl','plan-rain','plan-wind','plan-arrows']");
   const iconsAt = lift.indexOf('coverageIconLayerIds(');
   assert.ok(planAt > 0, 'the stacking authority does not lift the ride layers');
   assert.ok(lift.indexOf("['mly-cov','mly-img']") < planAt && planAt < iconsAt, 'the ride layers go above the lines and below the coverage icons');
@@ -164,14 +171,16 @@ test('the ride reads the surface lines on the map where they are drawn, and the 
   assert.ok(!/: 'E'\)/.test(plan), 'an E is still written for the last stop');
 });
 
-test('the legend and the height strip fold with an animation, and not for riders who ask for less motion (owner 2026-10-15)', () => {
+test('the legend and the height strip fold with an animation, a short soft one for riders who ask for less motion (owner 2026-10-18)', () => {
   const css = read('assets/styles/map.css');
   assert.match(css, /\.legend \.lg-body\{overflow:hidden;max-height:80vh;max-width:17\.5rem;transition:max-height \.28s ease,max-width \.28s ease,opacity \.2s ease\}/);
   assert.match(css, /\.legend\.collapsed \.lg-body\{max-height:0;max-width:0;opacity:0;visibility:hidden\}/);
   assert.ok(!/\.legend\.collapsed \.lg-body\{display:none\}/.test(css), 'the legend still snaps shut');
   assert.match(css, /\.cc-plan-strip\{[^}]*transition:transform \.3s ease/);
   assert.match(css, /\.cc-plan-strip\.folded\{transform:translateY\(100%\)\}/);
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\)\{[^}]*\.cc-plan-strip,\.legend,\.legend \.lg-body/);
+  // Less motion is a 0.12 s change over the page-wide stop, never a jump.
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)\{\n    \.cc-plan-strip\{transition:transform \.12s ease!important\}/);
+  assert.match(css, /\.map-wrap \.legend\{transition:bottom \.12s ease,padding \.12s ease!important\}/);
   assert.match(plan, /function showStrip\(on\)\{/);
 });
 
@@ -281,7 +290,7 @@ test('the GPX is the ride file: Download GPX writes it, Open a GPX reads it back
   assert.match(twig, /<button type="button" class="cc-ride-btn cc-plan-go" id="planGpx">/);
   assert.match(twig, /<button type="button" class="cc-ride-btn" id="planOpen">\{\{ 'map\.plan_open'\|trans \}\}<\/button>/);
   assert.match(twig, /<input type="file" id="planOpenFile" accept="\.gpx,application\/gpx\+xml" hidden>/);
-  assert.match(twig, /\{\{ 'map\.plan_keep_hint'\|trans\|rich \}\}/, 'the panel does not say we keep no copy');
+  assert.match(read('translations/messages.en.yaml'), /^ {2}plan_guide_privacy: "We keep no copy of your ride\./m, 'the guide does not say we keep no copy');
   assert.ok(!twig.includes('id="planSave"') && !twig.includes('plan_save_login'), 'a save to the account is still offered');
   assert.match(plan, /gpxText\(\{ name: ride\.name, bike: ride\.bike, stops: ride\.stops, legs: ride\.legs \}/, 'the file does not carry the bike');
   const open = (plan.match(/function openRideFile\(file\)\{([\s\S]*?)\n\}/) || [])[1] || '';
@@ -329,7 +338,7 @@ test('the stops\' info box says how to plan with the mouse and the keys', () => 
   }
   assert.ok(!/class="hint cc-plan-undo"/.test(twig), 'the three hint lines are still under the stops');
   for (const gone of ['plan_undo_hint', 'plan_place_hint']) assert.ok(!twig.includes(gone), `${gone} is still on the page`);
-  assert.match(plan, /document\.querySelectorAll\('#p-plan \.cc-info-wrap'\)\.forEach\(w => \{/, 'one binding for every info box of the panel');
+  assert.match(plan, /document\.querySelectorAll\('#p-plan \.cc-info-wrap, #planSide \.cc-info-wrap'\)\.forEach\(w => \{/, 'one binding for every info box of the panel and of the side');
   const en = read('translations/messages.en.yaml');
   assert.match(en, /^ {2}plan_help_click: "Click the map to add a checkpoint\."/m);
   assert.match(en, /^ {2}plan_help_remove: "Right-click a checkpoint to remove it\."/m);
@@ -342,9 +351,9 @@ test('the water-gap line adds the nearest water stop in one click', () => {
   assert.match(twig, /nearby: path\('map_coverage_nearby'\),/, 'the planner is not told where to ask');
   const render = (plan.match(/function renderTougher\(day, f\)\{([\s\S]*?)\n\}/) || [])[1] || '';
   assert.match(render, /data-plan-fill-water/, 'the water-gap line has no button');
-  assert.match(render, /waterGap\(alongRows\.concat\(stopRows\(ride\.stops, ride\.legs\)\), f\.distM\)/, 'a water stop in the ride does not split the gap');
+  assert.match(render, /waterGap\(nearRows\(\)\.concat\(stopRows\(ride\.stops, ride\.legs\)\), f\.distM\)/, 'a water stop in the ride does not split the gap, and water past the 250 m corridor is not along it');
   const fill = (plan.match(/async function fillWater\(\)\{([\s\S]*?)\n\}/) || [])[1] || '';
-  assert.match(fill, /waterGapSpan\(alongRows\.concat\(stopRows\(ride\.stops, ride\.legs\)\), f\.distM\)/, 'the middle is not the middle of the longest stretch');
+  assert.match(fill, /waterGapSpan\(nearRows\(\)\.concat\(stopRows\(ride\.stops, ride\.legs\)\), f\.distM\)/, 'the middle is not the middle of the longest stretch');
   assert.match(fill, /fetch\(`\$\{CC_PLAN\.nearby\}\?lat=\$\{mid\[1\]\}&lng=\$\{mid\[0\]\}&km=\$\{FILL_WATER_KM\}`/);
   // Measured to the dry stretch and put in where it lies (owner 2026-10-15: the stop went into another leg and the gap stayed).
   assert.match(fill, /for\(let d = fromM; d <= toM; d \+= 200\)\{ const p = pointAt\(ride\.legs, d\); if\(p\) points\.push\(\{ lat: p\[1\], lng: p\[0\], alongM: d \}\); \}/);
@@ -386,7 +395,7 @@ test('a leg that goes round answers "Why this way?" on a click, asking once', ()
 test('the water-gap line: an icon button, and its stretch on the map on hover', () => {
   const render = (plan.match(/function renderTougher\(day, f\)\{([\s\S]*?)\n\}/) || [])[1] || '';
   assert.match(render, /class="cc-info cc-plan-fillwater" data-plan-fill-water title="\$\{escPend\(label\)\}" aria-label="\$\{escPend\(label\)\}"><svg/, 'the button is not an icon with its words as title and name');
-  assert.match(render, /<li class="cc-plan-gap" tabindex="0">/, 'the gap line cannot be hovered or focused');
+  assert.match(render, /<li class="cc-plan-gap" tabindex="0" data-part="water">/, 'the gap line cannot be hovered or focused');
   assert.match(plan, /map\.addSource\('plan-gap',/);
   assert.match(plan, /map\.addLayer\(\{ id: 'plan-gap', type: 'line', source: 'plan-gap'/);
   assert.match(plan, /function showGap\(on\)\{/);
@@ -395,9 +404,11 @@ test('the water-gap line: an icon button, and its stretch on the map on hover', 
 });
 
 test('the panel says the ride is kept seven days in this browser, with its history', () => {
-  assert.match(twig, /<div class="hint">\{\{ 'map\.plan_keep_days'\|trans \}\}<\/div>/);
-  for (const l of ['en', 'fr', 'nl', 'de', 'es']) assert.match(read(`translations/messages.${l}.yaml`), /^ {2}plan_keep_days: "/m);
-  assert.match(read('translations/messages.en.yaml'), /^ {2}plan_keep_days: "A ride you are working on is kept in this browser for 7 days, including its history of changes\."/m);
+  // Said once, in the guide (owner 2026-10-17), not again in the panel.
+  assert.ok(!twig.includes('plan_keep_hint') && !twig.includes('plan_keep_days'), 'the keep line is said twice');
+  assert.match(read('translations/messages.en.yaml'), /^ {2}plan_guide_privacy: "We keep no copy of your ride\. Our server only handles the requests that draw it[^"]*Your ride stays in this browser for 7 days after your last change\. Use <i>Download GPX<\/i> to keep it\."/m);
+  // On its own at the top of the guide, before the steps (owner 2026-10-17).
+  assert.ok(twig.indexOf("'map.plan_guide_privacy'|trans|rich") < twig.indexOf("'map.plan_guide_1'|trans|rich"), 'privacy is not first');
 });
 
 test('with the stops folded, a line says how many legs go round and opens the first answer', () => {
@@ -418,7 +429,7 @@ test('arrows along the ride line show the way it is ridden', () => {
   assert.match(plan, /function addArrowImage\(\)\{/);
   assert.match(plan, /\['plan-casing', 'plan-line', 'plan-straight', 'plan-arrows'\]\.forEach\(id => \{ if\(map\.getLayer\(id\)\) map\.setLayoutProperty\(id, 'visibility'/, 'the eye does not hide the arrows with the line');
   const render = read('assets/map/render.js');
-  assert.match(render, /\['plan-gap','plan-alt','plan-casing','plan-line','plan-straight','plan-arrows'\]\.forEach/, 'the arrows, the gap and the shorter way do not keep their place over the other lines');
+  assert.match(render, /\['plan-gap','plan-alt','plan-casing','plan-line','plan-straight','plan-hl-casing','plan-hl','plan-rain','plan-wind','plan-arrows'\]\.forEach/, 'the arrows, the gap and the shorter way do not keep their place over the other lines');
 });
 
 /* See the shorter way and choose it (owner 2026-10-15): hovering the answer
@@ -453,9 +464,11 @@ test('the guide opens with the planner, remembers the rider\'s choice, and opens
   const mapWrap = twig.slice(twig.indexOf('<main class="map-wrap">'));
   assert.ok(mapWrap.includes('id="planGuide"'), 'the guide is not on the map, in its middle (owner 2026-10-15)');
   assert.match(read('assets/styles/map.css'), /\.cc-plan-guide\{position:absolute;left:50%;top:50%;transform:translate\(-50%,-50%\)/);
-  assert.match(twig, /<button type="button" class="dl-all" id="planGuideOpen">\{\{ 'map\.plan_guide_open'\|trans \}\}<\/button>/);
+  assert.match(twig, /<button type="button" class="dl-all cc-head-plan" id="planGuideOpen">\{\{ 'map\.plan_guide_open'\|trans \}\}<\/button>/);
+  const head = twig.slice(twig.indexOf('<div class="dwr-head">'), twig.indexOf('id="dwr-x"'));
+  assert.ok(head.includes('id="planGuideOpen"'), 'How it works is not in the title row (owner 2026-10-17)');
   assert.match(twig, /<input type="checkbox" id="planGuideShow" checked>/);
-  for (const n of [1, 2, 3, 4, 5, 6]) assert.ok(twig.includes(`{{ 'map.plan_guide_${n}'|trans }}`) || twig.includes(`{{ 'map.plan_guide_${n}'|trans|rich }}`), `the guide lacks step ${n}`);
+  for (const n of [1, 2, 3, 4, 5, 6, 7, 8, 9]) assert.ok(twig.includes(`{{ 'map.plan_guide_${n}'|trans }}`) || twig.includes(`{{ 'map.plan_guide_${n}'|trans|rich }}`), `the guide lacks step ${n}`);
   assert.match(twig, /open: path\('map_hint_open', \{hint: 'HINT'\}\)/, 'the page does not say where to open a hint again');
   assert.match(plan, /const GUIDE_KEY = 'cc-plan-guide';/);
   const off = (plan.match(/function guideOff\(\)\{([\s\S]*?)\n\}/) || [])[1] || '';
@@ -465,7 +478,7 @@ test('the guide opens with the planner, remembers the rider\'s choice, and opens
   assert.match(set, /\(show \? h\.open : h\.url\)\.replace\('HINT', 'plan_guide'\)/, 'the account is not told');
   assert.match(plan, /if\(key === 'plan' && !guideShownOnce && !guideOff\(\)\)\{ guideShownOnce = true; showGuide\(true\); \}/);
   assert.match(plan, /e\.stopImmediatePropagation\(\); showGuide\(false\); \} \}, true\);/, 'Escape on the guide also closes the planner panel');
-  for (const k of ['plan_guide_h', 'plan_guide_1', 'plan_guide_2', 'plan_guide_3', 'plan_guide_4', 'plan_guide_5', 'plan_guide_6', 'plan_guide_show', 'plan_guide_close', 'plan_guide_open']) {
+  for (const k of ['plan_guide_h', 'plan_guide_1', 'plan_guide_2', 'plan_guide_3', 'plan_guide_4', 'plan_guide_5', 'plan_guide_6', 'plan_guide_7', 'plan_guide_8', 'plan_guide_9', 'plan_guide_privacy_h', 'plan_guide_privacy', 'plan_guide_show', 'plan_guide_close', 'plan_guide_open']) {
     for (const l of ['en', 'fr', 'nl', 'de', 'es']) assert.match(read(`translations/messages.${l}.yaml`), new RegExp(`^ {2}${k}: "`, 'm'), `messages.${l}.yaml lacks ${k}`);
   }
 });
@@ -500,7 +513,7 @@ test('the planner calls a point of the ride a checkpoint, in every language', ()
   const words = { en: /checkpoint/i, nl: /checkpoint/i, de: /Checkpoint/, fr: /points? de contrôle/i, es: /puntos? de control/i };
   for (const [l, word] of Object.entries(words)) {
     const y = read(`translations/messages.${l}.yaml`);
-    for (const key of ['plan_stops_h', 'plan_no_stops', 'plan_add_stop', 'plan_stops_sum', 'plan_bar_stops', 'plan_help_click', 'plan_help_remove', 'plan_guide_2', 'plan_guide_3']) {
+    for (const key of ['plan_stops_h', 'plan_no_stops', 'plan_add_stop', 'plan_stops_sum', 'plan_bar_stops', 'plan_help_click', 'plan_help_remove', 'plan_guide_5', 'plan_guide_6', 'plan_guide_7']) {
       const line = (y.match(new RegExp(`^ {2}${key}: "([^"]*)"`, 'm')) || [])[1] || '';
       assert.match(line, word, `${l} ${key} does not say checkpoint: ${line}`);
     }
@@ -522,7 +535,7 @@ test('with the height strip open, the map credits and the zoom buttons stay visi
    (owner 2026-10-16); the lines go through the sanitising |rich filter, never |raw. */
 test('the guide and the hints name their buttons in italics', () => {
   // plan_guide_1 names Open a GPX: a ride can start from a file on the device (owner 2026-10-16).
-  for (const k of ['plan_guide_1', 'plan_guide_4', 'plan_guide_6', 'plan_help_place', 'plan_keep_hint']) {
+  for (const k of ['plan_guide_1', 'plan_guide_8', 'plan_guide_privacy', 'plan_help_place']) {
     assert.ok(twig.includes(`{{ 'map.${k}'|trans|rich }}`), `${k} is not rendered through |rich`);
     for (const l of ['en', 'fr', 'nl', 'de', 'es']) {
       const line = (read(`translations/messages.${l}.yaml`).match(new RegExp(`^ {2}${k}: "([^"]*)"`, 'm')) || [])[1] || '';
@@ -593,4 +606,253 @@ test('the water fill never takes back anything but its own stop', () => {
   assert.doesNotMatch(check, /undo\(\)/, 'never the rider\'s undo');
   assert.match(controller, /'fillWaterFull' => \$t->trans\('map\.plan_fill_water_full'\)/);
   for (const l of ['en', 'fr', 'nl', 'de', 'es']) assert.match(read(`translations/messages.${l}.yaml`), /^ {2}plan_fill_water_full: "[^"]*\{n\}/m, l);
+});
+
+test('the forecast is asked only at forecastPoint: rounded in the browser, never near the start or the finish', () => {
+  const fn = plan.slice(plan.indexOf('async function fetchWeather'), plan.indexOf('/* The profile in the panel'));
+  assert.ok(fn.includes('forecastPoint(ride.legs)'), 'fetchWeather does not take its point from forecastPoint');
+  assert.ok(!/pointAt\(/.test(fn), 'fetchWeather picks a point of its own instead of forecastPoint');
+  assert.ok(fn.includes('JSON.stringify({ lat: at[1], lng: at[0], date })'), 'the body does not carry the rounded point');
+  assert.ok(/const fc = forecast && forecast\.date === rideDate\(\) && forecastPoint\(ride\.legs\)/.test(plan), 'the panel shows a forecast for a ride that asks none');
+});
+
+test('the start search sends Photon a rounded middle of the map, and the scope follows the start picked', () => {
+  const fn = plan.slice(plan.indexOf('async function searchStart'), plan.indexOf('function setBike'));
+  assert.ok(fn.includes("'&lat=' + c.lat.toFixed(1) + '&lon=' + c.lng.toFixed(1)"), 'the start search sends Photon more than a 0.1° point');
+  assert.ok(!/toFixed\([2-9]\)/.test(fn), 'the start search sends a finer point than the privacy notice says');
+  assert.ok(/regionOfPointPrecise\(r\.lng, r\.lat\)\.then\(reg => \{ if\(reg\) followRideScope\(\[reg\]\); \}\)/.test(fn), 'a start picked outside the scope leaves the scope where it was');
+});
+
+test('the scope follows the stops as soon as they are on the map, and a stop clicked in the list', () => {
+  assert.match(plan, /routeAll\(\); followStopsScope\(ride\.stops\); saveDraft\(\);/, 'a new stop leaves the scope where it was until the legs are routed');
+  assert.match(plan, /flyToPin\(\[s\.lng, s\.lat\]\); followStopsScope\(\[s\]\);/, 'a stop clicked in the list does not take the scope to its region');
+  const fn = plan.slice(plan.indexOf('function followStopsScope'), plan.indexOf('function restoreRideScope'));
+  assert.ok(fn.includes('followRideScope(regions)'), 'the stops do not use the ride\'s own scope rule');
+});
+
+test('another rail panel, or the drawer closing, takes the guide away without changing its tick', () => {
+  assert.match(plan, /if\(key !== 'plan'\)\{ const g = \$\('planGuide'\); if\(g && !g\.hidden\) showGuide\(false\); \}/);
+  const fn = plan.slice(plan.indexOf('function showGuide'), plan.indexOf('function setGuideShown'));
+  assert.ok(!fn.includes('setGuideShown'), 'hiding the guide must not untick "Show this guide"');
+});
+
+test('the profile strip folds down by an arrow, comes back up by one, and carries a height scale', () => {
+  const x = twig.slice(twig.indexOf('id="planStripX"'), twig.indexOf('</button>', twig.indexOf('id="planStripX"')));
+  assert.match(x, /<path d="m6 9 6 6 6-6"\/>/, 'the close button is an arrow pointing down');
+  const tab = twig.slice(twig.indexOf('id="planStripTab"'), twig.indexOf('</button>', twig.indexOf('id="planStripTab"')));
+  assert.match(tab, /<path d="m6 15 6-6 6 6"\/>/, 'the closed strip leaves an arrow pointing up');
+  const draw = plan.slice(plan.indexOf('function drawProfile'), plan.indexOf('function scrubTo'));
+  assert.match(draw, /heightTicks\(minH \* perM, \(minH \+ span\) \* perM\)/, 'the scale is in the rider\'s unit');
+  assert.match(draw, /<line class="hgrid"/);
+  assert.match(draw, /svg \+= grid;/, 'the lines are drawn over the profile');
+});
+
+test('the along list looks 250 m to 5 km as the rider picks, kept with the draft (owner 2026-10-17)', () => {
+  assert.match(twig, /<select id="planAlongR" class="cc-plan-reach" aria-label="\{\{ 'map\.plan_along_reach'\|trans \}\}"><\/select>/);
+  assert.match(plan, /const ALONG_STEPS = \[250, 500, 1000, 2000, 5000\];/);
+  assert.match(plan, /body: JSON\.stringify\(\{ line: \{ type: 'LineString', coordinates: line \}, radius: alongM \}\)/, 'the pick never reaches the server');
+  assert.match(plan, /along: alongM, at: Date\.now\(\)/, 'the pick is not kept with the draft');
+  assert.match(plan, /const nearRows = \(\) => \(alongRows \|\| \[\]\)\.filter\(r => r\.distM <= CORRIDOR_M\);/);
+});
+
+test('the forecast of the hours ridden always shows: what is not tougher reads under Weather (owner 2026-10-17)', () => {
+  assert.match(twig, /<div class="cc-plan-tougher" id="planWeatherGrp" hidden>/);
+  const w = (plan.match(/function renderWeather\(fc, tough, feel\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.match(w, /if\(!tough\.has\('heat'\)\)/);
+  assert.match(w, /if\(!tough\.has\('wind'\)\)/);
+  assert.match(w, /if\(!tough\.has\('rain'\)\)/);
+  assert.match(plan, /rideHours\(forecast, startMin\(\), day\.seconds\)/, 'the forecast is the whole day, not the hours ridden');
+  for (const key of ['plan_weather_h', 'plan_dry', 'plan_along_reach', 'plan_start_time', 'plan_finish_h', 'plan_finish_note', 'plan_forecast_hours', 'plan_lead_days', 'plan_lead_far']) {
+    assert.ok(controller.includes(`'map.${key}'`) || twig.includes(`'map.${key}'`), `map.${key} is never translated`);
+  }
+});
+
+test('the ride kept from the last visit sleeps until the planner opens (owner 2026-10-17)', () => {
+  assert.match(plan, /paintBikes\(\); asleep = true; \}/, 'the kept ride is routed and drawn as the map page opens');
+  assert.doesNotMatch(plan, /d\.stops\.length\)\{[^\n]*afterChange\(\); \}/, 'the kept ride still wakes on page load');
+  assert.match(plan, /if\(activePanel\(\) === 'plan'\)\{ everOpened = true; if\(asleep\)\{ asleep = false; afterChange\(\); return; \} \}/, 'opening the planner does not wake the ride');
+  assert.match(plan, /function planning\(\)\{ return activePanel\(\) === 'plan' \|\| \(!asleep && ride\.stops\.length > 0\); \}/, 'a sleeping ride still takes map clicks');
+  assert.match(plan, /function drawRide\(\)\{\n  if\(asleep\) return;/);
+  assert.match(plan, /const show = !asleep && activePanel\(\) !== 'plan'/, 'the ride bar shows for a sleeping ride');
+});
+
+test('on a wide screen the ride details sit on the right, and a place drawer takes that side while open (owner 2026-10-17)', () => {
+  assert.match(twig, /<aside class="cc-ride-side" id="planSide" hidden aria-label="\{\{ 'map\.plan_ride_h'\|trans \}\}">/);
+  assert.ok(twig.indexOf('id="planSide"') < twig.indexOf('id="drawer"'), 'the side is not under the place drawer');
+  const sync = (plan.match(/function syncSide\(\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.match(sync, /const on = WIDE\.matches && !asleep && !sideClosed && ride\.stops\.length >= 2 && !spotOpen\(\);/);
+  assert.match(sync, /body\.insertBefore\(figs, \$\('planSideKey'\)\)/, 'the details do not move to the side, above a docked key');
+  assert.match(sync, /figsHome\.parentNode\.insertBefore\(figs, figsHome\.nextSibling\)/, 'the details do not come back to the panel');
+  assert.match(plan, /const WIDE = window\.matchMedia\('\(min-width:821px\)'\);/, 'the phone breakpoint is 820 px');
+  assert.match(plan, /new MutationObserver\(syncSide\)\.observe\(spot, \{ attributes: true, attributeFilter: \['class'\] \}\)/, 'closing a place does not bring the details back');
+  assert.match(plan, /const MAP_COVERS = \[[^\]]*'#planSide'\]/, 'fitting the ride ignores the side');
+  assert.match(read('assets/styles/map.css'), /\.map-wrap\.cc-side-on \.cc-plan-strip\{right:var\(--side-w\)\}/, 'the strip runs under the side');
+  assert.ok(controller.includes("'map.plan_side_hide'") || twig.includes("'map.plan_side_hide'"));
+});
+
+test('details closed off the right side come back with one click in their heading (owner 2026-10-17)', () => {
+  assert.match(twig, /<button type="button" class="dl-all ico" id="planSideBack" hidden title="\{\{ 'map\.plan_side_show'\|trans \}\}"/);
+  assert.match(plan, /const back = \$\('planSideBack'\); if\(back\) back\.hidden = !\(WIDE\.matches && sideClosed && !asleep\);/);
+  assert.match(plan, /\$\('planSideBack'\)\?\.addEventListener\('click', \(\) => \{ sideClosed = false; syncSide\(\); \}\);/);
+  for (const l of ['en', 'fr', 'nl', 'de', 'es']) assert.match(read(`translations/messages.${l}.yaml`), /^ {2}plan_side_show: "/m);
+});
+
+test('the map key drags into the ride details and snaps in, and back out (owner 2026-10-17)', () => {
+  const dock = read('assets/map/legend-dock.js');
+  assert.match(twig, /<div class="cc-ride-side-body" id="planSideBody"><div class="cc-ride-side-key" id="planSideKey"><\/div><\/div>/);
+  assert.match(plan, /legendSync = initLegendDock\(\$\('planSide'\), \$\('planSideKey'\), /);
+  assert.match(plan, /if\(legendSync\) legendSync\(on\);/, 'a docked key is lost while the side is away');
+  assert.match(dock, /const into = e\.type === 'pointerup' && over\(e\);/, 'a drop over the side does not dock');
+  assert.match(dock, /home\.parentNode\.insertBefore\(legend, home\.nextSibling\)/, 'the key does not go back to its corner');
+  assert.match(dock, /grip\.hidden = !shown;/, 'the grip shows without a side to dock into');
+  assert.match(dock, /localStorage\.setItem\(KEY, on \? '1' : '0'\)/);
+  for (const l of ['en', 'fr', 'nl', 'de', 'es']) for (const k of ['plan_key_dock', 'plan_key_undock']) assert.match(read(`translations/messages.${l}.yaml`), new RegExp(`^ {2}${k}: "`, 'm'));
+});
+
+test('pointing at the wind draws its direction along the ride; cold, humidity and ice get their lines (owner 2026-10-17)', () => {
+  assert.match(plan, /map\.addLayer\(\{ id: 'plan-wind', type: 'symbol', source: 'plan-wind', layout: \{ 'icon-image': 'plan-wind-arrow'/);
+  assert.match(plan, /windArrows\(h \? h\.fromDeg : null, h \? h\.windKmh : null\);/, 'the hour pointed at in the chart does not turn the arrows');
+  assert.match(plan, /windArrows\(\.\.\.\(cls && cls\.startsWith\('wind-'\) \? ridingWind\(\) : \[null, null\]\)\);/, 'the wind bar does not draw the arrows');
+  // The harder the wind, the bigger its arrows (owner 2026-10-17).
+  assert.match(plan, /const WIND_SCALE = \['interpolate', \['linear'\], \['get', 'kmh'\], 0, 0\.6, 20, 1, 40, 1\.45, 60, 1\.85\];/);
+  assert.match(plan, /'icon-size': \['interpolate', \['linear'\], \['zoom'\], 8, \['\*', 0\.7, WIND_SCALE\], 14, \['\*', 1\.1, WIND_SCALE\]\]/);
+  assert.match(plan, /const feel = rideFeel\(fc, day\.seconds > 0 \? f\.distM \/ 1000 \/ \(day\.seconds \/ 3600\) : 0\);/, 'the wind chill does not count the riding pace');
+  for (const k of ['plan_cold_feel', 'plan_heat_humid', 'plan_ice', 'plan_ice_freezing', 'plan_ice_snow', 'plan_ice_frost']) {
+    assert.ok(controller.includes(`'map.${k}'`), `map.${k} is not translated`);
+    for (const l of ['en', 'fr', 'nl', 'de', 'es']) assert.match(read(`translations/messages.${l}.yaml`), new RegExp(`^ {2}${k}: "`, 'm'));
+  }
+});
+
+test('the day and the start time sit under the name; the finish is a time with 5 % for traffic (owner 2026-10-17)', () => {
+  const when = twig.slice(twig.indexOf('id="planWhen"'), twig.indexOf('cc-plan-bike'));
+  assert.ok(when.includes('id="planDate"') && when.includes('id="planStartTime"'), 'the day and the start time are not base facts at the top');
+  assert.ok(twig.indexOf('id="planWhen"') < twig.indexOf('id="planFigsGrp"'));
+  assert.match(plan, /const FINISH_SLACK = 1\.05;/);
+  assert.match(plan, /at\.textContent = '~ ' \+ clockText\(new Date\(startAt\(\)\.getTime\(\) \+ roundedS\(day\.seconds \* FINISH_SLACK\) \* 1000\)\)/);
+  assert.match(plan, /\+ ' · ' \+ leadText\(fc\.date\)/, 'the forecast does not say how far ahead it is');
+});
+
+test('the riding time and the finish stand side by side, each explained behind an info icon (owner 2026-10-17)', () => {
+  const figs = twig.slice(twig.indexOf('id="planFigs"'), twig.indexOf('id="planDayFx"'));
+  assert.match(figs, /<div class="cc-plan-fig cc-plan-fig-half" data-part="all" tabindex="0"><b id="planTime"><\/b>/);
+  assert.match(figs, /<div class="cc-plan-fig cc-plan-fig-half" id="planArrive" hidden><b id="planArriveT"><\/b>/);
+  assert.match(figs, /aria-controls="planTimeTip"/);
+  assert.match(figs, /aria-controls="planFinishTip"/);
+  assert.match(read('assets/styles/map.css'), /\.map-wrap:has\(#planGuide:not\(\[hidden\]\)\) #map\{filter:blur\(3px\)/, 'the guide does not blur the map');
+});
+
+test('the forecast says how far ahead in plain facts, never a verdict of its own on nearer days (owner 2026-10-17)', () => {
+  const lead = (plan.match(/function leadText\(date\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.match(lead, /return days >= LEAD_FAR_DAYS \? when \+ ', ' \+ \(P\(\)\.leadFar/);
+  assert.doesNotMatch(read('translations/messages.en.yaml'), /usually right/);
+});
+
+test('the side keeps only its close button, in the heading beside the eye; the guide veils the map and takes its clicks (owner 2026-10-17)', () => {
+  assert.ok(!twig.includes('planSideOpen') && !twig.includes('planSideClear'), 'Open and Clear are still on the side');
+  const h3 = twig.slice(twig.indexOf('id="planLineToggle"'), twig.indexOf('</h3>', twig.indexOf('id="planLineToggle"')));
+  assert.match(h3, /id="planSideX" hidden/);
+  assert.match(plan, /const x = \$\('planSideX'\); if\(x\) x\.hidden = !on;/);
+  assert.match(twig, /<div class="cc-plan-veil" id="planGuideVeil" hidden><\/div>/);
+  assert.match(plan, /const guide = \$\('planGuide'\); if\(guide && !guide\.hidden\) return;/, 'a click under the guide still adds a checkpoint');
+  assert.match(plan, /const veil = \$\('planGuideVeil'\); if\(veil\) veil\.hidden = !show;/);
+});
+
+test('the weather watches wind chill, humidity and ice, struck through while there is nothing to say (owner 2026-10-17)', () => {
+  assert.match(twig, /<div class="cc-wx-watch" id="planWatch"><\/div>/);
+  const w = (plan.match(/function renderWatch\(fc, feel\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.match(w, /<path class="cc-wx-strike" d="M4 20 20 4"\/>/);
+  for (const k of ["item('chill'", "item('humid'", "item('ice'"]) assert.ok(w.includes(k), k);
+  for (const k of ['plan_watch_chill', 'plan_watch_humid', 'plan_watch_ice', 'plan_watch_chill_off', 'plan_watch_humid_off', 'plan_watch_ice_off', 'plan_watch_no_hours']) {
+    for (const l of ['en', 'fr', 'nl', 'de', 'es']) assert.match(read(`translations/messages.${l}.yaml`), new RegExp(`^ {2}${k}: "`, 'm'));
+  }
+});
+
+test('pointing at a stat or the weather veils the map; an hour lights where the rider is then, with its rain as drops (owner 2026-10-18)', () => {
+  assert.match(plan, /map\.addLayer\(\{ id: 'plan-veil', type: 'background', paint: \{ 'background-color': '#F3EBD8', 'background-opacity': 0, 'background-opacity-transition': \{ duration: still \? VEIL_FADE_STILL_MS : VEIL_FADE_MS, delay: 0 \} \} \}\);/, 'the veil does not fade (owner 2026-10-18: "so flashy")');
+  assert.match(plan, /const VEIL_FADE_STILL_MS = 120;/, 'reduced motion jumps instead of a short fade');
+  assert.match(plan, /const VEIL_OPACITY = 0\.62, VEIL_FADE_MS = 300, VEIL_HOLD_MS = 150;/);
+  assert.match(plan, /veilLiftTimer = setTimeout\(\(\) => \{ if\(!focused\) liftInfoLayersAboveRoutes\(\); \}, VEIL_FADE_MS \+ 20\);/, 'the ride drops under the veil before it has faded');
+  assert.match(plan, /function lightPart\(cls\)\{\n  focusMap\(!!cls\);/, 'a stat does not veil the map');
+  const hour = (plan.match(/function lightHour\(hr\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.match(hour, /hourSpan\(startMin\(\), day\.seconds, total, hr\)/);
+  assert.match(hour, /rainDrops\(span \? \[span\] : null, h \? h\.rainMm : 0\);/);
+  assert.match(hour, /focusMap\(!!h\);/);
+});
+
+test('a click on the ride line puts the checkpoint between the two of that stretch (owner 2026-10-18)', () => {
+  assert.match(plan, /const at = onRideLine\(e\.point\) \? insertIndex\(ride\.stops, ride\.legs, raw\) : undefined;/);
+  const on = (plan.match(/function onRideLine\(pt\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.match(on, /\['plan-line', 'plan-casing'\]/, 'only the ride\'s own line counts');
+  assert.match(on, /if\(ride\.stops\.length < 2 \|\| !lineShown\) return false;/);
+  assert.match(plan, /map\.getContainer\(\)\.classList\.toggle\('cc-insert', over\);/, 'the pointer does not say it inserts');
+  assert.match(read('assets/styles/map.css'), /\.cc-insert \.maplibregl-canvas\{cursor:copy!important\}/, 'a layer\'s hover pointer beats the insert cursor');
+});
+
+test('the guide runs in the order a ride is made, each step its own box (owner 2026-10-18)', () => {
+  const en = read('translations/messages.en.yaml');
+  assert.match(en, /^ {2}plan_guide_1: "Name your ride, or load one from your device with <i>Open a GPX<\/i>\."/m);
+  assert.match(en, /^ {2}plan_guide_2: "Set the start date and time if you want the weather forecast\."/m);
+  assert.match(en, /^ {2}plan_guide_7: "Click the line between two checkpoints to add a checkpoint there\."/m);
+  assert.match(en, /^ {2}plan_guide_4: "Pick your bike\./m, 'the bike has no step (owner 2026-10-18)');
+  assert.match(twig, /<ol class="cc-plan-guide-steps">/);
+  assert.match(en, /^ {2}plan_date: "Start date"/m);
+});
+
+test('the side\'s close button and the arrow back never show together; the guide is 39 rem wide (owner 2026-10-18)', () => {
+  const css = read('assets/styles/map.css');
+  assert.match(css, /#planSideX\[hidden\],#planSideBack\[hidden\]\{display:none\}/, 'an id rule beats the hidden attribute');
+  assert.match(css, /\.cc-plan-guide\{[^}]*width:min\(39rem,calc\(100% - 2rem\)\)/);
+});
+
+test('the start date opens our own calendar, in the site style, the forecast days marked (owner 2026-10-18)', () => {
+  const cal = read('assets/map/date-pick.js');
+  assert.match(plan, /initDatePick\(show, dateIn, \{ prev: P\(\)\.calPrev, next: P\(\)\.calNext, aria: P\(\)\.calAria, forecast: P\(\)\.calForecast \}, FORECAST_DAYS\)/);
+  assert.ok(!plan.includes('showPicker'), 'the browser\'s calendar is still used');
+  assert.match(cal, /input\.dispatchEvent\(new Event\('change', \{ bubbles: true \}\)\)/, 'a picked day does not reach the planner');
+  assert.match(cal, /new Date\(2024, 0, 1 \+ i\)/, 'the week does not start on Monday');
+  assert.match(cal, /shut = k < min/, 'days before today can be picked');
+  for (const k of ['plan_cal_prev', 'plan_cal_next', 'plan_cal_aria', 'plan_cal_forecast']) {
+    assert.ok(controller.includes(`'map.${k}'`));
+    for (const l of ['en', 'fr', 'nl', 'de', 'es']) assert.match(read(`translations/messages.${l}.yaml`), new RegExp(`^ {2}${k}: "`, 'm'));
+  }
+});
+
+test('each line of what makes it tougher lights its stretches under the veil (owner 2026-10-18)', () => {
+  assert.match(plan, /const TOUGH_PART = \{ long: 'all', steep: 'steep', climb: 'climbrun', rough: 'rough', busy: 'busy', water: 'water', daylight: 'dark', wind: 'wind-into', rain: 'rain', heat: 'hour-hot', cold: 'hour-cold', ice: 'hour-ice' \};/);
+  assert.match(plan, /parts\[i\] \? `<li data-part="\$\{parts\[i\]\}" tabindex="0">/);
+  assert.match(plan, /<li class="cc-plan-gap" tabindex="0" data-part="water">/, 'the water gap does not veil the map');
+  assert.match(plan, /const FOCUS_LAYERS = \['plan-gap', /, 'the water gap goes under the veil');
+  assert.match(plan, /busyRuns: d\.busyRuns \|\| null/);
+});
+
+test('a part under 50 m reads "under 0.1 km", never "0 km" (owner 2026-10-18)', () => {
+  assert.match(plan, /function partDist\(m\)\{ if\(m > 0 && m < 50\) return tpl\(P\(\)\.underDist \|\| 'under \{d\}', \{ d: uKm\(0\.1\) \}\); return fmtKm\(m\); \}/);
+  assert.match(plan, /const value = b => byDist \? partDist\(b\.seconds\) : partText\(b\.seconds\);/);
+});
+
+test('a step of the guide frames what it speaks of, and the place search stays (owner 2026-10-18)', () => {
+  for (let n = 1; n <= 9; n++) assert.match(twig, new RegExp(`<li data-guide="${n}" tabindex="0">`));
+  assert.match(plan, /const GUIDE_TARGETS = \{ 1: \['#planRideName', '#planOpen'\], 2: \['#planWhen'\], 3: \['#planStartBox'\], 4: \['\.cc-plan-bike'\], 5: \['#map'\], 6: \['\.cc-plan-mk'\], 7: \['#map'\], 8: \['spots'\]/);
+  assert.match(plan, /if\(!show\) guideGlow\(null\);/, 'a frame outlives the guide');
+  assert.match(plan, /box\.hidden = !\(ride\.name \|\| ''\)\.trim\(\);/, 'the search still hides once the ride has checkpoints');
+  for (const l of ['en', 'fr', 'nl', 'de', 'es']) assert.match(read(`translations/messages.${l}.yaml`), /^ {2}plan_goto_h: "/m);
+});
+
+test('the place search is the third card, after the name and the day (owner 2026-10-18)', () => {
+  const at = id => twig.indexOf(`id="${id}"`);
+  assert.ok(at('planStart') < at('planWhen') && at('planWhen') < at('planSearchGrp') && at('planSearchGrp') < twig.indexOf('cc-plan-bike'), 'the cards are out of order');
+  assert.ok(twig.slice(at('planSearchGrp'), twig.indexOf('cc-plan-bike')).includes('id="planStartBox"'), 'the search is not in its card');
+  assert.match(plan, /const grp = \$\('planSearchGrp'\); if\(grp\) grp\.hidden = box\.hidden;/);
+});
+
+test('a map point moves onto the road a bike would take before it becomes a checkpoint (owner 2026-10-18)', () => {
+  assert.match(twig, /snap: path\('map_plan_snap'\)/);
+  assert.match(plan, /snapPoint\(raw\.lat, raw\.lng\)\.then\(p => addStop\(\{ \.\.\.raw, lat: p\.lat, lng: p\.lng \}, at\)\);/, 'a clicked point is not snapped');
+  assert.match(plan, /m\.on\('dragend', async \(\) => \{ const ll = m\.getLngLat\(\); const p = await snapPoint\(ll\.lat, ll\.lng\);/, 'a dragged point is not snapped');
+  assert.match(plan, /return d && d\.snapped && Array\.isArray\(d\.point\) \? \{ lat: d\.point\[1\], lng: d\.point\[0\] \} : \{ lat, lng \};/, 'a failed snap loses the point');
+});
+
+test('the guide stays the top layer: frames go under it and no ring lies on it (owner 2026-10-18)', () => {
+  assert.match(read('assets/styles/map.css'), /\.cc-guide-glow\{position:fixed;z-index:1295;/);
+  assert.match(plan, /for\(const \[x, y\] of spotPoints\(\)\.filter\(\(\[x, y\]\) => !under\(x, y\)\)\)\{/);
 });

@@ -51,6 +51,10 @@ final class LegSurfacesTest extends TestCase
         $mix = $client->along([[50.49, 5.86], [50.47, 5.86]]);
 
         self::assertSame(['paved' => 2500, 'gravel' => 500, 'rough' => 200, 'unknown' => 400, 'busy' => 2400, 'cycle' => 500, 'signals' => 0], $mix);
+        // The busy stretches: the primary road from 0 to 2000 m, the trunk road at the end, 3200 to 3600 m.
+        $read = $client->read([[50.49, 5.86], [50.47, 5.86]]);
+        self::assertNotNull($read);
+        self::assertSame([[0, 2000], [3200, 3600]], $read['busyRuns']);
         self::assertSame(['edge.surface', 'edge.length', 'edge.road_class', 'edge.cycle_lane', 'edge.names', 'edge.use', 'edge.traffic_signal', 'node.traffic_signal'], $this->lastBody['filters']['attributes']);
         // The leg's own line, walked edge by edge, under the bicycle costing.
         self::assertSame('edge_walk', $this->lastBody['shape_match']);
@@ -106,6 +110,8 @@ final class LegSurfacesTest extends TestCase
         self::assertNotNull($read);
         // An unnamed road says what it is (owner 2026-10-15: the hover was empty on a road OSM names nothing).
         self::assertSame([[0, 'Place Royale', 'road'], [69, 'Place du Monument', 'road'], [146, null, 'track'], [246, 'N62', 'road']], $read['streets']);
+        // The surface runs: paved to 146 m, the dirt track rough to 246 m, paved again (owner 2026-10-17: hover lights them up).
+        self::assertSame([[0, 'paved'], [146, 'rough'], [246, 'paved']], $read['runs']);
         self::assertSame(546, array_sum(array_slice($read['surfaces'], 0, 4)));
         self::assertContains('edge.names', $this->lastBody['filters']['attributes']);
         self::assertContains('edge.use', $this->lastBody['filters']['attributes']);

@@ -14,8 +14,12 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 /**
  * The forecast behind a planned ride's date (docs/specs/route-planner.md
  * section 4.4 and 8): Open-Meteo's daily forecast for one point and one
- * day, the day's dominant wind direction and highest wind speed at 10 m,
- * the highest temperature and the rain sum. The point is rounded to a tenth
+ * day, the day's dominant wind direction, highest wind speed and highest
+ * gust at 10 m, the highest temperature and the rain sum, and the same
+ * figures for each of the day's 24 local hours (`hours`, null when the
+ * service gives no hours), so the panel reads the hours the rider rides;
+ * with the rounded point it is for, so the panel's link to Open-Meteo names the same point;
+ * a gust the service does not give is null. The point is rounded to a tenth
  * of a degree before anything leaves our server, so the service sees our
  * address, a 10 km cell and a date, nothing about the rider; the answer is
  * cached under that cell and date, so a ride dragged around a town costs one
@@ -47,7 +51,7 @@ final class Forecast
     }
 
     /**
-     * @return array{date: string, windKmh: float, windFromDeg: int, tempMaxC: float, rainMm: float}|null
+     * @return array{date: string, lat: float, lng: float, windKmh: float, gustKmh: float|null, windFromDeg: int, tempMaxC: float, rainMm: float, hours: list<array{windKmh: float, gustKmh: float|null, fromDeg: int, tempC: float, rainMm: float, humidity: int|null, dewC: float|null, groundC: float|null, snowCm: float|null, code: int|null}>|null}|null
      */
     public function forDay(float $lat, float $lng, string $date): ?array
     {
@@ -56,10 +60,10 @@ final class Forecast
         }
         $lat = self::round($lat);
         $lng = self::round($lng);
-        $key = sprintf('forecast.%s.%s.%s', str_replace(['.', '-'], ['_', 'm'], (string) $lat), str_replace(['.', '-'], ['_', 'm'], (string) $lng), $date);
+        $key = sprintf('forecast4.%s.%s.%s', str_replace(['.', '-'], ['_', 'm'], (string) $lat), str_replace(['.', '-'], ['_', 'm'], (string) $lng), $date);
         $item = $this->cache->getItem($key);
         if ($item->isHit()) {
-            /** @var array{date: string, windKmh: float, windFromDeg: int, tempMaxC: float, rainMm: float} $hit */
+            /** @var array{date: string, lat: float, lng: float, windKmh: float, gustKmh: float|null, windFromDeg: int, tempMaxC: float, rainMm: float, hours: list<array{windKmh: float, gustKmh: float|null, fromDeg: int, tempC: float, rainMm: float, humidity: int|null, dewC: float|null, groundC: float|null, snowCm: float|null, code: int|null}>|null} $hit */
             $hit = $item->get();
 
             return $hit;
@@ -88,14 +92,15 @@ final class Forecast
     }
 
     /**
-     * @return array{date: string, windKmh: float, windFromDeg: int, tempMaxC: float, rainMm: float}|null
+     * @return array{date: string, lat: float, lng: float, windKmh: float, gustKmh: float|null, windFromDeg: int, tempMaxC: float, rainMm: float, hours: list<array{windKmh: float, gustKmh: float|null, fromDeg: int, tempC: float, rainMm: float, humidity: int|null, dewC: float|null, groundC: float|null, snowCm: float|null, code: int|null}>|null}|null
      */
     private function fetch(float $lat, float $lng, string $date): ?array
     {
         $url = rtrim($this->forecastUrl, '/').'/v1/forecast?'.http_build_query([
             'latitude' => sprintf('%.1f', $lat),
             'longitude' => sprintf('%.1f', $lng),
-            'daily' => 'wind_speed_10m_max,wind_direction_10m_dominant,temperature_2m_max,precipitation_sum',
+            'daily' => 'wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,temperature_2m_max,precipitation_sum',
+            'hourly' => 'wind_speed_10m,wind_gusts_10m,wind_direction_10m,temperature_2m,precipitation,relative_humidity_2m,dew_point_2m,soil_temperature_0cm,snowfall,weather_code',
             'timezone' => 'auto',
             'start_date' => $date,
             'end_date' => $date,
@@ -115,10 +120,47 @@ final class Forecast
         $from = $daily['wind_direction_10m_dominant'][0] ?? null;
         $temp = $daily['temperature_2m_max'][0] ?? null;
         $rain = $daily['precipitation_sum'][0] ?? null;
+        $gust = $daily['wind_gusts_10m_max'][0] ?? null;
         if (!is_numeric($wind) || !is_numeric($from) || !is_numeric($temp) || !is_numeric($rain)) {
             return null;
         }
 
-        return ['date' => $date, 'windKmh' => (float) $wind, 'windFromDeg' => (int) round((float) $from), 'tempMaxC' => (float) $temp, 'rainMm' => (float) $rain];
+        return ['date' => $date, 'lat' => $lat, 'lng' => $lng, 'windKmh' => (float) $wind, 'gustKmh' => is_numeric($gust) ? (float) $gust : null, 'windFromDeg' => (int) round((float) $from), 'tempMaxC' => (float) $temp, 'rainMm' => (float) $rain, 'hours' => self::hours($data['hourly'] ?? null, $date)];
+    }
+
+    /**
+     * The day's 24 local hours, 00:00 first; null unless every hour of the date is there with its wind, direction,
+     * temperature and rain (a gust may be null, as for the day). The humidity, the dew point, the ground's
+     * temperature, the snowfall and the weather code read wind chill, heat and the chance of ice (route-planner.md
+     * section 4.4); each is null where the service gives none.
+     *
+     * @return list<array{windKmh: float, gustKmh: float|null, fromDeg: int, tempC: float, rainMm: float, humidity: int|null, dewC: float|null, groundC: float|null, snowCm: float|null, code: int|null}>|null
+     */
+    private static function hours(mixed $hourly, string $date): ?array
+    {
+        if (!\is_array($hourly) || !\is_array($hourly['time'] ?? null)) {
+            return null;
+        }
+        $out = [];
+        for ($h = 0; $h < 24; ++$h) {
+            $at = $hourly['time'][$h] ?? null;
+            $wind = $hourly['wind_speed_10m'][$h] ?? null;
+            $from = $hourly['wind_direction_10m'][$h] ?? null;
+            $temp = $hourly['temperature_2m'][$h] ?? null;
+            $rain = $hourly['precipitation'][$h] ?? null;
+            $gust = $hourly['wind_gusts_10m'][$h] ?? null;
+            if (sprintf('%sT%02d:00', $date, $h) !== $at || !is_numeric($wind) || !is_numeric($from) || !is_numeric($temp) || !is_numeric($rain)) {
+                return null;
+            }
+            $num = static fn (string $k): ?float => is_numeric($hourly[$k][$h] ?? null) ? (float) $hourly[$k][$h] : null;
+            $humidity = $num('relative_humidity_2m');
+            $code = $num('weather_code');
+            $out[] = [
+                'windKmh' => (float) $wind, 'gustKmh' => is_numeric($gust) ? (float) $gust : null, 'fromDeg' => (int) round((float) $from), 'tempC' => (float) $temp, 'rainMm' => (float) $rain,
+                'humidity' => null === $humidity ? null : (int) round($humidity), 'dewC' => $num('dew_point_2m'), 'groundC' => $num('soil_temperature_0cm'), 'snowCm' => $num('snowfall'), 'code' => null === $code ? null : (int) $code,
+            ];
+        }
+
+        return $out;
     }
 }

@@ -11,6 +11,7 @@ use App\Catalog\RideCheckService;
 use App\Contribution\Gpx\TrackProcessor;
 use App\Elevation\ElevationClient;
 use App\Elevation\LegSurfaces;
+use App\Elevation\PointSnapper;
 use App\Elevation\RouteSnapper;
 use App\Entity\User;
 use App\Security\PseudonymousKey;
@@ -38,6 +39,9 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 final class PlanController extends AbstractController
 {
+    /** How far from the line `along` may look, metres (route-planner.md section 5): 250 m unless the rider picks more. */
+    public const array ALONG_RADII = [250, 500, 1000, 2000, 5000];
+
     /** The most vertices a planned line may carry to `along`; the planner's line is the engine's, dense but bounded by the stop cap. */
     public const int MAX_LINE_POINTS = 5000;
 
@@ -104,7 +108,41 @@ final class PlanController extends AbstractController
             'heights' => $heights,
             'surfaces' => $read['surfaces'] ?? null,
             'streets' => $read['streets'] ?? null,
+            'runs' => $read['runs'] ?? null,
+            'busyRuns' => $read['busyRuns'] ?? null,
         ]);
+    }
+
+    /**
+     * A map point on the road a bike would take there (route-planner.md section 4.1): the
+     * nearest edge the bike may ride that is no one's driveway, within 500 m. `snapped:
+     * false` leaves the point as the rider put it. The point passes; nothing is kept.
+     */
+    #[Route('/map/plan/snap', name: 'map_plan_snap', methods: ['POST'])]
+    public function snap(
+        Request $request,
+        PointSnapper $snapper,
+        RateLimiterFactoryInterface $planSnapLimiter,
+        RateLimiterFactoryInterface $planSnapAnonLimiter,
+        #[Autowire('%kernel.secret%')]
+        string $secret,
+    ): JsonResponse {
+        if (!$this->isCsrfTokenValid('plan-leg', (string) $request->headers->get('X-CC-Token'))) {
+            throw new AccessDeniedHttpException('Invalid CSRF token.');
+        }
+        $payload = json_decode($request->getContent(), true);
+        $payload = \is_array($payload) ? $payload : [];
+        $point = self::point($payload['point'] ?? null);
+        $bike = BikeType::tryFrom(\is_string($payload['bike'] ?? null) ? $payload['bike'] : '');
+        if (null === $point || null === $bike) {
+            return new JsonResponse(['error' => 'bad_request'], 400);
+        }
+        if (!$this->spend($request, $planSnapLimiter, $planSnapAnonLimiter, $secret)) {
+            return new JsonResponse(['error' => 'rate_limited'], 429);
+        }
+        $at = $snapper->snap($point[0], $point[1], $bike);
+
+        return new JsonResponse(null === $at ? ['snapped' => false] : ['snapped' => true, 'point' => [$at['lng'], $at['lat']], 'distanceM' => $at['distanceM']]);
     }
 
     #[Route('/map/plan/along', name: 'map_plan_along', methods: ['POST'])]
@@ -123,6 +161,10 @@ final class PlanController extends AbstractController
         $payload = json_decode($request->getContent(), true);
         $line = \is_array($payload) ? ($payload['line'] ?? null) : null;
         if (!\is_array($line) || 'LineString' !== ($line['type'] ?? null) || !\is_array($line['coordinates'] ?? null)) {
+            return new JsonResponse(['error' => 'bad_request'], 400);
+        }
+        $radius = $payload['radius'] ?? RideCheckService::DEFAULT_RADIUS;
+        if (!\is_int($radius) || !\in_array($radius, self::ALONG_RADII, true)) {
             return new JsonResponse(['error' => 'bad_request'], 400);
         }
         $raw = $line['coordinates'];
@@ -155,7 +197,7 @@ final class PlanController extends AbstractController
         );
 
         // The regions the line crosses: the planner widens the map's scope to a ride outside it (route-planner.md section 5).
-        return new JsonResponse([...$rideCheck->alongLine($geoJson, $lengthM, RideCheckService::DEFAULT_RADIUS), 'regions' => $rideCheck->crossedRegions($geoJson)]);
+        return new JsonResponse([...$rideCheck->alongLine($geoJson, $lengthM, $radius), 'regions' => $rideCheck->crossedRegions($geoJson)]);
     }
 
     /**
