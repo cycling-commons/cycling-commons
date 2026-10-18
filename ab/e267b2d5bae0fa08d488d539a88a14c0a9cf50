@@ -1,0 +1,25 @@
+docs/specs/map-and-search.md
+  s_123df5f50d8dd2::t_55166b24bf3424 90-99
+web/assets/map/map-init.js
+  s_123df5f50d8dd2::t_003b82ac10b4b2 18-20,24-28
+  s_123df5f50d8dd2::t_d9e61abccb8bbc 13-17,21-23,29-30
+web/tests/js/map-fast-layers.test.cjs
+  s_123df5f50d8dd2::t_13de1ce8bdf7e0 37-38,41
+  s_123df5f50d8dd2::t_cc41d4384caf66 1-36,39-40,42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "abe267b2d5bae0fa08d488d539a88a14c0a9cf50",
+  "prompts": {},
+  "sessions": {
+    "s_123df5f50d8dd2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "85fbaa43-da21-4c2f-b88d-163d1042aba8",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
