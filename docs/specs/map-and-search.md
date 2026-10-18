@@ -2054,7 +2054,12 @@ The geometry is pure (`web/assets/map/fan-out.js`, tested in
     click never lands on an empty map.
   - The selection ring sits on the pin as it is drawn at this zoom: half the
     height of the pin on screen (`ringOffset()`, `pinElFor()`), following the
-    pin as the map zooms.
+    pin as the map zooms. It goes on what the map draws, not on what the
+    caller expected: a pin found by its record, or the one pin at the ring's
+    point (`pinElAt()`), takes the ring on its body even where the caller
+    expected a flat OpenStreetMap dot. A place just confirmed turns from that
+    dot into our pin; the pin layout signals a pin drawn or removed
+    (`cc:fanout`), and the ring moves onto the new pin (owner 2026-10-17).
   - The coverage icon layers are lifted over every line; Mapillary's `mly-cov`
     line is not one of them (`coverageIconLayerIds()`).
 - **Coverage renders as a density heatmap at overview, individual icons from

@@ -25,7 +25,7 @@ import { watchCommonsPhoto, photoWaitRef } from './commons-photo.js';
 import { wantsHiddenPhotos, hiddenPhotosHtml, galleryWithConfirmed, pinMoveHidesHtml } from './hidden-photos.js';
 import { osmQuestionHtml, replacesHtml } from './osm-question.js';
 import { townPinSvg } from './town-pin.js';
-import { fanPin, fanRingFor, pinElFor } from './pin-fan.js';
+import { fanPin, fanRingFor, pinElFor, pinElAt } from './pin-fan.js';
 import { setSurfaceTiles, surfaceTilesVisible, surfaceTilesConfigured } from './surface-tiles.js';
 import { isPicking, cancelPicking } from './picking.js';
 import { openCity, openRouteById, bumpPlaceReq } from './places.js';
@@ -1358,17 +1358,21 @@ export function highlightAt(ll, offset, key){
   _hl={ll, offset:offset||[0,0], key:key==null ? null : key};
   placeHighlight();
 }
-/* The ring on a bottom-anchored pin: half the height the pin is drawn at
-   (pins scale with the zoom), or the default offset at the pin scale when no
-   pin for it is on screen. A flat dot (offset 0) stays centred. */
+/* The ring goes on what the map draws, not on what the caller expected: a
+   pin drawn there (found by its record or by its point) takes the ring on its
+   body, half the height it is drawn at (pins scale with the zoom), even where
+   the caller expected a flat dot (a place just confirmed turns from an
+   OpenStreetMap dot into our pin; owner 2026-10-17). With no pin on screen, a
+   caller's pin offset at the pin scale, and a flat dot stays centred. */
 export function ringOffset(offset, pinHeight, scale){
+  if(pinHeight > 0) return [offset[0], -pinHeight/2];
   if(offset[0]===0 && offset[1]===0) return [0, 0];
-  return [offset[0], pinHeight > 0 ? -pinHeight/2 : offset[1]*scale];
+  return [offset[0], offset[1]*scale];
 }
 function placeHighlight(){
   if(!hlMarker){ const el=document.createElement('div'); el.className='cc-highlight'; hlMarker=new maplibregl.Marker({element:el,anchor:'center'}); }
   const {ll, key}=_hl;
-  const pin = pinElFor(key);
+  const pin = pinElFor(key) || pinElAt(ll);
   const offset = ringOffset(_hl.offset, pin ? pin.offsetHeight : 0, pinScale(map.getZoom()));
   const onPin = offset[0]!==0 || offset[1]!==0;
   const fan = onPin ? fanRingFor(key, ll) : null;

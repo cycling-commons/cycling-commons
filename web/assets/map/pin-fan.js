@@ -17,7 +17,7 @@ const VIEW_MARGIN = 80;   // px past the canvas edge still laid out, so a group 
 
 const pins = new Map();       // pin element -> entry
 const seatOf = new Map();     // `letter:id` -> last offset, so a pin redrawn by render() takes its seat at once
-let _raf = 0, _bound = false;
+let _raf = 0, _bound = false, _setChanged = false;
 const ZERO = [0, 0];
 
 const isZero = o => !o || (o[0] === 0 && o[1] === 0);
@@ -38,6 +38,7 @@ export function fanPin(marker, key){
     sortKey: key == null ? '~' + ll.lng.toFixed(6) + ',' + ll.lat.toFixed(6) : String(key),
     off: ZERO, target: ZERO, leader: null, anim: null};
   pins.set(el, e);
+  _setChanged = true;
   const seat = e.key != null ? seatOf.get(e.key) : null;
   if(seat){ e.target = seat; setOff(e, seat); }
   bind();
@@ -72,6 +73,17 @@ export function pinElFor(key){
   }
   return null;
 }
+/** The one pin drawn at `ll` ([lat, lng]), or null when none is, or when several share the point. */
+export function pinElAt(ll){
+  if(!ll) return null;
+  let found = null;
+  for(const e of pins.values()){
+    if(!e.el.isConnected) continue;
+    const p = e.marker.getLngLat();
+    if(Math.abs(p.lat - ll[0]) < 1e-7 && Math.abs(p.lng - ll[1]) < 1e-7){ if(found) return null; found = e.el; }
+  }
+  return found;
+}
 export function fanRingFor(key, ll){
   let byPoint = null, n = 0;
   for(const e of pins.values()){
@@ -97,7 +109,7 @@ function layout(){
   const w = cv.clientWidth, h = cv.clientHeight;
   const pts = [], ents = [];
   for(const [el, e] of pins){
-    if(!el.isConnected){ drop(e); pins.delete(el); continue; }
+    if(!el.isConnected){ drop(e); pins.delete(el); _setChanged = true; continue; }
     const p = map.project(e.marker.getLngLat());
     if(p.x < -VIEW_MARGIN || p.y < -VIEW_MARGIN || p.x > w + VIEW_MARGIN || p.y > h + VIEW_MARGIN) continue;
     pts.push({key: e.sortKey, x: p.x, y: p.y});
@@ -113,8 +125,9 @@ function layout(){
     changed = true;
     moveTo(e, t);
   });
-  /* drawer.js keeps its halo on a moved pin by listening for this. */
-  if(changed) document.dispatchEvent(new CustomEvent('cc:fanout'));
+  /* drawer.js keeps its halo on a moved pin, and on a pin drawn anew (a place just confirmed turns from a
+     flat dot into our pin), by listening for this. */
+  if(changed || _setChanged){ _setChanged = false; document.dispatchEvent(new CustomEvent('cc:fanout')); }
 }
 
 /* A short ease from where the pin is to its seat; a cut under reduced motion. */

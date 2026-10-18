@@ -70,8 +70,12 @@ test('the selection ring sits on the pin as drawn at this zoom', () => {
   assert.deepEqual([...c.f([0, -16], 30, 1)], [0, -15], 'a full teardrop: half its height');
   assert.deepEqual([...c.f([0, -16], 21, 0.7)], [0, -10.5], 'a teardrop at 70%');
   assert.deepEqual([...c.f([0, -16], 0, 0.7)], [0, -11.2], 'no pin on screen: the default offset at the pin scale');
-  assert.deepEqual([...c.f([0, 0], 30, 1)], [0, 0], 'a flat dot stays centred');
+  assert.deepEqual([...c.f([0, 0], 0, 1)], [0, 0], 'a flat dot, no pin drawn: centred');
+  assert.deepEqual([...c.f([0, 0], 30, 1)], [0, -15], 'a pin drawn where a flat dot was expected (a place just confirmed): on the pin');
   assert.match(fan, /export function pinElFor\(key\)\{/);
+  assert.match(fan, /export function pinElAt\(ll\)\{/);
+  assert.match(drawer, /const pin = pinElFor\(key\) \|\| pinElAt\(ll\);/);
+  assert.match(fan, /if\(changed \|\| _setChanged\)\{ _setChanged = false; document\.dispatchEvent\(new CustomEvent\('cc:fanout'\)\); \}/);
   assert.match(drawer, /map\.on\('zoom', ?\(\)=>\{ if\(_hl\) placeHighlight\(\); \}\)/);
 });
 
