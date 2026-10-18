@@ -57,6 +57,37 @@ export function localiseBasemapLabels(){
   return n;
 }
 
+/* Roads a bike may not ride, faded (map-and-search.md section 4.1, owner 2026-10-17: "you will never need them, only
+   good to know they are there"): motorways in their own liberty layers fade whole; in every other road layer a trunk
+   road fades, and so does a road the tiles mark `bicycle=no` or `bicycle=use_sidepath` (ride the cycle path beside it).
+   A layer with an opacity of its own that is not a plain number keeps it. It runs again after every style change, so a
+   reloaded style or a switched theme cannot bring the roads back; a layer already faded is left as it is. */
+export const HIGHWAY_FADE = 0.1;
+export const NO_BIKE_FADE = ['case', ['any', ['==', ['get', 'class'], 'trunk'], ['match', ['get', 'bicycle'], ['no', 'use_sidepath'], true, false]], HIGHWAY_FADE, 1];
+export function fadeHighways(){
+  // The layer order and each layer by id: cheap, where getStyle() would serialise the whole style on every run.
+  const ids = typeof map.getLayersOrder === 'function' ? map.getLayersOrder() : ((map.getStyle() || {}).layers || []).map(l => l.id);
+  let n = 0;
+  for(const id of ids){
+    const layer = map.getLayer(id);
+    if(!layer || layer.type !== 'line' || layer.source !== 'openmaptiles' || (layer.sourceLayer || layer['source-layer']) !== 'transportation') continue;
+    const own = map.getPaintProperty(id, 'line-opacity');
+    const want = /motorway/.test(id) ? HIGHWAY_FADE : own == null || own === 1 ? NO_BIKE_FADE : typeof own === 'number' ? ['case', NO_BIKE_FADE[1], HIGHWAY_FADE * own, own] : null;
+    if(want == null) continue;
+    if(JSON.stringify(own) === JSON.stringify(want)) continue;   // faded already: setting it again would only fire another style change
+    map.setPaintProperty(id, 'line-opacity', want);
+    n++;
+  }
+  return n;
+}
+/* After a style change, once per frame however many changes come in that frame. */
+let fadeQueued = false;
+export function fadeHighwaysSoon(){
+  if(fadeQueued) return;
+  fadeQueued = true;
+  requestAnimationFrame(() => { fadeQueued = false; fadeHighways(); });
+}
+
 /** Attribution, navigation, Locate me and the live zoom readout.
     `toast(msg)` says why a Locate me lookup did not work. */
 export function initMapControls({toast}={}){

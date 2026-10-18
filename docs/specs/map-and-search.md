@@ -1589,6 +1589,21 @@ two places, sized to their audience:
   build on a planned tag or on the words "paper dot". Both keys link
   `styles/pins.css`, the one definition of the pin, and never copy its rules.
 
+**Roads a bike may not ride, faded** (owner 2026-10-17: "you will never
+need them, only good to know they are there; it makes the map less busy").
+`fadeHighways()` in `map-init.js`, called with the label rewrite when the
+style is ready, draws every liberty motorway layer (roads, links, bridges,
+tunnels and their casings) at 10 % opacity (`HIGHWAY_FADE`; 35 % at first, owner
+2026-10-17: "still very much visible", then 20 %, owner 2026-10-18: "even more"); in every other
+liberty road line layer (`transportation`) a road fades to 10 % where its
+class is trunk or the tiles mark it `bicycle=no` or `bicycle=use_sidepath`
+(ride the cycle path beside it), `NO_BIKE_FADE`. The OpenFreeMap tiles carry
+`bicycle` from zoom 10: around Hoorn at zoom 12, 99 secondary roads say
+`no` and 83 `use_sidepath` (measured 2026-10-17). A layer whose opacity is
+already a zoom expression keeps it. It runs again on every `styledata`, so a
+reloaded style cannot bring the roads back; a layer already faded is skipped,
+so the run fires no further style change. Shields and names stay.
+
 **Basemap furniture.** The liberty style's four POI layers ask
 the OpenFreeMap sprite for an image named after each point's OSM class, and
 the sprite lacks most classes: one console warning per class, nothing drawn.
