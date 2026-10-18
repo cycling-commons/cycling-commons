@@ -1,0 +1,60 @@
+web/translations/messages.fr.yaml
+  s_123df5f50d8dd2::t_968657c162c062 1242
+web/translations/messages.de.yaml
+  s_123df5f50d8dd2::t_968657c162c062 1247
+web/tests/js/legend-collapse.test.cjs
+  s_123df5f50d8dd2::t_e252f95a85bc8a 163
+  s_123df5f50d8dd2::t_e03c825aaa4cf9 165-169
+  s_123df5f50d8dd2::t_eae07fafe7336f 158-162,164
+docs/specs/map-and-search.md
+  s_123df5f50d8dd2::t_968657c162c062 1503,1851
+  s_123df5f50d8dd2::t_eae07fafe7336f 359
+  s_123df5f50d8dd2::t_c8e7bdb015809f 1789
+  s_123df5f50d8dd2::t_e03c825aaa4cf9 360-362
+web/translations/messages.es.yaml
+  s_123df5f50d8dd2::t_968657c162c062 1869
+web/assets/map/panels.js
+  s_123df5f50d8dd2::t_18148a48891a10 102,189
+web/translations/messages.nl.yaml
+  s_123df5f50d8dd2::t_968657c162c062 1244
+web/assets/map/surface-tiles.js
+  s_123df5f50d8dd2::t_18148a48891a10 506
+web/assets/styles/map.css
+  s_123df5f50d8dd2::t_02732c0a65bc2f 770-774
+  s_123df5f50d8dd2::t_fa7467f70062af 775-780
+  s_f2df2a2aa8a918::t_cb588510a2f967 781,2055,2064-2066
+web/translations/messages.en.yaml
+  s_123df5f50d8dd2::t_968657c162c062 1862
+docs/specs/edit-items/A-road-surface.md
+  s_123df5f50d8dd2::t_968657c162c062 418
+web/assets/map/plan-model.js
+  s_f2df2a2aa8a918::t_3b0874a1fec458 721-735
+web/assets/map/plan.js
+  s_f2df2a2aa8a918::t_58bec2cd990fc6 637-638,644-650
+web/templates/map/index.html.twig
+  s_f2df2a2aa8a918::t_097ad883cdb060 726,762,814-815,842
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f7a392758df4fb46a55fddf1fd956af241ddd84d",
+  "prompts": {},
+  "sessions": {
+    "s_123df5f50d8dd2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "85fbaa43-da21-4c2f-b88d-163d1042aba8",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f2df2a2aa8a918": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed0d77c5-c8d0-43ea-9923-231bd4b99809",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
