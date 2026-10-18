@@ -1,0 +1,32 @@
+web/src/Elevation/ElevationClient.php
+  s_f2df2a2aa8a918::t_ba3df765832ab1 215-216
+  s_123df5f50d8dd2::t_bfbac3e7e1d991 122-127,159-160,165-167,169-173,178,180-214,217
+web/tests/Elevation/ElevationClientTest.php
+  s_123df5f50d8dd2::t_1571786ee92086 140,142-145,150,152-173,175
+docs/specs/route-planner.md
+  s_f2df2a2aa8a918::t_f8b75bc59c9e34 322-328,819-821
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5933eac20e927bcbb0babe19b0230de29559b453",
+  "prompts": {},
+  "sessions": {
+    "s_123df5f50d8dd2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "85fbaa43-da21-4c2f-b88d-163d1042aba8",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f2df2a2aa8a918": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed0d77c5-c8d0-43ea-9923-231bd4b99809",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
