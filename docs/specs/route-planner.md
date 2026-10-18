@@ -245,9 +245,13 @@ location"). The first block of the panel (`#planStart`):
    name and until it has a stop: a town or a street, through Photon in the
    browser as the map search is (map-and-search.md section 7.2), with
    `layer=city|district|locality|street` instead of the map search's towns
-   only, biased to the map's centre, towns listed before streets. Picking a
+   only, biased to the map's centre rounded to 0.1° (about 10 km; the privacy
+   notice's Photon row says so), towns listed before streets. Picking a
    row flies the map there (zoom 13 for a town, 16 for a street) and says
-   "Click the map where you start."
+   "Click the map where you start." The scope follows the start picked as it
+   follows a ride (section 5, `followRideScope`): Hoorn picked while the map
+   looked near Spa takes the scope to North Holland, and clearing the ride
+   gives the rider's own scope back (owner 2026-10-17).
 3. **The first click** sets the start, as before.
 
 ### 4.2 Legs, the engine, and the bike
@@ -773,8 +777,9 @@ version 2 (privacy-notice.md section 7a).
 
 **The forecast** (section 4.4), the change key `v6_forecast` in the same
 version 3: for the ride's date our server
-asks Open-Meteo for the day's forecast at one point, the middle of the ride
-rounded to 0.1° (about 10 km), with the date. Open-Meteo sees our server's
+asks Open-Meteo for the day's forecast at one point near the middle of the
+ride, never near its start or finish and only for a ride of 20 km or more
+(section 4.4), rounded to 0.1° (about 10 km) in the browser, with the date. Open-Meteo sees our server's
 address, that rounded point and the date; nothing about the rider, no
 account, no stops, no line. The answer is cached for three hours under the
 rounded point and the date, and nothing else is kept. Keys, five locales:

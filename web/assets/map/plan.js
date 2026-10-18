@@ -128,9 +128,11 @@ async function searchStart(qy){
   if(startCtl) startCtl.abort();
   if(qy.length < 3){ ul.innerHTML = ''; return; }
   startCtl = new AbortController();
+  // Photon ranks towns and streets near the middle of the map first; rounded to 0.1° (about 10 km), all it needs,
+  // as the privacy notice says (bs_photon_sees).
   const c = map.getCenter();
   const url = 'https://photon.komoot.io/api/?limit=6&layer=city&layer=district&layer=locality&layer=street'
-    + '&q=' + encodeURIComponent(qy) + '&lat=' + c.lat.toFixed(3) + '&lon=' + c.lng.toFixed(3) + '&lang=' + photonLang(document.documentElement.lang);
+    + '&q=' + encodeURIComponent(qy) + '&lat=' + c.lat.toFixed(1) + '&lon=' + c.lng.toFixed(1) + '&lang=' + photonLang(document.documentElement.lang);
   let feats = [];
   try { const r = await fetch(url, { signal: startCtl.signal }); feats = r.ok ? ((await r.json()).features || []) : []; } catch(e){ return; }
   // Towns first, then streets: a ride starts in a place, a street narrows it.

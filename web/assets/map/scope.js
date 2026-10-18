@@ -622,7 +622,12 @@
          into a box spanning the world, which is the bug this whole change
          exists to remove. `countrycode` still narrows the search, and for the
          two scopes that wrap it is the country that matters anyway. */
-      const b = this.bbox();
+      /* A "Near ..." area is a circle round a home area, and its box's middle is that point: Photon gets the
+         box round the point rounded to 0.1° (about 10 km), as the privacy notice says (bs_photon_sees; owner
+         2026-10-17). The area itself, and every other use of its box, keep the true circle. */
+      const b = scope.kind === 'myArea' && scope.myArea
+        ? circleBbox(scope.myArea.center.map((v) => Math.round(v * 10) / 10), scope.myArea.radiusKm)
+        : this.bbox();
       return {
         bbox: bboxWraps(b) ? null : b,
         countrycode: scope.countryCode ? scope.countryCode.toLowerCase() : null,

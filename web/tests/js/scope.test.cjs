@@ -343,14 +343,17 @@ test('myArea widen goes to its single country, and no further', () => {
   assert.equal(CCScope.canWiden(), false);
 });
 
-test('myArea photonParams has circle bbox and NO countrycode gate', () => {
-  boot({ myArea: { lat: 50.45, lng: 4.85, radiusKm: 40, regionIds: [1, 24], countryCodes: ['BE'] } });
+test('myArea photonParams has circle bbox round the home area rounded to 0.1°, and NO countrycode gate', () => {
+  boot({ myArea: { lat: 50.4637, lng: 4.8712, radiusKm: 40, regionIds: [1, 24], countryCodes: ['BE'] } });
   CCScope.setMyArea();
   const p = CCScope.photonParams();
   assert.equal(p.countrycode, null);
-  assert.deepEqual(p.bbox, CCScope.bbox());
-  const b = p.bbox;
-  assert.ok(b[0] < 4.85 && b[2] > 4.85 && b[1] < 50.45 && b[3] > 50.45, 'bbox is the circle, not a region union');
+  const b = p.bbox, mid = [(b[1] + b[3]) / 2, (b[0] + b[2]) / 2];
+  assert.ok(Math.abs(mid[0] - 50.5) < 1e-9 && Math.abs(mid[1] - 4.9) < 1e-9, 'Photon sees the middle rounded, never the home area: ' + mid);
+  assert.ok(b[2] - b[0] > 0.9 && b[3] - b[1] > 0.6, 'still the 40 km circle, not a region union');
+  // The area itself keeps its true circle: only what Photon receives is rounded.
+  const own = CCScope.bbox();
+  assert.ok(Math.abs((own[1] + own[3]) / 2 - 50.4637) < 1e-9, 'the scope box moved');
 });
 
 test('myArea coverageParams is rid-only', () => {
