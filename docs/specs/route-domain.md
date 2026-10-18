@@ -1273,8 +1273,8 @@ cabin), else from its imported type label (`StayKind::fromLabel()`: guest
 house, B&B, gîte or furnished rental a house, campsite a tent, hostel or budget
 stay a bunk bed, chalet or mountain hut a cabin), else a house outline with a
 "?": as the icon where there is no picture, and in
-words with its town as the row's line ("Hotel · Spa", `vote.stay_kind.*`). On the ballot only for now (owner 2026-10-03); the
-map's pins keep `KindIcons`. Five category tabs;
+words with its town as the row's line ("Hotel · Spa", `vote.stay_kind.*`). The map draws the same five drawings on the
+category disc (`KindIcons`, letter O, owner 2026-10-17). Five category tabs;
 a `cat` that is missing, unknown or not votable opens climbs, and a `pick`
 that is not a row of that category on the ballot is ignored. The list shows
 every row of the category in the region A to Z (`BALLOT_CANDIDATES`, 2000, is

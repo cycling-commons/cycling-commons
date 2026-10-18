@@ -40,6 +40,16 @@ def candidates(index: dict, cc: str) -> list[str]:
     return sorted(found, key=lambda s: (s.count("/"), s))
 
 
+def lists_country(index: dict, slug: str, cc: str) -> bool:
+    """Does Geofabrik's index name `cc` among the countries of extract `slug`?
+
+    The all-Ireland extract lists IE only, though Northern Ireland (GB) is in
+    it too: a country listed in an extract may share it with the country that
+    already holds it."""
+    return any(_slug(p := f.get("properties", {})) == slug and cc in (p.get("iso3166-1:alpha2") or [])
+               for f in index.get("features", []))
+
+
 def choose_extract(index: dict, cc: str, override: str | None = None) -> str:
     if override:
         if override not in extract_slugs(index):

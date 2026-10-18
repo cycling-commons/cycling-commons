@@ -3827,6 +3827,24 @@ legend:
   kind_g_bus_shelter_t: 'Un panneau d’arrêt de bus. Dans OSM : shelter_type=public_transport.'
   kind_g_defibrillator_h: 'Défibrillateur'
   kind_g_defibrillator_t: 'Un cœur avec un éclair. Dans OSM : emergency=defibrillator.'
+  kind_o_hotel_h: "Hôtel"
+  kind_o_hotel_t: "Un bâtiment avec des fenêtres et une porte. Dans OSM : tourism=hotel."
+  kind_o_motel_h: "Motel"
+  kind_o_motel_t: "Le même bâtiment qu’un hôtel. Dans OSM : tourism=motel."
+  kind_o_guest_house_h: "Maison d’hôtes / chambre d’hôtes"
+  kind_o_guest_house_t: "Une maison avec une porte. Dans OSM : tourism=guest_house."
+  kind_o_apartment_h: "Location de vacances"
+  kind_o_apartment_t: "La même maison qu’une maison d’hôtes. Dans OSM : tourism=apartment."
+  kind_o_hostel_h: "Auberge de jeunesse"
+  kind_o_hostel_t: "Des lits superposés. Dans OSM : tourism=hostel."
+  kind_o_camp_h: "Camping"
+  kind_o_camp_t: "Une tente à la porte ouverte. Dans OSM : tourism=camp_site."
+  kind_o_chalet_h: "Chalet / gîte"
+  kind_o_chalet_t: "Une cabane au toit pentu. Dans OSM : tourism=chalet."
+  kind_o_alpine_hut_h: "Refuge de montagne"
+  kind_o_alpine_hut_t: "La même cabane qu’un chalet. Dans OSM : tourism=alpine_hut."
+  kind_o_wilderness_hut_h: "Abri de randonnée"
+  kind_o_wilderness_hut_t: "La même cabane qu’un chalet. Dans OSM : tourism=wilderness_hut."
   kind_p_viewpoint_h: 'Point de vue'
   kind_p_viewpoint_t: 'Des jumelles : un endroit pour s’arrêter et regarder. Dans OSM : tourism=viewpoint.'
   kind_p_peak_h: 'Sommet'

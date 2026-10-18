@@ -91,3 +91,21 @@ def test_a_country_without_extracts_is_refused(catalog, capsys):
     assert _main(catalog, lambda step: ran.append(step) or 0) == 1
     assert "DK has no country_extract row" in capsys.readouterr().err
     assert ran == []
+
+
+def test_a_shared_extract_is_harvested_once_with_full_membership(catalog):
+    """Ireland's only extract is also Great Britain's: one harvest re-owns both sides of the border."""
+    shared = "europe/ireland-and-northern-ireland"
+    add_country(catalog, "IE", "seeded", [shared])
+    add_country(catalog, "GB", "live", ["europe/great-britain", shared])
+    add_region(catalog, 1, "IE", 6, "POLYGON((-10 52,-6.1 52,-6.1 55,-10 55,-10 52))", slug="donegal")
+    add_region(catalog, 2, "GB", 4, "POLYGON((-6.05 54,-5 54,-5 55,-6.05 55,-6.05 54))", slug="northern-ireland")
+    ran = []
+    assert repair.main(["IE"], connect=lambda dsn: contextlib.nullcontext(catalog),
+                       runner=lambda step: ran.append(step) or 0, clock=lambda: 0.0) == 0
+    assert [(s.argv[3:], s.env) for s in ran] == [
+        (("--load-only", "--regions", f"europe/great-britain,{shared}"), {"COVERAGE_FULL_MEMBERSHIP": "1"}),
+        (("--tiles-only",), {}),
+        (("--routes", "--regions", f"{shared},europe/great-britain"), {"COVERAGE_FORCE_EXTRACT": "1"}),
+        (("--surface", "--regions", f"{shared},europe/great-britain"), {"COVERAGE_FORCE_EXTRACT": "1"}),
+    ]

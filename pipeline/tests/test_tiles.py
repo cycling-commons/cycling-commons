@@ -141,6 +141,34 @@ def test_export_folds_dense_same_kind_points_onto_one_member(db, tmp_path):
         assert "grp" not in feats[f"node/920000{i}"]["properties"], "four is not a group"
 
 
+def test_export_folds_two_water_points_of_one_kind_but_never_mixes_what_the_pin_shows(db, tmp_path):
+    """Water folds from two (owner 2026-10-17: three taps on one cemetery drew
+    three pins; a rider needs one): two drinkable taps 40 m apart are one
+    feature with grp 2. The fold key is what the pin draws, so a drinkable tap
+    and an undrinkable one beside it never fold, and food keeps the five."""
+    ensure_schema(db)
+    sid = _src_id(db)
+    rows = [
+        ("node/9300001", "Tap A", 4.9000, 51.0000, {"amenity": "drinking_water"}),
+        ("node/9300002", "Tap B", 4.9006, 51.0000, {"amenity": "drinking_water"}),            # about 40 m east
+        ("node/9300011", "Yes tap", 4.9500, 51.0000, {"man_made": "water_tap", "drinking_water": "yes"}),
+        ("node/9300012", "No tap", 4.9506, 51.0000, {"man_made": "water_tap", "drinking_water": "no"}),
+        ("node/9300021", "Bakery A", 5.0000, 51.0000, {"shop": "bakery"}),
+        ("node/9300022", "Bakery B", 5.0006, 51.0000, {"shop": "bakery"}),
+    ]
+    for ref, name, lon, lat, tags in rows:
+        db.execute(
+            "INSERT INTO coverage_poi (ref, letter, kind, name, geom, tags, src_region_id, country_code)"
+            " VALUES (%s, 'B', NULL, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326), %s, %s, 'BE')",
+            (ref, name, lon, lat, Json(tags), sid))
+    feats = _features(tiles.export_geojsonl(db, tmp_path)[("B", "BE")])
+    taps = [f for r, f in feats.items() if r in {"node/9300001", "node/9300002"}]
+    assert len(taps) == 1 and taps[0]["properties"]["grp"] == 2, "two drinkable taps 40 m apart are one pin"
+    assert {"node/9300011", "node/9300012"} <= set(feats), "a drinkable and an undrinkable tap stay two pins"
+    assert "grp" not in feats["node/9300011"]["properties"] and "grp" not in feats["node/9300012"]["properties"]
+    assert {"node/9300021", "node/9300022"} <= set(feats), "food keeps the five"
+
+
 def test_export_carries_scope_tokens_when_stamped(db, tmp_path):
     """A region-stamped row emits ridtok="|<region_id>|" + cctok="|<cc>|"; a
     cc-only boundary row (region_id NULL) emits an EMPTY ridtok but a non-empty

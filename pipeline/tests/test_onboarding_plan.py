@@ -109,11 +109,41 @@ def test_write_plan_replaces_an_earlier_plan_in_one_transaction(catalog):
         "SELECT fallback_locales FROM country_plan_region WHERE slug = 'sjaelland'").fetchone()[0] == ["fr", "nl", "es"]
 
 
-def test_an_extract_owned_by_another_country_stops_the_write(catalog):
-    add_country(catalog, "XB", "live", ["europe/denmark"])
-    plan = planner.build_plan("DK", "2026-08-19.0", {"region": REGIONS}, OUTLINE, set(), INDEX)
-    with pytest.raises(planner.PlanError, match="europe/denmark already belongs to XB"):
+def test_an_extract_another_country_holds_stops_the_write_unless_geofabrik_lists_this_one(catalog):
+    """A typo in --extract must not hand Denmark Great Britain's extract."""
+    add_country(catalog, "GB", "live", ["europe/great-britain"])
+    plan = planner.build_plan("DK", "2026-08-19.0", {"region": REGIONS}, OUTLINE, set(), INDEX,
+                              extract="europe/great-britain")
+    with pytest.raises(planner.PlanError,
+                       match="europe/great-britain already belongs to GB, and Geofabrik does not list DK in it"):
         planner.write_plan(catalog, plan)
+    assert catalog.execute("SELECT count(*) FROM country WHERE code = 'DK'").fetchone()[0] == 0
+
+
+def test_ireland_shares_the_all_ireland_extract_with_great_britain(catalog):
+    """Geofabrik ships the Republic only together with Northern Ireland, which is GB's."""
+    shared = "europe/ireland-and-northern-ireland"
+    add_country(catalog, "GB", "live", ["europe/great-britain", shared])
+    plan = planner.build_plan("DK", "2026-08-19.0", {"region": REGIONS}, OUTLINE, set(), INDEX)
+    plan.cc, plan.extract, plan.extract_listed = "IE", shared, True
+    planner.write_plan(catalog, plan)
+    assert plan.shared_with == ["GB"]
+    assert catalog.execute(
+        "SELECT country_code FROM country_extract WHERE slug = %s ORDER BY 1", (shared,)).fetchall() == [
+        ("GB",), ("IE",)]
+    assert "Extract     europe/ireland-and-northern-ireland (shared with GB)" in planner.render_table(plan)
+    assert planner.plan_json(plan)["shared_with"] == ["GB"]
+    # Planning again replaces Ireland's row only; Great Britain keeps both of its own.
+    planner.write_plan(catalog, plan)
+    assert catalog.execute("SELECT count(*) FROM country_extract WHERE country_code = 'GB'").fetchone()[0] == 2
+
+
+def test_the_plan_knows_whether_geofabrik_lists_the_country_in_its_extract():
+    plan = planner.build_plan("DK", "2026-08-19.0", {"region": REGIONS}, OUTLINE, set(), INDEX)
+    assert plan.extract_listed is True
+    plan = planner.build_plan("DK", "2026-08-19.0", {"region": REGIONS}, OUTLINE, set(), INDEX,
+                              extract="europe/great-britain")
+    assert plan.extract_listed is False
 
 
 def test_a_write_failing_partway_leaves_nothing(catalog):

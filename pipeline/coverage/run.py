@@ -35,7 +35,7 @@ from .pbfs import pbf_identity, pbf_path
 from .parse import parse_pois
 from .publish import (CountryBuild, GapsBuild, ensure_bucket, inputs_fingerprint,
                       prune_family, publish_countries, read_live_manifest, read_manifest)
-from .regions import default_regions, load_onboarded
+from .regions import countries, default_regions, load_onboarded
 from .roadpieces import SELECTOR as ROADPIECES_SELECTOR
 from .roadpieces import extract_region as roadpieces_extract_region
 from .routes import extract_region as routes_extract_region
@@ -240,7 +240,7 @@ def _ownership(workdir: pathlib.Path) -> Owners:
     return Owners.load(path)
 
 
-def _onboarded() -> dict[str, str]:
+def _onboarded() -> dict[str, tuple[str, ...]]:
     """The onboarded extracts and their countries, read once per pass (coverage.regions)."""
     return load_onboarded()
 
@@ -265,13 +265,15 @@ def _line_run_lock(family: str):
                 conn.execute("SELECT pg_advisory_unlock(%s)", (key,))
 
 
-def _complete_countries(regions: list[str], onboarded: dict[str, str]) -> dict[str, list[str]]:
+def _complete_countries(regions: list[str], onboarded: dict[str, tuple[str, ...]]) -> dict[str, list[str]]:
     """Countries whose every onboarded region is in this run, with those regions.
 
     A country built from part of its regions would publish over the whole one:
     `--regions north-america/us/california` must not take Colorado off the map.
     A region that is not onboarded (a dev/ region, a sub-country extract
     such as europe/germany/bayern) is extracted but never tiled per country.
+    A shared region counts for each country it serves: Ireland and Great
+    Britain both need the all-Ireland extract.
     """
     wanted = set(regions)
     for region in regions:
@@ -282,8 +284,9 @@ def _complete_countries(regions: list[str], onboarded: dict[str, str]) -> dict[s
         else:
             print(f"[tiles] {region}: not an onboarded region, not tiled per country")
     by_cc: dict[str, list[str]] = {}
-    for region, cc in onboarded.items():
-        by_cc.setdefault(cc, []).append(region)
+    for region, ccs in onboarded.items():
+        for cc in ccs:
+            by_cc.setdefault(cc, []).append(region)
     out = {}
     for cc, members in sorted(by_cc.items()):
         present = [r for r in members if r in wanted]
@@ -297,7 +300,7 @@ def _complete_countries(regions: list[str], onboarded: dict[str, str]) -> dict[s
 
 def _first_publish_refused(family: str, complete: dict[str, list[str]], live_v2: bool,
                            retire: tuple[str, ...], failed: Iterable[str] = (), *,
-                           onboarded: dict[str, str]) -> bool:
+                           onboarded: dict[str, tuple[str, ...]]) -> bool:
     """Is this the first v2 publish of `family` and does it lack a country?
 
     Until a v2 manifest is live, the app serves the v1 world archive; the first
@@ -311,7 +314,7 @@ def _first_publish_refused(family: str, complete: dict[str, list[str]], live_v2:
     """
     if live_v2 or retire or os.environ.get("COVERAGE_FIRST_PUBLISH_PARTIAL") == "1":
         return False
-    onboarded_ccs = set(onboarded.values())
+    onboarded_ccs = countries(onboarded)
     missing = sorted((onboarded_ccs - set(complete)) | (onboarded_ccs & set(failed)))
     if not missing:
         return False
@@ -319,6 +322,20 @@ def _first_publish_refused(family: str, complete: dict[str, list[str]], live_v2:
           f"lacks {', '.join(missing)}. Run every onboarded region, or set "
           "COVERAGE_FIRST_PUBLISH_PARTIAL=1 to publish this subset alone.", file=sys.stderr)
     return True
+
+
+def _line_key(region: str, cc: str | None, onboarded: dict[str, tuple[str, ...]]) -> str:
+    """The workdir name of one country's share of a region's line extract.
+
+    The region's own name when it serves one country, which is nearly every
+    region; a shared region gets one name per country it serves
+    (`europe-ireland-and-northern-ireland_ie`), because each country keeps only
+    the ways it owns. The input helpers below take either form.
+    """
+    slug = region.replace("/", "-")
+    if cc is None or len(resolve_country(region, onboarded) or ()) <= 1:
+        return slug
+    return f"{slug}_{cc.lower()}"
 
 
 def _stamp_text(workdir: pathlib.Path, prefix: str, region: str) -> str:
@@ -360,7 +377,7 @@ def _roadpieces_inputs(workdir: pathlib.Path, regions: list[str]) -> str:
 
 
 def _world_gap_cells(workdir: pathlib.Path, wants: dict[str, str],
-                     onboarded: dict[str, str]) -> tuple[dict[str, list[pathlib.Path]], list[str]]:
+                     onboarded: dict[str, tuple[str, ...]]) -> tuple[dict[str, list[pathlib.Path]], list[str]]:
     """Every onboarded region's current gap-cell file, keyed by its country, and
     the onboarded regions that have none.
 
@@ -370,14 +387,15 @@ def _world_gap_cells(workdir: pathlib.Path, wants: dict[str, str],
     """
     cells: dict[str, list[pathlib.Path]] = {}
     missing = []
-    for region, cc in onboarded.items():
-        slug = region.replace("/", "-")
-        path = workdir / f"surface_{slug}_gapcells.tsv"
+    for region, ccs in onboarded.items():
         want = wants.get(region) or _region_stamp(workdir, _default_pbf(workdir, region))
-        if path.exists() and _stamp_text(workdir, "surface", region) == want:
-            cells.setdefault(cc, []).append(path)
-        else:
-            missing.append(region)
+        for cc in ccs:
+            key = _line_key(region, cc, onboarded)
+            path = workdir / f"surface_{key}_gapcells.tsv"
+            if path.exists() and _stamp_text(workdir, "surface", key) == want:
+                cells.setdefault(cc, []).append(path)
+            elif region not in missing:
+                missing.append(region)
     return cells, missing
 
 
@@ -439,7 +457,7 @@ def _extract_is_current(extract: pathlib.Path, pbf: pathlib.Path, contract_file:
 def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
                  publish: bool = True, retire: tuple[str, ...] = (),
                  rebuilt: list[str] | None = None,
-                 onboarded: dict[str, str] | None = None) -> int:
+                 onboarded: dict[str, tuple[str, ...]] | None = None) -> int:
     """The line path, under the surface run lock; 2 when another surface run holds it."""
     with _line_run_lock("surface") as got:
         if not got:
@@ -449,10 +467,67 @@ def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
                              publish=publish, retire=retire, rebuilt=rebuilt, onboarded=onboarded)
 
 
+def _surface_share(region: str, country_code: str | None, pbf: pathlib.Path, want: str,
+                   wayids_path: pathlib.Path, workdir: pathlib.Path, contract, owners,
+                   onboarded: dict[str, tuple[str, ...]]) -> None:
+    """One country's share of a region's surface extract, reused while current."""
+    slug = _line_key(region, country_code, onboarded)
+    name = region if slug == region.replace("/", "-") else f"{region} ({country_code})"
+    out = workdir / f"surface_{slug}_classified.geojsonl"
+    todo_out = workdir / f"surface_{slug}_todo.geojsonl"
+    gaps_out = workdir / f"surface_{slug}_gapcells.tsv"
+
+    # The per-region EXTRACT is the expensive step (osmium plus a full
+    # node-location pass over a national PBF), so it is cached.
+    #
+    # Reused only when the extract is newer than the PBF it came from
+    # and its stamp names the contract that shaped it and the outlines
+    # near the region. The contract matters as much as the data: adding
+    # a highway type or a surface class changes what SHOULD be in the
+    # file while leaving the PBF untouched. All three outputs are
+    # checked, not just the classified one.
+    stamp = workdir / f"surface_{slug}.stamp"
+    if all(_extract_is_current(f, pbf, contract_path(), stamp,
+                               extra_inputs=(wayids_path,), expected=want)
+           for f in (out, todo_out, gaps_out)):
+        print(f"[surface] {name}: extract unchanged, reusing {out.name}")
+        return
+    # Removed before the extract starts, not only written after:
+    # extract_region truncates its outputs first, so a run killed
+    # or raising mid-extract must not leave the OLD stamp beside
+    # the now-truncated files, or the next run's
+    # _extract_is_current would call them current.
+    stamp.unlink(missing_ok=True)
+    stamp.with_suffix(".src").unlink(missing_ok=True)
+    source = pbf_identity(pbf)
+    filtered = workdir / (region.replace("/", "-") + "-surface.osm.pbf")
+    run_filter(pbf, filtered, surface_selectors(contract))
+    route_way_ids = load_way_ids(wayids_path)
+    if not route_way_ids:
+        # Loudly, not silently: the arm still builds, but a rider
+        # zooming the Zuiderdijk would see class-gated homework
+        # only, and nothing else in the log would say why.
+        print(f"[surface] {name}: no routes extract in the workdir; "
+              "the to-do arm is class-gated only (run --routes first "
+              "for route-awareness)")
+    fresh = extract_region(
+        filtered, contract, classified_out=out, todo_out=todo_out,
+        gaps_out=gaps_out, cctok=f"|{country_code}|",
+        route_way_ids=route_way_ids,
+        keep=owners.keeper(country_code) if owners else None)
+    # Written only once all three files are complete: a run killed
+    # mid-extract leaves no stamp, so the next run re-extracts.
+    stamp.write_text(want, encoding="utf-8")
+    stamp.with_suffix(".src").write_text(source, encoding="utf-8")
+    print(f"[surface] {name}: {fresh.classified} classified, "
+          f"{fresh.todo} to record, {fresh.cells} grid cells, "
+          f"{fresh.foreign} owned by a neighbour")
+
+
 def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
                   publish: bool = True, retire: tuple[str, ...] = (),
                   rebuilt: list[str] | None = None,
-                  onboarded: dict[str, str] | None = None) -> int:
+                  onboarded: dict[str, tuple[str, ...]] | None = None) -> int:
     """The line path: PBF -> osmium -> GeoJSONL -> tippecanoe, per country. No
     database beyond the outline snapshot and the run lock.
 
@@ -478,69 +553,23 @@ def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
     onboarded = _onboarded() if onboarded is None else onboarded
     for region in regions:
         try:
-            country_code = resolve_country(region, onboarded)
             pbf = fetch_pbf(region, workdir)
             want = _region_stamp(workdir, pbf)
-            # Keyed by REGION, not by country: the US is onboarded as two
-            # Geofabrik extracts (california + colorado) and Great Britain can
-            # be joined by the all-Ireland one; a per-country filename would
-            # let the second region overwrite the first.
-            slug = region.replace("/", "-")
-            out = workdir / f"surface_{slug}_classified.geojsonl"
-            todo_out = workdir / f"surface_{slug}_todo.geojsonl"
-            gaps_out = workdir / f"surface_{slug}_gapcells.tsv"
-
-            # The per-region EXTRACT is the expensive step (osmium plus a full
-            # node-location pass over a national PBF), so it is cached.
-            #
-            # Reused only when the extract is newer than the PBF it came from
-            # and its stamp names the contract that shaped it and the outlines
-            # near the region. The contract matters as much as the data: adding
-            # a highway type or a surface class changes what SHOULD be in the
-            # file while leaving the PBF untouched. All three outputs are
-            # checked, not just the classified one.
-            stamp = workdir / f"surface_{slug}.stamp"
             # The routes extract's way-id set, when a `--routes` run has left
             # one in the workdir: it is what makes the to-do arm route-aware
             # (an untagged way on a signed route is homework whatever its
             # class). Named as an extract INPUT too, so a fresh routes run
-            # invalidates the surface extracts it would change.
-            wayids_path = workdir / f"routes_{slug}_wayids.txt"
-            if all(_extract_is_current(f, pbf, contract_path(), stamp,
-                                       extra_inputs=(wayids_path,), expected=want)
-                   for f in (out, todo_out, gaps_out)):
-                print(f"[surface] {region}: extract unchanged, reusing {out.name}")
-            else:
-                # Removed before the extract starts, not only written after:
-                # extract_region truncates its outputs first, so a run killed
-                # or raising mid-extract must not leave the OLD stamp beside
-                # the now-truncated files, or the next run's
-                # _extract_is_current would call them current.
-                stamp.unlink(missing_ok=True)
-                stamp.with_suffix(".src").unlink(missing_ok=True)
-                source = pbf_identity(pbf)
-                filtered = workdir / (slug + "-surface.osm.pbf")
-                run_filter(pbf, filtered, surface_selectors(contract))
-                route_way_ids = load_way_ids(wayids_path)
-                if not route_way_ids:
-                    # Loudly, not silently: the arm still builds, but a rider
-                    # zooming the Zuiderdijk would see class-gated homework
-                    # only, and nothing else in the log would say why.
-                    print(f"[surface] {region}: no routes extract in the workdir; "
-                          "the to-do arm is class-gated only (run --routes first "
-                          "for route-awareness)")
-                fresh = extract_region(
-                    filtered, contract, classified_out=out, todo_out=todo_out,
-                    gaps_out=gaps_out, cctok=f"|{country_code}|",
-                    route_way_ids=route_way_ids,
-                    keep=owners.keeper(country_code) if owners else None)
-                # Written only once all three files are complete: a run killed
-                # mid-extract leaves no stamp, so the next run re-extracts.
-                stamp.write_text(want, encoding="utf-8")
-                stamp.with_suffix(".src").write_text(source, encoding="utf-8")
-                print(f"[surface] {region}: {fresh.classified} classified, "
-                      f"{fresh.todo} to record, {fresh.cells} grid cells, "
-                      f"{fresh.foreign} owned by a neighbour")
+            # invalidates the surface extracts it would change. One set per
+            # region, whatever its countries: the set is not owner-filtered.
+            wayids_path = workdir / f"routes_{region.replace('/', '-')}_wayids.txt"
+            # Keyed by REGION, not by country: the US is onboarded as two
+            # Geofabrik extracts (california + colorado), and a per-country
+            # filename would let the second region overwrite the first. A
+            # region two countries share (the all-Ireland extract) gets one
+            # share per country (_line_key), each holding the ways it owns.
+            for country_code in resolve_country(region, onboarded) or (None,):
+                _surface_share(region, country_code, pbf, want, wayids_path, workdir,
+                               contract, owners, onboarded)
             wants[region] = want
         except Exception as exc:  # noqa: BLE001 - one region must not stop the rest
             print(f"[surface] {region} FAILED: {exc}", file=sys.stderr)
@@ -569,11 +598,11 @@ def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
     built: dict[str, CountryBuild] = {}
     for cc, members in complete.items():
         try:
-            inputs = _surface_inputs(workdir, members)
+            slugs = [_line_key(r, cc, onboarded) for r in members]
+            inputs = _surface_inputs(workdir, slugs)
             if live["countries"].get(cc.lower(), {}).get("inputs") == inputs:
                 print(f"[surface] {cc}: unchanged, not rebuilt")
                 continue
-            slugs = [r.replace("/", "-") for r in members]
             paths, counts_cc = {}, {}
             for arm, lo, hi in (("classified", None, None),
                                 ("todo", spec["todo"]["minZoom"], spec["todo"]["maxZoom"])):
@@ -646,7 +675,7 @@ def _peak() -> str:
 def _run_routes(regions, workdir, contract, *, extract_only: bool = False,
                 publish: bool = True, retire: tuple[str, ...] = (),
                 rebuilt: list[str] | None = None,
-                onboarded: dict[str, str] | None = None) -> int:
+                onboarded: dict[str, tuple[str, ...]] | None = None) -> int:
     """The route-network path, under the routes run lock; 2 when another routes run holds it."""
     with _line_run_lock("routes") as got:
         if not got:
@@ -656,10 +685,54 @@ def _run_routes(regions, workdir, contract, *, extract_only: bool = False,
                             publish=publish, retire=retire, rebuilt=rebuilt, onboarded=onboarded)
 
 
+def _routes_share(region: str, country_code: str | None, pbf: pathlib.Path, want: str,
+                  workdir: pathlib.Path, contract, owners,
+                  onboarded: dict[str, tuple[str, ...]]) -> None:
+    """One country's share of a region's routes extract, reused while current.
+
+    The way-id set is the region's, not the share's: it is not owner-filtered,
+    so every share of a region writes the same set.
+    """
+    slug = _line_key(region, country_code, onboarded)
+    name = region if slug == region.replace("/", "-") else f"{region} ({country_code})"
+    ways_out = workdir / f"routes_{slug}_ways.geojsonl"
+    nodes_out = workdir / f"routes_{slug}_knoop.geojsonl"
+    wayids_out = workdir / f"routes_{region.replace('/', '-')}_wayids.txt"
+    stamp = workdir / f"routes_{slug}.stamp"
+    # allow_empty: a country with no node network has an empty knoop
+    # file, and a country with no signed routes at all (rare, but a
+    # partial extract like a single US state can be) has empty ways;
+    # both are answers, not failures to cache.
+    if all(_extract_is_current(f, pbf, contract_path(), stamp, allow_empty=True,
+                               expected=want)
+           for f in (ways_out, nodes_out, wayids_out)):
+        print(f"[routes] {name}: extract unchanged, reusing {ways_out.name}")
+        return
+    # Removed before the extract starts (surface pass, same
+    # reason): a run killed or raising mid-extract must not leave
+    # the OLD stamp beside the now-truncated files.
+    stamp.unlink(missing_ok=True)
+    stamp.with_suffix(".src").unlink(missing_ok=True)
+    source = pbf_identity(pbf)
+    filtered = workdir / (region.replace("/", "-") + "-routes.osm.pbf")
+    run_filter(pbf, filtered, routes_selectors())
+    fresh = routes_extract_region(
+        filtered, contract, ways_out=ways_out, nodes_out=nodes_out,
+        wayids_out=wayids_out, cctok=f"|{country_code}|",
+        keep=owners.keeper(country_code) if owners else None)
+    # Written only once all three files are complete: a run killed
+    # mid-extract leaves no stamp, so the next run re-extracts.
+    stamp.write_text(want, encoding="utf-8")
+    stamp.with_suffix(".src").write_text(source, encoding="utf-8")
+    print(f"[routes] {name}: {fresh.ways} member ways on "
+          f"{fresh.relations} routes, {fresh.nodes} knooppunten, "
+          f"{fresh.foreign} owned by a neighbour")
+
+
 def _routes_pass(regions, workdir, contract, *, extract_only: bool = False,
                  publish: bool = True, retire: tuple[str, ...] = (),
                  rebuilt: list[str] | None = None,
-                 onboarded: dict[str, str] | None = None) -> int:
+                 onboarded: dict[str, tuple[str, ...]] | None = None) -> int:
     """The route-network path: PBF -> osmium -> two-pass extract -> tippecanoe,
     per country.
 
@@ -678,44 +751,13 @@ def _routes_pass(regions, workdir, contract, *, extract_only: bool = False,
     onboarded = _onboarded() if onboarded is None else onboarded
     for region in regions:
         try:
-            country_code = resolve_country(region, onboarded)
             pbf = fetch_pbf(region, workdir)
             want = _region_stamp(workdir, pbf)
             # Keyed by REGION for the same multi-extract-country reason the
-            # surface files are (california + colorado).
-            slug = region.replace("/", "-")
-            ways_out = workdir / f"routes_{slug}_ways.geojsonl"
-            nodes_out = workdir / f"routes_{slug}_knoop.geojsonl"
-            wayids_out = workdir / f"routes_{slug}_wayids.txt"
-            stamp = workdir / f"routes_{slug}.stamp"
-            # allow_empty: a country with no node network has an empty knoop
-            # file, and a country with no signed routes at all (rare, but a
-            # partial extract like a single US state can be) has empty ways;
-            # both are answers, not failures to cache.
-            if all(_extract_is_current(f, pbf, contract_path(), stamp, allow_empty=True,
-                                       expected=want)
-                   for f in (ways_out, nodes_out, wayids_out)):
-                print(f"[routes] {region}: extract unchanged, reusing {ways_out.name}")
-            else:
-                # Removed before the extract starts (surface pass, same
-                # reason): a run killed or raising mid-extract must not leave
-                # the OLD stamp beside the now-truncated files.
-                stamp.unlink(missing_ok=True)
-                stamp.with_suffix(".src").unlink(missing_ok=True)
-                source = pbf_identity(pbf)
-                filtered = workdir / (slug + "-routes.osm.pbf")
-                run_filter(pbf, filtered, routes_selectors())
-                fresh = routes_extract_region(
-                    filtered, contract, ways_out=ways_out, nodes_out=nodes_out,
-                    wayids_out=wayids_out, cctok=f"|{country_code}|",
-                    keep=owners.keeper(country_code) if owners else None)
-                # Written only once all three files are complete: a run killed
-                # mid-extract leaves no stamp, so the next run re-extracts.
-                stamp.write_text(want, encoding="utf-8")
-                stamp.with_suffix(".src").write_text(source, encoding="utf-8")
-                print(f"[routes] {region}: {fresh.ways} member ways on "
-                      f"{fresh.relations} routes, {fresh.nodes} knooppunten, "
-                      f"{fresh.foreign} owned by a neighbour")
+            # surface files are (california + colorado), with one share per
+            # country for a shared region (_line_key).
+            for country_code in resolve_country(region, onboarded) or (None,):
+                _routes_share(region, country_code, pbf, want, workdir, contract, owners, onboarded)
             extracted.append(region)
         except Exception as exc:  # noqa: BLE001 - one region must not stop the rest
             print(f"[routes] {region} FAILED: {exc}", file=sys.stderr)
@@ -739,11 +781,11 @@ def _routes_pass(regions, workdir, contract, *, extract_only: bool = False,
     built: dict[str, CountryBuild] = {}
     for cc, members in complete.items():
         try:
-            inputs = _routes_inputs(workdir, members)
+            slugs = [_line_key(r, cc, onboarded) for r in members]
+            inputs = _routes_inputs(workdir, slugs)
             if live["countries"].get(cc.lower(), {}).get("inputs") == inputs:
                 print(f"[routes] {cc}: unchanged, not rebuilt")
                 continue
-            slugs = [r.replace("/", "-") for r in members]
             ways = [workdir / f"routes_{s}_ways.geojsonl" for s in slugs]
             knoop = [workdir / f"routes_{s}_knoop.geojsonl" for s in slugs]
             n_ways = sum(sum(1 for _ in f.open("rb")) for f in ways)
@@ -777,7 +819,7 @@ def _routes_pass(regions, workdir, contract, *, extract_only: bool = False,
 def _run_roadpieces(regions, workdir, contract, *, extract_only: bool = False,
                     publish: bool = True, retire: tuple[str, ...] = (),
                     rebuilt: list[str] | None = None,
-                    onboarded: dict[str, str] | None = None) -> int:
+                    onboarded: dict[str, tuple[str, ...]] | None = None) -> int:
     """The road-piece path, under its run lock; 2 when another road-piece run holds it."""
     with _line_run_lock("roadpieces") as got:
         if not got:
@@ -790,7 +832,7 @@ def _run_roadpieces(regions, workdir, contract, *, extract_only: bool = False,
 def _roadpieces_pass(regions, workdir, contract, *, extract_only: bool = False,
                      publish: bool = True, retire: tuple[str, ...] = (),
                      rebuilt: list[str] | None = None,
-                     onboarded: dict[str, str] | None = None) -> int:
+                     onboarded: dict[str, tuple[str, ...]] | None = None) -> int:
     """PBF -> osmium -> road pieces -> tippecanoe, per country
     (docs/specs/traffic-measurements.md §2).
 
@@ -1084,7 +1126,7 @@ def main(argv=None) -> int:
                 # unresolvable country is now a hard failure (raises), caught by the
                 # try/except like any other per-region failure, rather than the two
                 # call sites independently `.get()`-missing into a silent None.
-                country_code = resolve_country(region, onboarded)
+                country_codes = resolve_country(region, onboarded)
                 with tracker.step(region, "download") as st:
                     download_started = time.time()
                     pbf = fetch_pbf(region, workdir)
@@ -1099,7 +1141,10 @@ def main(argv=None) -> int:
                 # parse_pois is a generator consumed by load_region's COPY; timing
                 # it lazily keeps the rows streaming instead of held in memory.
                 parse_seconds = [0.0]
-                rows = _timed(parse_pois(filtered, contract, region, country_code), parse_seconds)
+                # A shared region's rows take their own country in load_region; the
+                # parser stamps the first one.
+                rows = _timed(parse_pois(filtered, contract, region,
+                                         country_codes[0] if country_codes else None), parse_seconds)
                 near_ways = None
                 if near_rules:
                     rule = next(iter(near_rules.values()))
@@ -1109,7 +1154,7 @@ def main(argv=None) -> int:
                     near_ways = ({letter: r.within_m for letter, r in near_rules.items()},
                                  rideable_lines(export_lines(ways), rule))
                 with tracker.step(region, "load") as st:
-                    result = load_region(conn, rows, region, country_code, near_ways=near_ways,
+                    result = load_region(conn, rows, region, country_codes, near_ways=near_ways,
                                          name_or_tags=name_or_tags or None,
                                          exclude_tag_values=exclude_tag_values or None)
                     st.rows = result.inserted

@@ -131,6 +131,10 @@ final class KindIcons
                 // A heart with a bolt.
                 'defibrillator' => ['paths' => [$disc, ['d' => 'M12 18.4 6 12.6a3.4 3.4 0 0 1 6-4.4 3.4 3.4 0 0 1 6 4.4Z', 'fill' => self::INK_ON_CATEGORY], ['d' => 'M12.6 9.4 10.4 13h1.8l-.8 3.4L14 12.4h-1.8l.4-3Z', 'fill' => self::CATEGORY_FILL]]],
             ],
+            // Where to sleep: one glyph per kind of stay, the ballot's five
+            // drawings (StayKind) redrawn on the category disc; the types that
+            // look alike share one (owner 2026-10-17: a hotel showed the tent).
+            ItemType::WhereToSleep->letter() => self::stays($disc),
             ItemType::ScenicViews->letter() => [
                 // Binoculars: a place to stop and look.
                 'viewpoint' => ['paths' => [$disc, ['d' => 'M6 14.5a3 3 0 1 0 6 0a3 3 0 1 0-6 0Z', 'fill' => self::INK_ON_CATEGORY], ['d' => 'M12 14.5a3 3 0 1 0 6 0a3 3 0 1 0-6 0Z', 'fill' => self::INK_ON_CATEGORY], ['d' => 'M7.4 7.5h3.2v5H7.4Z', 'fill' => self::INK_ON_CATEGORY], ['d' => 'M13.4 7.5h3.2v5h-3.2Z', 'fill' => self::INK_ON_CATEGORY], ['d' => 'M10.4 9.5h3.2v2h-3.2Z', 'fill' => self::INK_ON_CATEGORY]]],
@@ -179,6 +183,42 @@ final class KindIcons
                 // A facade with arched windows: architecture, ours only.
                 'architecture' => ['paths' => [$disc, ['d' => 'M5.5 18V8.6L12 5.4l6.5 3.2V18Z', 'fill' => self::INK_ON_CATEGORY], ['d' => 'M7.8 18v-4a1.4 1.4 0 0 1 2.8 0v4Z', 'fill' => self::CATEGORY_FILL], ['d' => 'M13.4 18v-4a1.4 1.4 0 0 1 2.8 0v4Z', 'fill' => self::CATEGORY_FILL], ['d' => 'M11 9.8a1 1 0 1 0 2 0a1 1 0 1 0-2 0Z', 'fill' => self::CATEGORY_FILL]]],
             ],
+        ];
+    }
+
+    /**
+     * The stay kinds (PlaceKind, letter O): five drawings for nine types.
+     *
+     * @param array{d: string, fill: string, stroke?: string, width?: float} $disc
+     *
+     * @return array<string, array{paths: list<array{d: string, fill: string, stroke?: string, width?: float}>}>
+     */
+    private static function stays(array $disc): array
+    {
+        $ink = static fn (string $d): array => ['d' => $d, 'fill' => self::INK_ON_CATEGORY];
+        $cut = static fn (string $d): array => ['d' => $d, 'fill' => self::CATEGORY_FILL];
+        // A building with six windows and a door.
+        $hotel = ['paths' => [$disc, $ink('M7 5h10v13h-3.4v-3h-3.2v3H7Z'),
+            $cut('M8.7 6.6h1.7v1.6H8.7Z'), $cut('M13.6 6.6h1.7v1.6h-1.7Z'),
+            $cut('M8.7 9.4h1.7V11H8.7Z'), $cut('M13.6 9.4h1.7V11h-1.7Z'),
+            $cut('M8.7 12.2h1.7v1.6H8.7Z'), $cut('M13.6 12.2h1.7v1.6h-1.7Z')]];
+        // A house with a door: guest house, B&B, a rental.
+        $house = ['paths' => [$disc, $ink('M12 5.2 4.8 11.4H7V18h3.4v-3.6h3.2V18H17v-6.6h2.2Z')]];
+        // A tent with its door open.
+        $camp = ['paths' => [$disc, $ink('M12 5.4 5 18h4.8l2.2-4.4 2.2 4.4H19Z')]];
+        // A bunk bed: a hostel.
+        $hostel = ['paths' => [$disc, $ink('M6 6h1.6v12H6Z'), $ink('M16.4 6H18v12h-1.6Z'),
+            $ink('M7.6 8.2h8.8v2.2H7.6Z'), $ink('M7.6 13.4h8.8v2.2H7.6Z')]];
+        // A cabin with a steep roof and two windows: chalet, mountain hut.
+        $chalet = ['paths' => [$disc, $ink('M12 5 4.8 11.6h1.6V18h4v-3.4h3.2V18h4v-6.4h1.6Z'),
+            $cut('M8 12.4h2.2v1.3H8Z'), $cut('M13.8 12.4H16v1.3h-2.2Z')]];
+
+        return [
+            'hotel' => $hotel, 'motel' => $hotel,
+            'guest_house' => $house, 'apartment' => $house,
+            'hostel' => $hostel,
+            'camp' => $camp,
+            'chalet' => $chalet, 'alpine_hut' => $chalet, 'wilderness_hut' => $chalet,
         ];
     }
 }

@@ -10,6 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * A Geofabrik extract a country is harvested from, onboarded while its country is seeded or live.
+ * A shared extract (europe/ireland-and-northern-ireland for GB and IE) has one row per country.
  *
  * @api
  */
@@ -23,6 +24,7 @@ class CountryExtract
     #[ORM\Column(type: 'string', length: 100)]
     private string $slug = '';
 
+    #[ORM\Id]
     #[ORM\Column(type: 'string', length: 2, options: ['fixed' => true])]
     private string $countryCode = '';
 

@@ -4,7 +4,7 @@ import pathlib
 
 import pytest
 
-from onboarding.extracts import ExtractUndecided, candidates, choose_extract, load_index
+from onboarding.extracts import ExtractUndecided, candidates, choose_extract, lists_country, load_index
 
 INDEX = load_index(str(pathlib.Path(__file__).parent / "fixtures" / "geofabrik-index.json"))
 
@@ -23,10 +23,22 @@ def test_two_at_the_same_depth_stop_with_both_named():
         choose_extract(INDEX, "GB")
 
 
-def test_a_shared_extract_is_not_an_exact_match():
-    with pytest.raises(ExtractUndecided, match=r"\[IE\]") as exc:
-        choose_extract(INDEX, "IE")
-    assert "extracts that include IE: europe/ireland-and-northern-ireland" in str(exc.value)
+def test_ireland_takes_the_all_ireland_extract():
+    """Geofabrik lists only IE for it, though Northern Ireland (GB) is inside too."""
+    assert choose_extract(INDEX, "IE") == "europe/ireland-and-northern-ireland"
+    assert lists_country(INDEX, "europe/ireland-and-northern-ireland", "IE")
+    assert not lists_country(INDEX, "europe/ireland-and-northern-ireland", "GB")
+    assert not lists_country(INDEX, "europe/nowhere", "IE")
+
+
+def test_an_extract_of_several_countries_is_not_an_exact_match():
+    index = {"features": [{"properties": {
+        "iso3166-1:alpha2": ["ZA", "LS"],
+        "urls": {"pbf": "https://download.geofabrik.de/africa/south-africa-and-lesotho-latest.osm.pbf"}}}]}
+    with pytest.raises(ExtractUndecided, match=r"\[LS\]") as exc:
+        choose_extract(index, "LS")
+    assert "extracts that include LS: africa/south-africa-and-lesotho" in str(exc.value)
+    assert lists_country(index, "africa/south-africa-and-lesotho", "LS")
 
 
 def test_an_override_must_exist_in_the_index():

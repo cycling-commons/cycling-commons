@@ -212,7 +212,7 @@ export function clusterEl(layer, count){
    docs/specs/osm-data-architecture.md §5a). A catalog item carries it as
    `type`, a coverage point as the tile's `kind`; one without a known kind
    keeps the category glyph. */
-export const PLACE_LETTER={shelter:'G', scenic:'P', history:'Q'};
+export const PLACE_LETTER={shelter:'G', stays:'O', scenic:'P', history:'Q'};
 /* English label → kind (window.CC_PLACE_KIND_LABELS). A tile's `t` is the
    contract's selector label, which is the kind's label (CoverageContractTest),
    so a tile the pipeline has not stamped with `kind` still names it. */

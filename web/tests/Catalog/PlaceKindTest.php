@@ -125,7 +125,9 @@ final class PlaceKindTest extends TestCase
         self::assertSame('hostel', PlaceKind::fromLabel('O', 'Budget stay'));
         self::assertSame('apartment', PlaceKind::fromLabel('O', 'Furnished rental'));
         self::assertSame('camp', PlaceKind::fromLabel('O', 'Campsite'));
-        self::assertNotContains('O', PlaceKind::LETTERS, 'no stay glyphs on the map yet (StayKind)');
+        self::assertContains('O', PlaceKind::LETTERS, 'stays draw their kind on the map (owner 2026-10-17)');
+        self::assertSame('guest_house', PlaceKind::kindsByLabel('O')['Guest house'], 'a stay tile from before the kind stamp');
+        self::assertSame('hotel', PlaceKind::kindsByLabel('O')['Hotel']);
         self::assertContains('O', PlaceKind::TYPED_LETTERS);
     }
 

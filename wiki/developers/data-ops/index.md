@@ -96,7 +96,9 @@ walks the same mechanism from the row's point of view.
 
 **Ownership, and nearest-region-wins.** Geofabrik's extracts overlap at borders, so one real object
 arrives in several of them. Ownership is decided by geometry, not by which extract ran last: a row
-belongs to the extract whose country holds the nearest region. Every other extract's run deletes it.
+belongs to the extract whose country holds the nearest region, and takes that region's country. An
+extract that serves two countries, such as `europe/ireland-and-northern-ireland` for Great Britain
+and Ireland, keeps the rows of both. Every other extract's run deletes it.
 This is what stops a border POI flapping between countries week to week.
 
 **Drift abort.** A guard, not a threshold to tune. If a region's new extract carries far fewer rows

@@ -2114,7 +2114,7 @@ final class Version20261005120100 extends AbstractMigration
         }
         foreach (self::EXTRACTS as $slug => $cc) {
             $this->addSql(
-                'INSERT INTO country_extract (slug, country_code) VALUES (:slug, :cc) ON CONFLICT (slug) DO NOTHING',
+                'INSERT INTO country_extract (slug, country_code) VALUES (:slug, :cc) ON CONFLICT DO NOTHING',
                 ['slug' => $slug, 'cc' => $cc],
             );
         }

@@ -40,7 +40,7 @@ A country moves through three states, stored in `country.status`:
 - **live**: every step passed; only now does the country show on the map.
 
 The configuration lives in four tables: `country` (name, status, timezones, labels), `country_extract`
-(its Geofabrik extracts), `country_plan_region` (the plan) and `region` (the seeded regions, with
+(its Geofabrik extracts, one row per country for an extract two countries share), `country_plan_region` (the plan) and `region` (the seeded regions, with
 their `labels`). No YAML or source file lists countries; `make country-lists-check` fails when one
 creeps back in.
 
@@ -65,6 +65,10 @@ rule has an override flag for the case where it cannot decide.
   fixed templates per language. Fix one label later with `app:country:label` (below).
 - **Extract.** The Geofabrik extract whose ISO country list is exactly that country, the shallowest
   one first. None, or two at the same depth, stops the plan. Override: `--extract europe/denmark`.
+  An extract another country already holds is shared when Geofabrik lists the new country in it:
+  `europe/ireland-and-northern-ireland` lists Ireland and also carries Northern Ireland, so Ireland
+  shares it with Great Britain, and the plan prints `(shared with GB)`. An extract that does not list
+  the country stops the plan, so a mistyped `--extract` never takes another country's extract.
 - **Neighbours.** Seeded or live countries whose regions lie within this distance of the new
   country, just over the 0.1026° buffer Geofabrik cuts its extracts with:
 
@@ -100,7 +104,9 @@ applies when a rider submits.
 membership (their border rows must be re-owned now that new regions sit next to them), rebuilds the
 point tiles, then the route and surface tiles of the new country and its neighbours. Each is one
 call of the documented `coverage.run` command. When the nightly harvest holds the coverage, routes or
-surface lock, repair exits with code 2 and says to start it again later.
+surface lock, repair exits with code 2 and says to start it again later. An extract the new country
+shares with a neighbour is harvested once, in the neighbours' step: one harvest gives each point to
+the country of its nearest region, so Ireland's points and Northern Ireland's come from the same run.
 
 **Elevation check** samples 25 points inside the country and asks the elevation instance
 `ElevationEndpoints` picks for each. It fails when more than 80 % of the answers are null or exactly
@@ -131,7 +137,9 @@ php bin/console app:country:mark-live DK
 Production never queries Overture. `app:country:export DK` writes the live staging country (its
 `country` row, extracts and regions, geometry as GeoJSON) to stdout, and `app:country:import-plan`
 reads it on production (from stdin, or `--file`) into a plan. The same apply, repair, check and live
-sequence then runs there, so production gets staging's exact slugs, labels and borders.
+sequence then runs there, so production gets staging's exact slugs, labels and borders. The bundle
+names the other countries that share each extract; the import shares an extract with exactly those
+and refuses one that another country holds there.
 
 ## Telling the riders who asked
 
@@ -168,11 +176,6 @@ planner and the coverage commands read the tables the migrations create.
   moderation.
 - **A new UI language.** Onboarding Denmark does not add Danish.
 - **Official data providers.** Separate, per-licence work.
-- **A shared Geofabrik extract.** The planner takes an extract whose ISO list is exactly the one
-  country, so a country Geofabrik ships only together with others cannot be onboarded by the
-  command: `europe/ireland-and-northern-ireland` covers Ireland and is already GB's, and
-  `africa/south-africa` bundles Lesotho and Eswatini. Such a country needs a hand-made plan and a
-  decision on which country owns the shared extract.
 - **Part of a country.** The planner plans a whole country at one level. The two US states and two
   Canadian provinces were seeded by hand before the planner existed; adding a third state is not
   something the planner does.

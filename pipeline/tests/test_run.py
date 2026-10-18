@@ -196,7 +196,7 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
     monkeypatch.setenv("COVERAGE_WORKDIR", str(tmp_path))
     monkeypatch.setenv("COVERAGE_PUBLIC_BASE_URL", "https://tiles.example/cc-maps")
     monkeypatch.setattr(run.psycopg, "connect", lambda dsn: FakeConn())
-    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": "BE"})
+    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": ("BE",)})
     monkeypatch.setattr(run, "ensure_schema", lambda conn: calls.append("schema"))
     # dev/bad and dev/ok are placeholder slugs for this orchestration test, not
     # real countries — resolve_country only special-cases the literal
@@ -259,7 +259,7 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
 
 def test_resolve_country_stamps_netherlands():
     from coverage.load import resolve_country
-    assert resolve_country("europe/netherlands", {"europe/netherlands": "NL"}) == "NL"
+    assert resolve_country("europe/netherlands", {"europe/netherlands": ("NL",)}) == ("NL",)
 
 
 def test_run_lock_is_exclusive_across_sessions(db):
@@ -341,7 +341,7 @@ def test_main_tiles_only_skips_the_harvest_and_still_publishes(monkeypatch, tmp_
     monkeypatch.setenv("COVERAGE_WORKDIR", str(tmp_path))
     monkeypatch.setenv("COVERAGE_PUBLIC_BASE_URL", "https://tiles.example/cc-maps")
     monkeypatch.setattr(run.psycopg, "connect", lambda dsn: FakeConn())
-    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": "BE"})
+    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": ("BE",)})
     monkeypatch.setattr(run, "ensure_schema", lambda conn: calls.append("schema"))
     monkeypatch.setattr(run, "resolve_country", lambda region, onboarded: calls.append("resolve"))
     monkeypatch.setattr(run, "fetch_pbf", lambda region, workdir: calls.append("fetch"))
@@ -415,7 +415,7 @@ def test_main_load_only_loads_and_builds_no_tiles(monkeypatch, tmp_path):
 
     monkeypatch.setenv("COVERAGE_WORKDIR", str(tmp_path))
     monkeypatch.setattr(run.psycopg, "connect", lambda dsn: FakeConn())
-    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": "BE"})
+    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": ("BE",)})
     monkeypatch.setattr(run, "ensure_schema", lambda conn: calls.append("schema"))
     monkeypatch.setattr(run, "resolve_country", lambda region, onboarded: None)
     monkeypatch.setattr(run, "fetch_pbf", lambda region, workdir: tmp_path / "in.pbf")
@@ -471,7 +471,7 @@ def test_main_records_a_step_row_per_stage(monkeypatch, tmp_path):
     pbf.write_bytes(b"x" * 10)
     monkeypatch.setenv("COVERAGE_WORKDIR", str(tmp_path))
     monkeypatch.setattr(run.psycopg, "connect", lambda dsn: FakeConn())
-    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": "BE"})
+    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": ("BE",)})
     monkeypatch.setattr(run, "ensure_schema", lambda conn: None)
     monkeypatch.setattr(run, "resolve_country", lambda region, onboarded: None)
     monkeypatch.setattr(run, "fetch_pbf", lambda region, workdir: pbf)
@@ -546,7 +546,7 @@ def test_main_keeps_the_live_manifest_when_it_cannot_be_read(monkeypatch, tmp_pa
 
     monkeypatch.setenv("COVERAGE_WORKDIR", str(tmp_path))
     monkeypatch.setattr(run.psycopg, "connect", lambda dsn: FakeConn())
-    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": "BE"})
+    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": ("BE",)})
     monkeypatch.setattr(run, "ensure_schema", lambda conn: None)
     (tmp_path / "b.geojsonl").write_text('{"a":1}\n')
     monkeypatch.setattr(run, "export_geojsonl", lambda conn, wd: {("B", "BE"): tmp_path / "b.geojsonl"})

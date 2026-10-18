@@ -88,15 +88,18 @@ def test_service_kind_mapping_matches_php_service_kind_cases():
     assert [s.tag for s in contract.letters["D"].selectors] == list(contract.service_kind)
 
 
-def test_place_kind_rules_are_exactly_the_p_and_q_selectors():
-    # Every harvested P and Q point gets the kind its tag names
+def test_place_kind_rules_are_exactly_the_typed_letters_selectors():
+    # Every harvested G, O, P and Q point gets the kind its tag names
     # (osm-data-architecture.md §5a), the same mapping as PlaceKind::harvestRules().
     contract = load_contract()
-    assert set(contract.place_kind) == {"G", "P", "Q"}
+    assert set(contract.place_kind) == {"G", "O", "P", "Q"}
     for letter, rules in contract.place_kind.items():
         assert [s.tag for s in contract.letters[letter].selectors] == list(rules)
     assert contract.place_kind["P"]["waterway=waterfall"] == "waterfall"
     assert contract.place_kind["Q"]["historic=archaeological_site"] == "archaeological"
+    # A stay is stamped with its kind, so its dot draws a hotel and not the tent (owner 2026-10-17).
+    assert contract.place_kind["O"]["tourism=hotel"] == "hotel"
+    assert contract.place_kind["O"]["tourism=camp_site"] == "camp"
 
 
 def test_place_kind_rules_must_match_the_selectors(tmp_path):

@@ -24,11 +24,12 @@ namespace App\Catalog;
 final class PlaceKind
 {
     /** @var list<string> The letters whose kinds are drawn as map glyphs (KindIcons) and asked of a Scout tag. */
-    public const array LETTERS = ['G', 'P', 'Q'];
+    public const array LETTERS = ['G', 'O', 'P', 'Q'];
 
     /**
-     * Every letter with a kind Type. O · Where to sleep has one, but no map
-     * glyphs yet: its icons stay on the ballot (StayKind, owner 2026-10-03).
+     * Every letter with a kind Type. Today these are the letters with map
+     * glyphs too; O · Where to sleep draws its kind since 2026-10-17 (owner:
+     * a hotel showed the tent). A Scout tag is never filed as a stay.
      *
      * @var list<string>
      */
@@ -132,6 +133,18 @@ final class PlaceKind
     public static function labels(string $letter): array
     {
         return array_map(static fn (array $k): string => $k[1], self::KINDS[$letter] ?? []);
+    }
+
+    /**
+     * Label → kind for every name a kind goes by: its label, and the older
+     * labels a tile or a row may still carry (a stay tile from before its
+     * kind was stamped says "Guest house").
+     *
+     * @return array<string, string>
+     */
+    public static function kindsByLabel(string $letter): array
+    {
+        return array_flip(self::labels($letter)) + (self::LEGACY_LABELS[$letter] ?? []);
     }
 
     public static function osmTag(string $letter, string $kind): ?string

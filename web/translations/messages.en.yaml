@@ -3846,6 +3846,24 @@ legend:
   kind_g_bus_shelter_t: 'A bus stop sign. In OSM: shelter_type=public_transport.'
   kind_g_defibrillator_h: 'Defibrillator'
   kind_g_defibrillator_t: 'A heart with a bolt. In OSM: emergency=defibrillator.'
+  kind_o_hotel_h: "Hotel"
+  kind_o_hotel_t: "A building with windows and a door. In OSM: tourism=hotel."
+  kind_o_motel_h: "Motel"
+  kind_o_motel_t: "The same building as a hotel. In OSM: tourism=motel."
+  kind_o_guest_house_h: "Guest house / B&B"
+  kind_o_guest_house_t: "A house with a door. In OSM: tourism=guest_house."
+  kind_o_apartment_h: "Holiday rental"
+  kind_o_apartment_t: "The same house as a guest house. In OSM: tourism=apartment."
+  kind_o_hostel_h: "Hostel"
+  kind_o_hostel_t: "A bunk bed. In OSM: tourism=hostel."
+  kind_o_camp_h: "Campsite"
+  kind_o_camp_t: "A tent with its door open. In OSM: tourism=camp_site."
+  kind_o_chalet_h: "Chalet / gîte"
+  kind_o_chalet_t: "A cabin with a steep roof. In OSM: tourism=chalet."
+  kind_o_alpine_hut_h: "Mountain hut"
+  kind_o_alpine_hut_t: "The same cabin as a chalet. In OSM: tourism=alpine_hut."
+  kind_o_wilderness_hut_h: "Wilderness hut"
+  kind_o_wilderness_hut_t: "The same cabin as a chalet. In OSM: tourism=wilderness_hut."
   kind_p_viewpoint_h: 'Viewpoint'
   kind_p_viewpoint_t: 'Binoculars: a place to stop and look. In OSM: tourism=viewpoint.'
   kind_p_peak_h: 'Peak'

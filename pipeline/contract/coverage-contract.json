@@ -140,36 +140,36 @@
     "O": {
       "selectors": [
         {
-          "tag": "tourism=camp_site",
-          "label": "Campsite"
-        },
-        {
-          "tag": "tourism=hostel",
-          "label": "Hostel"
-        },
-        {
-          "tag": "tourism=guest_house",
-          "label": "Guest house"
-        },
-        {
-          "tag": "tourism=chalet",
-          "label": "Chalet"
-        },
-        {
-          "tag": "tourism=wilderness_hut",
-          "label": "Wilderness hut"
-        },
-        {
-          "tag": "tourism=alpine_hut",
-          "label": "Mountain hut"
+          "tag": "tourism=hotel",
+          "label": "Hotel"
         },
         {
           "tag": "tourism=motel",
           "label": "Motel"
         },
         {
-          "tag": "tourism=hotel",
-          "label": "Hotel"
+          "tag": "tourism=guest_house",
+          "label": "Guest house / B&B"
+        },
+        {
+          "tag": "tourism=hostel",
+          "label": "Hostel"
+        },
+        {
+          "tag": "tourism=camp_site",
+          "label": "Campsite"
+        },
+        {
+          "tag": "tourism=chalet",
+          "label": "Chalet / gîte"
+        },
+        {
+          "tag": "tourism=alpine_hut",
+          "label": "Mountain hut"
+        },
+        {
+          "tag": "tourism=wilderness_hut",
+          "label": "Wilderness hut"
         }
       ],
       "tileProps": [
@@ -284,6 +284,16 @@
       "shelter_type=sun_shelter": "sun_shelter",
       "shelter_type=weather_shelter": "weather_shelter",
       "shelter_type=wildlife_hide": "wildlife_hide"
+    },
+    "O": {
+      "tourism=hotel": "hotel",
+      "tourism=motel": "motel",
+      "tourism=guest_house": "guest_house",
+      "tourism=hostel": "hostel",
+      "tourism=camp_site": "camp",
+      "tourism=chalet": "chalet",
+      "tourism=alpine_hut": "alpine_hut",
+      "tourism=wilderness_hut": "wilderness_hut"
     },
     "P": {
       "tourism=viewpoint": "viewpoint",

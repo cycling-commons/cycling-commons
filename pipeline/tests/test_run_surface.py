@@ -20,8 +20,8 @@ from coverage import run
 from coverage.contract import load_contract
 # The onboarded set these runner tests assume; the real one is country_extract rows.
 ONBOARDED = {
-    "asia/japan": "JP", "europe/belgium": "BE", "europe/netherlands": "NL",
-    "north-america/us/california": "US", "north-america/us/colorado": "US",
+    "asia/japan": ("JP",), "europe/belgium": ("BE",), "europe/netherlands": ("NL",),
+    "north-america/us/california": ("US",), "north-america/us/colorado": ("US",),
 }
 from coverage.routes import RouteCounts
 from coverage.run import _extract_is_current, _run_routes, _run_surface
@@ -429,7 +429,7 @@ def test_first_v2_publish_refuses_when_a_countrys_build_failed(tiled, offline, c
     it would still take that country's v1 archive off the map."""
     tiled["live_v2"] = False
     (offline / "europe-belgium-latest.osm.pbf").write_bytes(b"pbf")
-    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": "BE", "europe/netherlands": "NL"})
+    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": ("BE",), "europe/netherlands": ("NL",)})
 
     def flaky_build(layer_files, out, contract, **kw):
         if out.name == "surface-be.pmtiles":
@@ -448,7 +448,7 @@ def test_first_v2_publish_with_retire_is_allowed_despite_a_failed_build(tiled, o
                                                                         monkeypatch):
     tiled["live_v2"] = False
     (offline / "europe-belgium-latest.osm.pbf").write_bytes(b"pbf")
-    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": "BE", "europe/netherlands": "NL"})
+    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": ("BE",), "europe/netherlands": ("NL",)})
 
     def flaky_build(layer_files, out, contract, **kw):
         if out.name == "surface-be.pmtiles":
@@ -595,7 +595,7 @@ def test_first_v2_routes_publish_refuses_when_a_countrys_build_failed(routed, of
     """A country present this run but whose TILING failed must block a first
     v2 routes publish, the same as one missing from the run."""
     monkeypatch.setattr(run, "read_live_manifest", lambda family: ({"version": 2, "countries": {}}, False))
-    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": "BE", "europe/netherlands": "NL"})
+    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": ("BE",), "europe/netherlands": ("NL",)})
 
     def flaky(ways, knoop, out, contract):
         if out.name == "routes-be.pmtiles":
@@ -819,13 +819,128 @@ def test_the_road_piece_run_takes_the_onboarded_countries_it_is_given(roadpieces
     """main() reads the onboarded countries once and hands them to every family's run."""
     from coverage.run import _run_roadpieces
     assert _run_roadpieces(["europe/netherlands"], offline, contract, publish=False,
-                           onboarded={"europe/netherlands": "NL"}) == 0
+                           onboarded={"europe/netherlands": ("NL",)}) == 0
 
 
 def test_first_v2_roadpieces_publish_must_cover_every_onboarded_country(roadpieces_tiled, offline, contract,
                                                                         monkeypatch, capsys):
     from coverage.run import _run_roadpieces
     monkeypatch.setattr(run, "read_live_manifest", lambda family: ({"version": 2, "countries": {}}, False))
-    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": "BE", "europe/netherlands": "NL"})
+    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": ("BE",), "europe/netherlands": ("NL",)})
     assert _run_roadpieces(["europe/netherlands"], offline, contract) == 1
     assert "first per-country publish refused" in capsys.readouterr().err
+
+
+SHARED = "europe/ireland-and-northern-ireland"
+# Geofabrik ships the Republic only together with Northern Ireland: one extract, two countries.
+SHARED_ONBOARDED = {"europe/great-britain": ("GB",), SHARED: ("GB", "IE")}
+
+
+class _KeeperPerCountry:
+    """Stands in for coverage.ownership.Owners: names the country each keeper keeps."""
+
+    def keeper(self, cc):
+        return f"keep {cc}"
+
+
+def test_a_shared_region_counts_for_each_country_it_serves(capsys):
+    assert run._complete_countries([SHARED], SHARED_ONBOARDED) == {"IE": [SHARED]}
+    assert "GB: not tiled, this run lacks europe/great-britain" in capsys.readouterr().out
+    assert run._complete_countries(["europe/great-britain", SHARED], SHARED_ONBOARDED) == {
+        "GB": ["europe/great-britain", SHARED], "IE": [SHARED]}
+
+
+def test_a_shared_region_has_one_line_share_per_country():
+    assert run._line_key(SHARED, "IE", SHARED_ONBOARDED) == "europe-ireland-and-northern-ireland_ie"
+    assert run._line_key(SHARED, "GB", SHARED_ONBOARDED) == "europe-ireland-and-northern-ireland_gb"
+    assert run._line_key("europe/great-britain", "GB", SHARED_ONBOARDED) == "europe-great-britain"
+    assert run._line_key("dev/fixture", None, SHARED_ONBOARDED) == "dev-fixture"
+
+
+def test_a_shared_region_extracts_one_surface_share_per_country(offline, contract, monkeypatch):
+    """Each share keeps only the ways its own country owns, and is tagged with that country."""
+    monkeypatch.setattr(run, "_onboarded", lambda: dict(SHARED_ONBOARDED))
+    monkeypatch.setattr(run, "_ownership", lambda workdir: _KeeperPerCountry())
+    (offline / "europe-ireland-and-northern-ireland-latest.osm.pbf").write_bytes(b"pbf")
+    seen = []
+
+    def fake_extract(filtered, contract, *, classified_out, todo_out, gaps_out,
+                     ridtok="", cctok="", route_way_ids=frozenset(), keep=None):
+        seen.append((classified_out.name, gaps_out.name, cctok, keep))
+        for p in (classified_out, todo_out, gaps_out):
+            p.write_text("")
+        return SurfaceCounts(0, 0, 0)
+
+    monkeypatch.setattr(run, "extract_region", fake_extract)
+    assert _run_surface([SHARED], offline, contract, extract_only=True, publish=False) == 0
+    assert seen == [
+        ("surface_europe-ireland-and-northern-ireland_gb_classified.geojsonl",
+         "surface_europe-ireland-and-northern-ireland_gb_gapcells.tsv", "|GB|", "keep GB"),
+        ("surface_europe-ireland-and-northern-ireland_ie_classified.geojsonl",
+         "surface_europe-ireland-and-northern-ireland_ie_gapcells.tsv", "|IE|", "keep IE"),
+    ]
+
+
+def test_a_shared_region_extracts_one_routes_share_per_country(offline, contract, monkeypatch):
+    """Ways and knooppunten split per country; the way-id set stays the region's."""
+    monkeypatch.setattr(run, "_onboarded", lambda: dict(SHARED_ONBOARDED))
+    monkeypatch.setattr(run, "_ownership", lambda workdir: _KeeperPerCountry())
+    (offline / "europe-ireland-and-northern-ireland-latest.osm.pbf").write_bytes(b"pbf")
+    seen = []
+
+    def fake_extract(filtered, contract, *, ways_out, nodes_out, wayids_out, ridtok="", cctok="",
+                     keep=None):
+        seen.append((ways_out.name, nodes_out.name, wayids_out.name, cctok, keep))
+        for p in (ways_out, nodes_out, wayids_out):
+            p.write_text("")
+        return RouteCounts(ways=0, nodes=0, relations=0)
+
+    monkeypatch.setattr(run, "routes_extract_region", fake_extract)
+    assert _run_routes([SHARED], offline, contract, extract_only=True, publish=False) == 0
+    assert seen == [
+        ("routes_europe-ireland-and-northern-ireland_gb_ways.geojsonl",
+         "routes_europe-ireland-and-northern-ireland_gb_knoop.geojsonl",
+         "routes_europe-ireland-and-northern-ireland_wayids.txt", "|GB|", "keep GB"),
+        ("routes_europe-ireland-and-northern-ireland_ie_ways.geojsonl",
+         "routes_europe-ireland-and-northern-ireland_ie_knoop.geojsonl",
+         "routes_europe-ireland-and-northern-ireland_wayids.txt", "|IE|", "keep IE"),
+    ]
+
+
+def test_each_country_is_built_from_its_own_share_of_a_shared_region(tiled, offline, contract,
+                                                                      monkeypatch):
+    """Ireland's archive reads the IE share only, Great Britain's the GB share with its own region."""
+    monkeypatch.setattr(run, "_onboarded", lambda: dict(SHARED_ONBOARDED))
+    for region in ("europe-great-britain", "europe-ireland-and-northern-ireland"):
+        (offline / f"{region}-latest.osm.pbf").write_bytes(b"pbf")
+    inputs = {}
+
+    def fake_build(layer_files, out, contract, **kw):
+        for cc, files in layer_files.items():
+            inputs.setdefault(cc, set()).update(f.name for f in files)
+        out.write_bytes(b"pm")
+
+    monkeypatch.setattr(run, "build_surface_pmtiles", fake_build)
+    assert _run_surface(["europe/great-britain", SHARED], offline, contract) == 0
+    assert tiled["published"][1] == ["GB", "IE"]
+    assert inputs["IE"] == {"surface_europe-ireland-and-northern-ireland_ie_classified.geojsonl",
+                            "surface_europe-ireland-and-northern-ireland_ie_todo.geojsonl"}
+    assert inputs["GB"] == {"surface_europe-great-britain_classified.geojsonl",
+                            "surface_europe-great-britain_todo.geojsonl",
+                            "surface_europe-ireland-and-northern-ireland_gb_classified.geojsonl",
+                            "surface_europe-ireland-and-northern-ireland_gb_todo.geojsonl"}
+
+
+def test_the_world_grid_takes_each_share_of_a_shared_region_under_its_country(offline):
+    for key in ("europe-great-britain", "europe-ireland-and-northern-ireland_gb",
+                "europe-ireland-and-northern-ireland_ie"):
+        (offline / f"surface_{key}_gapcells.tsv").write_text("1\t1\t1.0\t0.0\t1\n")
+        (offline / f"surface_{key}.stamp").write_text("w")
+    wants = {"europe/great-britain": "w", SHARED: "w"}
+    cells, missing = run._world_gap_cells(offline, wants, SHARED_ONBOARDED)
+    assert missing == []
+    assert {cc: sorted(p.name for p in paths) for cc, paths in cells.items()} == {
+        "GB": ["surface_europe-great-britain_gapcells.tsv",
+               "surface_europe-ireland-and-northern-ireland_gb_gapcells.tsv"],
+        "IE": ["surface_europe-ireland-and-northern-ireland_ie_gapcells.tsv"],
+    }

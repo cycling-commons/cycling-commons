@@ -22,7 +22,7 @@ final class CountryBundle
     {
     }
 
-    /** @return array{version: int, country: array<string, mixed>, extracts: list<string>, regions: list<array<string, mixed>>} */
+    /** @return array{version: int, country: array<string, mixed>, extracts: list<string>, shared: array<string, list<string>>, regions: list<array<string, mixed>>} */
     public function export(string $cc): array
     {
         $c = $this->db->fetchAssociative(
@@ -58,12 +58,34 @@ final class CountryBundle
                 'overture_release' => $c['overture_release'] ?? null,
             ],
             'extracts' => (new Countries($this->db))->extracts($cc),
+            'shared' => $this->sharedWith($cc),
             'regions' => $regions,
         ];
     }
 
     /**
-     * @return array{country: array{code: string, name: string, subtype: string, bbox: list<float>|null, labels: array<string, string>, timezones: list<string>, overture_release: string|null}, extracts: list<string>, regions: list<array{slug: string, iso_code: string|null, name: string, labels: array<string, string>, admin_level: int, area_km2: float, geometry: array<string, mixed>}>}
+     * The other countries holding each of this country's extracts: Ireland's
+     * europe/ireland-and-northern-ireland is also Great Britain's.
+     *
+     * @return array<string, list<string>>
+     */
+    private function sharedWith(string $cc): array
+    {
+        $out = [];
+        foreach ($this->db->fetchAllAssociative(
+            'SELECT o.slug, o.country_code FROM country_extract e
+               JOIN country_extract o ON o.slug = e.slug AND o.country_code <> e.country_code
+              WHERE e.country_code = :cc ORDER BY o.slug, o.country_code',
+            ['cc' => $cc],
+        ) as $r) {
+            $out[(string) $r['slug']][] = trim((string) $r['country_code']);
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return array{country: array{code: string, name: string, subtype: string, bbox: list<float>|null, labels: array<string, string>, timezones: list<string>, overture_release: string|null}, extracts: list<string>, shared: array<string, list<string>>, regions: list<array{slug: string, iso_code: string|null, name: string, labels: array<string, string>, admin_level: int, area_km2: float, geometry: array<string, mixed>}>}
      *
      * @throws \InvalidArgumentException
      */
@@ -90,6 +112,19 @@ final class CountryBundle
         $extracts = $bundle['extracts'] ?? null;
         if (!\is_array($extracts) || [] === $extracts || [] !== array_filter($extracts, static fn ($e): bool => !\is_string($e) || '' === $e)) {
             throw $fail('extracts must be a non-empty list of Geofabrik slugs');
+        }
+        // Optional: a bundle written before extracts could be shared has none.
+        $shared = $bundle['shared'] ?? [];
+        if (!\is_array($shared)) {
+            throw $fail('shared must map an extract to the other countries holding it');
+        }
+        $sharedOut = [];
+        foreach ($shared as $slug => $holders) {
+            if (!\is_string($slug) || !\in_array($slug, $extracts, true) || !\is_array($holders) || [] === $holders
+                || [] !== array_filter($holders, static fn ($h): bool => !\is_string($h) || 1 !== preg_match('/^[A-Z]{2}$/', $h))) {
+                throw $fail('shared must map an extract to the other countries holding it');
+            }
+            $sharedOut[$slug] = array_values($holders);
         }
         $regions = $bundle['regions'] ?? null;
         if (!\is_array($regions) || [] === $regions) {
@@ -120,6 +155,7 @@ final class CountryBundle
                 'overture_release' => \is_string($c['overture_release'] ?? null) ? $c['overture_release'] : null,
             ],
             'extracts' => array_values(array_map('strval', $extracts)),
+            'shared' => $sharedOut,
             'regions' => $out,
         ];
     }
@@ -127,7 +163,7 @@ final class CountryBundle
     /**
      * Writes a validated bundle as a plan (status planned), replacing an earlier plan, never a seeded or live country.
      *
-     * @param array{country: array{code: string, name: string, subtype: string, bbox: list<float>|null, labels: array<string, string>, timezones: list<string>, overture_release: string|null}, extracts: list<string>, regions: list<array{slug: string, iso_code: string|null, name: string, labels: array<string, string>, admin_level: int, area_km2: float, geometry: array<string, mixed>}>} $bundle
+     * @param array{country: array{code: string, name: string, subtype: string, bbox: list<float>|null, labels: array<string, string>, timezones: list<string>, overture_release: string|null}, extracts: list<string>, shared: array<string, list<string>>, regions: list<array{slug: string, iso_code: string|null, name: string, labels: array<string, string>, admin_level: int, area_km2: float, geometry: array<string, mixed>}>} $bundle
      *
      * @throws \InvalidArgumentException when the country is already seeded or live here
      */
@@ -143,6 +179,8 @@ final class CountryBundle
                 ['slugs' => $bundle['extracts'], 'cc' => $c['code']],
                 ['slugs' => ArrayParameterType::STRING],
             );
+            // An extract the exporting side shared with the same countries is shared here too.
+            $taken = array_values(array_filter($taken, static fn (array $t): bool => !\in_array(trim($t['country_code']), $bundle['shared'][$t['slug']] ?? [], true)));
             if ([] !== $taken) {
                 throw new \InvalidArgumentException(\sprintf('extract %s already belongs to %s here.', $taken[0]['slug'], trim($taken[0]['country_code'])));
             }

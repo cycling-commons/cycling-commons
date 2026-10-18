@@ -89,8 +89,9 @@ def catalog(db):
         "overture_release varchar(40), planned_at timestamptz, seeded_at timestamptz, live_at timestamptz)"
     )
     db.execute(
-        "CREATE TABLE country_extract (slug varchar(100) PRIMARY KEY, "
-        "country_code char(2) NOT NULL REFERENCES country (code) ON DELETE CASCADE)"
+        "CREATE TABLE country_extract (slug varchar(100) NOT NULL, "
+        "country_code char(2) NOT NULL REFERENCES country (code) ON DELETE CASCADE, "
+        "PRIMARY KEY (slug, country_code))"
     )
     db.execute(
         "CREATE TABLE country_plan_region (country_code char(2) NOT NULL REFERENCES country (code) ON DELETE CASCADE, "

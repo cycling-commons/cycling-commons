@@ -19,7 +19,7 @@ from psycopg.types.json import Jsonb
 
 from divisions import config
 from divisions.probe_areas import bbox_union, geom_bounds
-from onboarding.extracts import GEOFABRIK_INDEX, ExtractUndecided, choose_extract, load_index
+from onboarding.extracts import GEOFABRIK_INDEX, ExtractUndecided, choose_extract, lists_country, load_index
 from onboarding.labels import LOCALES, country_phrases, region_labels
 from onboarding.levels import LEVEL_PROBE_ORDER, NoLevelFits, choose_level
 from onboarding.neighbours import country_status, neighbours
@@ -55,6 +55,11 @@ class Plan:
     regions: list[PlanRegion]
     skipped: list[str] = field(default_factory=list)
     neighbours: list[str] = field(default_factory=list)
+    # Geofabrik's index lists this country in the extract, so it may share
+    # an extract another country already holds (europe/ireland-and-northern-ireland).
+    extract_listed: bool = False
+    # The other countries that hold the extract, filled by write_plan.
+    shared_with: list[str] = field(default_factory=list)
 
 
 def _key(d: Division, subtype: str, cc: str) -> str | None:
@@ -128,6 +133,7 @@ def build_plan(cc: str, release: str, level_rows: dict[str, list[Division]], out
         extract=chosen_extract,
         regions=regions,
         skipped=skipped,
+        extract_listed=lists_country(index, chosen_extract, cc),
     )
 
 
@@ -136,9 +142,13 @@ def write_plan(conn, plan: Plan) -> None:
         row = conn.execute("SELECT status FROM country WHERE code = %s FOR UPDATE", (plan.cc,)).fetchone()
         if row and row[0] in ("seeded", "live"):
             raise PlanError(f"{plan.cc} is {row[0]}: its slugs are frozen identity. Nothing written.")
-        owner = conn.execute("SELECT country_code FROM country_extract WHERE slug = %s", (plan.extract,)).fetchone()
-        if owner and owner[0].strip() != plan.cc:
-            raise PlanError(f"{plan.extract} already belongs to {owner[0].strip()}; rerun with --extract <slug>")
+        holders = [cc.strip() for (cc,) in conn.execute(
+            "SELECT country_code FROM country_extract WHERE slug = %s AND country_code <> %s ORDER BY 1",
+            (plan.extract, plan.cc))]
+        if holders and not plan.extract_listed:
+            raise PlanError(f"{plan.extract} already belongs to {', '.join(holders)}, and Geofabrik does not list "
+                            f"{plan.cc} in it; rerun with --extract <slug>")
+        plan.shared_with = holders
         conn.execute(
             """INSERT INTO country (code, name, subtype, bbox, labels, status, overture_release, planned_at)
                VALUES (%s, %s, %s, %s, %s, 'planned', %s, now())
@@ -164,7 +174,7 @@ def write_plan(conn, plan: Plan) -> None:
 def plan_json(plan: Plan) -> dict:
     return {
         "country": plan.cc, "name": plan.name, "level": plan.subtype, "release": plan.release,
-        "extract": plan.extract, "neighbours": plan.neighbours, "labels": plan.labels, "skipped": plan.skipped,
+        "extract": plan.extract, "shared_with": plan.shared_with, "neighbours": plan.neighbours, "labels": plan.labels, "skipped": plan.skipped,
         "regions": [{"slug": r.slug, "iso_code": r.iso_code, "admin_level": r.admin_level, "area_km2": r.area_km2,
                      "labels": r.labels, "fallback_locales": r.fallbacks} for r in plan.regions],
     }
@@ -174,7 +184,7 @@ def render_table(plan: Plan) -> str:
     head = [
         f"Country     {plan.cc}  {plan.name}  (Overture {plan.release})",
         f"Level       {plan.subtype} (admin_level {config.SUBTYPE_ADMIN_LEVEL[plan.subtype]})",
-        f"Extract     {plan.extract}",
+        f"Extract     {plan.extract}" + (f" (shared with {', '.join(plan.shared_with)})" if plan.shared_with else ""),
         f"Neighbours  {', '.join(plan.neighbours) or 'none'}",
         f"Phrase      {' | '.join(f'{loc} {plan.labels[loc]}' for loc in LOCALES)}",
         "",

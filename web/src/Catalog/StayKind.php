@@ -10,10 +10,9 @@ namespace App\Catalog;
  * What kind of stay a place to sleep is, drawn as an icon.
  *
  * Read from the row's `t`, the type label every stay carries ("Hotel",
- * "Guest house", "B&B", "Campsite", ...). Five drawings cover them. Shown on
- * the season ballot only for now (owner 2026-10-03: "B first in the ballot,
- * then later if I like the design it will be added to the map"); the map's
- * pin kinds stay in {@see KindIcons} until then.
+ * "Guest house", "B&B", "Campsite", ...). Five drawings cover them, shown on
+ * the season ballot. The map draws the same five on the category disc, in
+ * {@see KindIcons} (letter O, owner 2026-10-17).
  *
  * Each drawing is one filled path in a 24-box, drawn in the text colour with
  * the even-odd rule, the same style as the type icons.

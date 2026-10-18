@@ -344,15 +344,20 @@ guest house / B&B (`tourism=guest_house`), hostel, campsite
 not harvested). A label names both words riders know a type by: one type, not
 two. The authority's B&B, Gîte and Budget stay map onto guest house, chalet and
 hostel. It is a form field, filled on conversion and on import from the
-row's `t` label; it has no map glyphs yet (`PlaceKind::TYPED_LETTERS` holds O,
-`PlaceKind::LETTERS`, the glyph letters, does not), and the season ballot draws
-its stay icon from it (`StayKind::fromType()`). Migration
+row's `t` label. The map draws it as a glyph (`KindIcons`, letter O in
+`PlaceKind::LETTERS`; owner 2026-10-17: a hotel showed the tent): five
+drawings for nine types, the ballot's own (`StayKind`) redrawn on the category
+disc. The coverage contract stamps a stay point's kind (`placeKind.O`), its
+selectors carry the type labels, and a tile from before the stamp still names
+its kind by its older label (`PlaceKind::kindsByLabel()`: "Guest house",
+"Chalet"). The season ballot draws its stay icon from the Type too
+(`StayKind::fromType()`). Migration
 `Version20261008090000` gave existing places their Type: the linked OSM point's
 `tourism` tag, else the `t` label; `Version20261008100000` folds the three
 types an earlier reading kept apart (bnb, gite, budget) into the OSM ones.
 O had no Type field before, so no submission proposed one.
 
-The G, P and Q kinds are used the same way everywhere:
+The G, O, P and Q kinds are used the same way everywhere:
 
 - **Stored** as the item's `type` attribute: a key (`waterfall`), shown as its
   translated label (`CatalogField::selectKeyed`). On every form the Type is the

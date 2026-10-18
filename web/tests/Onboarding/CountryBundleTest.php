@@ -187,6 +187,41 @@ final class CountryBundleTest extends KernelTestCase
         self::assertFalse($this->db()->fetchOne("SELECT code FROM country WHERE code = 'XA'"));
     }
 
+    /** Ireland's only extract is also Great Britain's: production shares it the way staging did. */
+    public function testASharedExtractTravelsWithTheCountriesThatShareIt(): void
+    {
+        self::bootKernel();
+        $db = $this->db();
+        $db->executeStatement("INSERT INTO country (code, name, subtype, status) VALUES ('XD', 'Xdland', 'region', 'live')");
+        $db->executeStatement("INSERT INTO country_extract (slug, country_code) VALUES ('test/xaland', 'XD')");
+        $json = $this->exportedXaThenForgotten();
+        /** @var array{shared: array<string, list<string>>} $bundle */
+        $bundle = json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        self::assertSame(['test/xaland' => ['XD']], $bundle['shared']);
+
+        $this->command('app:country:import-plan', ['--file' => $this->tempFile($json)])->assertCommandIsSuccessful();
+
+        self::assertSame(['XA', 'XD'], array_map('trim', $db->fetchFirstColumn("SELECT country_code FROM country_extract WHERE slug = 'test/xaland' ORDER BY 1")));
+    }
+
+    /** A bundle that shares an extract with one country does not open it to another. */
+    public function testASharedExtractIsRefusedWhenAnotherCountryHoldsItHere(): void
+    {
+        self::bootKernel();
+        $db = $this->db();
+        $db->executeStatement("INSERT INTO country (code, name, subtype, status) VALUES ('XD', 'Xdland', 'region', 'live'), ('XE', 'Xeland', 'region', 'live')");
+        $db->executeStatement("INSERT INTO country_extract (slug, country_code) VALUES ('test/xaland', 'XD')");
+        $json = $this->exportedXaThenForgotten();
+        $db->executeStatement("DELETE FROM country_extract WHERE country_code = 'XD'");
+        $db->executeStatement("INSERT INTO country_extract (slug, country_code) VALUES ('test/xaland', 'XE')");
+
+        $tester = $this->command('app:country:import-plan', ['--file' => $this->tempFile($json)]);
+
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertStringContainsString('extract test/xaland already belongs to XE', $tester->getDisplay());
+        self::assertFalse($db->fetchOne("SELECT code FROM country WHERE code = 'XA'"));
+    }
+
     public function testApplyAcceptsAnImportedPlan(): void
     {
         self::bootKernel();

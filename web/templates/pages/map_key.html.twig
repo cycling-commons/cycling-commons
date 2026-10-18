@@ -123,7 +123,7 @@
   <h2>{{ 'legend.kinds_h'|trans }}</h2>
   <p class="mk-note">{{ 'legend.kinds_note'|trans }}</p>
   {% for kLetter, kinds in cc_kind_icons() %}
-  <p class="mk-grp">{{ ('item_type.' ~ {'B':'water-food','D':'bike-services','G':'shelter','P':'scenic-views','Q':'history-culture'}[kLetter] ~ '.label')|trans }}</p>
+  <p class="mk-grp">{{ ('item_type.' ~ {'B':'water-food','D':'bike-services','G':'shelter','O':'where-to-sleep','P':'scenic-views','Q':'history-culture'}[kLetter] ~ '.label')|trans }}</p>
   <div class="mk-rows">
     {% for kind, kd in kinds %}
     <div class="mk-row mk-kind" data-kind="{{ kLetter }}:{{ kind }}">

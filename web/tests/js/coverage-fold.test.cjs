@@ -21,8 +21,12 @@ const tiles = read('../pipeline/coverage/tiles.py');
 test('the export folds in SQL: five or more of a kind within 100 Mercator metres, the member nearest the centre carries grp', () => {
   assert.match(tiles, /^FOLD_EPS = 100$/m);
   assert.match(tiles, /^FOLD_MIN = 5$/m);
-  assert.match(tiles, /ST_ClusterDBSCAN\(ST_Transform\(geom, 3857\), eps := \{FOLD_EPS\}, minpoints := \{FOLD_MIN\}\)/);
+  assert.match(tiles, /^FOLD_MIN_WATER = 2$/m, 'water folds from two (owner 2026-10-17)');
+  assert.match(tiles, /"ST_ClusterDBSCAN\(ST_Transform\(geom, 3857\), eps := " \+ str\(FOLD_EPS\) \+ ", minpoints := \{n\}\) "/);
   assert.match(tiles, /OVER \(PARTITION BY country_code, \{kind_key\}\)/, 'a fold never spans a border or a kind');
+  assert.match(tiles, /return dbscan\.format\(n=FOLD_MIN\)/);
+  assert.match(tiles, /CASE WHEN \(\{_FOOD_SQL\}\) THEN \{dbscan\.format\(n=FOLD_MIN\)\} ELSE \{dbscan\.format\(n=FOLD_MIN_WATER\)\} END/, 'B: food keeps five, water folds from two');
+  assert.match(tiles, /COALESCE\(\{_POTABLE_SQL\}, ''\)/, 'a drinkable tap never folds with an undrinkable one');
   assert.match(tiles, /ORDER BY g\.country_code, g\.kind_key, g\.fold, ST_Distance\(p\.geom, g\.centre\), p\.ref/, 'the representative is the member nearest the centre');
   assert.ok(contract.universalTileProps.includes('grp'), 'grp is a universal tile prop');
 });

@@ -923,3 +923,89 @@ def test_a_broken_extract_still_trips_the_drift_guard_when_rules_are_on(db):
     with pytest.raises(DriftAbort):
         load_region(db, [_row(f"node/b{i}", "B") for i in range(5)], "europe/belgium", name_or_tags=rule)
     assert db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0] == 10
+
+
+def _gb_and_ie(db):
+    """Northern Ireland (GB) east of 6W, the Republic (IE) west of it."""
+    ensure_schema(db)
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (1, 100, 'GB', "
+        "ST_GeomFromText('POLYGON((-6 54, -5 54, -5 55, -6 55, -6 54))', 4326))")
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (2, 100, 'IE', "
+        "ST_GeomFromText('POLYGON((-10 51, -6 51, -6 55, -10 55, -10 51))', 4326))")
+    db.commit()
+
+
+SHARED = "europe/ireland-and-northern-ireland"
+
+
+def test_a_shared_extract_gives_each_point_to_the_country_it_lies_in(db):
+    """One extract, two owners: every row lands in its own country, whatever the
+    parser stamped, and a row near no region of either is not staged."""
+    _gb_and_ie(db)
+    load_region(db, [
+        _row("node/belfast", "B", lon=-5.9, lat=54.6, country_code="GB"),
+        _row("node/galway", "B", lon=-9.0, lat=53.3, country_code="GB"),
+        # Off the west coast, outside the IE polygon but within the snap of it.
+        _row("node/aran", "B", lon=-10.005, lat=53.1, country_code="GB"),
+        _row("node/atlantic", "B", lon=-20.0, lat=53.0, country_code="GB"),
+    ], SHARED, ("GB", "IE"))
+
+    got = {r[0]: (r[1], r[2]) for r in db.execute(
+        "SELECT ref, country_code, region_id FROM coverage_poi").fetchall()}
+    assert got == {"node/belfast": ("GB", 1), "node/galway": ("IE", 2), "node/aran": ("IE", 2)}
+
+
+def test_a_shared_extract_leaks_into_no_third_country(db):
+    """A row whose nearest region belongs to neither owner stays out."""
+    _gb_and_ie(db)
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (3, 100, 'FR', "
+        "ST_GeomFromText('POLYGON((-5 47, -1 47, -1 49, -5 49, -5 47))', 4326))")
+    db.commit()
+    load_region(db, [
+        _row("node/galway", "B", lon=-9.0, lat=53.3, country_code="GB"),
+        _row("node/brest", "B", lon=-4.5, lat=48.4, country_code="GB"),
+    ], SHARED, ("GB", "IE"))
+
+    refs = {r[0] for r in db.execute("SELECT ref FROM coverage_poi").fetchall()}
+    assert refs == {"node/galway"}
+
+
+def test_a_single_owner_extract_does_not_take_the_other_owners_rows(db):
+    """great-britain is GB's alone: an Irish entity it carries in its overlap stays out."""
+    _gb_and_ie(db)
+    load_region(db, [
+        _row("node/belfast", "B", lon=-5.9, lat=54.6, country_code="GB"),
+        _row("node/galway", "B", lon=-9.0, lat=53.3, country_code="GB"),
+    ], "europe/great-britain", "GB")
+
+    refs = {r[0] for r in db.execute("SELECT ref FROM coverage_poi").fetchall()}
+    assert refs == {"node/belfast"}
+
+
+def test_a_shared_extract_rewrites_nothing_on_an_unchanged_run(db):
+    """The staged country is the row's own, so a second identical run writes no row."""
+    _gb_and_ie(db)
+    rows = [_row("node/belfast", "B", lon=-5.9, lat=54.6, country_code="GB"),
+            _row("node/galway", "B", lon=-9.0, lat=53.3, country_code="GB")]
+    load_region(db, rows, SHARED, ("GB", "IE"))
+    db.commit()
+    before = dict(db.execute("SELECT ref, xmin::text FROM coverage_poi").fetchall())
+    db.commit()
+    load_region(db, rows, SHARED, ("GB", "IE"))
+    db.commit()
+    after = dict(db.execute("SELECT ref, xmin::text FROM coverage_poi").fetchall())
+    assert after == before
+
+
+def test_a_shared_extract_refuses_to_load_while_one_owner_has_no_regions(db):
+    """IE seeded without its regions would silently lose every Irish row."""
+    ensure_schema(db)
+    db.execute(
+        "INSERT INTO region (id, area_km2, country_code, geom) VALUES (1, 100, 'GB', "
+        "ST_GeomFromText('POLYGON((-6 54, -5 54, -5 55, -6 55, -6 54))', 4326))")
+    db.commit()
+    with pytest.raises(RuntimeError, match="'IE'"):
+        load_region(db, [_row("node/belfast", "B", lon=-5.9, lat=54.6)], SHARED, ("GB", "IE"))

@@ -183,9 +183,12 @@ under one, and the reason to keep any is a fast rollback, not history.
 A PMTiles archive cannot be appended to, so a country's tiling step builds
 from exactly the regions it was given. Three onboarded countries span more
 than one Geofabrik extract (US = california + colorado, CA = british-columbia
-+ quebec, GB = great-britain + ireland-and-northern-ireland). When a run does
-not include every one of a country's onboarded regions, that country is
-skipped with a log line rather than published from a partial extract:
++ quebec, GB = great-britain + ireland-and-northern-ireland). One extract can
+also serve two countries: `europe/ireland-and-northern-ireland` is Great
+Britain's and Ireland's, and its line extract is cut into one share per
+country, each holding the ways that country owns. When a run does not include
+every one of a country's onboarded regions, that country is skipped with a log
+line rather than published from a partial extract:
 
 <!-- CODE-ILLUSTRATIVE a run missing one of a multi-region country's regions -->
 ```bash

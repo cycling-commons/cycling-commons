@@ -36,8 +36,9 @@ def neighbours(conn, cc: str, source: str = "region") -> list[str]:
 
 
 def extracts_of(conn, codes: list[str]) -> list[str]:
+    """The extracts these countries are harvested from, each once: a shared extract has a row per country."""
     if not codes:
         return []
     rows = conn.execute(
-        "SELECT slug FROM country_extract WHERE country_code = ANY(%s) ORDER BY slug", (codes,)).fetchall()
+        "SELECT DISTINCT slug FROM country_extract WHERE country_code = ANY(%s) ORDER BY slug", (codes,)).fetchall()
     return [slug for (slug,) in rows]

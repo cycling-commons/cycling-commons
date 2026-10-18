@@ -203,10 +203,11 @@ soon as both are.
 
     <!-- CODE-ILLUSTRATIVE post-harvest acceptance queries -->
     ```sql
-    -- Per-extract country stamps. Each extract belongs to one country in
-    -- country_extract, so one row per extract is the expected
-    -- shape; a second country with a handful of rows is a border case to look
-    -- at, not a failure of the run.
+    -- Per-extract country stamps. Most extracts serve one country in
+    -- country_extract, so one row per extract is the expected shape; a
+    -- second country with a handful of rows is a border case to look at, not
+    -- a failure of the run. A shared extract (a row per country in
+    -- country_extract) shows each of its countries with its full share.
     SELECT s.slug, p.country_code, count(*)
     FROM coverage_poi p JOIN coverage_source s ON s.id = p.src_region_id
     GROUP BY 1, 2 ORDER BY 1, 2;

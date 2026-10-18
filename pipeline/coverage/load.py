@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 import os
 import sys
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 
 import psycopg
@@ -76,11 +76,13 @@ def apply_session_budget(conn: psycopg.Connection) -> None:
     conn.commit()
 
 
-def resolve_country(region: str, onboarded: Mapping[str, str]) -> str | None:
-    """Resolve a Geofabrik region slug to its country, from coverage.regions.onboarded_map.
+def resolve_country(region: str, onboarded: Mapping[str, tuple[str, ...]]) -> tuple[str, ...] | None:
+    """Resolve a Geofabrik region slug to its countries, from coverage.regions.onboarded_map.
 
     Longest-prefix match on the slug's `/`-separated segments, so a sub-country
-    extract (`europe/germany/bayern`) resolves via its onboarded ancestor.
+    extract (`europe/germany/bayern`) resolves via its onboarded ancestor. Most
+    extracts have one country; a shared one (`europe/ireland-and-northern-ireland`
+    for GB and IE) has several, in code order.
 
     `dev/fixture` is the only explicit skip. Any other unresolvable slug is a
     HARD FAILURE: an unresolved country disables the ownership filter for the
@@ -90,9 +92,9 @@ def resolve_country(region: str, onboarded: Mapping[str, str]) -> str | None:
         return None
     parts = region.split("/")
     for depth in range(len(parts), 0, -1):
-        cc = onboarded.get("/".join(parts[:depth]))
-        if cc is not None:
-            return cc
+        ccs = onboarded.get("/".join(parts[:depth]))
+        if ccs:
+            return tuple(ccs)
     raise RuntimeError(
         f"{region!r} is not an onboarded extract nor below one: no seeded or live country "
         "holds it in country_extract. Onboard its country first (wiki: Onboarding a new country, "
@@ -355,7 +357,7 @@ def load_region(
     conn: psycopg.Connection,
     rows: Iterable[PoiRow],
     src_region: str,
-    country_code: str | None = None,
+    country_code: str | Sequence[str] | None = None,
     near_ways: tuple[dict[str, float], Iterable[list[tuple[float, float]]]] | None = None,
     name_or_tags: dict[str, list[str]] | None = None,
     exclude_tag_values: dict[str, dict[str, list[str]]] | None = None,
@@ -370,7 +372,13 @@ def load_region(
     region_id via ST_Contains over region polygons (coverage-provider.md §3
     step 4). A DriftAbort (or any error) rolls the whole merge back, keeping the
     last good slice.
+
+    `country_code` is the extract's country, or its countries when the extract is
+    shared (`("GB", "IE")`): a staged row is kept when its nearest region belongs
+    to one of them, and takes that region's country.
     """
+    owners = ((country_code,) if isinstance(country_code, str)
+              else tuple(country_code) if country_code is not None else None)
     dropped_by_rule: dict[str, int] = {}
     with conn.transaction():
         with conn.cursor() as cur:
@@ -412,8 +420,8 @@ def load_region(
             # (coverage-provider.md §1): find the SINGLE closest region to the row, across ALL
             # onboarded countries, not just the extract's own — containment (distance 0)
             # always wins, so the BOUNDARY_SNAP_DEG rescue is preserved exactly.
-            # This extract keeps the row only if that nearest region's country is its
-            # own; every other extract's run deletes it. That makes the predicate
+            # This extract keeps the row only if that nearest region's country is one of
+            # its own; every other extract's run deletes it. That makes the predicate
             # mutually exclusive: a row within the snap of BOTH its own and a
             # neighbour's region (Geofabrik's overlap buffer is 0.1026 deg, 10x the
             # 0.01 deg snap, so this band is not an edge case) would otherwise pass both
@@ -443,7 +451,7 @@ def load_region(
             # dev/fixture has no configured country; it keeps the old unfiltered
             # behaviour so the offline fixture path still works.
             staged = cur.execute("SELECT count(*) FROM coverage_poi_staging").fetchone()[0]
-            if country_code is None:
+            if owners is None:
                 print(f"[coverage] {src_region}: no configured country — "
                       "ownership filter skipped", file=sys.stderr)
             else:
@@ -451,25 +459,33 @@ def load_region(
                 # otherwise make the filter below delete every staged row silently. With
                 # previous > 0 the drift guard below would catch that; with previous == 0
                 # (a brand-new extract — exactly the onboarding case) nothing else would.
-                has_regions = cur.execute(
-                    "SELECT count(*) FROM region WHERE country_code = %s", (country_code,)
-                ).fetchone()[0]
-                if has_regions == 0:
-                    raise RuntimeError(
-                        f"{src_region}: no `region` rows for country {country_code!r} — "
-                        "the ownership filter would drop every staged row. "
-                        "Apply the country first (app:country:apply) before loading coverage."
-                    )
-                # This guard only covers THIS extract's country, and deliberately so.
+                for owner in owners:
+                    has_regions = cur.execute(
+                        "SELECT count(*) FROM region WHERE country_code = %s", (owner,)
+                    ).fetchone()[0]
+                    if has_regions == 0:
+                        raise RuntimeError(
+                            f"{src_region}: no `region` rows for country {owner!r}: "
+                            "the ownership filter would drop every staged row it owns. "
+                            "Apply the country first (app:country:apply) before loading coverage."
+                        )
+                # This guard only covers THIS extract's countries, and deliberately so.
                 # Nearest-wins reads every onboarded country's regions, so a NEIGHBOUR
                 # whose regions are missing or mid-reseed makes this extract win border
                 # rows it would normally cede. That direction over-claims rather than
                 # drops, so nothing here can silently empty a slice — it self-corrects
                 # on the neighbour's next run once its regions are back.
+                # Each staged row first takes its nearest region's country (NULL
+                # when none is within the snap), then every row not owned by this
+                # extract's countries goes. For a one-country extract the kept
+                # rows already carried that country; for a shared extract the
+                # parser could only stamp one of them, and a wrong stamp would
+                # both miss the same-country boundary snap below and make the
+                # upsert rewrite the row on every run.
                 cur.execute(
                     """
-                    DELETE FROM coverage_poi_staging s
-                    WHERE COALESCE((
+                    UPDATE coverage_poi_staging s
+                    SET country_code = (
                         SELECT r.country_code FROM region_operational r
                         WHERE r.geom && ST_Expand(s.geom, %(snap)s)
                           AND ST_DWithin(r.geom, s.geom, %(snap)s)
@@ -484,9 +500,14 @@ def load_region(
                           AND r.country_code <> ''
                         ORDER BY ST_Distance(r.geom, s.geom), r.area_km2 ASC NULLS LAST, r.id ASC
                         LIMIT 1
-                    ), '') <> %(cc)s
+                    )
                     """,
-                    {"snap": BOUNDARY_SNAP_DEG, "cc": country_code},
+                    {"snap": BOUNDARY_SNAP_DEG},
+                )
+                cur.execute(
+                    "DELETE FROM coverage_poi_staging "
+                    "WHERE NOT (COALESCE(country_code, '') = ANY(%s))",
+                    (list(owners),),
                 )
             for letter, keys in (name_or_tags or {}).items():
                 # docs/specs/scenic-views.md §2: no name and no photo link says nothing a rider can use.

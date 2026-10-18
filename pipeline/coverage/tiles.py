@@ -35,6 +35,14 @@ def _label_case(selectors) -> str:
 # Per-letter extra tile properties (coverage-provider.md §4 table); SQL
 # fragments for jsonb_build_object pairs. NULLs are stripped, so absent
 # attributes cost nothing in the tile.
+# B's drinkable answer and its food flag, as SQL: the tile props below, and the
+# fold's notion of "one kind" for B (_kind_key), which must be what the pin draws.
+_POTABLE_SQL = ("CASE WHEN tags->>'drinking_water' = 'yes' OR "
+                "(tags->>'amenity' = 'drinking_water' AND NOT (tags ? 'drinking_water')) THEN 'yes' "
+                "WHEN tags->>'drinking_water' = 'no' THEN 'no' END")
+_FOOD_SQL = ("CASE WHEN tags ? 'shop' OR tags->>'amenity' IN "
+             "('cafe', 'fast_food', 'restaurant', 'bar', 'pub') THEN true END")
+
 _EXTRA_SQL = {
     "kind": "'kind', kind",
     # B: three answers, because the pin draws three kinds of tap
@@ -44,16 +52,13 @@ _EXTRA_SQL = {
     # point nobody has said anything about. A boolean here folded 'no' into
     # 'nobody said' (7,221 vs 14,599 rows, measured 2026-09-04) and the map
     # called both "tagged not drinkable".
-    "potable": ("'potable', CASE WHEN tags->>'drinking_water' = 'yes' OR "
-                "(tags->>'amenity' = 'drinking_water' AND NOT (tags ? 'drinking_water')) THEN 'yes' "
-                "WHEN tags->>'drinking_water' = 'no' THEN 'no' END"),
+    "potable": "'potable', " + _POTABLE_SQL,
     # B is "water AND food", and the food half is not small: 119,192 shops and
     # 4,678 eateries out of 375,252 rows, about 44% (measured 2026-09-04).
     # Without this flag every one of them drew a water drop and opened a panel
     # asking about drinking water, because a letter is all the tile said. NULL
     # (stripped) for the water half, so only the food rows pay a byte.
-    "food": ("'food', CASE WHEN tags ? 'shop' OR tags->>'amenity' IN "
-             "('cafe', 'fast_food', 'restaurant', 'bar', 'pub') THEN true END"),
+    "food": "'food', " + _FOOD_SQL,
     # O: the stays accessibility filter narrows on the CatalogFormRegistry
     # vocabulary (web/assets/map/render.js applyStaysAccessFilter); the only OSM-derivable member
     # is wheelchair=yes → 'Wheelchair-accessible'. Everything else stays NULL.
@@ -116,12 +121,30 @@ def _universal_props(spec, universal: list[str]) -> list[str]:
 # groups, the biggest a holiday park of 2,523.
 FOLD_EPS = 100
 FOLD_MIN = 5
+# Water folds from two (owner 2026-10-17: three taps on one cemetery drew three
+# pins): a rider needs one tap, not a count of them. B's food half keeps FOLD_MIN.
+FOLD_MIN_WATER = 2
 
 
-def _kind_key(spec) -> str:
-    """What makes two points 'of one kind' for the fold: the stamped kind, else
-    the selector label the tile shows as `t`; the empty string when neither."""
-    return f"COALESCE(kind, {_label_case(spec.selectors)}, '')"
+def _kind_key(spec, letter: str = "") -> str:
+    """What makes two points 'of one kind' for the fold: what the pin draws.
+    The stamped kind, else the selector label the tile shows as `t`; the empty
+    string when neither. For B also the drinkable answer and the food flag, so
+    a drinkable tap never folds with an undrinkable one or with a bakery."""
+    base = f"COALESCE(kind, {_label_case(spec.selectors)}, '')"
+    if letter != "B":
+        return base
+    return f"{base} || '|' || COALESCE({_POTABLE_SQL}, '') || '|' || COALESCE(({_FOOD_SQL})::text, '')"
+
+
+def _fold_sql(letter: str, kind_key: str) -> str:
+    """The group a row folds into, NULL outside one (ST_ClusterDBSCAN per country and kind)."""
+    dbscan = ("ST_ClusterDBSCAN(ST_Transform(geom, 3857), eps := " + str(FOLD_EPS) + ", minpoints := {n}) "
+              f"OVER (PARTITION BY country_code, {kind_key})")
+    if letter != "B":
+        return dbscan.format(n=FOLD_MIN)
+    # A partition is all water or all food (the food flag is in the key), so each runs its own minimum.
+    return f"CASE WHEN ({_FOOD_SQL}) THEN {dbscan.format(n=FOLD_MIN)} ELSE {dbscan.format(n=FOLD_MIN_WATER)} END"
 
 
 def _letter_sql(letter: str, spec, universal: list[str]) -> str:
@@ -141,11 +164,10 @@ def _letter_sql(letter: str, spec, universal: list[str]) -> str:
     # fold never spans a border, as the per-country layers never do.
     props = _universal_props(spec, universal)
     props += [_EXTRA_SQL[p] for p in spec.tile_props]
-    kind_key = _kind_key(spec)
+    kind_key = _kind_key(spec, letter)
     return (
         "COPY (WITH pts AS ("
-        f"SELECT cp.*, ST_ClusterDBSCAN(ST_Transform(geom, 3857), eps := {FOLD_EPS}, minpoints := {FOLD_MIN}) "
-        f"OVER (PARTITION BY country_code, {kind_key}) AS fold "
+        f"SELECT cp.*, {_fold_sql(letter, kind_key)} AS fold "
         f"FROM coverage_poi cp WHERE letter = {_lit(letter)}"
         "), grps AS ("
         f"SELECT country_code, {kind_key} AS kind_key, fold, count(*) AS n, ST_Centroid(ST_Collect(geom)) AS centre "

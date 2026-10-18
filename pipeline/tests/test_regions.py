@@ -20,16 +20,16 @@ def test_onboarded_reads_seeded_and_live_countries_only(catalog):
     _seed(catalog)
     assert regions.onboarded(catalog) == [
         "europe/belgium", "north-america/us/california", "north-america/us/colorado"]
-    assert regions.onboarded_map(catalog)["north-america/us/colorado"] == "US"
+    assert regions.onboarded_map(catalog)["north-america/us/colorado"] == ("US",)
 
 
 def test_default_regions_prefers_the_env(monkeypatch):
     monkeypatch.setenv("COVERAGE_REGIONS", " europe/belgium, asia/japan ,")
-    assert regions.default_regions({"europe/netherlands": "NL"}) == ["europe/belgium", "asia/japan"]
+    assert regions.default_regions({"europe/netherlands": ("NL",)}) == ["europe/belgium", "asia/japan"]
     monkeypatch.setenv("COVERAGE_REGIONS", "")
-    assert regions.default_regions({"europe/netherlands": "NL"}) == ["europe/netherlands"]
+    assert regions.default_regions({"europe/netherlands": ("NL",)}) == ["europe/netherlands"]
     monkeypatch.delenv("COVERAGE_REGIONS")
-    monkeypatch.setattr(regions, "load_onboarded", lambda: {"asia/japan": "JP"})
+    monkeypatch.setattr(regions, "load_onboarded", lambda: {"asia/japan": ("JP",)})
     assert regions.default_regions() == ["asia/japan"]
 
 
@@ -43,9 +43,9 @@ def test_module_main_prints_the_onboarded_csv(catalog, monkeypatch, capsys):
 
 
 def test_resolve_country_uses_the_longest_onboarded_prefix():
-    onboarded = {"europe/germany": "DE", "north-america/us/california": "US"}
-    assert resolve_country("europe/germany", onboarded) == "DE"
-    assert resolve_country("europe/germany/bayern", onboarded) == "DE"
+    onboarded = {"europe/germany": ("DE",), "north-america/us/california": ("US",)}
+    assert resolve_country("europe/germany", onboarded) == ("DE",)
+    assert resolve_country("europe/germany/bayern", onboarded) == ("DE",)
     assert resolve_country("dev/fixture", onboarded) is None
     with pytest.raises(RuntimeError, match="country_extract"):
         resolve_country("north-america/us/texas", onboarded)
@@ -76,7 +76,7 @@ def test_main_without_regions_or_env_requests_every_onboarded_extract(monkeypatc
 
     monkeypatch.delenv("COVERAGE_REGIONS", raising=False)
     monkeypatch.setenv("COVERAGE_WORKDIR", str(tmp_path))
-    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": "BE", "asia/japan": "JP", "europe/spain": "ES"})
+    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": ("BE",), "asia/japan": ("JP",), "europe/spain": ("ES",)})
     monkeypatch.setattr(run.psycopg, "connect", lambda dsn: FakeConn())
     monkeypatch.setattr(run, "ensure_schema", lambda conn: None)
     (tmp_path / "b.geojsonl").write_text('{"a":1}\n')
@@ -91,3 +91,17 @@ def test_main_without_regions_or_env_requests_every_onboarded_extract(monkeypatc
 
     assert run.main(["--tiles-only"]) == 0
     assert writes == [("manual", 3, "points")]
+
+
+def test_a_shared_extract_serves_every_onboarded_country_that_holds_it(catalog):
+    """A planned country does not count yet: the harvest needs its region rows."""
+    add_country(catalog, "GB", "live", ["europe/great-britain", "europe/ireland-and-northern-ireland"])
+    add_country(catalog, "IE", "planned", ["europe/ireland-and-northern-ireland"])
+    assert regions.onboarded_map(catalog)["europe/ireland-and-northern-ireland"] == ("GB",)
+    catalog.execute("UPDATE country SET status = 'seeded' WHERE code = 'IE'")
+    catalog.commit()
+    got = regions.onboarded_map(catalog)
+    assert got["europe/ireland-and-northern-ireland"] == ("GB", "IE")
+    assert regions.onboarded(catalog) == ["europe/great-britain", "europe/ireland-and-northern-ireland"]
+    assert regions.countries(got) == {"GB", "IE"}
+    assert resolve_country("europe/ireland-and-northern-ireland", got) == ("GB", "IE")

@@ -55,7 +55,12 @@ loads the stalest first). The onboarded extracts are
   read from the `country_extract` table (`python -m coverage.regions`), so a
   country cannot be onboarded without its extract being harvested; a run
   that sets `COVERAGE_REGIONS` replaces that list on purpose. An unknown
-  region hard-fails rather than silently disabling ownership. *Border caveat:* Geofabrik
+  region hard-fails rather than silently disabling ownership. One extract may
+  serve several countries (a `country_extract` row each, key `(slug,
+  country_code)`): Geofabrik ships the Republic of Ireland only together with
+  Northern Ireland, so `europe/ireland-and-northern-ireland` serves GB and IE.
+  `coverage.regions.onboarded_map` maps each extract to the tuple of its
+  seeded or live countries; a shared extract is harvested once. *Border caveat:* Geofabrik
   extracts overlap in a border buffer, so one OSM entity can arrive staged in
   two adjacent extracts with the same `(ref, letter)`. Ownership is decided at
   staging, by geometry, not by write order: each staged row is
@@ -104,14 +109,14 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
     id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     ref           varchar(160) NOT NULL,  -- 'node/61146471' | 'way/…' = item.source_ref format
     letter        char(1)      NOT NULL,  -- B C D F G O P Q (osm-data-architecture.md §5 catalogue)
-    kind          varchar(16),            -- serviceKind for D (shop|station|pump), placeKind for P and Q (osm-data-architecture.md §5a), NULL otherwise
+    kind          varchar(16),            -- serviceKind for D (shop|station|pump), placeKind for G, O, P and Q (osm-data-architecture.md §5a), NULL otherwise
     name          varchar(255),           -- OSM name tag, NULL when unnamed
     geom          geometry(Point, 4326) NOT NULL, -- nodes as-is; ways centroid at load
     tags          jsonb        NOT NULL,  -- trimmed to the contract's storedTagKeys (§2.1), never the full tag set
     osm_version   int,                    -- upstream version
     osm_ts        timestamptz,            -- upstream last-edit timestamp
     src_region_id smallint     NOT NULL REFERENCES coverage_source(id), -- harvest extract (normalized: 2 bytes/row, not a repeated ~16-byte string)
-    country_code  char(2),                -- stamped from extract config
+    country_code  char(2),                -- the nearest region's country at load; the region's own once stamped
     region_id     int,                    -- ST_Contains(region.geom, geom) at load; NULL until polygons exist. Soft ref to region.id (4 bytes: region count never nears int4)
     UNIQUE (ref, letter)                  -- one entity may carry two letters (item's uniq_item_source_ref_letter, source-scoped: catalog-data-model.md §3)
 );
@@ -323,7 +328,7 @@ Per region in `COVERAGE_REGIONS`, independently:
    `serviceKind` derives from the shared contract file
    (coverage-provider.md §7) — the same mapping as
    `App\Catalog\ServiceKind::fromOsmTags()`
-   (`web/src/Catalog/ServiceKind.php`). A P or Q row's kind comes from the
+   (`web/src/Catalog/ServiceKind.php`). A G, O, P or Q row's kind comes from the
    contract's `placeKind` rules (`Contract.kind_for_letter()`), the same mapping
    as `App\Catalog\PlaceKind::harvestRules()`.
    **A ferry dock links its ferry routes, and without a `bicycle` tag of its
@@ -356,7 +361,10 @@ Per region in `COVERAGE_REGIONS`, independently:
    guard.** `COPY` into a staging table, then **before** the drift count: an
    ownership filter deletes staged rows this extract does not own — nearest-region-wins,
    across every onboarded country, so a border row picks exactly one owner
-   regardless of which extract's cut also carries it; a row with no region
+   regardless of which extract's cut also carries it. Each staged row first
+   takes its nearest region's country, and the rows whose country is not one of
+   the extract's countries go; a shared extract keeps the rows of each of its
+   countries, each with its own country; a row with no region
    within `BOUNDARY_SNAP_DEG` of *any* onboarded country is dropped outright
    (not staged at all). The contract rules (`nameOrTags`, then
    `excludeTagValues`, then `nearWay`) then remove the staged points they refuse. Abort if the row count drops more than
@@ -368,7 +376,7 @@ Per region in `COVERAGE_REGIONS`, independently:
    Zealand and British Columbia each lost more than 40% of their rows to the
    scenic rules, with every other letter steady). A truncated
    download must never wipe a region, and the filter itself needs its own
-   guard: an unseeded `region` table for the extract's country raises rather
+   guard: an unseeded `region` table for any of the extract's countries raises rather
    than silently staging zero rows. Then one transaction:
    resolve the extract slug to its `coverage_source` id (get-or-create), then a
    **diff-merge** swap (upsert only changed or new rows, unchanged rows skip
@@ -392,8 +400,13 @@ After all regions, once per run:
    100 m at the equator; `ST_ClusterDBSCAN`, `tiles.py` `FOLD_EPS`,
    `FOLD_MIN`) ride the tiles as **one feature**: the member nearest the
    group's centre, carrying `grp` = the count; the other members stay in the
-   index and out of the tiles. "Of one kind" is the stamped `kind`, else the
-   selector label `t`. The pin is a real member, never a centroid, so it is
+   index and out of the tiles. "Of one kind" is what the pin draws: the
+   stamped `kind`, else the selector label `t`, and for B also the drinkable
+   answer and the food flag, so a drinkable tap never folds with an
+   undrinkable one or with a bakery. **Water folds from two** (`FOLD_MIN_WATER`,
+   owner 2026-10-17: three taps on one cemetery drew three pins; a rider needs
+   one tap): two water points of one kind within the same distance are one
+   feature; B's food half keeps five. The pin is a real member, never a centroid, so it is
    always drawn where a point is, inside its own country, and the scope
    tokens stay exact: this is what the no-clustering rule of step 6 protects,
    and the fold keeps it. The pin shows the count beside its glyph
@@ -403,7 +416,8 @@ After all regions, once per run:
    `d_cov_group_value`). Measured on the dev index, Belgium and the
    Netherlands: 7,255 chalet points in 127 groups, the biggest a park of
    2,523; the toilets of event grounds and the memorials of a cemetery fold
-   the same way. Pinned by `test_export_folds_dense_same_kind_points_onto_one_member`.
+   the same way. Pinned by `test_export_folds_dense_same_kind_points_onto_one_member`
+   and `test_export_folds_two_water_points_of_one_kind_but_never_mixes_what_the_pin_shows`.
 6. **Build tiles** with tippecanoe: one layer per letter, `--minimum-zoom 6 /
    --maximum-zoom 14`, direct `.pmtiles` output
    (`pipeline/coverage/tiles.py::build_pmtiles`). Tiles carry **individual
@@ -476,6 +490,17 @@ without anyone having to remember to force one, and onboarding a country
 elsewhere re-extracts nothing. A PBF without a header box falls back to the
 fingerprint of every outline (`ownership.outlines_fingerprint`).
 
+**A shared region is cut into one share per country.** A region that serves
+one country writes its line files under the region's own name
+(`surface_europe-belgium_classified.geojsonl`). A region two countries share
+is extracted once per country, each pass keeping only the features that
+country owns and tagging them with its `cctok`, into files named after the
+region and the country (`surface_europe-ireland-and-northern-ireland_ie_classified.geojsonl`,
+`run.py::_line_key`). Its gap cells feed the world grid under each share's
+own country. The routes way-id set stays one per region: it is not
+owner-filtered. Road pieces have no ownership split, so a shared region's
+road-piece file feeds the archive of every country it serves.
+
 **A country rebuilds only when its own inputs changed.** For every family
 (coverage points, surface classified/todo, routes), a country's build is
 compared by `publish.inputs_fingerprint(its input files, the contract
@@ -489,6 +514,8 @@ correctly, and a file renamed with identical bytes is not new data.
 **A country builds only from a complete region set.** Three onboarded
 countries span more than one Geofabrik extract (US = california + colorado,
 CA = british-columbia + quebec, GB = great-britain + ireland-and-northern-ireland).
+A shared region counts for each country it serves: a run over
+`europe/ireland-and-northern-ireland` alone builds Ireland and skips Great Britain.
 When a run's `--regions` does not include every one of a country's onboarded
 regions, that country is skipped with a log line rather than published from a
 partial extract - a run over `north-america/us/california` alone must not
@@ -721,12 +748,12 @@ across the credits.
 | `t` | all | type label (existing marker/drawer vocabulary) |
 | `ridtok` | all (always; `""` when unstamped) | region scope filter: `"|<region_id>|"` (map-and-search.md §4.5) |
 | `cctok` | all (always; `""` when unstamped) | country scope filter: `"|<cc>|"` (map-and-search.md §4.5) |
-| `kind` | D, P, Q | D: shop/station/pump icon match. P and Q: the kind (`waterfall`, `castle`), one glyph each (osm-data-architecture.md §5a) |
+| `kind` | D, G, O, P, Q | D: shop/station/pump icon match. G, O, P and Q: the kind (`picnic_shelter`, `hotel`, `waterfall`, `castle`), one glyph each (osm-data-architecture.md §5a) |
 | `potable` | B | water kind glyph: `yes` / `no` / absent (nobody said), derived from OSM `drinking_water` and `amenity` tags (data-provider-hierarchy.md §6.3a) |
 | `food` | B | `true` for the shop and eatery half of letter B, absent for the water half; picks the food kind glyph |
 | `acc` | O | stays accessibility filter |
 | `cd` | all (when dated) | OSM `check_date`, only when it is a full `YYYY-MM-DD`, truncated to the day. A witness inside the freshness window drops the `?` badge on the coverage disc (data-provider-hierarchy.md §6.7.7, rung 8); the map compares it as a string to `window.CC_WITNESS_CUTOFF` |
-| `grp` | all (the one member that stands for a folded group) | the group's size (§3 step 5): five or more points of one kind close together ride the tiles as this one feature; absent on every other feature |
+| `grp` | all (the one member that stands for a folded group) | the group's size (§3 step 5): five or more points of one kind close together, two or more for water, ride the tiles as this one feature; absent on every other feature |
 
 `ref`/`n`/`t`/`ridtok`/`cctok`/`grp` are the **universal** props (every layer, declared
 as `universalTileProps` in `coverage-contract.json`, consumed by
@@ -1176,7 +1203,7 @@ source of truth for the mapping both languages need:
              "tileProps": […]}, …},
  "serviceKind": {"shop=bicycle": "shop", "amenity=bicycle_repair_station": "station",
                  "amenity=compressed_air": "pump"},
- "placeKind": {"P": {"tourism=viewpoint": "viewpoint", …}, "Q": {"historic=castle": "castle", …}},
+ "placeKind": {"G": {"shelter_type=gazebo": "gazebo", …}, "O": {"tourism=hotel": "hotel", …}, "P": {"tourism=viewpoint": "viewpoint", …}, "Q": {"historic=castle": "castle", …}},
  "universalTileProps": ["ref", "n", "t", "ridtok", "cctok"],
  "storedTagKeys": ["addr:city", "amenity", …],
  "surface": {…}, "routes": {…}}
@@ -1245,7 +1272,7 @@ props); the rest of this section is about the point catalogue.
 - **PHP tests pin it** (`web/tests/Catalog/CoverageContractTest.php`): the
   `serviceKind` rules must resolve identically through
   `App\Catalog\ServiceKind::fromOsmTags()`, every PHP kind must be reachable,
-  the D selectors must be exactly the `serviceKind` rule set, the P and Q
+  the D selectors must be exactly the `serviceKind` rule set, the G, O, P and Q
   `placeKind` rules must equal `App\Catalog\PlaceKind::harvestRules()` and be
   exactly those letters' selectors, and
   **`CoverageRepository::TAG_WHITELIST ⊆ storedTagKeys`** — the drawer can only

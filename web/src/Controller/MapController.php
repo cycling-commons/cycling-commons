@@ -264,8 +264,8 @@ final class MapController extends AbstractController
             }
         }
         $params['scout_kinds'] = ['labels' => $kindLabels, 'byPick' => ScoutTag::DETAIL_KINDS, 'filled' => $filled];
-        // English label → kind: a tile's `t` names the kind before the pipeline stamps `kind`.
-        $params['place_kind_labels'] = array_combine(PlaceKind::LETTERS, array_map(static fn (string $l): array => array_flip(PlaceKind::labels($l)), PlaceKind::LETTERS));
+        // English label → kind, older labels included: a tile's `t` names the kind before the pipeline stamps `kind`.
+        $params['place_kind_labels'] = array_combine(PlaceKind::LETTERS, array_map(static fn (string $l): array => PlaceKind::kindsByLabel($l), PlaceKind::LETTERS));
         // Surface label → map line class, so a changed dropdown recolours the stretch.
         $params['scout_surface_class'] = SurfaceVocabulary::TO_TILE_CLASS;
 

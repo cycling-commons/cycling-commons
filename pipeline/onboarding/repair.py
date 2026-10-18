@@ -31,13 +31,19 @@ class Step:
 
 
 def plan_steps(own: list[str], neighbour_extracts: list[str]) -> list[Step]:
-    steps = [Step("harvest the new country", (*_RUN, "--load-only", "--regions", ",".join(own)))]
+    # An extract the new country shares with a neighbour (Ireland's is also
+    # Great Britain's) is harvested once, in the neighbours' step: it holds
+    # the neighbour's border rows too, so it needs the full membership pass.
+    only_own = [e for e in own if e not in neighbour_extracts]
+    steps = []
+    if only_own:
+        steps.append(Step("harvest the new country", (*_RUN, "--load-only", "--regions", ",".join(only_own))))
     if neighbour_extracts:
         # Full membership: the neighbour's border rows must be re-owned against the new regions.
         steps.append(Step("re-harvest the neighbours", (*_RUN, "--load-only", "--regions", ",".join(neighbour_extracts)),
                           {"COVERAGE_FULL_MEMBERSHIP": "1"}))
     steps.append(Step("rebuild point tiles", (*_RUN, "--tiles-only")))
-    both = ",".join(own + neighbour_extracts)
+    both = ",".join(dict.fromkeys(own + neighbour_extracts))
     steps.append(Step("rebuild route tiles", (*_RUN, "--routes", "--regions", both), {"COVERAGE_FORCE_EXTRACT": "1"}))
     steps.append(Step("rebuild surface tiles", (*_RUN, "--surface", "--regions", both), {"COVERAGE_FORCE_EXTRACT": "1"}))
     return steps
