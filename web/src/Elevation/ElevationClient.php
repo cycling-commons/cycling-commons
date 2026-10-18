@@ -30,9 +30,6 @@ final class ElevationClient
     /** A planned leg's profile is sampled this often along the line (docs/specs/route-planner.md section 4.2). */
     public const int PROFILE_RESAMPLE_M = 30;
 
-    /** A leg's samples must be this far non-zero, or the leg has no heights (route-planner.md section 4.2). */
-    private const float PROFILE_MIN_NONZERO_SHARE = 0.9;
-
     public function __construct(
         private readonly HttpClientInterface $http,
         private readonly LoggerInterface $logger,
@@ -122,9 +119,12 @@ final class ElevationClient
      * the engine, each sample with its metres along, so a chart draws
      * distance rather than vertex index (docs/specs/route-planner.md section
      * 4.2). A line longer than MAX_POINTS vertices is thinned evenly first,
-     * both ends kept. Null when there is no engine, it does not answer, or
-     * fewer than PROFILE_MIN_NONZERO_SHARE of the samples are known: the leg
-     * then keeps its line and loses its heights, never a flat profile.
+     * both ends kept. Null when there is no engine, it does not answer, no
+     * sample is known, or every sample is exactly 0, which is how the engine
+     * answers without tiles: the leg then keeps its line and loses its
+     * heights, never a flat profile. Land at sea level keeps its heights,
+     * zeros and all (owner 2026-10-17: Hoorn lost its profile). A missing
+     * sample takes the height between its known neighbours, never 0 m.
      *
      * @param list<array{0: float, 1: float}> $coords [lat, lng] pairs, the routed line
      *
@@ -156,29 +156,65 @@ final class ElevationClient
         if (!\is_array($raw) || \count($raw) < 2) {
             return null;
         }
-        $out = [];
-        $nonZero = 0;
+        $along = [];
+        $heights = [];
         foreach ($raw as $pair) {
             if (!\is_array($pair) || !isset($pair[0]) || !is_numeric($pair[0])) {
                 return null;
             }
-            // A missing sample is null or a large negative sentinel: unknown, counted as zero.
-            $h = isset($pair[1]) && is_numeric($pair[1]) && (float) $pair[1] >= -1000.0 ? (float) $pair[1] : 0.0;
-            if (0.0 !== $h) {
-                ++$nonZero;
-            }
-            $out[] = [(float) $pair[0], $h];
+            $along[] = (float) $pair[0];
+            // A missing sample is null or a large negative sentinel: unknown.
+            $heights[] = isset($pair[1]) && is_numeric($pair[1]) && (float) $pair[1] >= -1000.0 ? (float) $pair[1] : null;
         }
-        if ($nonZero / \count($out) < self::PROFILE_MIN_NONZERO_SHARE) {
-            $this->logger->warning('leg profile was mostly zeros - no tiles loaded for this area?', [
-                'points' => \count($out),
-                'nonZero' => $nonZero,
+        $known = array_filter($heights, static fn (?float $h): bool => null !== $h);
+        if ([] === $known || [] === array_filter($known, static fn (float $h): bool => 0.0 !== $h)) {
+            $this->logger->warning('leg profile had no height but 0 - no tiles loaded for this area?', [
+                'points' => \count($heights),
+                'known' => \count($known),
             ]);
 
             return null;
         }
+        $filled = self::fillUnknown($along, $heights);
 
-        return $out;
+        return array_map(static fn (float $d, float $h): array => [$d, $h], $along, $filled);
+    }
+
+    /**
+     * Unknown heights from their known neighbours: between two, on the straight
+     * line by distance along; before the first or after the last, that one.
+     *
+     * @param list<float>      $along
+     * @param list<float|null> $heights at least one known
+     *
+     * @return list<float>
+     */
+    private static function fillUnknown(array $along, array $heights): array
+    {
+        $out = $heights;
+        $prev = null;
+        foreach ($heights as $i => $h) {
+            if (null !== $h) {
+                $prev = $i;
+                continue;
+            }
+            $next = null;
+            for ($j = $i + 1, $n = \count($heights); $j < $n; ++$j) {
+                if (null !== $heights[$j]) {
+                    $next = $j;
+                    break;
+                }
+            }
+            if (null !== $prev && null !== $next) {
+                $span = $along[$next] - $along[$prev];
+                $t = $span > 0.0 ? ($along[$i] - $along[$prev]) / $span : 0.0;
+                $out[$i] = round((float) $heights[$prev] + ((float) $heights[$next] - (float) $heights[$prev]) * $t, 1);
+            } else {
+                $out[$i] = (float) $heights[$prev ?? $next];
+            }
+        }
+
+        return array_map(static fn (?float $h): float => (float) $h, $out);
     }
 
     /**

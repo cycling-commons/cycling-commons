@@ -137,22 +137,42 @@ final class ElevationClientTest extends TestCase
         self::assertSame([[0.0, 300.0], [30.0, 305.0], [60.0, 311.0]], $result);
     }
 
-    public function testAProfileMostlyAtExactlyZeroIsNoProfile(): void
+    public function testAProfileOfOnlyZerosIsNoProfile(): void
     {
-        // Nine zeros and one height: the engine has no tiles here. The leg
-        // keeps its line and loses its heights, never a flat profile.
-        $zeros = array_map(static fn (int $i): array => [$i * 30, 0], range(0, 8));
-        $client = $this->recording(new MockResponse((string) json_encode(['range_height' => [...$zeros, [270, 312]]])));
+        // Every sample exactly 0: the engine has no tiles here. The leg keeps
+        // its line and loses its heights, never a flat profile.
+        $zeros = array_map(static fn (int $i): array => [$i * 30, 0], range(0, 9));
+        $client = $this->recording(new MockResponse((string) json_encode(['range_height' => $zeros])));
 
         self::assertNull($client->profile([[50.1, 5.1], [50.2, 5.2]]));
     }
 
-    public function testAProfileNinetyPerCentKnownIsKept(): void
+    public function testAProfileAroundSeaLevelIsKeptThoughMostSamplesAreZero(): void
     {
-        $known = array_map(static fn (int $i): array => [$i * 30, 100 + $i], range(0, 8));
-        $client = $this->recording(new MockResponse((string) json_encode(['range_height' => [[0, 0], ...$known]])));
+        // Near Hoorn the land lies at sea level: real heights of 0 m, with a
+        // dike or a dip between (owner 2026-10-17: "it should always show height data").
+        $heights = [0, 0, 2, 0, -1, 0, 0, 4, 0, 0];
+        $range = array_map(static fn (int $i, int $h): array => [$i * 30, $h], array_keys($heights), $heights);
+        $client = $this->recording(new MockResponse((string) json_encode(['range_height' => $range])));
 
-        self::assertCount(10, (array) $client->profile([[50.1, 5.1], [50.2, 5.2]]));
+        self::assertSame([[0.0, 0.0], [30.0, 0.0], [60.0, 2.0], [90.0, 0.0], [120.0, -1.0], [150.0, 0.0], [180.0, 0.0], [210.0, 4.0], [240.0, 0.0], [270.0, 0.0]],
+            $client->profile([[52.64, 5.05], [52.66, 5.09]]));
+    }
+
+    public function testAMissingSampleTakesTheHeightBetweenItsNeighboursNeverZero(): void
+    {
+        // A null or a sentinel is unknown, not 0 m: in the hills a 0 would draw a pit to sea level.
+        $client = $this->recording(new MockResponse((string) json_encode(['range_height' => [[0, 250], [30, null], [60, 256], [90, -32768], [120, null], [150, 262], [180, null]]])));
+
+        self::assertSame([[0.0, 250.0], [30.0, 253.0], [60.0, 256.0], [90.0, 258.0], [120.0, 260.0], [150.0, 262.0], [180.0, 262.0]],
+            $client->profile([[50.49, 5.86], [50.47, 5.90]]));
+    }
+
+    public function testAProfileWithNoKnownSampleIsNoProfile(): void
+    {
+        $client = $this->recording(new MockResponse((string) json_encode(['range_height' => [[0, null], [30, -32768]]])));
+
+        self::assertNull($client->profile([[50.1, 5.1], [50.2, 5.2]]));
     }
 
     public function testALongLineIsThinnedBeforeItIsSentAndKeepsItsEnds(): void

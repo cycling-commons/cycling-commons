@@ -319,8 +319,13 @@ a lake is a lie a device would follow.
 for the routed line resampled every 30 m, with the distance along
 (`range`), and answers `heights: [[m, ele], ...]`. The engine fails by
 returning zeros, not errors (climb-elevation.md section 2d), so a leg whose
-samples are less than 90 % non-zero has no heights: the line stays, the
-figures and the profile leave it out, and the row says "No heights here".
+every sample is exactly 0, or none is known, has no heights: the line stays,
+the figures and the profile leave it out, and the row says "No heights here".
+Land at sea level keeps its heights, zeros and all (owner 2026-10-17: a leg
+near Hoorn, heights -2 to 8 m, lost its profile under a rule that wanted
+nine samples in ten non-zero). A missing sample (null or the engine's large
+negative sentinel) takes the height between its known neighbours along the
+line, never 0 m (`ElevationClient::profile()`).
 
 #### 4.2a Why this way?
 
@@ -811,8 +816,9 @@ No rider's rows: nothing of a ride is stored, so there is no scope to leak.
 
 - **PHP.** `BikeCosting`: every `BikeType` has a block, an unknown value
   throws. The leg endpoint: the costing block sent per bike, `routed: false`
-  with no heights when the engine answers nothing, heights dropped under the
-  90 % rule, the limiters asserted against the config. `/map/plan/along`
+  with no heights when the engine answers nothing, heights dropped only when
+  every sample is 0 or none is known, a sea-level leg kept, a missing sample
+  filled from its neighbours, the limiters asserted against the config. `/map/plan/along`
   answers the same groups as the ride check for the same line.
 - **Node** (`web/tests/js`): inserting a place at its km along; the climbed
   and descended rule on a known sample; the profile's gap for a leg without
