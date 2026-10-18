@@ -1,0 +1,38 @@
+web/assets/map/map-init.js
+  s_f2df2a2aa8a918::t_aa0713f1da0c8c 60-62,66,79
+  s_f2df2a2aa8a918::t_e84d393c29ccff 68-69,71-75,78,82-89
+  s_f2df2a2aa8a918::t_061a6d4b6a87eb 63-64,76-77
+  s_f2df2a2aa8a918::t_03ee0be56f48b0 65
+  s_f2df2a2aa8a918::t_2f1c92283952f8 67,70,80-81
+  s_f2df2a2aa8a918::t_f661c7f4a7d17b 90
+docs/specs/map-and-search.md
+  s_f2df2a2aa8a918::t_061a6d4b6a87eb 1603-1605
+  s_f2df2a2aa8a918::t_2f1c92283952f8 1593-1595
+  s_f2df2a2aa8a918::t_aa0713f1da0c8c 1592,1599-1602
+  s_f2df2a2aa8a918::t_03ee0be56f48b0 1596-1598
+  s_f2df2a2aa8a918::t_14733585d97e06 1606
+web/tests/js/fade-highways.test.mjs
+  s_f2df2a2aa8a918::t_e84d393c29ccff 19-27
+  s_f2df2a2aa8a918::t_03ee0be56f48b0 40
+  s_f2df2a2aa8a918::t_e94f6105cb173d 1-7,9,17-18,28,30,33-34,42-44
+  s_f2df2a2aa8a918::t_061a6d4b6a87eb 41
+  s_f2df2a2aa8a918::t_aa0713f1da0c8c 8,10-16,29,31-32,35-39
+web/assets/map/map.js
+  s_f2df2a2aa8a918::t_e84d393c29ccff 8,53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "260b8ad004f9b0ce5ef36158699d30834eff550c",
+  "prompts": {},
+  "sessions": {
+    "s_f2df2a2aa8a918": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed0d77c5-c8d0-43ea-9923-231bd4b99809",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
