@@ -1,0 +1,141 @@
+pipeline/tests/test_tiles.py
+  s_123df5f50d8dd2::t_2526df066602be 144-171
+web/src/Catalog/StayKind.php
+  s_123df5f50d8dd2::t_9349c524093a49 13-15
+web/migrations/Version20261005120100.php
+  s_123df5f50d8dd2::t_eb284f79ca509d 2117
+web/translations/messages.fr.yaml
+  s_123df5f50d8dd2::t_1011fc27524005 3830-3832
+  s_f2df2a2aa8a918::t_26bbf4bdb14702 3833-3847
+docs/specs/route-domain.md
+  s_123df5f50d8dd2::t_0cd3e00e0d5319 1276-1277
+pipeline/onboarding/plan.py
+  s_123df5f50d8dd2::t_aa2d635dd63e97 22,58-62,136,145-151,177,187
+web/tests/Onboarding/CountryBundleTest.php
+  s_123df5f50d8dd2::t_f178cb5fc49e5e 190-224
+web/src/Catalog/PlaceKind.php
+  s_123df5f50d8dd2::t_bacb49436ce73a 27,30-32
+  s_123df5f50d8dd2::t_b8842cfc7b7822 138-149
+pipeline/coverage/tiles.py
+  s_123df5f50d8dd2::t_4ef260114db8f8 38-45,55,61,124-137,140-147,167,170
+wiki/developers/data-ops/harvesting.md
+  s_123df5f50d8dd2::t_801c5cf74d4ef0 206-210
+web/src/Catalog/KindIcons.php
+  s_123df5f50d8dd2::t_e20ca8755b1962 188-223
+  s_123df5f50d8dd2::t_f0d7ea340a084c 134-137
+pipeline/tests/test_onboarding_plan.py
+  s_123df5f50d8dd2::t_7bb02d83846a6f 112-118,120-146
+pipeline/tests/test_run.py
+  s_123df5f50d8dd2::t_ccc3caa36c0f02 199,262,344,418,474,549
+web/translations/messages.de.yaml
+  s_123df5f50d8dd2::t_1011fc27524005 3835-3836
+  s_f2df2a2aa8a918::t_40f2dfe6c42e4d 3837-3852
+wiki/developers/data-ops/onboarding-a-country.md
+  s_123df5f50d8dd2::t_bd33571b4139d5 43,68-71,107-109,140-142
+pipeline/tests/test_load.py
+  s_123df5f50d8dd2::t_7f4821c74bc57a 926-1011
+pipeline/onboarding/neighbours.py
+  s_123df5f50d8dd2::t_becd727d2324f4 39,43
+wiki/developers/data-ops/surface-tiles.md
+  s_123df5f50d8dd2::t_801c5cf74d4ef0 186-191
+pipeline/tests/test_regions.py
+  s_123df5f50d8dd2::t_ccc3caa36c0f02 23,28,30,32,46-48,79
+  s_123df5f50d8dd2::t_e37b5c050695e2 94-107
+pipeline/onboarding/extracts.py
+  s_123df5f50d8dd2::t_aa2d635dd63e97 43-52
+pipeline/tests/conftest.py
+  s_123df5f50d8dd2::t_26deee8ac7bb8f 92
+  s_123df5f50d8dd2::t_525c51624446b6 93-94
+pipeline/tests/test_onboarding_extracts.py
+  s_123df5f50d8dd2::t_7bb02d83846a6f 7,26-41
+docs/specs/osm-data-architecture.md
+  s_123df5f50d8dd2::t_0cd3e00e0d5319 347-354,360
+web/assets/map/icons.js
+  s_123df5f50d8dd2::t_0ee358d7651d44 215
+web/src/Catalog/Entity/CountryExtract.php
+  s_123df5f50d8dd2::t_26deee8ac7bb8f 13,27
+web/translations/messages.nl.yaml
+  s_123df5f50d8dd2::t_1011fc27524005 3834-3836
+  s_f2df2a2aa8a918::t_2eab942356c5d2 3837-3851
+web/tests/Catalog/PlaceKindTest.php
+  s_123df5f50d8dd2::t_71bd8698d6b00a 128-130
+web/templates/pages/map_key.html.twig
+  s_123df5f50d8dd2::t_6eb7856a45f775 126
+pipeline/tests/test_onboarding_repair.py
+  s_123df5f50d8dd2::t_4f6f3b47c431f3 94-111
+web/src/Controller/MapController.php
+  s_123df5f50d8dd2::t_b8842cfc7b7822 267-268
+docs/specs/coverage-provider.md
+  s_123df5f50d8dd2::t_0cd3e00e0d5319 751
+  s_123df5f50d8dd2::t_d561e649da3082 331,1275
+  s_123df5f50d8dd2::t_d5cd8f2d9d3432 112,1206
+  s_123df5f50d8dd2::t_73679f14202a93 58-63,119,364-367,379
+  s_123df5f50d8dd2::t_28038b88948e29 403-409,419-420,756
+  s_123df5f50d8dd2::t_fb06dfaf554f80 493-503,517-518
+wiki/developers/data-ops/index.md
+  s_123df5f50d8dd2::t_801c5cf74d4ef0 99-101
+pipeline/tests/test_contract.py
+  s_123df5f50d8dd2::t_b8f25f4ec4f0ba 91-92,95,100-102
+pipeline/contract/coverage-contract.json
+  s_123df5f50d8dd2::t_87e3c87656e8ff 143-144,147-148,152,155-156,159-160,163-164,167-168,171-172,288-296
+  s_123df5f50d8dd2::t_113ca706f22c9d 297
+pipeline/coverage/run.py
+  s_123df5f50d8dd2::t_8f7a7993587d37 1129,1144-1147,1157
+  s_123df5f50d8dd2::t_18ac2c8cc8f973 276
+  s_123df5f50d8dd2::t_d6910fc6965708 688-731
+  s_123df5f50d8dd2::t_8b2370cf4185c6 475,493,510,522
+  s_123df5f50d8dd2::t_d6f8bafbaf86ca 601-602,784-785
+  s_123df5f50d8dd2::t_3d68eb39201cf5 38,243,268,275,287-289,303,317,327-340,380,390,392-398,460,530,678,735,822,835
+  s_123df5f50d8dd2::t_f9aeb27d26fab7 757-760
+  s_123df5f50d8dd2::t_0e87650da6f330 562-572
+  s_123df5f50d8dd2::t_bc5ffde879d990 470-474,476-492,494-509,511-521,523-526
+pipeline/coverage/load.py
+  s_123df5f50d8dd2::t_027b35c00c16e2 79-80,83-85,95-97,360,375-378,380-381,454,462-467,469-472,478-484,487-488,503,505-510
+  s_123df5f50d8dd2::t_89147b22865b48 423-424
+  s_123df5f50d8dd2::t_a3a4087c73a803 15
+  s_123df5f50d8dd2::t_94f41c917de951 468
+pipeline/tests/test_run_surface.py
+  s_123df5f50d8dd2::t_ccc3caa36c0f02 23-24,432,451,598,822,829
+  s_123df5f50d8dd2::t_fa6b8c1b308a7b 832-946
+pipeline/tests/fixtures/geofabrik-index.json
+  s_123df5f50d8dd2::t_7bb02d83846a6f 7
+web/tests/js/coverage-fold.test.cjs
+  s_123df5f50d8dd2::t_11390cc4e88685 24-25,27-29
+pipeline/coverage/regions.py
+  s_123df5f50d8dd2::t_2c769e3efa2d56 4-7,21,25-35,42,54
+web/translations/messages.es.yaml
+  s_123df5f50d8dd2::t_1011fc27524005 3857-3859
+  s_f2df2a2aa8a918::t_6525af953de9fa 3860-3874
+web/migrations/Version20261017010000.php
+  s_123df5f50d8dd2::t_26deee8ac7bb8f 1-44
+pipeline/onboarding/repair.py
+  s_123df5f50d8dd2::t_4f6f3b47c431f3 34-40,46
+web/src/Onboarding/CountryBundle.php
+  s_123df5f50d8dd2::t_ebd88a11e42bbd 25,61,67-88,116-128,158,166,182-183
+web/translations/messages.en.yaml
+  s_f2df2a2aa8a918::t_ce0f5d2724ec6e 3849-3866
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "fb640e670b688257596fdd4e823219c3cb9a3d28",
+  "prompts": {},
+  "sessions": {
+    "s_123df5f50d8dd2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "85fbaa43-da21-4c2f-b88d-163d1042aba8",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f2df2a2aa8a918": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed0d77c5-c8d0-43ea-9923-231bd4b99809",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
