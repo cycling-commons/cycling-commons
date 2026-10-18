@@ -1,0 +1,21 @@
+web/src/Controller/GovernanceRedirectController.php
+  s_123df5f50d8dd2::t_9d89556277d2bd 1-33
+web/tests/Routing/GovernanceRedirectTest.php
+  s_123df5f50d8dd2::t_9d89556277d2bd 1-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "506ac383b75fa6227efc5bfb5e0590f167214b13",
+  "prompts": {},
+  "sessions": {
+    "s_123df5f50d8dd2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "85fbaa43-da21-4c2f-b88d-163d1042aba8",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
