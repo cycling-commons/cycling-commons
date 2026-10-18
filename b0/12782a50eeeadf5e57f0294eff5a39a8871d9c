@@ -1,0 +1,34 @@
+docs/specs/map-and-search.md
+  s_123df5f50d8dd2::t_7f0ea2d5e7d977 2057-2058
+  s_f2df2a2aa8a918::t_51a8854eb9e8aa 2059-2062
+web/assets/map/drawer.js
+  s_123df5f50d8dd2::t_4ebe78c4dde1ae 28,1361-1366,1368,1370,1375
+web/assets/map/pin-fan.js
+  s_123df5f50d8dd2::t_4ebe78c4dde1ae 20,41,76-86,112,128-130
+web/tests/js/map-review-fixes.test.cjs
+  s_123df5f50d8dd2::t_4ebe78c4dde1ae 73-74,76-78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b012782a50eeeadf5e57f0294eff5a39a8871d9c",
+  "prompts": {},
+  "sessions": {
+    "s_123df5f50d8dd2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "85fbaa43-da21-4c2f-b88d-163d1042aba8",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f2df2a2aa8a918": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed0d77c5-c8d0-43ea-9923-231bd4b99809",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
