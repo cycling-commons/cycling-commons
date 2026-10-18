@@ -634,12 +634,20 @@ function renderProfile(){
   }
 }
 function drawProfile(prof, svgEl, cur, tip, W, H, f, bins){
-  const L = 26, R = 6, T = 14, B = 16, total = f.distM;
+  // L leaves room for the height scale's numbers (owner 2026-10-17: a scale on the left with thin lines).
+  const L = 38, R = 6, T = 14, B = 16, total = f.distM;
   let minH = Infinity, maxH = -Infinity;
   for(const b of bins){ minH = Math.min(minH, b.h0, b.h1); maxH = Math.max(maxH, b.h0, b.h1); }
   const span = Math.max(maxH - minH, 40);
   const y = h => T + (H - T - B) * (1 - (h - minH) / span), x = d => L + (W - L - R) * d / total, base = H - B;
   let svg = '';
+  // The height scale: round heights in the rider's unit, a faint line across the profile at each, its number at the
+  // left, the unit written once above them.
+  const perM = uElevValue(1) || 1;
+  const lines = heightTicks(minH * perM, (minH + span) * perM).map(v => v / perM).filter(h => y(h) >= T - 0.5 && y(h) <= base + 0.5);
+  let grid = '';
+  for(const h of lines) grid += `<line class="hgrid" x1="${L}" x2="${W - R}" y1="${y(h).toFixed(1)}" y2="${y(h).toFixed(1)}"/><text x="${L - 4}" y="${(y(h) + 3).toFixed(1)}" text-anchor="end">${Math.round(h * perM).toLocaleString(document.documentElement.lang || undefined)}</text>`;
+  grid += `<text x="${L - 4}" y="${(T - 4).toFixed(1)}" text-anchor="end">${escPend(uElevUnit())}</text>`;
   for(const b of bins){
     svg += `<polygon points="${x(b.d0).toFixed(1)},${base} ${x(b.d0).toFixed(1)},${y(b.h0).toFixed(1)} ${x(b.d1).toFixed(1)},${y(b.h1).toFixed(1)} ${x(b.d1).toFixed(1)},${base}" fill="${gradColor(b.grad)}" fill-opacity=".92" stroke="#fff" stroke-width=".4"><title>${uKm(b.d0 / 1000)} to ${uKm(b.d1 / 1000)} · ${b.grad.toFixed(0)}%</title></polygon>`;
   }

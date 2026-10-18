@@ -99,7 +99,7 @@ export function initLayerList(){
       : on ? (I18N.overlayOn||'On') : (I18N.overlayOff||'Off');
   };
 
-  /* Study mode follows the surface layer: disabled (and off) while the skin is off. */
+  /* Road mode follows the surface layer: disabled (and off) while the skin is off. */
   const gapsBtn=document.getElementById('skeyGaps');
   const syncStudyGate=()=>{
     if(studyBtn){
@@ -186,7 +186,7 @@ export function initLayerList(){
   document.addEventListener('cc:legend', syncLegend);
   syncLegend(); syncFilterGroups();
 
-  // Legend-as-filter + study mode.
+  // Legend-as-filter + road mode.
   document.querySelectorAll('.skey-row[data-surf-cls]').forEach(b=>{
     b.onclick=()=>{ b.setAttribute('aria-pressed', toggleSurfaceClass(b.dataset.surfCls) ? 'true' : 'false'); };
   });

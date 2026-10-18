@@ -1866,7 +1866,7 @@ map:
   legend_dirt: 'Tierra'
   legend_rock: 'Roca'
   legend_unverified: 'Firme sin registrar'
-  study_mode: 'Modo estudio · ocultar el mapa base'
+  study_mode: 'Modo carreteras · ocultar el mapa base'
   gaps_grid: 'Rejilla de huecos — donde falta info de superficie'
   gaps_grid_title: 'Los cuadrados rojos sombrean zonas con carreteras sin registrar — más oscuro, más falta. Sobre el agua el rojo se ve morado.'
   data_versions_title: 'Las versiones de datos que muestra esta página. Compárala con otro dispositivo o el servidor para distinguir una caché obsoleta de datos que faltan.'

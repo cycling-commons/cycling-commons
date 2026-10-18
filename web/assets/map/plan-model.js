@@ -718,3 +718,18 @@ export function roadAt(legs, d){
   }
   return null;
 }
+
+/** The height scale of a profile (route-planner.md section 4.5): round values between `lo` and `hi`, in the rider's
+    own unit, about `want` of them, on a step of 1, 2 or 5 times a power of ten. Empty for no span. */
+export function heightTicks(lo, hi, want = 4){
+  if(!(hi > lo) || !Number.isFinite(lo) || !Number.isFinite(hi)) return [];
+  const raw = (hi - lo) / Math.max(1, want), mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const at = step => { const out = []; for(let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(Math.round(v * 1e6) / 1e6 + 0); return out; };
+  // The round step whose line count comes nearest `want`; on a tie the finer step, more lines.
+  let best = null;
+  for(const step of [0.5, 1, 2, 5, 10, 20].map(k => k * mag)){
+    const ticks = at(step);
+    if(!best || Math.abs(ticks.length - want) < Math.abs(best.length - want)) best = ticks;
+  }
+  return best;
+}

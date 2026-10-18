@@ -155,3 +155,15 @@ test('a key eye switches its rows by clicking them, and follows them', () => {
     'any row on: all off; none on: all on - through the rows, so presets and the map hear one path');
   assert.match(panels, /watch\.observe\(r, \{ attributes: true, attributeFilter: \['aria-pressed'\] \}\)/);
 });
+
+test('the fold button shows its L shortcut: a keyboard and a keycap, hidden without a keyboard', () => {
+  const btn = twig.slice(twig.indexOf('id="lgToggle"'), twig.indexOf('<div class="lg-body"'));
+  assert.match(btn, /<span class="lg-key" aria-hidden="true"><svg[^>]*>[\s\S]*?<\/svg><kbd>L<\/kbd><\/span>/, 'the keycap sits inside the button, so it folds the key too');
+  assert.match(btn, /aria-keyshortcuts="L"/);
+  assert.match(css, /@media \(hover:none\)\{ \.legend \.lg-key\{display:none\} \}/, 'a phone has no L key to press');
+});
+
+test('open, the fold button sits top right and the first key shown takes the row beside it', () => {
+  assert.match(css, /\.legend:not\(\.collapsed\) \.lg-toggle\{position:absolute;top:\.6rem;right:\.75rem;margin:0\}/);
+  assert.match(css, /\.legend:not\(\.collapsed\) \.lg-body > :not\(\[hidden\]\):not\(:not\(\[hidden\]\) ~ \*\) > h4:first-of-type\{display:flex;align-items:center;min-height:1\.8rem;margin-top:0;padding-right:5\.4rem\}/);
+});

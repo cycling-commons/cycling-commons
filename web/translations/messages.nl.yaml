@@ -1241,7 +1241,7 @@ map:
   legend_dirt: 'Aarde'
   legend_rock: 'Rots'
   legend_unverified: 'Wegdek niet vermeld'
-  study_mode: 'Studiemodus · achtergrond uit'
+  study_mode: 'Wegenmodus · achtergrond uit'
   gaps_grid: 'Hiatenraster — waar weginfo ontbreekt'
   gaps_grid_title: 'Rode vierkanten markeren gebieden met niet-geregistreerde wegen — donkerder = meer ontbrekend. Boven water oogt het rood paars.'
   data_versions_title: 'De dataversies die deze pagina toont. Vergelijk met een ander apparaat of de server om een verouderde cache van ontbrekende data te onderscheiden.'

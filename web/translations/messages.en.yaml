@@ -1859,7 +1859,7 @@ map:
   legend_dirt: 'Dirt'
   legend_rock: 'Rock'
   legend_unverified: 'Surface not recorded'
-  study_mode: 'Study mode · hide basemap'
+  study_mode: 'Road mode · hide basemap'
   gaps_grid: 'Gaps grid — where surface info is missing'
   gaps_grid_title: 'Red squares shade areas with unrecorded roads — darker means more missing. Over water the red reads purple.'
   data_versions_title: 'The data builds this page is drawing. Compare with another device or the server to tell a stale cache from missing data.'

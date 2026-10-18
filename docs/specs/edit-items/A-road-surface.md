@@ -415,7 +415,7 @@ unknown highway values return null rather than a nearest guess.
 it is how a re-harvest silently undoes the fix.
 
 **Legend affordances**: each class row carries a ✓ when shown and loses it when
-filtered out, so a rider sees the rows are buttons. **Study mode is gated on the surface skin
+filtered out, so a rider sees the rows are buttons. **Road mode is gated on the surface skin
 being on** — stripping the basemap with no surface lines to study is a blank
 page, so the control disables with the layer and switches off with it.
 

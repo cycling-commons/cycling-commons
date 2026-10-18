@@ -723,7 +723,7 @@
        while its panel is closed, with a way back in. plan.js fills and shows it. #}
     {# The height profile along the foot of the map (route-planner.md section
        4.5): the panel's profile, the map's width wide. plan.js draws it. #}
-    <div class="cc-plan-strip" id="planStrip" hidden><svg id="planStripSvg" viewBox="0 0 800 140" aria-hidden="true"></svg><div class="cc-plan-cursor" id="planStripCur"></div><div class="cc-plan-tip" id="planStripTip"></div><button type="button" class="cc-plan-strip-x" id="planStripX" aria-label="{{ 'map.plan_strip_hide'|trans }}" title="{{ 'map.plan_strip_hide'|trans }}">✕</button></div>
+    <div class="cc-plan-strip" id="planStrip" hidden><svg id="planStripSvg" viewBox="0 0 800 140" aria-hidden="true"></svg><div class="cc-plan-cursor" id="planStripCur"></div><div class="cc-plan-tip" id="planStripTip"></div><button type="button" class="cc-plan-strip-x" id="planStripX" aria-label="{{ 'map.plan_strip_hide'|trans }}" title="{{ 'map.plan_strip_hide'|trans }}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
     {# The planner's guide in the middle of the map (owner 2026-10-15); plan.js opens and closes it. #}
     <div class="cc-plan-guide" id="planGuide" role="dialog" aria-modal="false" aria-labelledby="planGuideH" hidden>
       <h3 id="planGuideH">{{ 'map.plan_guide_h'|trans }}</h3>
@@ -759,7 +759,7 @@
       <form method="dialog" class="cc-plan-dlg-acts"><button type="button" class="cc-ride-btn" id="planNoticeShow" hidden>{{ 'map.plan_notice_show'|trans }}</button><button value="ok" class="cc-ride-btn cc-plan-go" autofocus>{{ 'map.plan_notice_ok'|trans }}</button></form>
     </dialog>
     {# The closed strip, folded into a tab at the foot of the map: a click opens it again (owner 2026-10-15). #}
-    <button type="button" class="cc-plan-striptab" id="planStripTab" hidden><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 20 9 9l4 5 3-4 6 10Z"/></svg>{{ 'map.plan_strip_show'|trans }}</button>
+    <button type="button" class="cc-plan-striptab" id="planStripTab" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>{{ 'map.plan_strip_show'|trans }}</button>
     <div class="cc-plan-bar" id="planBar" hidden><span class="cc-plan-bar-f" id="planBarText"></span><button type="button" class="cc-ride-btn cc-plan-go" id="planBarOpen">{{ 'map.plan_bar_open'|trans }}</button><button type="button" class="cc-ride-btn cc-plan-quiet" id="planBarClear">{{ 'map.plan_clear'|trans }}</button></div>
     {# "Not covered yet" banner (map-and-search.md §4.5b): the rider panned or
        searched to a place outside every onboarded country. Same pill as the
@@ -811,6 +811,8 @@
       {% set ccEye %}<svg class="eye-open" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-shut" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>{% endset %}
       <button class="lg-toggle" id="lgToggle" type="button" aria-controls="lgBody"
               aria-label="{{ 'map.legend_aria'|trans }}" aria-expanded="true" aria-keyshortcuts="L">
+        {# The shortcut, shown where it acts (owner 2026-10-17): a keyboard and the key L; hidden without a keyboard. #}
+        <span class="lg-key" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M9.3 10h.01M12.6 10h.01M15.9 10h.01M18 10h.01M6 14h.01M18 14h.01M9 14h6"/></svg><kbd>L</kbd></span>
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
       <div class="lg-body" id="lgBody">
@@ -837,7 +839,7 @@
          class: this row explains, it does not filter (surface-tiles.js draws
          ticks only where OSM smoothness exists, z13+). #}
       <div class="skey-note"><span class="skey-ticks" aria-hidden="true"></span>{{ 'map.legend_quality'|trans }}</div>
-      {# Study mode belongs with the key: it is about reading these classes. #}
+      {# Road mode belongs with the key: it is about reading these classes. #}
       <button type="button" class="skey-study" id="skeyStudy" aria-pressed="false">{{ 'map.study_mode'|trans }}</button>
       {# The gaps grid, opt-in (owner 2026-08-14): at planning zoom the red
          squares tinted whole regions pink (purple over water) and read as

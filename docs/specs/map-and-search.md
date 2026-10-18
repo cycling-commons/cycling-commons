@@ -356,7 +356,10 @@ map module opens `#drawer` behind its back.
   only while the Road surface or Routes overlay is on, clear of the circle, and
   compact: rows 1.55rem apart, tight headings and buttons (owner 2026-10-15). The L key presses its
   fold button (the three stripes), except inside a text field or with Ctrl, Alt or the command key
-  held. Each key's heading (Road surface, Routes) starts with an eye, open while any of its rows
+  held; the button shows it, a small keyboard and a keycap "L" left of the stripes, hidden on a
+  screen without a hover (a phone has no L to press; owner 2026-10-17). Open, that button sits in the
+  top right and the first key shown (Road surface, else Routes) takes the row beside it, so the panel
+  starts with its heading and no empty row; folded, the button is the whole panel again. Each key's heading (Road surface, Routes) starts with an eye, open while any of its rows
   shows and shut while none does: it switches all that key's rows off while any is on, else all on,
   by clicking the rows themselves (owner 2026-10-15). Both are visible whether or
   not the drawer is open, which is the point: a rider notices data is missing
@@ -1497,7 +1500,7 @@ two places, sized to their audience:
 - **The Key rail panel** (`data-panel="key"`, `#p-key`, title
   `map.rail_key`). It is an explainer and nothing in it is interactive: a
   row is read, never tapped. Anything that switches the map (the surface
-  class rows, the route type rows, Study mode, the Gaps grid) lives in the
+  class rows, the route type rows, Road mode, the Gaps grid) lives in the
   overlay key box at the bottom-right corner, not here (owner 2026-09-21).
   The route type rows (national, regional and node network, mountain bike,
   and the numbered junctions) switch their type on and off as the surface
@@ -1783,7 +1786,7 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   for). Network styling keys and badge zoom are pinned to the contract by
   `routes-zooms.test.cjs`. It stacks above the surface skin (the corridor is
   the headline the toggle asks for) and below everything curated.
-- **Study mode** (the toggle inside the legend, where it belongs — it is about
+- **Road mode** (the toggle inside the legend, where it belongs: it is about
   reading these classes) drops the basemap to a flat light-grey and hides
   satellite and street-level with it, leaving only the surface lines. Turning it
   off restores whatever the style had, rather than forcing everything visible.
@@ -1845,7 +1848,7 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   (`GAPS_MAX_ZOOM`, owner 2026-09-18) by stretching the z11 tiles, so squares
   and to-do lines overlap from z11 to z12; the `#skeyGaps` button hides above
   z12, where it would switch on nothing. **The grid is opt-in**
-  (`#skeyGaps`, below Study mode in the legend, shown only while the skin is
+  (`#skeyGaps`, below Road mode in the legend, shown only while the skin is
   on, owner 2026-08-14): arriving with the skin, the squares would tint whole
   regions pink at planning zoom, and translucent red over blue water reads
   PURPLE, a colour with no legend row of its own. It is a contributor's

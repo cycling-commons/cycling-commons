@@ -1239,7 +1239,7 @@ map:
   legend_dirt: 'Terre'
   legend_rock: 'Rocher'
   legend_unverified: 'Revêtement non renseigné'
-  study_mode: 'Mode étude · masquer le fond'
+  study_mode: 'Mode routes · masquer le fond'
   gaps_grid: 'Grille des lacunes — où l''info de revêtement manque'
   gaps_grid_title: 'Les carrés rouges couvrent les zones aux routes non renseignées — plus foncé = plus de manques. Sur l''eau, le rouge paraît violet.'
   data_versions_title: 'Les versions de données affichées par cette page. Comparez avec un autre appareil ou le serveur pour distinguer un cache périmé de données manquantes.'

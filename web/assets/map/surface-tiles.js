@@ -503,7 +503,7 @@ export function toggleSurfaceClass(cls) {
   return surfaceClassEnabled(cls);
 }
 
-/* Study mode: hide named basemap sources so surface classes read alone.
+/* Road mode: hide named basemap sources so surface classes read alone.
    Recolour the background rather than hide it (transparent canvas shows through). */
 const BASEMAP_SOURCES = new Set(['openmaptiles', 'ne2_shaded', 'satellite', 'mly']);
 const STUDY_BG = '#EDEDE8';

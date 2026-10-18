@@ -1244,7 +1244,7 @@ map:
   legend_dirt: 'Erde'
   legend_rock: 'Fels'
   legend_unverified: 'Belag nicht erfasst'
-  study_mode: 'Studienmodus · Basiskarte aus'
+  study_mode: 'Straßenmodus · Basiskarte aus'
   gaps_grid: 'Lückenraster — wo Belagsinfo fehlt'
   gaps_grid_title: 'Rote Quadrate zeigen Gebiete mit nicht erfassten Straßen — dunkler heißt mehr fehlt. Über Wasser wirkt das Rot violett.'
   data_versions_title: 'Die Datenstände, die diese Seite anzeigt. Vergleiche mit einem anderen Gerät oder dem Server, um veralteten Cache von fehlenden Daten zu unterscheiden.'
