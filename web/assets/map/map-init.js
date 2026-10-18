@@ -10,6 +10,24 @@ export const map = (function(){
   if(window.__ccMapOpts) return new maplibregl.Map(window.__ccMapOpts);
   throw new Error('map-init: no MapLibre instance and no options — map.js must be booted by catalog-load.js');
 })();
+/* Our layers skip MapLibre's per-layer style check (docs/specs/map-and-search.md §2; owner 2026-10-17: opening
+   the planner took seconds in Firefox). Style.addLayer checks a new layer against a serialized copy of the WHOLE
+   style, so n layers copy the style n times, and switching the route and surface lines on adds about 300 layers
+   (a set per country). The layers are ours, built by tested code; `validate: false` is the option MapLibre itself
+   offers for this, which Map.addLayer never passes. Map.addLayer in MapLibre 6.8.0 is style.addLayer(layer,
+   before, options) followed by _update(true); before the style exists it keeps its own path. Map.addSource is
+   the same shape and makes the same copy for every source. */
+const addLayerChecked = map.addLayer.bind(map), addSourceChecked = map.addSource.bind(map);
+map.addLayer = function(layer, before){
+  if(!this.style || typeof this._update !== 'function') return addLayerChecked(layer, before);
+  this.style.addLayer(layer, before, {validate:false});
+  return this._update(true);
+};
+map.addSource = function(id, source){
+  if(!this.style || typeof this._update !== 'function') return addSourceChecked(id, source);
+  this.style.addSource(id, source, {validate:false});
+  return this._update(true);
+};
 // Non-prod test handle (docs/specs/map-and-search.md §2). Gated on CC_DEBUG.
 if(window.CC_DEBUG) window.__ccMap = map;
 

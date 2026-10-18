@@ -87,6 +87,16 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
   head preloads both halves of the library (`maplibre-gl.mjs` and the
   `maplibre-gl-shared.mjs` it imports) with `modulepreload`, because the second
   is otherwise only discovered once the first has been parsed.
+- **Our layers and sources skip MapLibre's per-call style check** (`map-init.js`,
+  owner 2026-10-17). `Style.addLayer` and `Style.addSource` check a new layer or
+  source against a serialized copy of the whole style, so n layers copy the
+  style n times; a map preset switching the route and surface lines on adds
+  about 300 layers, and opening the planner took 3 to 5 seconds in Firefox. The
+  map instance's `addLayer` and `addSource` pass `validate: false`, MapLibre's
+  own option for this; before the style exists they keep the checked path.
+  Measured in Firefox: route lines on 806 to 53 ms, surface lines on 2,273 to
+  198 ms. `map-fast-layers.test.cjs` pins the three MapLibre internals the
+  wrapper relies on, so a MapLibre upgrade that changes them fails there.
 - **Every module of the map's static import graph is preloaded**, read from
   AssetMapper's import graph by `cc_module_graph('map/map.js')`
   (`App\Twig\ModuleGraphExtension`, owner 2026-10-11): the entry first, then
