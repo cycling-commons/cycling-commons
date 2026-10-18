@@ -192,6 +192,8 @@ credits:
   redoc_p: 'Rendert die öffentliche API-Referenz, ausgeliefert von dieser Seite.'
   mapillary_p: 'Street-Level-Fotoabdeckung im Straßenansicht-Dock der Karte.'
   esri_p: 'Satellitenbilder hinter der Satellitenebene des Anstiegs-Editors.'
+  relief_p: "Höhen hinter dem 3D-Relief der Karte: die Hänge schattiert und das Gelände erhöht. Unser Server holt die Kacheln aus Amazons Open-Data-Speicher und behält sie, dein Browser nimmt also nie Kontakt dazu auf."
+  relief_sources: "Die Quellen und ihre vorgeschriebenen Nennungen:"
   photon_p: 'Geocoding beim Tippen, von komoot — ebenfalls auf OpenStreetMap gebaut.'
   lic_api: 'API'
   mymemory_p: 'Maschinelle Übersetzung. Macht aus einer Wikipedia-Zusammenfassung in der Landessprache die englische Ortsbeschreibung auf der Karte, immer als auto-translated gekennzeichnet.'
@@ -1257,6 +1259,8 @@ map:
   street_level: 'Straßenansicht'
   surfaces: 'Beläge'
   route_network: 'Routen'
+  relief_3d: "3D-Relief"
+  relief_hint: "Die Hänge schattiert und das Gelände erhöht, doppelt so hoch wie in Wirklichkeit. Neige die Karte durch Ziehen mit der rechten Maustaste (Ctrl-Ziehen auf dem Mac)."
   gone_places: 'Entfernte Orte'
   legend_quality: 'Striche: Belagsqualität (glatt → rau), wo erfasst'
   legend_route_national: 'Nationale und internationale Routen'

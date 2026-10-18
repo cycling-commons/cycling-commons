@@ -901,6 +901,27 @@ three road-shield layers (which read `ref`) are left alone and a future style
 tweak is still caught. Guarded by a `map-smoke.js` checkpoint that asserts every
 name layer asks for `name:<document lang>`.
 
+### 4.2c 3D relief
+
+A trial (owner 2026-10-17, "for now just see"). **3D relief** in Layers & filters, under the
+map overlays (`#ovRelief`, `relief.js`), shades the slopes and raises the ground at twice its
+true height, so flat land still shows its dikes and dunes, and tilts the map to 55° when it is
+flat; switched off, the shading and the raised ground go and the map lies flat again. Tilting
+is MapLibre's own: a right-drag, or Ctrl and drag on a Mac (the switch's hint says so).
+
+- **Source.** The public Terrain Tiles (Mapzen's terrarium encoding, on Amazon's open-data
+  store), z0 to 15. The browser asks our own `/tiles/relief/{z}/{x}/{y}.png`; nginx fetches the
+  tile, keeps it 30 days (`proxy_cache relief`) and passes nothing of the rider on (no cookie,
+  referer, language, browser name or forwarded address), so the store only ever sees our
+  server and the privacy notice needs no line. Two `raster-dem` sources over the same tiles,
+  one for the terrain and one for the `hillshade` layer, which sits under the basemap's labels.
+- **Where it shows.** Only where nginx proxies `/tiles/relief/`: the switch is drawn when
+  `RELIEF_TILES` is true (Twig global `relief_tiles`; off by default, on in the dev stack).
+  Production needs the same nginx location before it is turned on.
+- **Credits.** While it is on, the map's credits line names Terrain Tiles and links its row on
+  `/credits` (`#credits-relief`), which carries every source's required credit line.
+- Pinned by `tests/js/relief.test.cjs`.
+
 ### 4.3 Filter chips
 
 Four chip groups, each backed by a real attribute. There is no Freshness

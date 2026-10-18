@@ -8,6 +8,8 @@
 .crow .who a{font-weight:600;text-decoration:none;border-bottom:1px solid var(--trail)}
 .crow .who .lic{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d;margin-top:.3rem}
 .crow p{font-size:.92rem;color:#3a3d30;margin:0}
+/* A source's own required credit lines, under its row (the 3D relief's Terrain Tiles). */
+.crow .credit-lines{grid-column:2;margin:.2rem 0 0;padding-left:1.1rem;font-size:.8rem;line-height:1.45;color:#4a4d40}
 /* Rows whose text is a LEGALLY REQUIRED notice, not a thank-you. The mark
    exists for the next editor: twice in one week a mandated text was nearly
    revised as if it were courtesy copy (the Copernicus notice both times).

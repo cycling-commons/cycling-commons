@@ -190,6 +190,8 @@ credits:
   redoc_p: 'Affiche la référence publique de l''API, servie depuis ce site.'
   mapillary_p: 'Couverture photo au niveau de la rue dans le dock de vue immersive de la carte.'
   esri_p: 'Imagerie satellite derrière le calque satellite de l''éditeur de cols.'
+  relief_p: "Les altitudes du relief 3D de la carte : les pentes ombrées et le terrain en relief. Notre serveur récupère les tuiles sur le dépôt de données ouvertes d’Amazon et les garde, votre navigateur ne le contacte donc jamais."
+  relief_sources: "Les sources et leurs mentions requises :"
   photon_p: 'Géocodage à la saisie par komoot, également construit sur OpenStreetMap.'
   lic_api: 'API'
   mymemory_p: 'Traduction automatique. Transforme un résumé Wikipédia en langue locale en la description anglaise du lieu affichée sur la carte, toujours signalée auto-translated.'
@@ -1252,6 +1254,8 @@ map:
   street_level: 'Vue immersive'
   surfaces: 'Revêtements'
   route_network: 'Itinéraires'
+  relief_3d: "Relief 3D"
+  relief_hint: "Les pentes ombrées et le terrain en relief, deux fois sa hauteur réelle. Inclinez la carte en glissant avec le clic droit (Ctrl-glisser sur Mac)."
   gone_places: 'Lieux retirés'
   legend_quality: 'Traits : qualité du revêtement (lisse → dégradé), là où elle est renseignée'
   legend_route_national: 'Itinéraires nationaux et internationaux'

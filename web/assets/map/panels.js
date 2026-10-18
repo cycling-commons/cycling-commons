@@ -22,6 +22,7 @@ import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible,
          toggleSurfaceClass, setStudyMode, studyModeOn,
          setGapsGrid, gapsGridOn, CLASSIFIED_MIN_ZOOM, GAPS_MAX_ZOOM } from './surface-tiles.js';
 import { routesTilesConfigured, setRoutesTiles, routesTilesVisible, toggleRouteGroup } from './routes-tiles.js';
+import { setRelief, reliefVisible } from './relief.js';
 import { setFilterDot } from './shell.js';
 import { newestStamp } from './tile-sources.js';
 
@@ -152,6 +153,10 @@ export function initLayerList(){
       syncLegend();
     };
   }
+
+  // 3D relief: the slopes shaded and the ground raised (relief.js); the button exists only where the tiles are proxied.
+  const reliefBtn=document.getElementById('ovRelief');
+  if(reliefBtn) reliefBtn.onclick=()=>paintOverlay(reliefBtn, setRelief(!reliefVisible()));
 
   // Measured traffic: curators only, drawn on the road-piece tiles.
   const trafficBtn=document.getElementById('ovTraffic');

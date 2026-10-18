@@ -194,6 +194,8 @@ credits:
   redoc_p: 'Muestra la referencia pública de la API, servida desde este sitio.'
   mapillary_p: 'Cobertura fotográfica a pie de calle en el visor street-level del mapa.'
   esri_p: 'Imágenes de satélite tras la capa satélite del editor de puertos.'
+  relief_p: "Las alturas tras el relieve 3D del mapa: las pendientes sombreadas y el terreno elevado. Nuestro servidor obtiene las teselas del almacén de datos abiertos de Amazon y las guarda, así que tu navegador nunca lo contacta."
+  relief_sources: "Las fuentes y sus menciones obligatorias:"
   photon_p: 'Geocodificación con búsqueda sobre la marcha, de komoot, también construida sobre OpenStreetMap.'
   lic_api: 'API'
   mymemory_p: 'Traducción automática. Convierte un resumen de Wikipedia en el idioma local en la descripción inglesa del lugar que ves en el mapa, siempre marcada como auto-translated.'
@@ -1879,6 +1881,8 @@ map:
   street_level: 'A pie de calle'
   surfaces: 'Firmes'
   route_network: 'Rutas'
+  relief_3d: "Relieve 3D"
+  relief_hint: "Las pendientes sombreadas y el terreno elevado, al doble de su altura real. Inclina el mapa arrastrando con el botón derecho (Ctrl y arrastrar en un Mac)."
   gone_places: 'Lugares retirados'
   legend_quality: 'Marcas: calidad del firme (liso → irregular), donde está registrada'
   legend_route_national: 'Rutas nacionales e internacionales'

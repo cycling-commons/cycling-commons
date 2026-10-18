@@ -192,6 +192,8 @@ credits:
   redoc_p: 'Renders the public API reference, served from this site.'
   mapillary_p: 'Street-level photo coverage in the map''s street view dock.'
   esri_p: 'Satellite imagery behind the climb editor''s satellite layer.'
+  relief_p: "Heights behind the map's 3D relief: the slopes shaded and the ground raised. Our server fetches the tiles from Amazon's open-data store and keeps them, so your browser never contacts it."
+  relief_sources: "The sources and their required credit lines:"
   photon_p: 'Search-as-you-type geocoding by komoot, also built on OpenStreetMap.'
   lic_api: 'API'
   mymemory_p: 'Machine translation. Turns a Wikipedia summary in the local language into the English place description you see on the map, always labelled auto-translated.'
@@ -1872,6 +1874,8 @@ map:
   street_level: 'Street-level'
   surfaces: 'Surfaces'
   route_network: 'Routes'
+  relief_3d: "3D relief"
+  relief_hint: "The slopes shaded and the ground raised, twice its true height. Tilt the map with a right-drag (Ctrl-drag on a Mac)."
   gone_places: 'Removed places'
   legend_quality: 'Ticks: surface quality (smooth → rough), where recorded'
   legend_route_national: 'National & international routes'

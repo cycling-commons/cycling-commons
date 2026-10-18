@@ -192,6 +192,8 @@ credits:
   redoc_p: 'Toont de publieke API-referentie, geserveerd vanaf deze site.'
   mapillary_p: 'Straatbeelddekking in het street-level-dock van de kaart.'
   esri_p: 'Satellietbeelden achter de satellietlaag van de klim-editor.'
+  relief_p: "Hoogtes achter het 3D-reliëf van de kaart: de hellingen gearceerd en het land verhoogd. Onze server haalt de tegels uit de open-dataopslag van Amazon en bewaart ze, dus je browser maakt er nooit contact mee."
+  relief_sources: "De bronnen en hun verplichte vermeldingen:"
   photon_p: 'Zoeken terwijl je typt, geocodering door komoot — ook gebouwd op OpenStreetMap.'
   lic_api: 'API'
   mymemory_p: 'Machinevertaling. Maakt van een Wikipedia-samenvatting in de plaatselijke taal de Engelse plaatsbeschrijving die je op de kaart ziet, altijd gelabeld als auto-translated.'
@@ -1254,6 +1256,8 @@ map:
   street_level: 'Straatbeeld'
   surfaces: 'Ondergrond'
   route_network: 'Routes'
+  relief_3d: "3D-reliëf"
+  relief_hint: "De hellingen gearceerd en het land verhoogd, twee keer zijn echte hoogte. Kantel de kaart door met de rechtermuisknop te slepen (Ctrl-slepen op een Mac)."
   gone_places: 'Verwijderde plekken'
   legend_quality: 'Streepjes: kwaliteit van het wegdek (glad → ruw), waar bekend'
   legend_route_national: 'Nationale en internationale routes'

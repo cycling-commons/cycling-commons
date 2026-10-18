@@ -7,6 +7,10 @@
 parameters:
     cc.session_cookie: PHPSESSID
     cc.remember_me_cookie: REMEMBERME
+    # 3D relief on the map (map-and-search.md section 4.2c): the Layers switch shows only
+    # where nginx proxies /tiles/relief/ to the public Terrain Tiles. Off unless set;
+    # the dev stack sets it.
+    env(RELIEF_TILES): '0'
 
 when@dev:
     parameters:

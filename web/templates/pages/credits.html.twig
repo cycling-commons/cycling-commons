@@ -87,6 +87,24 @@
       <div class="who"><a href="https://www.esri.com/" data-pkg="manual:esri-imagery">Esri World Imagery</a><a class="req" href="#credits-req"><span class="vh">{% trans %}credits.req_badge{% endtrans %}</span><span aria-hidden="true">*</span></a><span class="lic">© Esri, Maxar, Earthstar Geographics</span></div>
       <p>{% trans %}credits.esri_p{% endtrans %}</p>
     </div>
+    {# The 3D relief (map-and-search.md section 4.2c): the credit lines are the sources' own wording, kept in English. #}
+    <div class="crow" id="credits-relief">
+      <div class="who"><a href="https://registry.opendata.aws/terrain-tiles/" data-pkg="manual:terrain-tiles">Terrain Tiles</a><span class="lic">Mapzen · AWS Open Data</span></div>
+      <p>{% trans %}credits.relief_p{% endtrans %} {% trans %}credits.relief_sources{% endtrans %}</p>
+      <ul class="credit-lines" lang="en">
+        <li>3DEP, SRTM and GMTED2010 data courtesy of the U.S. Geological Survey.</li>
+        <li>ETOPO1: DOC/NOAA/NESDIS/NCEI, National Centers for Environmental Information, NESDIS, NOAA, U.S. Department of Commerce.</li>
+        <li>EU-DEM: produced using Copernicus data and information funded by the European Union - EU-DEM layers.</li>
+        <li>United Kingdom: © Environment Agency copyright and/or database right 2015. All rights reserved.</li>
+        <li>Austria: © offene Daten Österreichs - Digitales Geländemodell (DGM) Österreich.</li>
+        <li>Norway: © Kartverket.</li>
+        <li>Canada: contains information licensed under the Open Government Licence - Canada.</li>
+        <li>Mexico: source: INEGI, Continental relief, 2016.</li>
+        <li>Australia: © Commonwealth of Australia (Geoscience Australia) 2017.</li>
+        <li>New Zealand: copyright 2011 Crown copyright (c) Land Information New Zealand and the New Zealand Government. All rights reserved.</li>
+        <li>ArcticDEM: DEM(s) were created from DigitalGlobe, Inc., imagery and funded under National Science Foundation awards.</li>
+      </ul>
+    </div>
     <div class="crow">
       <div class="who"><a href="https://github.com/komoot/photon" data-pkg="manual:photon-geocoder">Photon</a><span class="lic">Apache-2.0</span></div>
       <p>{% trans %}credits.photon_p{% endtrans %}</p>

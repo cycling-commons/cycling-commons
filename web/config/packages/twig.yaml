@@ -8,6 +8,8 @@ twig:
         # The satellite base layer's key. Empty disables satellite and the map
         # falls back to the standard base — the layer has always been optional.
         esri_api_key: '%env(ESRI_API_KEY)%'
+        # The 3D relief switch, only where nginx proxies the relief tiles (RELIEF_TILES).
+        relief_tiles: '%env(bool:RELIEF_TILES)%'
         # The road-surface tile URLs are NOT globals: they come from
         # MapController via App\Coverage\SurfaceManifest, which resolves the
         # published build (or an operator's pin). A global reading the env

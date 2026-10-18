@@ -262,6 +262,7 @@ The onboarding playbook is `wiki/developers/data-ops/onboarding-a-country.md`.
 | OpenFreeMap (Protomaps basemap) | The basemap | Open | **Reference**, in use | verified (in use) |
 | Copernicus GLO-30 DEM | Worldwide 30 m elevation | Free, attribution required (notice on `/credits`) | **Ingest**, in use | verified (in use) |
 | Mapillary | Street-level imagery | Photos CC BY-SA; platform and **A**pplication **P**rogramming **I**nterface (API) under Meta's terms | **Reference only.** Embed with attribution, never ingest | verified (in use) |
+| Terrain Tiles (Mapzen, AWS Open Data; SRTM, EU-DEM, 3DEP and others) | The map's 3D relief: shaded slopes and raised ground (map-and-search.md section 4.2c) | Open data, each source's credit line required (list on `/credits`) | **Reference**, a trial on dev: fetched and kept by our nginx, never by a rider's browser | verified (in use on dev) |
 | Esri World Imagery | Satellite base | ArcGIS Location Platform key, referrer-restricted, expires 2027-08-10 | **Reference**, in use under a key, with the terms recorded | verified (in use) |
 | National orthophotos (NL PDOK ~8 cm, BE, FR IGN, DE) | Far better imagery than Esri, per country | National licences, §2 | **Reference**, a quality upgrade per country | stated |
 | Sentinel-2 cloudless | Worldwide imagery | Open | **Ruled out** at 10 m: too coarse to trace a road | verified (prior decision) |

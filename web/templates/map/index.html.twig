@@ -257,6 +257,10 @@
         <h3>{{ 'map.map_overlays'|trans }}</h3>
         <button class="layer ov-row" id="ovSurface" type="button" hidden aria-pressed="false"><span class="sw" style="--c:#C8923A;--ic:#101E16"><i class="sw-g">▰</i></span><span class="nm">{{ 'map.surfaces'|trans }}</span><span class="ct">{{ 'map.overlay_off'|trans }}</span></button>
         <button class="layer ov-row" id="ovRoutes" type="button" hidden aria-pressed="false"><span class="sw" style="--c:#7A4FCF;--ic:#EFE6D4"><i class="sw-g">⤳</i></span><span class="nm">{{ 'map.route_network'|trans }}</span><span class="ct">{{ 'map.overlay_off'|trans }}</span></button>
+        {# 3D relief: the slopes shaded and the ground raised, only where nginx proxies the relief tiles. #}
+        {% if relief_tiles|default(false) %}
+        <button class="layer ov-row" id="ovRelief" type="button" aria-pressed="false" title="{{ 'map.relief_hint'|trans }}"><span class="sw" style="--c:#8A7A5A;--ic:#F3EBD8"><i class="sw-g">▲</i></span><span class="nm">{{ 'map.relief_3d'|trans }}</span><span class="ct">{{ 'map.overlay_off'|trans }}</span></button>
+        {% endif %}
         {# Measured traffic from riders' radars, curators only and only what passed
            the disclosure rules (docs/specs/traffic-measurements.md §4.6), and
            only once the `traffic.map_layer_live` system setting is 1. #}
