@@ -9,6 +9,7 @@ import { layerByKey } from './catalog.js';
 import { openDrawer } from './drawer.js';
 import { fullWayEnds, isSurfaceSource } from './surface-tiles.js';
 import { familyConfigured, mountInView, sourceIdFor, ccOfSourceLayer, NO_VALIDATE } from './tile-sources.js';
+import { plannerTakesLineClick } from './plan-state.js';
 
 /* Same two-gate as the surface skin: configured = artifact exists; available = pmtiles loaded. */
 export const routesTilesConfigured = () => familyConfigured('routes', 'routes');
@@ -90,7 +91,7 @@ function addRouteLayers(key, src, under) {
           'line-opacity': LINE_OPACITY,
         },
       }, under);
-      map.on('click', id, e => openRouteDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry, srcLayer));
+      map.on('click', id, e => { if(plannerTakesLineClick(e)) return; openRouteDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry, srcLayer); });
       map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
     });
@@ -113,7 +114,7 @@ function addRouteLayers(key, src, under) {
           'line-opacity': 1,
         },
       }, under);
-      map.on('click', selId, e => openRouteDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry, srcLayer));
+      map.on('click', selId, e => { if(plannerTakesLineClick(e)) return; openRouteDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry, srcLayer); });
       map.on('mouseenter', selId, () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', selId, () => { map.getCanvas().style.cursor = ''; });
     }

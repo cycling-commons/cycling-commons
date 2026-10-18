@@ -15,7 +15,7 @@ import { pinElFor } from './pin-fan.js';
 import { liftInfoLayersAboveRoutes } from './render.js';
 import { activePanel } from './shell.js';
 import { isPicking } from './picking.js';
-import { setPlanning } from './plan-state.js';
+import { setPlanning, isLineOrArea } from './plan-state.js';
 import { CATALOG } from './catalog.js';
 import { layerGlyph, waterKind } from './icons.js';
 import { rideScopeFor, scopeKey, scopeCovers } from './ride-scope.js';
@@ -785,13 +785,23 @@ function addLayers(){
   applyLineShown();
   drawRide();
 }
-/* An empty map click is a stop. A click on anything of ours (a pin, a coverage
-   point, a route, a surface stretch) is not: the basemap's own sources are
-   remembered when the style loads (catalog-load.js), and everything else is a feature. */
+/* A click on the map is a stop, also on a line or an area of ours (a route, a surface stretch, traffic; owner
+   2026-10-17: the road under a surface line took no stop), whose own drawer stands aside (plannerTakesLineClick).
+   A click on a point of ours (a pin, a coverage point) is not: that is the place, with its Add to ride. The
+   basemap's own sources are remembered when the style loads (catalog-load.js); everything else is ours. */
+/* Within LINE_HIT_PX of the drawn ride line (route-planner.md section 4.1): the ride's own layers only. */
+const LINE_HIT_PX = 8;
+let overLine = false;
+function onRideLine(pt){
+  if(ride.stops.length < 2 || !lineShown) return false;
+  const layers = ['plan-line', 'plan-casing'].filter(id => map.getLayer(id));
+  if(!layers.length) return false;
+  return map.queryRenderedFeatures([[pt.x - LINE_HIT_PX, pt.y - LINE_HIT_PX], [pt.x + LINE_HIT_PX, pt.y + LINE_HIT_PX]], { layers }).length > 0;
+}
 function hitsFeature(e){
   const baseSources = window.__ccBaseSources;
   if(!baseSources) return false;
-  return map.queryRenderedFeatures(e.point).some(f => f.source && !baseSources.has(f.source) && f.source !== 'plan' && f.source !== 'plan-straight');
+  return map.queryRenderedFeatures(e.point).some(f => f.source && !baseSources.has(f.source) && f.source !== 'plan' && f.source !== 'plan-straight' && !isLineOrArea(f));
 }
 function renderBar(){
   const bar = $('planBar'); if(!bar) return;

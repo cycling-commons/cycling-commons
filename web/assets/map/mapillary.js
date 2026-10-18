@@ -4,6 +4,7 @@
    on a real token so init can be called unconditionally. */
 import { map } from './map-init.js';
 import { I18N } from './i18n.js';
+import { plannerTakesLineClick } from './plan-state.js';
 
 const MAPILLARY_TOKEN = window.MAPILLARY_TOKEN || 'MLY|PASTE_TOKEN_HERE';
 export const MLY_ENABLED = /^MLY\|/.test(MAPILLARY_TOKEN) && !/PASTE_TOKEN_HERE/.test(MAPILLARY_TOKEN);
@@ -29,7 +30,7 @@ export function addMapillary(){
       'circle-radius':['interpolate',['linear'],['zoom'],13,2,16,4,19,6]}});
   // Click a dot or coverage line → nearest image id from the tiles (no Graph API).
   map.on('click','mly-img',e=>openMapillaryAtPoint(e.point));
-  map.on('click','mly-cov',e=>openMapillaryAtPoint(e.point));
+  map.on('click','mly-cov',e=>{ if(plannerTakesLineClick(e)) return; openMapillaryAtPoint(e.point); });
   ['mly-img','mly-cov'].forEach(id=>{
     map.on('mouseenter',id,()=>{ if(mlyOn) map.getCanvas().style.cursor='pointer'; });
     map.on('mouseleave',id,()=>{ map.getCanvas().style.cursor=''; });

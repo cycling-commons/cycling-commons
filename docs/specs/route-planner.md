@@ -133,7 +133,12 @@ shows, which is the point.
 tells every panel change on the document as `cc:panel`; `plan-state.js` is
 the leaf that says whether a ride is being planned (the panel open, or a
 stop on the map), which `scope-ui.js` reads so a map click while planning is
-a stop and never a scope change. `plan.js` owns the DOM and the map:
+a stop and never a scope change. A click on a line or an area of ours (a
+route, a surface stretch, traffic, street-view coverage) is a stop too: its
+own drawer stands aside (`plannerTakesLineClick()` in every such handler),
+and only a point of ours (a pin, a coverage point) is a click on that place,
+with its Add to ride (owner 2026-10-17: the road under a surface line took no
+stop; `tests/js/plan-line-clicks.test.mjs`). `plan.js` owns the DOM and the map:
 `plan-model.js` is the pure model (stops and legs, where a place goes, the
 figures, the profile bins, the GPX), tested under node
 (`tests/js/plan-model.test.mjs`); `tests/js/plan-wiring.test.cjs` and

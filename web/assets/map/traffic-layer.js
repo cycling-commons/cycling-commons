@@ -7,6 +7,7 @@ import { map } from './map-init.js';
 import { D, tpl } from './i18n.js';
 import { familyConfigured, mountInView } from './tile-sources.js';
 import { colourFor, perWay } from '../lib/traffic-colours.js';
+import { plannerTakesLineClick } from './plan-state.js';
 
 const el = id => document.getElementById(id);
 const t = (k, fallback) => (D && D[k]) || fallback;
@@ -75,6 +76,7 @@ function applyStates() {
 }
 
 function onClick(e) {
+  if (plannerTakesLineClick(e)) return;
   const f = e.features && e.features[0];
   const entry = f && byWay.get(f.id);
   if (!entry) return;

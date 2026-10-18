@@ -16,6 +16,7 @@ import { openDrawer, planPlace } from './drawer.js';
 import { NO_VALIDATE } from './tile-sources.js';
 import { attrMatch, narrowingCount, climbChipsMatch, modeShows, placeKey, createShownAnyway } from './filters.js';
 import { fanPin, fanOffsetOf, scheduleFanOut } from './pin-fan.js';
+import { plannerTakesLineClick } from './plan-state.js';
 
 export const PREFS = window.CC_PREFS || {bikes: [], styles: []};
 
@@ -75,7 +76,7 @@ export const layerTarget=new Map();     // layer id -> {layer, f}
 const boundHandlers=new Map();          // layer id -> [[event, fn], …]
 function bindLayer(id){
   if(boundLayerIds.has(id)) return;
-  const onClick=()=>{ const t=layerTarget.get(id); if(t) openDrawer(t.layer, t.f); };
+  const onClick=e=>{ if(plannerTakesLineClick(e)) return; const t=layerTarget.get(id); if(t) openDrawer(t.layer, t.f); };
   const onEnter=()=>map.getCanvas().style.cursor='pointer';
   const onLeave=()=>map.getCanvas().style.cursor='';
   map.on('click',id,onClick);
@@ -317,7 +318,7 @@ export function renderSurfaceLayer(layer, visible){
     map.addLayer({id,type:'line',source:'surface-src',
       filter:['==',['get','cls'],cls],
       layout:{'line-cap':st.cap||'round','line-join':'round'},paint});
-    map.on('click',id,e=>{ const f=featAt(e); if(f) openDrawer(layer,f); });
+    map.on('click',id,e=>{ if(plannerTakesLineClick(e)) return; const f=featAt(e); if(f) openDrawer(layer,f); });
     map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
     map.on('mousemove',id,e=>{ const f=featAt(e); if(f) showTip(f.headline||featureSummary(f,D)||f.name, e.lngLat); });   
     map.on('mouseleave',id,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
