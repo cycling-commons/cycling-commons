@@ -1,0 +1,48 @@
+web/translations/privacy.es.yaml
+  s_123df5f50d8dd2::t_5d137442a55bd3 111
+  s_123df5f50d8dd2::t_137de0a9a51afd 107
+web/assets/map/scope.js
+  s_123df5f50d8dd2::t_8491c58dbc434d 625-630
+web/tests/js/scope.test.cjs
+  s_123df5f50d8dd2::t_59c10e059dbee1 346-347,351-356
+web/translations/privacy.fr.yaml
+  s_123df5f50d8dd2::t_137de0a9a51afd 107
+  s_123df5f50d8dd2::t_5d137442a55bd3 111
+docs/specs/privacy-notice.md
+  s_123df5f50d8dd2::t_ab9d559d18ea71 78
+docs/specs/route-planner.md
+  s_f2df2a2aa8a918::t_c186eaa1beff7b 780-782
+web/translations/privacy.nl.yaml
+  s_123df5f50d8dd2::t_5d137442a55bd3 111
+  s_123df5f50d8dd2::t_137de0a9a51afd 107
+web/translations/privacy.de.yaml
+  s_123df5f50d8dd2::t_137de0a9a51afd 107
+  s_123df5f50d8dd2::t_5d137442a55bd3 111
+web/translations/privacy.en.yaml
+  s_123df5f50d8dd2::t_5d137442a55bd3 111
+  s_123df5f50d8dd2::t_137de0a9a51afd 107
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7970c8e4a237e0806d3983565ad30c4467e7bbef",
+  "prompts": {},
+  "sessions": {
+    "s_123df5f50d8dd2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "85fbaa43-da21-4c2f-b88d-163d1042aba8",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f2df2a2aa8a918": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed0d77c5-c8d0-43ea-9923-231bd4b99809",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
