@@ -1276,7 +1276,7 @@ This section owns region scoping: the Search & region panel's Region group
   inside no candidate polygon it falls back to nearest-centre.
 - **Three-tier region spotlight.** For a single named-region scope,
   the active region's border-neighbours (`region.adj`) render at a **middle** dim
-  tone — lighter than the fully-outside world (`0.13` vs `0.22`), darker than the
+  tone — lighter than the fully-outside world (`0.08` vs `0.15`, a warm dark `#2A2614`; owner 2026-10-19: "Make these areas a bit less gray", `MASK_COLOUR` in `spotlight.js`), darker than the
   clear active region — each **individually** outlined with a fainter dashed line
   than the active region's. Dark-mask holes come from the dissolved
   `ST_Union(active + adj)` (`/map/scope/boundary?rids=<active,adj>`, one clean
@@ -1626,6 +1626,44 @@ layer below stays either way; map presets do not hold this switch yet. It
 runs again on every `styledata`, so a
 reloaded style cannot bring the roads back; a layer already faded is skipped,
 so the run fires no further style change. Shields and names stay.
+
+**Cycle paths, drawn clearly** (owner 2026-10-18: with the road beside it
+faded, the separate cycle path was lost; liberty draws a path as faint white
+dashes). `addCycleways()` adds one line layer of ours, `cc-cycleways`, on the
+basemap's own tiles under its first label layer: a `path` the tiles call a
+`cycleway` or mark `bicycle=designated`, green (#2E7D5B), from zoom 12, a
+little wider as the map zooms in. It is added again after a style change, and
+Road mode hides it with the rest of the basemap.
+
+**Moss greens** (owner 2026-10-19: "the green in our map needs to be a bit
+warmer", then "Green must be deeper a bit more mossy", then "add a bit more
+warmth to it"). Liberty's grass, wood and park fills turn towards yellow and
+get darker and less saturated, hue about 98 to 72-75 (`WARM_GREENS`,
+`warmGreens()` in `map-init.js`): grass `rgb(156,174,102)`, wood
+`hsla(73,38%,52%,0.7)`, park `#ccd6a4`, each with liberty's own opacity. Set after every style change with the small roads
+below, and only where the colour differs.
+
+**Small roads seen from zoom 12** (owner 2026-10-18: "what I like about
+OSM's cycle map is that you can see all roads at lower zoom levels, because
+all roads are white"; tracks and service roads keep liberty's own drawing,
+as the surfaces show them). The OpenFreeMap tiles carry the small roads
+(`minor`) from zoom 12 (measured on a tile between Vielsalm and Petit-Thier:
+28 km of small roads at zoom 12, none at 11), and liberty draws their white
+only from zoom 13.5. `showSmallRoads()` in `map-init.js` sets liberty's two
+small-road layers wider from zoom 12 (`SMALL_ROADS`: 1.2 px white in a
+2.4 px edge at 12, 2 px in 3.4 px at 13), the edge a shade darker
+(`SMALL_ROAD_EDGE`, #bcb7ad) so white reads on the light ground, its
+opacity a zoom expression (0 at 11.5, 1 at 12): a plain number is what
+`fadeHighways()` rewrites, and the two undid each other on every style
+change, so the map restyled every frame and drew no tile (owner 2026-10-18:
+"drawing Wallonia takes ages"; a test runs both twice). Below
+zoom 12 the tile the map reads holds no small road; reading the zoom-12
+tile there would need a source of smaller tiles, and MapLibre 6 refuses a
+vector source of other than 512 px tiles (owner 2026-10-18 asked for 11.5;
+it crashed the map). Forest tracks are in the tiles mostly from zoom 14
+(13 km at 12, about 77 km over the same ground at 14) and stay liberty's.
+Each property is set only when it differs, before the fade, on boot and
+after every style change. Always on, with no switch (owner 2026-10-18).
 
 **Basemap furniture.** The liberty style's four POI layers ask
 the OpenFreeMap sprite for an image named after each point's OSM class, and

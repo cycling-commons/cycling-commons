@@ -95,12 +95,61 @@ export function fadeHighways(){
   }
   return n;
 }
+/* Cycle paths drawn clearly (map-and-search.md section 4.1, owner 2026-10-18: with the road beside it faded, the
+   separate cycle path was lost; liberty draws a path as faint white dashes). One line layer of ours on the basemap's
+   own tiles, under its labels: a path the tiles call a cycleway, or mark bicycle=designated, in green from zoom 12. */
+export const CYCLEWAY_LAYER = 'cc-cycleways';
+export const CYCLEWAY_FILTER = ['all', ['==', ['get', 'class'], 'path'], ['any', ['==', ['get', 'subclass'], 'cycleway'], ['==', ['get', 'bicycle'], 'designated']]];
+export function addCycleways(){
+  if(map.getLayer(CYCLEWAY_LAYER) || !map.getSource('openmaptiles')) return false;
+  const ids = typeof map.getLayersOrder === 'function' ? map.getLayersOrder() : ((map.getStyle() || {}).layers || []).map(l => l.id);
+  const before = ids.find(id => { const l = map.getLayer(id); return l && l.type === 'symbol' && l.source === 'openmaptiles'; });
+  map.addLayer({ id: CYCLEWAY_LAYER, type: 'line', source: 'openmaptiles', 'source-layer': 'transportation', minzoom: 12, filter: CYCLEWAY_FILTER,
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': '#2E7D5B', 'line-opacity': 0.9, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1, 15, 2.2, 18, 4] } }, before);
+  return true;
+}
+/* Small roads seen from zoom 12, white with a grey edge (map-and-search.md section 4.1, owner 2026-10-18: "what I like
+   about OSM's cycle map is that you can see all roads at lower zoom levels, because all roads are white"; tracks and
+   service roads stay liberty's, the surfaces show those). The tiles carry the small roads (`minor`) from zoom 12, and
+   liberty draws their white only from 13.5: its two layers are set wider from 12. Each property is set only when it
+   differs, so a run after a style change sets nothing again. */
+export const SMALL_ROAD_EDGE = '#bcb7ad';
+const exp = stops => ['interpolate', ['exponential', 1.2], ['zoom'], ...stops];
+export const SMALL_ROADS = {
+  // The edge's opacity a zoom expression, never a plain number: fadeHighways() rewrites a plain number with its own,
+  // and the two would undo each other on every style change (owner 2026-10-18: "drawing Wallonia takes ages").
+  road_minor_casing: { 'line-width': exp([12, 2.4, 13, 3.4, 14, 5, 20, 20]), 'line-color': SMALL_ROAD_EDGE, 'line-opacity': ['interpolate', ['linear'], ['zoom'], 11.5, 0, 12, 1] },
+  road_minor: { 'line-width': exp([12, 1.2, 13, 2, 14, 3, 20, 18]) },
+};
+/* The basemap's greens warmer and deeper, a moss green (map-and-search.md section 4.1, owner 2026-10-19: "the green in
+   our map needs to be a bit warmer", then "Green must be deeper a bit more mossy", then "add a bit more warmth to
+   it"). Liberty's grass, wood and park sit near hue 90 to 98; ours near 72 to 75, darker and less saturated, with
+   their own opacity kept. */
+export const WARM_GREENS = {
+  landcover_grass: { 'fill-color': 'rgb(156,174,102)' },
+  landcover_wood: { 'fill-color': 'hsla(73,38%,52%,0.7)' },
+  park: { 'fill-color': '#ccd6a4' },
+};
+export function showSmallRoads(){ return setPaints(SMALL_ROADS); }
+export function warmGreens(){ return setPaints(WARM_GREENS); }
+function setPaints(table){
+  let n = 0;
+  for(const [id, paint] of Object.entries(table)){
+    if(!map.getLayer(id)) continue;
+    for(const [k, v] of Object.entries(paint)){
+      if(JSON.stringify(map.getPaintProperty(id, k)) === JSON.stringify(v)) continue;
+      map.setPaintProperty(id, k, v); n++;
+    }
+  }
+  return n;
+}
 /* After a style change, once per frame however many changes come in that frame. */
 let fadeQueued = false;
 export function fadeHighwaysSoon(){
   if(fadeQueued) return;
   fadeQueued = true;
-  requestAnimationFrame(() => { fadeQueued = false; fadeHighways(); });
+  requestAnimationFrame(() => { fadeQueued = false; showSmallRoads(); warmGreens(); fadeHighways(); addCycleways(); });
 }
 
 /** Attribution, navigation, Locate me and the live zoom readout.

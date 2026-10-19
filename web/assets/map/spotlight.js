@@ -52,6 +52,12 @@ export function setSpotlight(slug){
     }).catch(()=>{});   // tier 1 already logged a main-boundary failure; adj/full self-degrade to null
 }
 
+/* The shade over the land outside the scope, and the lighter one over its neighbours (map-and-search.md §4.5;
+   owner 2026-10-19: "Make these areas a bit less gray"): a warm dark tone, thin enough that the moss greens and the
+   fields still read under it. */
+export const MASK_COLOUR = '#2A2614';
+export const MASK_OPACITY = 0.15;
+export const ADJ_MASK_OPACITY = 0.08;
 // Dim outside `g` + dashed outline. adjFeatures + fullUnion = three-tier neighbour band.
 function drawSpotlightMask(g, adjFeatures, fullUnion){
   const outerRings = geo => (geo.type==='MultiPolygon' ? geo.coordinates : [geo.coordinates]).map(p=>p[0]);
@@ -65,11 +71,11 @@ function drawSpotlightMask(g, adjFeatures, fullUnion){
   const mask={type:'Feature',geometry:{type:'Polygon',coordinates:[world,...outerRings(holeSrc).map(asHole)]}};
   map.addSource('region-mask',{type:'geojson',data:mask});
   map.addSource('region',{type:'geojson',data:{type:'Feature',geometry:g}});
-  map.addLayer({id:'region-mask',type:'fill',source:'region-mask',paint:{'fill-color':'#101E16','fill-opacity':0.22}});
+  map.addLayer({id:'region-mask',type:'fill',source:'region-mask',paint:{'fill-color':MASK_COLOUR,'fill-opacity':MASK_OPACITY}});
   // Middle tone over neighbours only (gated on fullUnion so they are holes, not double-dark).
   if(adjFeatures && adjFeatures.length && fullUnion){
     map.addSource('region-adj-mask',{type:'geojson',data:{type:'FeatureCollection',features:adjFeatures}});
-    map.addLayer({id:'region-adj-mask',type:'fill',source:'region-adj-mask',paint:{'fill-color':'#101E16','fill-opacity':0.13}});
+    map.addLayer({id:'region-adj-mask',type:'fill',source:'region-adj-mask',paint:{'fill-color':MASK_COLOUR,'fill-opacity':ADJ_MASK_OPACITY}});
     map.addLayer({id:'region-adj-line',type:'line',source:'region-adj-mask',paint:{'line-color':'#C8923A','line-width':1.5,'line-dasharray':[2,1.5],'line-opacity':0.7}});
   }
   map.addLayer({id:'region-line',type:'line',source:'region',paint:{'line-color':'#C8923A','line-width':2.5,'line-dasharray':[2,1.4],'line-opacity':0.95}});
@@ -103,6 +109,6 @@ export function setCircleSpotlight(center, rkm){
   const mask={type:'Feature',geometry:{type:'Polygon',coordinates:[world, ring]}};   // world minus the circle = the dimmed outside
   map.addSource('region-mask',{type:'geojson',data:mask});
   map.addSource('region',{type:'geojson',data:{type:'Feature',geometry:{type:'Polygon',coordinates:[ring]}}});
-  map.addLayer({id:'region-mask',type:'fill',source:'region-mask',paint:{'fill-color':'#101E16','fill-opacity':0.22}});
+  map.addLayer({id:'region-mask',type:'fill',source:'region-mask',paint:{'fill-color':MASK_COLOUR,'fill-opacity':MASK_OPACITY}});
   map.addLayer({id:'region-line',type:'line',source:'region',paint:{'line-color':'#C8923A','line-width':2.5,'line-blur':3,'line-opacity':0.95}});
 }
