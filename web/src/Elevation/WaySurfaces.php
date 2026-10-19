@@ -34,7 +34,7 @@ final class WaySurfaces implements RecordedWays
      * @param list<int> $wayIds the leg's ways, from the engine's `edge.way_id`
      *
      * @return array<int, array{surface: string|null, smoothness: string|null, tracktype: string|null}>|null by way id; a
-     *                                                                                                         way with nothing recorded is absent
+     *                                                                                                       way with nothing recorded is absent
      */
     #[\Override]
     public function forLeg(float $lat, float $lng, array $wayIds): ?array

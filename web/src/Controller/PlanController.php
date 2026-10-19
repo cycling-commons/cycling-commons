@@ -296,7 +296,7 @@ final class PlanController extends AbstractController
         // ride took the other way, a road missing from the map), gives way to the file's own line: the file is where
         // the rider went (owner 2026-10-18: a 7.2 km leg near Houffalize matched 0.8 km).
         $legs = [];
-        foreach ($snapper->matchMany($pieces, $bike) as $i => $m) {
+        foreach ($snapper->matchMany($pieces) as $i => $m) {
             $line = array_map(static fn (array $p): array => [$p[1], $p[0]], $pieces[$i]);
             $lengthM = self::lengthM($pieces[$i]);
             $whole = null !== $m && \count($m['coordinates']) > 1

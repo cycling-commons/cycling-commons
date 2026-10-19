@@ -18,6 +18,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * a service road, a drive-through, an alley, emergency access) wins, and for a road bike
  * not a track or a path either. Null when the engine is off, does not answer, or nothing
  * fits within RADIUS_M (500 m, owner 2026-10-18): the point then stays where the rider put it. Nothing is kept.
+ *
+ * @api
  */
 final class PointSnapper
 {

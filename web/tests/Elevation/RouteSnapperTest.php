@@ -123,7 +123,7 @@ final class RouteSnapperTest extends TestCase
         $snapper = new RouteSnapper($http, new NullLogger(), 'http://valhalla.test');
         $long = array_map(static fn (int $i): array => [50.0 + $i * 1e-5, 5.0], range(0, 4999));
 
-        $out = $snapper->matchMany([[[50.0, 5.0], [50.002, 5.002]], $long], BikeType::Road);
+        $out = $snapper->matchMany([[[50.0, 5.0], [50.002, 5.002]], $long]);
 
         self::assertCount(2, $out);
         self::assertSame(300.0, $out[0]['distanceM'] ?? null);

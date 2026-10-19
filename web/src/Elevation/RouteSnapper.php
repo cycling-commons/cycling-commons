@@ -83,9 +83,9 @@ final class RouteSnapper
      *
      * @return list<array{coordinates: list<array{0: float, 1: float}>, distanceM: float}|null>
      */
-    public function matchMany(array $pieces, ?BikeType $bike = null): array
+    public function matchMany(array $pieces): array
     {
-        $pending = array_map(fn (array $piece): ?ResponseInterface => $this->matchRequest($piece, $bike), $pieces);
+        $pending = array_map(fn (array $piece): ?ResponseInterface => $this->matchRequest($piece), $pieces);
 
         return array_map(fn (?ResponseInterface $res): ?array => null === $res ? null : $this->snapResult($res), $pending);
     }
@@ -93,7 +93,7 @@ final class RouteSnapper
     /**
      * @param list<array{0: float, 1: float}> $piece
      */
-    private function matchRequest(array $piece, ?BikeType $bike): ?ResponseInterface
+    private function matchRequest(array $piece): ?ResponseInterface
     {
         if ('' === $this->valhallaUrl || \count($piece) < 2) {
             return null;
