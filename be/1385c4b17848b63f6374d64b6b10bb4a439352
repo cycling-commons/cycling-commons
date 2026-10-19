@@ -1,0 +1,28 @@
+web/tests/js/ride-scope.test.mjs
+  s_266155a992380b::t_a88f3ddc7e7e76 10,46-49,51-62
+web/assets/map/plan.js
+  s_266155a992380b::t_5f20aa0a7dc2a1 231
+  s_266155a992380b::t_1f185354c80bbc 229-230
+  s_266155a992380b::t_1de4c72b60d1d2 232
+web/assets/map/ride-scope.js
+  s_266155a992380b::t_5f20aa0a7dc2a1 31-34,36-40
+web/tests/js/plan-wiring.test.cjs
+  s_266155a992380b::t_efef523b7864f8 577-580,582-584,623,626-629
+  s_266155a992380b::t_116697407fb946 630
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "be1385c4b17848b63f6374d64b6b10bb4a439352",
+  "prompts": {},
+  "sessions": {
+    "s_266155a992380b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d6d2a9c8-dd96-48df-be16-07f9aa0ce892",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
