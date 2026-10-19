@@ -969,8 +969,8 @@ resistance; the graphic shows them as the surface bar's parts.
 **The engine guesses where OpenStreetMap is silent** (owner 2026-10-15,
 measured on a leg through Chevrouheid: four roads with no `surface` tag the
 engine called asphalt and dirt, 2.15 km the map draws as "surface not
-recorded"). Until the server knows (the to-do below), the browser reads the
-map's own surface lines where they are drawn: every 50 m of a leg, the
+recorded"). Where the server cannot read the recorded surfaces (below), the
+browser reads the map's own surface lines where they are drawn: every 50 m of a leg, the
 point is looked up among the drawn surface layers (`surftile-*` for a
 recorded class, `surftodo-*` for none recorded), and the class found there
 replaces the engine's word for that stretch (`tileSurfaceClass()`,
@@ -1131,6 +1131,30 @@ the base layout, removes the two keys and then the mark; the display and map
 preferences stay. A fragment never reaches a server, so the mark is in no
 log. This answers a shared computer: the next person finds an empty
 planner. The privacy notice's local storage paragraph says so.
+
+**The routed legs are kept too** (owner 2026-10-18: a reopened ride of 15
+checkpoints spent 19 of a visitor's 100 legs a day, every time; "a couple of
+megabytes is not a problem"). `leg-store.js` keeps every routed leg of the
+ride in the browser's own database (IndexedDB `cc-plan`, store `legs`, keyed
+as the leg cache: both ends and the bike): the line, the length, the heights,
+the surfaces, the streets, the road detail (`recorded`, `quality`,
+`speeds`, `detailRuns`, section 4.4a) and the repeat check's verdict (`otherWay`,
+`repeatChecked`), stamped with the time it was last part of a routed ride
+(`finishRouting()` calls `keepLegs()`). Before it asks our server,
+`routeAll()` takes the legs it has not in memory from there
+(`storedLegs()`), so a reopened ride, an undo to an earlier ride or a bike
+switched back routes nothing: no `legs`, no `detours`. A kept leg without
+`detailRuns` is from before the server sent the road detail and where it
+lies, and is asked again (`keptLegUsable()`; owner 2026-10-19: "where do I
+see the data?", a ride kept the night before showed none of it). A kept leg goes seven
+days after it was last part of a ride (`workFresh()`, as the draft), and at
+most 500 are kept (`KEEP_LEGS`, about ten rides of fifty legs, some ten
+megabytes), the oldest forgotten first. Not in local storage: fifty legs with
+their lines, heights and surfaces are a few megabytes, past what local
+storage holds for a site. Every call fails quiet: without the database (a
+private window, blocked site data) the planner asks our server as before.
+Signing out deletes the database with the two keys (`signed-out.js`). The
+privacy notice's local storage paragraph names it.
 
 **A kept ride sleeps until the planner opens** (owner 2026-10-17: the map
 page showed the height strip and the ride bar as it opened). The map page

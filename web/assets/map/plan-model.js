@@ -496,6 +496,48 @@ export function surfaceMix(legs){
   return mix;
 }
 
+/** OpenStreetMap's smoothness in the five words the contribute form offers (surface-tiles.js SM_LABEL), best first. */
+export const SMOOTH_WORD = { excellent: 'excellent', good: 'good', intermediate: 'intermediate', bad: 'bad', very_bad: 'very_bad', horrible: 'very_bad', very_horrible: 'very_bad', impassable: 'very_bad' };
+const SMOOTH_ORDER = ['excellent', 'good', 'intermediate', 'bad', 'very_bad'];
+/** What OpenStreetMap records along the ride (route-planner.md section 4.4a): metres per smoothness word, per track
+    grade and per speed limit in km/h, each as [key, metres] in reading order; the speed limits slowest first and the
+    metres with none set ("unset") last. A leg without the fields adds nothing. */
+export function roadDetail(legs){
+  const sm = {}, tt = {}, sp = {};
+  const add = (into, k, m) => { if(Number.isFinite(m) && m > 0) into[k] = (into[k] || 0) + m; };
+  for(const leg of legs){
+    if(!leg || !leg.routed) continue;
+    const q = leg.quality || {};
+    for(const [k, m] of Object.entries(q.smoothness || {})) if(SMOOTH_WORD[k]) add(sm, SMOOTH_WORD[k], m);
+    for(const [k, m] of Object.entries(q.tracktype || {})) if(/^grade[1-5]$/.test(k)) add(tt, k, m);
+    for(const [k, m] of Object.entries(leg.speeds || {})) if(k === 'unset' || /^\d+$/.test(k)) add(sp, k, m);
+  }
+  const speedKey = k => k === 'unset' ? Infinity : Number(k);
+  return {
+    smoothness: SMOOTH_ORDER.filter(k => sm[k]).map(k => [k, sm[k]]),
+    tracktype: Object.keys(tt).sort().map(k => [k, tt[k]]),
+    speeds: Object.keys(sp).sort((a, b) => speedKey(a) - speedKey(b)).map(k => [k, sp[k]]),
+  };
+}
+
+/** Where one line of the road detail lies along the ride, [from, to] metres (route-planner.md section 4.4a, owner
+    2026-10-19: "I can't hover it"): `kind` is `sm` (smoothness, `value` one of the five words), `tt` (a track grade)
+    or `sp` (a speed limit in km/h, or "unset"), from each leg's `detailRuns`, one leg after the other. */
+export function detailSpans(legs, kind, value){
+  const field = { sm: 'smoothness', tt: 'tracktype', sp: 'speeds' }[kind];
+  const spans = []; let off = 0;
+  for(const leg of legs){
+    if(!leg || !leg.routed) continue;
+    const runs = (leg.detailRuns && leg.detailRuns[field]) || [];
+    for(const [a, b, v] of runs){
+      const word = kind === 'sm' ? SMOOTH_WORD[v] : String(v);
+      if(word === value) spans.push([off + a, off + b]);
+    }
+    off += leg.distM || 0;
+  }
+  return joinSpans(spans, 1);
+}
+
 /** The padding that keeps a fitted ride clear of what covers the map (route-planner.md section 3): `box` is the map's
     rectangle, `covers` the rectangles over it ({left, top, right, bottom}, page pixels), `gap` the margin on every side.
     A cover counts on the edge it touches; one in a corner counts on the edge where it costs the smaller share of the map. */
@@ -522,7 +564,7 @@ export function coverPadding(box, covers, gap){
 }
 
 /* Overlapping or touching stretches, [fromM, toM], as one; short gaps under `joinM` closed. */
-function joinSpans(spans, joinM){
+export function joinSpans(spans, joinM){
   const out = [];
   for(const s of spans.sort((a, b) => a[0] - b[0])){
     const last = out[out.length - 1];

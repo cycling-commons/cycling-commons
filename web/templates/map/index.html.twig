@@ -576,6 +576,8 @@
         <div class="cc-plan-dayfx" id="planDayFx" hidden>
           <div class="cc-plan-dayunit" id="planDayUnit" role="group" aria-label="{{ 'map.plan_unit_aria'|trans }}"><button type="button" data-u="time" class="on">{{ 'map.plan_unit_time'|trans }}</button><button type="button" data-u="dist">{{ 'map.plan_unit_dist'|trans }}</button></div>
           <div class="cc-plan-daybars" id="planDaySvg"></div>
+          {# What OpenStreetMap records along the ride: smoothness, track grade, speed limit (route-planner.md section 4.4a). #}
+          <div class="cc-plan-detail" id="planDetail" hidden></div>
         </div>
         <div class="cc-plan-tougher" id="planTougherGrp" hidden>
           <h4>{{ 'map.plan_tougher_h'|trans }}</h4>

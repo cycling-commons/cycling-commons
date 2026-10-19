@@ -733,6 +733,13 @@ final class MapController extends AbstractController
                 'partDescend' => $t->trans('map.plan_part_descend'),
                 'partFlat' => $t->trans('map.plan_part_flat'),
                 'partUnknown' => $t->trans('map.plan_part_unknown'),
+                // What OpenStreetMap records along the ride (route-planner.md section 4.4a).
+                'detail' => [
+                    'h' => $t->trans('map.plan_detail_h'), 'smooth' => $t->trans('map.plan_detail_smooth'), 'track' => $t->trans('map.plan_detail_track'),
+                    'speed' => $t->trans('map.plan_detail_speed'), 'unset' => $t->trans('map.plan_speed_unset'),
+                    'sm' => ['excellent' => $t->trans('map.plan_sm_excellent'), 'good' => $t->trans('map.plan_sm_good'), 'intermediate' => $t->trans('map.plan_sm_intermediate'), 'bad' => $t->trans('map.plan_sm_bad'), 'very_bad' => $t->trans('map.plan_sm_very_bad')],
+                    'tt' => ['grade1' => $t->trans('map.plan_tt_grade1'), 'grade2' => $t->trans('map.plan_tt_grade2'), 'grade3' => $t->trans('map.plan_tt_grade3'), 'grade4' => $t->trans('map.plan_tt_grade4'), 'grade5' => $t->trans('map.plan_tt_grade5')],
+                ],
                 'roads' => ['road' => $t->trans('map.plan_road_road'), 'track' => $t->trans('map.plan_road_track'), 'path' => $t->trans('map.plan_road_path'), 'cycleway' => $t->trans('map.plan_road_cycleway')],
                 'stopsShow' => $t->trans('map.plan_stops_show'), 'stopsHide' => $t->trans('map.plan_stops_hide'), 'stopsSum' => $t->trans('map.plan_stops_sum'),
                 'underMin' => $t->trans('map.plan_under_min'),

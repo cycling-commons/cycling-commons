@@ -63,7 +63,7 @@ async function routeLeg(a, b, bike, shortest){
     const d = await r.json();
     showLegsLeft(d.budget);
     if(!d.routed) return { routed: false };
-    return { routed: true, line: d.coordinates, distM: d.distanceM, heights: d.heights || null, surfaces: d.surfaces || null, streets: d.streets || null, runs: d.runs || null, busyRuns: d.busyRuns || null };
+    return { routed: true, line: d.coordinates, distM: d.distanceM, heights: d.heights || null, surfaces: d.surfaces || null, streets: d.streets || null, runs: d.runs || null, busyRuns: d.busyRuns || null, recorded: !!d.recorded, quality: d.quality || null, speeds: d.speeds || null, detailRuns: d.detailRuns || null };
   } catch(e){ return { routed: false, down: true }; }
 }
 /* How far the along list looks (route-planner.md section 5): 250 m unless the rider picks more, kept with the draft.
@@ -76,6 +76,97 @@ function fillAlongReach(){
   const sel = $('planAlongR'); if(!sel) return;
   sel.innerHTML = ALONG_STEPS.map(m => `<option value="${m}">${escPend(tpl(P().within || 'within {d}', { d: reachText(m) }))}</option>`).join('');
   sel.value = String(alongM);
+}
+/* The legs of a stretch of the ride in one request (route-planner.md section 8, owner 2026-10-18: a reopened ride
+   asked its legs one after another). Null when the server routes the stretch not whole: the planner then asks leg by
+   leg; `{ limited: true }` when the day's legs are spent. */
+async function routeLegs(stops, bike){
+  if(!CC_PLAN.legs) return null;
+  try {
+    const r = await fetch(CC_PLAN.legs, { method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CC-Token': CC_PLAN.legToken || '' },
+      body: JSON.stringify({ stops: stops.map(s => [s.lng, s.lat]), bike }) });
+    if(r.status === 429) return await spent(r);
+    if(!r.ok) return null;
+    const d = await r.json();
+    showLegsLeft(d.budget);
+    if(!Array.isArray(d.legs) || d.legs.length !== stops.length - 1) return null;
+    return d.legs.map(legFrom);
+  } catch(e){ return null; }
+}
+/* Legs asked alone, each with its own roads to keep off, in one request (the repeat check, route-planner.md section
+   4.2). One answer per ask, in order; null when the request fails, `{ limited: true }` when the legs are spent. */
+async function routeDetours(asks, bike){
+  if(!CC_PLAN.detours) return null;
+  try {
+    const r = await fetch(CC_PLAN.detours, { method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CC-Token': CC_PLAN.legToken || '' },
+      body: JSON.stringify({ bike, legs: asks.map(q => ({ a: [q.a.lng, q.a.lat], b: [q.b.lng, q.b.lat], avoid: q.avoid })) }) });
+    if(r.status === 429) return await spent(r);
+    if(!r.ok) return null;
+    const d = await r.json();
+    showLegsLeft(d.budget);
+    if(!Array.isArray(d.legs) || d.legs.length !== asks.length) return null;
+    return d.legs.map(l => l && l.routed ? legFrom(l) : { routed: false });
+  } catch(e){ return null; }
+}
+function legFrom(l){
+  return { routed: true, line: l.coordinates, distM: l.distanceM, heights: l.heights || null, surfaces: l.surfaces || null, streets: l.streets || null, runs: l.runs || null, busyRuns: l.busyRuns || null, recorded: !!l.recorded, quality: l.quality || null, speeds: l.speeds || null, detailRuns: l.detailRuns || null, ...(l.fromFile ? { fromFile: true, matched: !!l.matched } : {}) };
+}
+/* A ride file's legs on the file's own roads (route-planner.md section 6.1, owner 2026-10-18): its track cut at the
+   checkpoints, one piece per leg, matched to the roads in one request. One leg per piece, in order; null when the
+   request fails, and the planner then routes the legs; `{ limited: true }` when the legs are spent. */
+async function routeMatch(pieces, bike){
+  if(!CC_PLAN.match) return null;
+  try {
+    const r = await fetch(CC_PLAN.match, { method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CC-Token': CC_PLAN.legToken || '' },
+      body: JSON.stringify({ bike, legs: pieces }) });
+    if(r.status === 429) return await spent(r);
+    if(!r.ok) return null;
+    const d = await r.json();
+    showLegsLeft(d.budget);
+    if(!Array.isArray(d.legs) || d.legs.length !== pieces.length) return null;
+    return d.legs.map(l => l && l.routed ? legFrom(l) : null);
+  } catch(e){ return null; }
+}
+/* The legs a ride file gave, by their two stops whatever the bike (stopKey|stopKey): a bike chosen after the file
+   opened keeps the file's roads, as the file says where the rider goes. */
+const fileLegs = new Map();
+const fileLegKey = (a, b) => stopKey(a) + '|' + stopKey(b);
+/* The legs' budget is spent: a visitor's for the day, a rider's for a few minutes (the server's `until`). */
+async function spent(r){
+  let until = '';
+  try { const d = await r.json(); until = d.until || ''; showLegsLeft(d.budget); } catch(e){ /* no body: the short wait */ }
+  return { limited: true, tomorrow: until === 'tomorrow' };
+}
+/* The legs left to plan, under the status line, always (owner 2026-10-18): from every leg answer, and asked when the
+   panel opens, which spends none. A visitor's are the day's, a rider's those of the next ten minutes. */
+function showLegsLeft(b){
+  const el = $('planLegsLeft');
+  if(!el || !b || !Number.isFinite(b.left) || !Number.isFinite(b.limit)) return;
+  el.textContent = tpl(b.per === 'day' ? (P().legsLeftDay || '{n} of {max} legs left today') : (P().legsLeftWindow || '{n} of {max} legs left for the next 10 minutes'), { n: b.left, max: b.limit });
+  el.hidden = false;
+}
+let budgetAskedAt = 0;
+async function askLegsLeft(){
+  if(!CC_PLAN.budget || Date.now() - budgetAskedAt < 60000) return;
+  budgetAskedAt = Date.now();
+  try {
+    const r = await fetch(CC_PLAN.budget, { method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CC-Token': CC_PLAN.legToken || '' }, body: '{}' });
+    if(r.ok) showLegsLeft((await r.json()).budget);
+  } catch(e){ /* the line waits for the next leg */ }
+}
+/* The legs to route as runs of neighbours, [first, last] leg index, none ridden the shortest way (that leg asks alone). */
+function legRuns(idx){
+  const runs = [];
+  for(const i of idx){
+    if(ride.stops[i + 1] && ride.stops[i + 1].way === 'shortest') continue;
+    const last = runs[runs.length - 1];
+    if(last && last[1] === i - 1) last[1] = i; else runs.push([i, i]);
+  }
+  return runs.filter(([a, b]) => b > a);
 }
 /* A map point onto the road a bike would take there (route-planner.md section 4.1, owner 2026-10-18: a checkpoint in a
    field routed up a farm's driveway). The point as it was when the server cannot say. */
@@ -603,8 +694,9 @@ function tileMetres(leg){
   for(const cls of seen.values()) out[cls] = (out[cls] || 0) + SAMPLE_M;
   return out;
 }
-/* The legs the day's figures read: each with its surfaces corrected by the map's lines where seen. */
-function dayLegs(){ return ride.legs.map(leg => leg && leg.routed ? { ...leg, surfaces: mergeSurfaces(leg.surfaces, tileMetres(leg), leg.distM) } : leg); }
+/* The legs the day's figures read: a leg the server read from the recorded surfaces as it is (section 4.4a), any other
+   with its surfaces corrected by the map's lines where seen. */
+function dayLegs(){ return ride.legs.map(leg => leg && leg.routed && !leg.recorded ? { ...leg, surfaces: mergeSurfaces(leg.surfaces, tileMetres(leg), leg.distM) } : leg); }
 let tileTimer = null;
 function scheduleTileRead(){ clearTimeout(tileTimer); tileTimer = setTimeout(() => { if(!asleep && ride.stops.length >= 2 && readTileSurfaces()){ renderFigures(); renderBar(); } }, 400); }
 /* The surface parts wear the map's own line colours (SurfaceVocabulary::LINE_COLOUR, the one palette), so "surface not
@@ -656,7 +748,8 @@ function partSpans(cls){
   if(cls === 'all') return [[0, figures(ride.legs).distM]];
   const tough = toughSpans(cls); if(tough) return tough;
   if(cls.startsWith('wind-')){ const fc = forecast && rideHours(forecast, startMin(), (rideTime(dayLegs(), ride.bike) || {}).seconds); return fc ? windSpans(ride.legs, fc.windFromDeg, cls.slice(5)) : []; }
-  if(SURF_PARTS.has(cls)) return surfaceSpans(ride.legs, cls, leg => tileSeen.get(leg.key), SAMPLE_M);
+  if(/^(sm|tt|sp):/.test(cls)) return detailSpans(ride.legs, cls.slice(0, 2), cls.slice(3));
+  if(SURF_PARTS.has(cls)) return surfaceSpans(ride.legs, cls, leg => leg.recorded ? null : tileSeen.get(leg.key), SAMPLE_M);
   return gradientSpans(ride.legs, cls);
 }
 /* The wind's direction drawn along the ride (owner 2026-10-17): arrows where the wind blows, about every 1.5 km, from
@@ -739,8 +832,28 @@ function wirePartHover(root){
   root.addEventListener('mouseout', off); root.addEventListener('focusout', off);
 }
 let dayUnit = 'time';
+/* What OpenStreetMap records along the ride (route-planner.md section 4.4a, owner 2026-10-19): the smoothness, the
+   tracks by grade and the speed limits, in distance, each line only where something is recorded. Each line lights
+   its stretches on the map when pointed at or focused, as the surface lines do (`sm:good`, `tt:grade3`, `sp:50`). */
+function speedText(k){
+  const t = P().detail || {};
+  if(k === 'unset') return t.unset || 'no limit recorded';
+  return uDistUnit() === 'mi' ? Math.round(Number(k) / 1.609344 / 5) * 5 + ' mph' : k + ' km/h';
+}
+function renderDetail(){
+  const host = $('planDetail'); if(!host) return;
+  const t = P().detail || {}, d = roadDetail(ride.legs);
+  const row = (kind, head, rows, label) => rows.length ? `<h5>${escPend(head)}</h5><ul class="cc-plan-daylegend">${rows.map(([k, m]) => `<li data-part="${kind}:${k}" tabindex="0">${escPend(label(k))} · ${escPend(partDist(m))}</li>`).join('')}</ul>` : '';
+  const speeds = d.speeds.some(([k]) => k !== 'unset') ? d.speeds : [];
+  const html = row('sm', t.smooth || 'Smoothness', d.smoothness, k => (t.sm || {})[k] || k)
+    + row('tt', t.track || 'Tracks', d.tracktype, k => (t.tt || {})[k] || k)
+    + row('sp', t.speed || 'Speed limit', speeds, speedText);
+  host.innerHTML = html ? html + `<p class="cc-plan-detailnote">${escPend(t.h || 'From OpenStreetMap, where it is recorded')}</p>` : '';
+  host.hidden = !html;
+}
 function renderDayGraphic(day){
   const box = $('planDayFx'), host = $('planDaySvg'); if(!box || !host) return;
+  renderDetail();
   const byDist = dayUnit === 'dist';
   const src = day ? (byDist ? day.metres : day.parts) : null;
   const rows = src ? [surfaceBars(src), gradientBars(src)].filter(r => r.length) : [];

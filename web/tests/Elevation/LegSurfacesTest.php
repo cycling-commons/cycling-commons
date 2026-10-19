@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Elevation;
 
 use App\Elevation\LegSurfaces;
+use App\Elevation\RecordedWays;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -23,15 +24,34 @@ final class LegSurfacesTest extends TestCase
     /** @var array<string, mixed> */
     private array $lastBody = [];
 
-    private function client(MockResponse $response, string $url = 'http://valhalla.test'): LegSurfaces
+    /**
+     * @param array<int, array{surface: string|null, smoothness: string|null, tracktype: string|null}>|null $recorded what the table holds, or null for a leg outside a loaded country
+     */
+    private function client(MockResponse $response, string $url = 'http://valhalla.test', ?array $recorded = null, bool $withWays = false): LegSurfaces
     {
+        $ways = $withWays ? new class($recorded) implements RecordedWays {
+            /** @var list<int> */
+            public array $asked = [];
+
+            /** @param array<int, array{surface: string|null, smoothness: string|null, tracktype: string|null}>|null $recorded */
+            public function __construct(private readonly ?array $recorded)
+            {
+            }
+
+            public function forLeg(float $lat, float $lng, array $wayIds): ?array
+            {
+                $this->asked = $wayIds;
+
+                return $this->recorded;
+            }
+        } : null;
         $http = new MockHttpClient(function (string $method, string $u, array $options) use ($response): MockResponse {
             $this->lastBody = json_decode((string) $options['body'], true, 512, \JSON_THROW_ON_ERROR);
 
             return $response;
         });
 
-        return new LegSurfaces($http, new NullLogger(), $url);
+        return new LegSurfaces($http, new NullLogger(), $url, null, $ways);
     }
 
     public function testItFoldsTheEnginesSurfacesIntoPavedGravelRoughAndUnknownMetres(): void
@@ -55,7 +75,7 @@ final class LegSurfacesTest extends TestCase
         $read = $client->read([[50.49, 5.86], [50.47, 5.86]]);
         self::assertNotNull($read);
         self::assertSame([[0, 2000], [3200, 3600]], $read['busyRuns']);
-        self::assertSame(['edge.surface', 'edge.length', 'edge.road_class', 'edge.cycle_lane', 'edge.names', 'edge.use', 'edge.traffic_signal', 'node.traffic_signal'], $this->lastBody['filters']['attributes']);
+        self::assertSame(['edge.surface', 'edge.length', 'edge.road_class', 'edge.cycle_lane', 'edge.names', 'edge.use', 'edge.traffic_signal', 'node.traffic_signal', 'edge.way_id', 'edge.speed_limit'], $this->lastBody['filters']['attributes']);
         // The leg's own line, walked edge by edge, under the bicycle costing.
         self::assertSame('edge_walk', $this->lastBody['shape_match']);
         self::assertSame('bicycle', $this->lastBody['costing']);
