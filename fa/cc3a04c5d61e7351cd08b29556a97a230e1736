@@ -1,0 +1,32 @@
+docs/specs/coverage-provider.md
+  h_fb5318cde6cf17 825-851
+pipeline/contract/coverage-contract.json
+  h_fb5318cde6cf17 475-485
+pipeline/coverage/contract.py
+  h_fb5318cde6cf17 271-278
+pipeline/coverage/run.py
+  h_fb5318cde6cf17 50,351-353,356,483,492,497,520,523,529,536-537,554-558,599-602,674-721
+pipeline/coverage/surface.py
+  h_fb5318cde6cf17 27-32,52,71-73,91-93,156,178-180,197,378,383,387,404-409,415-420,427-430,452
+pipeline/tests/test_contract.py
+  h_fb5318cde6cf17 370-381
+pipeline/tests/test_run_surface.py
+  h_fb5318cde6cf17 48-49,55,60,76,79,96,112,118,127,135,286,291,483,488,520,525,636,640,707,715,877,879-880,888-889,891-892,959-1058
+pipeline/tests/test_surface.py
+  h_fb5318cde6cf17 412-509
+web/config/table_comments.yaml
+  h_fb5318cde6cf17 42-49
+wiki/developers/data-ops/surface-tiles.md
+  h_fb5318cde6cf17 11,14-15,84,95,210-233
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "facc3a04c5d61e7351cd08b29556a97a230e1736",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
