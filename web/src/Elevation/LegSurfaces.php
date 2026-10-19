@@ -97,6 +97,133 @@ final class LegSurfaces
      */
     public function read(array $coords): ?array
     {
+        $res = $this->request($coords);
+
+        return null === $res ? null : $this->result($res, $coords);
+    }
+
+    /** The longest piece of a line the engine is asked to match at once, metres: its trace has a length limit. */
+    private const float PIECE_M = 50000.0;
+
+    /**
+     * A line that is not the engine's own route, a recommended route (route-domain.md §6.4, owner 2026-10-19: "A
+     * recommended route should also have the road 'quality' info"): matched to the roads (`map_snap`) in pieces of at
+     * most PIECE_M that share their joining point, read side by side, and joined, every stretch placed after the
+     * pieces before it. The streets are left out. Null when any piece has no answer.
+     *
+     * @param list<array{0: float, 1: float}> $coords [lat, lng] pairs
+     *
+     * @return array{distanceM: int, surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, signals: int}, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}}|null
+     */
+    public function readLine(array $coords): ?array
+    {
+        $reads = $this->readMany(self::pieces($coords), 'map_snap');
+        if ([] === $reads || \in_array(null, $reads, true)) {
+            return null;
+        }
+        $out = ['distanceM' => 0, 'surfaces' => ['paved' => 0, 'gravel' => 0, 'rough' => 0, 'unknown' => 0, 'busy' => 0, 'cycle' => 0, 'signals' => 0],
+            'runs' => [], 'busyRuns' => [], 'recorded' => false, 'quality' => ['smoothness' => [], 'tracktype' => []], 'speeds' => [],
+            'detailRuns' => ['smoothness' => [], 'tracktype' => [], 'speeds' => []]];
+        /** @var list<array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}}> $reads */
+        foreach ($reads as $read) {
+            $off = $out['distanceM'];
+            foreach ($read['surfaces'] as $k => $m) {
+                $out['surfaces'][$k] += $m;
+            }
+            foreach ($read['runs'] as [$at, $class]) {
+                $last = array_key_last($out['runs']);
+                if (null === $last || $out['runs'][$last][1] !== $class) {
+                    $out['runs'][] = [$off + $at, $class];
+                }
+            }
+            foreach ($read['busyRuns'] as [$from, $to]) {
+                $last = array_key_last($out['busyRuns']);
+                if (null !== $last && $out['busyRuns'][$last][1] >= $off + $from) {
+                    $out['busyRuns'][$last][1] = $off + $to;
+                } else {
+                    $out['busyRuns'][] = [$off + $from, $off + $to];
+                }
+            }
+            foreach (['smoothness', 'tracktype'] as $key) {
+                foreach ($read['quality'][$key] as $v => $m) {
+                    $out['quality'][$key][$v] = ($out['quality'][$key][$v] ?? 0) + $m;
+                }
+            }
+            foreach ($read['speeds'] as $v => $m) {
+                $out['speeds'][$v] = ($out['speeds'][$v] ?? 0) + $m;
+            }
+            foreach ($read['detailRuns'] as $key => $runs) {
+                foreach ($runs as [$from, $to, $v]) {
+                    $last = array_key_last($out['detailRuns'][$key]);
+                    if (null !== $last && $out['detailRuns'][$key][$last][2] === $v && $out['detailRuns'][$key][$last][1] === $off + $from) {
+                        $out['detailRuns'][$key][$last][1] = $off + $to;
+                    } else {
+                        $out['detailRuns'][$key][] = [$off + $from, $off + $to, $v];
+                    }
+                }
+            }
+            $out['recorded'] = $out['recorded'] || $read['recorded'];
+            $out['distanceM'] += $read['surfaces']['paved'] + $read['surfaces']['gravel'] + $read['surfaces']['rough'] + $read['surfaces']['unknown'];
+        }
+        uksort($out['speeds'], static fn (int|string $a, int|string $b): int => ('unset' === $a ? \PHP_INT_MAX : (int) $a) <=> ('unset' === $b ? \PHP_INT_MAX : (int) $b));
+
+        return $out;
+    }
+
+    /**
+     * A line cut into pieces of at most PIECE_M along it, each starting where the one before ends.
+     *
+     * @param list<array{0: float, 1: float}> $coords [lat, lng] pairs
+     *
+     * @return list<list<array{0: float, 1: float}>>
+     */
+    private static function pieces(array $coords): array
+    {
+        $pieces = [];
+        $piece = [];
+        $m = 0.0;
+        foreach ($coords as $i => $c) {
+            if ($i > 0 && [] !== $piece) {
+                $p = $coords[$i - 1];
+                $dy = ($c[0] - $p[0]) * 110540.0;
+                $dx = ($c[1] - $p[1]) * 111320.0 * cos(deg2rad($c[0]));
+                $m += sqrt($dx * $dx + $dy * $dy);
+                if ($m > self::PIECE_M && \count($piece) >= 2) {
+                    $pieces[] = $piece;
+                    $piece = [$p];
+                    $m = sqrt($dx * $dx + $dy * $dy);
+                }
+            }
+            $piece[] = $c;
+        }
+        if (\count($piece) >= 2) {
+            $pieces[] = $piece;
+        }
+
+        return $pieces;
+    }
+
+    /**
+     * Many legs at once (route-planner.md section 8, owner 2026-10-18): every request goes out before the first
+     * answer is read, so the engine walks the legs side by side. One answer per line, in order.
+     *
+     * @param list<list<array{0: float, 1: float}>> $lines      [lat, lng] pairs per leg
+     * @param string                                $shapeMatch `edge_walk` for the engine's own route, `map_snap` for any other line
+     *
+     * @return list<array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}}|null>
+     */
+    public function readMany(array $lines, string $shapeMatch = 'edge_walk'): array
+    {
+        $pending = array_map(fn (array $coords): ?ResponseInterface => $this->request($coords, $shapeMatch), $lines);
+
+        return array_map(fn (?ResponseInterface $res, array $coords): ?array => null === $res ? null : $this->result($res, $coords), $pending, $lines);
+    }
+
+    /**
+     * @param list<array{0: float, 1: float}> $coords
+     */
+    private function request(array $coords, string $shapeMatch = 'edge_walk'): ?ResponseInterface
+    {
         if (\count($coords) < 2 || '' === $this->valhallaUrl) {
             return null;
         }
@@ -107,7 +234,7 @@ final class LegSurfaces
                 'json' => [
                     'shape' => $shape,
                     'costing' => 'bicycle',
-                    'shape_match' => 'edge_walk',
+                    'shape_match' => $shapeMatch,
                     'units' => 'kilometers',
                     // The engine marks a traffic light on the edge that ends at it, now and then on the node itself.
                     'filters' => ['attributes' => ['edge.surface', 'edge.length', 'edge.road_class', 'edge.cycle_lane', 'edge.names', 'edge.use', 'edge.traffic_signal', 'node.traffic_signal', 'edge.way_id', 'edge.speed_limit'], 'action' => 'include'],

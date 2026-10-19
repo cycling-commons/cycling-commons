@@ -5,6 +5,7 @@
    renderers draw it, and its hover ring sits where that pin really is. Nothing
    here draws a pin. */
 import { D, tpl } from './i18n.js';
+import { escPend } from './util.js';
 import { active, mode, layerByKey, CATALOG, LETTER_KEY } from './catalog.js';
 import { openRouteById } from './places.js';
 import { liftModeFor } from './panels.js';
@@ -19,7 +20,7 @@ import { ringOffset, listedPlaceKeys } from './ride-places.js';
 import { routeClimbsHtml } from './route-climbs.js';
 import { alongListHtml, bindAlongMore } from './along-list.js';
 import { layerGlyph } from './icons.js';
-import { uM } from './units.js';
+import { uM, uKm } from './units.js';
 
 /**
  * Open one listed place so the map really draws it, then run `go`. The view
@@ -194,13 +195,21 @@ export function hydrateRouteClimbs(routeId){
    held, the listed pool places stay unclustered, and a place opened from a row
    keeps the route highlighted and offers "‹ route name" back. Letting the
    route go runs releaseRouteList. */
-export function hydrateRouteAlong(routeId){
-  hydrateRouteSlot(routeId, 'cc-d-along-slot', 'along', (slot, d) => {
+/* How far along the route the card looks (owner 2026-10-19: "make that selectable up till 5km like we have in the
+   user route planner"): the planner's steps (PlanController::ALONG_RADII), 250 m on every route the card opens
+   (owner 2026-10-19: "No default always 250 for every new route"). */
+const ROUTE_ALONG_STEPS = [250, 500, 1000, 2000, 5000];
+const reachText = m => m >= 1000 ? uKm(m / 1000, 0) : uM(m);
+export function hydrateRouteAlong(routeId, reach = 250){
+  hydrateRouteSlot(routeId, 'cc-d-along-slot', 'along?r=' + reach, (slot, d) => {
     if(!Array.isArray(d.groups)) return false;
-    const radius = uM(d.radiusM);
+    const radius = reachText(d.radiusM);
+    const within = `<select class="cc-along-r" aria-label="${escPend(tpl(D.alongRouteWithin || 'Within {r} of the route', {r: radius}))}">`
+      + ROUTE_ALONG_STEPS.map(m => `<option value="${m}"${m === d.radiusM ? ' selected' : ''}>${escPend(tpl(D.alongRouteWithin || 'Within {r} of the route', {r: reachText(m)}))}</option>`).join('')
+      + '</select>';
     slot.innerHTML = alongListHtml(d, {metaFor: catalogMeta, labels: {
       commonsH: D.alongRouteH || 'In the commons along the route',
-      within: tpl(D.alongRouteWithin || 'Within {r} of the route', {r: radius}),
+      within,
       coverageH: D.alongRouteCovH || 'Open coverage along the route',
       empty: tpl(D.nothingAlongRoute || 'Nothing in the Commons within {r} of this route yet.', {r: radius}),
       capped: D.capped, kmOff: D.kmOff, covNote: D.covArmNote,
@@ -208,6 +217,12 @@ export function hydrateRouteAlong(routeId){
     }});
     setListedPlaces(listedPlaceKeys(d.groups), 'route');
     bindAlongList(slot, d, {widen: true, beforeOpen: key => setDrawerHop(routeHop(routeId), key)});
+    const pick = slot.querySelector('.cc-along-r');
+    if(pick) pick.addEventListener('change', () => {
+      const v = Number(pick.value); if(!ROUTE_ALONG_STEPS.includes(v)) return;
+      slot.setAttribute('aria-busy', 'true');
+      hydrateRouteAlong(routeId, v);
+    });
     return true;
   });
 }

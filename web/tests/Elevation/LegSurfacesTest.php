@@ -136,4 +136,120 @@ final class LegSurfacesTest extends TestCase
         self::assertContains('edge.names', $this->lastBody['filters']['attributes']);
         self::assertContains('edge.use', $this->lastBody['filters']['attributes']);
     }
+
+    /**
+     * Where OpenStreetMap is silent the engine guesses (owner 2026-10-15, Chevrouheid: roads with no surface tag the
+     * engine called asphalt and dirt). In a country whose ways are loaded the table says what is recorded: a way it
+     * holds with a surface takes that class, a track or an unclassified road it does not hold is not recorded (the
+     * map's to-do lines), and any other road keeps the engine's word, as an untagged street is paved all but always
+     * (a residential road, a footway). The
+     * smoothness and the tracktype come with it, in metres (owner 2026-10-19: "why more detailed surfaces in
+     * bikerouter?").
+     */
+    public function testInALoadedCountryTheRecordedSurfacesStandForTheEnginesGuess(): void
+    {
+        $client = $this->client(new MockResponse((string) json_encode(['units' => 'kilometers', 'edges' => [
+            ['way_id' => 11, 'surface' => 'paved', 'length' => 1.0, 'use' => 'road', 'road_class' => 'tertiary'],
+            ['way_id' => 12, 'surface' => 'paved', 'length' => 0.5, 'use' => 'track', 'road_class' => 'service_other'],
+            ['way_id' => 13, 'surface' => 'paved', 'length' => 0.3, 'use' => 'road', 'road_class' => 'unclassified'],
+            ['way_id' => 16, 'surface' => 'paved', 'length' => 0.25, 'use' => 'road', 'road_class' => 'primary'],
+            ['way_id' => 14, 'surface' => 'dirt', 'length' => 0.2, 'use' => 'footway', 'road_class' => 'service_other'],
+            ['way_id' => 15, 'surface' => 'gravel', 'length' => 0.4, 'use' => 'track', 'road_class' => 'service_other'],
+        ]])), 'http://valhalla.test', [
+            11 => ['surface' => 'paved', 'smoothness' => 'good', 'tracktype' => null],
+            12 => ['surface' => 'pave', 'smoothness' => 'bad', 'tracktype' => null],
+            15 => ['surface' => null, 'smoothness' => null, 'tracktype' => 'grade3'],
+        ], true);
+
+        $read = $client->read([[50.49, 5.86], [50.47, 5.86]]);
+
+        self::assertNotNull($read);
+        self::assertTrue($read['recorded']);
+        // 11 paved; 12 the table's cobbles, rough; 13 not recorded; 16 the engine's paved; 14 the engine's dirt, rough;
+        // 15 a track with no surface tag, not recorded.
+        self::assertSame(['paved' => 1250, 'gravel' => 0, 'rough' => 700, 'unknown' => 700, 'busy' => 250, 'cycle' => 0, 'signals' => 0], $read['surfaces']);
+        self::assertSame([[0, 'paved'], [1000, 'rough'], [1500, 'unknown'], [1800, 'paved'], [2050, 'rough'], [2250, 'unknown']], $read['runs']);
+        self::assertSame(['smoothness' => ['good' => 1000, 'bad' => 500], 'tracktype' => ['grade3' => 400]], $read['quality']);
+        // Where each one lies, so the panel lights it on the map (owner 2026-10-19: "what part of the road is that about?").
+        self::assertSame(['smoothness' => [[0, 1000, 'good'], [1000, 1500, 'bad']], 'tracktype' => [[2250, 2650, 'grade3']], 'speeds' => [[0, 2650, 'unset']]], $read['detailRuns']);
+    }
+
+    public function testOutsideALoadedCountryTheEngineSpeaksAndNothingIsRecorded(): void
+    {
+        $client = $this->client(new MockResponse((string) json_encode(['units' => 'kilometers', 'edges' => [
+            ['way_id' => 11, 'surface' => 'paved', 'length' => 1.0, 'use' => 'track', 'road_class' => 'service_other'],
+        ]])), 'http://valhalla.test', null, true);
+
+        $read = $client->read([[50.49, 5.86], [50.47, 5.86]]);
+
+        self::assertNotNull($read);
+        self::assertFalse($read['recorded']);
+        self::assertSame(1000, $read['surfaces']['paved']);
+        self::assertSame(['smoothness' => [], 'tracktype' => []], $read['quality']);
+    }
+
+    /**
+     * The speed limits along the leg, from OpenStreetMap's maxspeed as the engine carries it (owner 2026-10-19: "can
+     * we also get max speeds for roads"): metres per limit in km/h, and the metres with none set.
+     */
+    public function testItMeasuresTheMetresPerSpeedLimit(): void
+    {
+        $client = $this->client(new MockResponse((string) json_encode(['units' => 'kilometers', 'edges' => [
+            ['surface' => 'paved', 'length' => 1.0, 'speed_limit' => 50],
+            ['surface' => 'paved', 'length' => 0.5, 'speed_limit' => 30],
+            ['surface' => 'paved', 'length' => 0.25, 'speed_limit' => 50],
+            ['surface' => 'paved', 'length' => 0.2],
+            ['surface' => 'paved', 'length' => 0.05, 'speed_limit' => 0],
+        ]])));
+
+        $read = $client->read([[50.49, 5.86], [50.47, 5.86]]);
+
+        self::assertNotNull($read);
+        self::assertSame(['30' => 500, '50' => 1250, 'unset' => 250], $read['speeds']);
+        // Two stretches of 50 km/h, one of 30 between them; a run of one limit is one stretch.
+        self::assertSame([[0, 1000, '50'], [1000, 1500, '30'], [1500, 1750, '50'], [1750, 2000, 'unset']], $read['detailRuns']['speeds']);
+    }
+
+    /**
+     * A recommended route's own line, read in pieces of at most 50 km (route-domain.md §6.4, owner 2026-10-19: "A
+     * recommended route should also have the road 'quality' info"): the engine's trace has a length limit, and a
+     * route runs to 267 km. Each piece is matched to the roads (map_snap: the line is not the engine's own), and the
+     * answers are joined, every stretch placed after the pieces before it.
+     */
+    public function testALongLineIsReadInPiecesAndJoined(): void
+    {
+        $bodies = [];
+        $answers = [
+            ['edges' => [['way_id' => 1, 'surface' => 'paved', 'length' => 40.0, 'speed_limit' => 50], ['way_id' => 2, 'surface' => 'gravel', 'length' => 10.0, 'road_class' => 'primary']]],
+            ['edges' => [['way_id' => 2, 'surface' => 'gravel', 'length' => 5.0, 'road_class' => 'primary'], ['way_id' => 3, 'surface' => 'paved', 'length' => 15.0, 'speed_limit' => 50]]],
+        ];
+        $http = new MockHttpClient(function (string $method, string $url, array $options) use (&$bodies, &$answers): MockResponse {
+            $bodies[] = json_decode((string) $options['body'], true, 512, \JSON_THROW_ON_ERROR);
+
+            return new MockResponse((string) json_encode(['units' => 'kilometers'] + array_shift($answers)));
+        });
+        // About 70 km due north, a point every 0.9 km.
+        $line = array_map(static fn (int $i): array => [50.0 + $i * 0.0081, 5.8], range(0, 77));
+
+        $read = (new LegSurfaces($http, new NullLogger(), 'http://valhalla.test'))->readLine($line);
+
+        self::assertCount(2, $bodies, 'two pieces of at most 50 km');
+        self::assertSame('map_snap', $bodies[0]['shape_match']);
+        self::assertSame(end($bodies[0]['shape']), $bodies[1]['shape'][0], 'the pieces share their joining point');
+        self::assertNotNull($read);
+        self::assertSame(['paved' => 55000, 'gravel' => 15000, 'rough' => 0, 'unknown' => 0, 'busy' => 15000, 'cycle' => 0, 'signals' => 0], $read['surfaces']);
+        self::assertSame(70000, $read['distanceM']);
+        self::assertSame([[0, 'paved'], [40000, 'gravel'], [55000, 'paved']], $read['runs'], 'one gravel run across the join');
+        self::assertSame([[40000, 55000]], $read['busyRuns']);
+        self::assertSame([[0, 40000, '50'], [40000, 55000, 'unset'], [55000, 70000, '50']], $read['detailRuns']['speeds']);
+        self::assertSame(['50' => 55000, 'unset' => 15000], $read['speeds']);
+    }
+
+    public function testALineWithAPieceTheEngineCannotReadIsNoAnswer(): void
+    {
+        $answers = [new MockResponse((string) json_encode(['edges' => [['surface' => 'paved', 'length' => 40.0]]])), new MockResponse('', ['error' => 'down'])];
+        $line = array_map(static fn (int $i): array => [50.0 + $i * 0.0081, 5.8], range(0, 77));
+
+        self::assertNull((new LegSurfaces(new MockHttpClient($answers), new NullLogger(), 'http://valhalla.test'))->readLine($line));
+    }
 }

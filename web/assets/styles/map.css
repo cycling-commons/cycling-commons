@@ -1561,6 +1561,14 @@
   .cc-town-race a{color:var(--chrome-link);text-decoration:underline}
   .cc-town-race small{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .65);margin-top:.15rem}
   .cc-near-h{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin:1.3rem 0 .5rem}
+  /* The route card's roads (route-roads.js): a fold, closed until opened, its summary headed as the sections under it. */
+  .cc-d-roadsfold summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:.45rem}
+  .cc-d-roadsfold summary::-webkit-details-marker{display:none}
+  .cc-d-roadsfold summary::after{content:'';width:.4rem;height:.4rem;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
+  .cc-d-roadsfold[open] summary::after{transform:rotate(45deg)}
+  .cc-d-roadsfold summary:hover{color:var(--trail)}
+  .cc-d-roadsfold summary:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
+  .cc-d-roadsfold .cc-plan-detail h5:first-child{margin-top:0}
   .cc-near-list{list-style:none;margin:0;padding:0}
   /* A row is two lines (owner 2026-10-14): the name written out on the first,
      the distances on the second, so a long name is never cut. */
@@ -1574,6 +1582,8 @@
      uncurated OSM, and must not read as verified Commons picks
  */
   .cc-near-note{margin-top:.5rem;color:rgb(var(--chrome-fg) / .65);font-family:var(--mono);font-size:.7rem;letter-spacing:.05em}
+  /* The along list's reach on a route card (listed-place.js), the planner's steps. */
+  .cc-along-r{max-width:22rem;font:inherit;font-size:.72rem;letter-spacing:.04em;color:inherit;background:var(--chrome-field);border:1px solid rgb(var(--chrome-fg) / .25);border-radius:4px;padding:.15rem .3rem}
   /* per-layer group header in the place card's nearby list (map-and-search.md §6.5) */
   .cc-near-grp{display:flex;align-items:center;gap:.55rem;margin-top:.7rem;padding:.25rem 0;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .72)}
   .cc-comm-tag{margin-left:.45rem;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .68);border:1px solid rgb(var(--chrome-fg) / .22);border-radius:8px;padding:.08rem .35rem;vertical-align:middle}

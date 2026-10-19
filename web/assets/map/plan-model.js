@@ -437,7 +437,44 @@ export function simplifyTrackAt(points, max){
     while(k < s.j - 1 && along[k] < half) k++;
     split(s, k);
   }
-  return [...keep].sort((a, b) => a - b).map(i => points[i]);
+  return [...keep].sort((a, b) => a - b);
+}
+
+/** The metres between two points of a ride file's track a piece sent for matching keeps (route-planner.md section
+    6.1): a device writes a point a second, the engine needs one every few tens of metres. */
+export const PIECE_STEP_M = 20;
+/** The most points of one piece: RouteSnapper::MAX_MATCH_POINTS. */
+export const PIECE_MAX_POINTS = 2000;
+/** A ride file's track cut at the checkpoints, one piece per leg, [[lng, lat], ...], each from its checkpoint's
+    point to the next one's, a point every PIECE_STEP_M at most (route-planner.md section 6.1, owner 2026-10-18:
+    Liège-Bastogne-Liège opened as 50 checkpoints rode round the Stockeu). `at` are the checkpoints' indexes in
+    `line`, ascending; null when they are not. */
+export function trackPieces(line, at){
+  if(!Array.isArray(at) || at.length < 2 || at.some((k, i) => !Number.isInteger(k) || k < 0 || k >= line.length || (i && k <= at[i - 1]))) return null;
+  const out = [];
+  for(let s = 1; s < at.length; s++){
+    const piece = [line[at[s - 1]]];
+    for(let i = at[s - 1] + 1; i < at[s]; i++){ const last = piece[piece.length - 1]; if(metres([last.lat, last.lng], [line[i].lat, line[i].lng]) >= PIECE_STEP_M) piece.push(line[i]); }
+    piece.push(line[at[s]]);
+    out.push(thinLine(piece.map(p => [p.lng, p.lat]), PIECE_MAX_POINTS));
+  }
+  return out;
+}
+/** Where each stop lies on a track, in order: for each, the nearest track point within 30 m, searched on from the
+    previous stop's, so a loop that passes its start again is cut at its end. Null when a stop lies off the track. */
+export function stopsOnTrack(line, stops){
+  const at = []; let from = 0;
+  for(const s of stops){
+    let best = -1, bestM = Infinity;
+    for(let i = from; i < line.length; i++){
+      const m = metres([s.lat, s.lng], [line[i].lat, line[i].lng]);
+      if(m < bestM){ bestM = m; best = i; }
+      else if(bestM <= 30 && m > bestM + 200) break;   // past the stop: the track has left it
+    }
+    if(best < 0 || bestM > 30 || (at.length && best <= at[at.length - 1])) return null;
+    at.push(best); from = best + 1;
+  }
+  return at;
 }
 
 /** The ride bar's line (route-planner.md section 3): distance, climbed, stops, in the rider's units. */

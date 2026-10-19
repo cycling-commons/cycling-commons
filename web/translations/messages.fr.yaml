@@ -2030,6 +2030,9 @@ map:
   d_route_climbs_h: 'Côtes sur cet itinéraire'
   d_route_climb_at: '{u} {n}'
   d_route_climbs_wait: 'Recherche des côtes sur l''itinéraire…'
+  d_route_roads_h: "Routes de cet itinéraire"
+  d_route_roads_wait: "Lecture des routes de l'itinéraire…"
+  d_route_roads_surface: "Revêtement"
   d_along_route_h: 'Dans les Commons le long de l''itinéraire'
   d_along_route_within: 'À moins de {r} de l''itinéraire'
   d_along_route_wait: 'Recherche le long de l''itinéraire…'

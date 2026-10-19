@@ -28,6 +28,7 @@ use App\Catalog\RegionBoundaryProvider;
 use App\Catalog\RegionLabels;
 use App\Catalog\RegionRegistryProvider;
 use App\Catalog\RideCheckService;
+use App\Catalog\RouteRoads;
 use App\Catalog\RidingStyle;
 use App\Catalog\RouteClimbService;
 use App\Catalog\RouteRankingService;
@@ -345,9 +346,31 @@ final class MapController extends AbstractController
     #[Route('/map/route/{id}/along', name: 'map_route_along', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function routeAlong(int $id, Request $request, RideCheckService $rideCheck, CatalogProvider $catalogProvider, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy): Response
     {
+        // The reach the rider picks, the planner's steps (owner 2026-10-19: "make that selectable up till 5km").
+        $radius = $request->query->getInt('r', RideCheckService::DEFAULT_RADIUS);
+        if (!\in_array($radius, PlanController::ALONG_RADII, true)) {
+            return new JsonResponse(['error' => 'bad_request'], 400);
+        }
+
         return $this->routeListResponse(
             $id, $request, $catalogProvider, $scopeProvider, $twoFactorPolicy,
-            static fn (bool $allowSubmitted): ?array => $rideCheck->alongRoute($id, $allowSubmitted),
+            static fn (bool $allowSubmitted): ?array => $rideCheck->alongRoute($id, $allowSubmitted, $radius),
+        );
+    }
+
+    /**
+     * What a route's roads are, for the route drawer: surfaces, main roads, smoothness, track grades and speed limits
+     * along its own line, as a planned ride shows them (RouteRoads).
+     *
+     * @see docs/specs/route-domain.md §6.4
+     * @see docs/specs/route-planner.md section 4.4a
+     */
+    #[Route('/map/route/{id}/roads', name: 'map_route_roads', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function routeRoads(int $id, Request $request, RouteRoads $roads, CatalogProvider $catalogProvider, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy): Response
+    {
+        return $this->routeListResponse(
+            $id, $request, $catalogProvider, $scopeProvider, $twoFactorPolicy,
+            static fn (bool $allowSubmitted): ?array => $roads->forRoute($id, $allowSubmitted),
         );
     }
 
@@ -633,7 +656,7 @@ final class MapController extends AbstractController
             'raceEditions' => 'd_race_editions', 'raceEditionsUndated' => 'd_race_editions_undated', 'raceOnce' => 'd_race_once',
             'routesH' => 'd_routes_h', 'routeKm' => 'd_route_km',
             // docs/specs/map-and-search.md §6.3: climbs on this route.
-            'routeClimbsH' => 'd_route_climbs_h', 'routeClimbAt' => 'd_route_climb_at', 'routeClimbsWait' => 'd_route_climbs_wait',
+            'routeClimbsH' => 'd_route_climbs_h', 'routeClimbAt' => 'd_route_climb_at', 'routeClimbsWait' => 'd_route_climbs_wait', 'routeRoadsH' => 'd_route_roads_h', 'routeRoadsWait' => 'd_route_roads_wait', 'routeRoadsSurface' => 'd_route_roads_surface',
             // docs/specs/map-and-search.md §6.3: places along this route.
             'alongRouteH' => 'd_along_route_h', 'alongRouteWithin' => 'd_along_route_within', 'alongRouteWait' => 'd_along_route_wait',
             'alongRouteCovH' => 'd_along_route_cov_h', 'nothingAlongRoute' => 'd_nothing_along_route',

@@ -759,13 +759,42 @@ places along the route (map-and-search.md §6.3) with the same access as the
 climbs above (both go through `MapController::routeListResponse`):
 `{radiusM, groups, coverage}` from `RideCheckService::alongRoute()`, the ride
 check's commons and open-coverage corridor arms (map-and-search.md §9) run on
-the route's stored geometry at `DEFAULT_RADIUS` (250 m), km along in true metres
+the route's stored geometry at the reach the rider picks (`?r=`, the planner's
+steps 250 m, 500 m, 1 km, 2 km or 5 km, `PlanController::ALONG_RADII`; any other
+value is 400; owner 2026-10-19: "make that selectable up till 5km like we have
+in the user route planner"), `DEFAULT_RADIUS` (250 m) when none is given. The
+card's "Within 250 m of the route" line is that choice (`.cc-along-r` in
+`listed-place.js`), back at 250 m on every route the card opens (owner
+2026-10-19: "No default always 250 for every new route"). Km along in true metres
 on that line (`LineMetres`, as for the climbs above). The climbs group (N) in
 `groups` holds the route's near climbs (`climbsAlong()['near']`, rows
 `{id, name, ll, distM, alongKm, avgGradient}`, `ll` the climb's foot), never a
 climb by its stored point and never one the route rides: those are in
 `GET /map/route/{id}/climbs`, which answers `{climbs}` with the ridden climbs
 only, rows `{id, name, alongKm, avgGradient, ll}`.
+
+**Roads on this route** (owner 2026-10-19: "A recommended route should also
+have the road 'quality' info. Like when you plan your own route"). The route
+card's first block (`route-roads.js`, slot `cc-d-roads-slot`), a fold closed
+until the rider opens it and headed as the sections under it (owner
+2026-10-19: "make the road description option a thing you can click to open
+default closed"), says what the route's roads are, in the planner's own words (route-planner.md section
+4.4a): the surfaces (asphalt, gravel, rough, not recorded), the main roads
+without a cycle lane, and the smoothness, the track grades and the speed
+limits where OpenStreetMap records them. Each line lights its stretches on
+the route in a yellow band while pointed at or focused (the selected route is
+drawn orange already), on the card's own line (`f.geom.path`), so a route
+opened from a link or a list lights too; closing the card takes the band away. It comes from
+`GET /map/route/{id}/roads` (`RouteRoads`), the same live-or-preview gate and
+public cache as the two lists above: our engine reads the route's own line as
+a planned leg is read (`LegSurfaces::readLine()`), matched to the roads
+(`map_snap`, as the line is not the engine's route) in pieces of at most
+50 km that share their joining point (the engine's trace has a length limit,
+and a route runs to 267 km), the answers joined with every stretch placed
+after the pieces before it. The answer is `{distanceM, surfaces, runs,
+busyRuns, recorded, quality, speeds, detailRuns}`, no street names, kept a
+day per route and line (a failed read a minute). Measured on dev: route 31,
+34 km and 1,104 points, reads in 0.14 s.
 
 ## 7. Located corrections (stretches on a suggestion)
 

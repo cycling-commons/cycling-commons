@@ -2035,6 +2035,9 @@ map:
   d_route_climbs_h: 'Anstiege auf dieser Route'
   d_route_climb_at: '{u} {n}'
   d_route_climbs_wait: 'Anstiege auf der Route werden gesucht…'
+  d_route_roads_h: "Straßen auf dieser Route"
+  d_route_roads_wait: "Die Straßen der Route werden gelesen…"
+  d_route_roads_surface: "Belag"
   d_along_route_h: 'In den Commons entlang der Route'
   d_along_route_within: 'Im Umkreis von {r} der Route'
   d_along_route_wait: 'Entlang der Route wird gesucht…'

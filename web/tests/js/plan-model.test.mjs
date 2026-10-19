@@ -1051,3 +1051,142 @@ test('the longest climb says where it starts', () => {
   assert.ok(Math.abs(c.fromM - 3000) <= 100, `from ${c.fromM}`);
   assert.ok(Math.abs(c.km - 2) < 0.2, `km ${c.km}`);
 });
+
+import { repeatRuns, repeatedM, avoidPoints, REPEAT } from '../../assets/map/plan-model.js';
+test('a leg back along an earlier leg\'s road is found, past the shared checkpoint, and gets points to keep off', () => {
+  // Out east 5 km, then back west 5 km along the same road and on 2 km past the start.
+  const east = Array.from({ length: 51 }, (_, i) => [5.0 + i * 0.00148, 52.7]);
+  const back = Array.from({ length: 71 }, (_, i) => [5.074 - i * 0.00148, 52.7]);
+  const legs = [{ routed: true, line: east, distM: 5000 }, { routed: true, line: back, distM: 7000 }];
+  const runs = repeatRuns(legs, 1);
+  assert.equal(runs.length, 1);
+  assert.ok(runs[0][0] >= REPEAT.endM && Math.abs(runs[0][1] - 5000) < 100, `run ${runs[0]}`);
+  assert.ok(repeatedM(runs) > 4000);
+  const pts = avoidPoints(legs[1], runs);
+  assert.ok(pts.length > 10 && pts.length <= REPEAT.maxAvoid, `${pts.length} points`);
+  assert.equal(repeatRuns(legs, 0).length, 0, 'the first leg repeats nothing');
+  // A leg on a parallel road 300 m away repeats nothing.
+  const parallel = back.map(([x, y]) => [x, y + 0.0027]);
+  assert.equal(repeatRuns([legs[0], { routed: true, line: parallel, distM: 7000 }], 1).length, 0);
+});
+
+import { gpxText as gpxOf, figures as figuresOf } from '../../assets/map/plan-model.js';
+test('the GPX carries the cleaned heights, so a device counts the climbing the planner counts (owner 2026-10-18)', () => {
+  const legs = HEIGHTS.polder.map(l => ({ routed: true, ...l, line: l.heights.map(([d]) => [5 + d / 68000, 52.7]) }));
+  const xml = gpxOf({ name: 'Polder', stops: [{ lat: 52.7, lng: 5, name: 'A' }, { lat: 52.7, lng: 5.3, name: 'B' }], legs: [legs[0]] });
+  const eles = [...xml.matchAll(/<ele>(-?[\d.]+)<\/ele>/g)].map(m => Number(m[1]));
+  let up = 0; for(let i = 1; i < eles.length; i++) if(eles[i] > eles[i - 1]) up += eles[i] - eles[i - 1];
+  const planner = figuresOf([legs[0]]).upM;
+  assert.ok(Math.abs(up - planner) < 3, `GPX climbs ${up.toFixed(1)} m, the planner ${planner.toFixed(1)} m`);
+});
+
+test('a round trip climbs what it descends: the heights are cleaned over the ride, not leg by leg (owner 2026-10-18)', async () => {
+  const { figures, cleanRide } = await import('../../assets/map/plan-model.js');
+  // Three legs out and back over a 2 m wobble at every join: leg by leg, each join's wobble went uncounted one way.
+  const leg = (hs, distM) => ({ routed: true, distM, heights: hs.map((h, i) => [i * 30, h]) });
+  const legs = [leg([0, 1, 2, 6, 10, 12], 150), leg([11, 12, 13, 9, 5, 3], 150), leg([2, 1, 0, 0, 1, 0], 150)];
+  const f = figures(legs);
+  assert.ok(Math.abs(f.upM - f.downM) < 0.01, `climbed ${f.upM} but descended ${f.downM} on a ride that ends where it starts`);
+  const clean = cleanRide(legs);
+  assert.equal(clean.length, 3);
+  assert.equal(clean[0].length, 6);
+  assert.equal(clean[1][0], clean[0][5], 'the joins of the cleaned line move');
+  const gap = cleanRide([legs[0], { routed: true, distM: 900, heights: null }, legs[2]]);
+  assert.equal(gap[1], null, 'a leg without heights gets heights');
+});
+
+test('a ride file keeps its roads: its track is cut at the checkpoints, one piece per leg (owner 2026-10-18)', async () => {
+  const { rideFromGpx, trackPieces, stopsOnTrack, gpxText, PIECE_MAX_POINTS } = await import('../../assets/map/plan-model.js');
+  // A track of 3000 points, a point every ~7 m, with a spur up and back down a side road at its middle.
+  const pts = [];
+  for(let i = 0; i < 1500; i++) pts.push([5.90 + i * 0.0001, 50.40]);
+  for(let i = 0; i < 300; i++) pts.push([6.05, 50.40 + i * 0.0001]);
+  for(let i = 300; i >= 0; i--) pts.push([6.05 + 0.00002, 50.40 + i * 0.0001]);
+  for(let i = 1; i < 900; i++) pts.push([6.05 + i * 0.0001, 50.40]);
+  const gpx = `<?xml version="1.0"?><gpx creator="StravaGPX"><trk><trkseg>${pts.map(([lng, lat]) => `<trkpt lat="${lat}" lon="${lng}"></trkpt>`).join('')}</trkseg></trk></gpx>`;
+  const r = rideFromGpx(gpx);
+  assert.ok(Array.isArray(r.track), 'a converted track carries no pieces');
+  assert.equal(r.track.length, r.stops.length - 1, 'one piece per leg');
+  r.track.forEach((piece, i) => {
+    assert.deepEqual(piece[0], [r.stops[i].lng, r.stops[i].lat], `piece ${i} does not start at its checkpoint`);
+    assert.deepEqual(piece[piece.length - 1], [r.stops[i + 1].lng, r.stops[i + 1].lat], `piece ${i} does not end at the next checkpoint`);
+    assert.ok(piece.length <= PIECE_MAX_POINTS);
+  });
+  const sent = r.track.reduce((n, p) => n + p.length, 0);
+  assert.ok(sent < pts.length / 2, `every device point is sent (${sent})`);
+  // The planner's own file: its track cut at its waypoints, a loop that passes its start again cut at the end.
+  const line = pts.map(([lng, lat]) => ({ lat, lng }));
+  const stops = [line[0], line[1500], line[1800], line[line.length - 1]].map(p => ({ lat: p.lat, lng: p.lng, name: '' }));
+  assert.deepEqual(stopsOnTrack(line, stops), [0, 1500, 1800, line.length - 1]);
+  assert.equal(stopsOnTrack(line, [{ lat: 51, lng: 6 }, stops[1]]), null, 'a stop off the track is placed');
+  assert.equal(trackPieces(line, [5, 3]), null, 'checkpoints out of order cut the track');
+  const legs = stops.slice(1).map((s, i) => ({ routed: true, distM: 1000, line: line.slice([0, 1500, 1800][i], [1500, 1800, line.length - 1][i] + 1).map(p => [p.lng, p.lat]), heights: null }));
+  const back = rideFromGpx(gpxText({ name: 'Spur', bike: 'Road', stops, legs }));
+  assert.equal(back.track && back.track.length, 3, 'the planner\'s own file loses its roads');
+});
+
+test('a slow climb keeps its points: a device writing one every 3 m is not standing still (owner 2026-10-18)', async () => {
+  const { rideFromGpx } = await import('../../assets/map/plan-model.js');
+  // 2 km at a point every ~3.3 m (12 km/h, one a second), then 2 km at ~11 m, then 30 points on one spot.
+  const pts = [];
+  for(let i = 0; i < 600; i++) pts.push([5.90, 50.40 + i * 0.00003]);
+  for(let i = 1; i <= 180; i++) pts.push([5.90 + i * 0.00016, 50.40 + 599 * 0.00003]);
+  for(let i = 0; i < 30; i++) pts.push(pts[pts.length - 1]);
+  const gpx = `<?xml version="1.0"?><gpx creator="Garmin"><trk><trkseg>${pts.map(([lng, lat]) => `<trkpt lat="${lat}" lon="${lng}"></trkpt>`).join('')}</trkseg></trk></gpx>`;
+  const r = rideFromGpx(gpx);
+  const climb = r.track.flat().filter(([lng]) => lng === 5.90);
+  assert.ok(climb.length > 50, `the climb kept ${climb.length} points`);
+  const step = (a, b) => Math.hypot((b[0] - a[0]) * 67800, (b[1] - a[1]) * 111200);
+  const biggest = Math.max(...r.track.flatMap(p => p.slice(1).map((q, k) => step(p[k], q))));
+  assert.ok(biggest < 60, `a piece jumps ${Math.round(biggest)} m`);
+});
+
+/* What OpenStreetMap records along the ride, summed over the legs (route-planner.md section 4.4a, owner 2026-10-19):
+   the smoothness in the five words the contribute form offers, the tracks by grade, and the speed limits, slowest
+   first and "not recorded" last. A leg from before the table, without the fields, adds nothing. */
+test('roadDetail sums smoothness, track grades and speed limits over the legs', () => {
+  const legs = [
+    { routed: true, distM: 3000, quality: { smoothness: { good: 1000, horrible: 200 }, tracktype: { grade3: 400 } }, speeds: { 50: 1000, unset: 500 } },
+    { routed: true, distM: 2000, quality: { smoothness: { good: 500, very_bad: 100, impassable: 50 }, tracktype: { grade1: 100 } }, speeds: { 30: 700, 50: 300, unset: 1000 } },
+    { routed: true, distM: 900 },
+    null,
+  ];
+  const d = roadDetail(legs);
+  assert.deepEqual(d.smoothness, [['good', 1500], ['very_bad', 350]]);
+  assert.deepEqual(d.tracktype, [['grade1', 100], ['grade3', 400]]);
+  assert.deepEqual(d.speeds, [['30', 700], ['50', 1300], ['unset', 1500]]);
+  assert.deepEqual(roadDetail([{ routed: true, distM: 100 }]), { smoothness: [], tracktype: [], speeds: [] });
+});
+
+/* Each line of the road detail lights its stretches on the map (owner 2026-10-19: "But what part of the road is that
+   about? I can't hover it"): the legs' runs, placed one leg after the other, OpenStreetMap's eight smoothness values
+   folded into the five words the line says. */
+test('detailSpans places a value\'s stretches along the whole ride', () => {
+  const legs = [
+    { routed: true, distM: 3000, detailRuns: { smoothness: [[0, 1000, 'good'], [1000, 1200, 'horrible']], tracktype: [[2000, 2400, 'grade3']], speeds: [[0, 1500, '50'], [1500, 3000, 'unset']] } },
+    { routed: true, distM: 2000 },
+    { routed: true, distM: 1000, detailRuns: { smoothness: [[0, 300, 'very_bad'], [300, 1000, 'good']], tracktype: [], speeds: [[0, 1000, '50']] } },
+  ];
+  assert.deepEqual(detailSpans(legs, 'sm', 'good'), [[0, 1000], [5300, 6000]]);
+  assert.deepEqual(detailSpans(legs, 'sm', 'very_bad'), [[1000, 1200], [5000, 5300]], 'horrible and very bad are one word');
+  assert.deepEqual(detailSpans(legs, 'tt', 'grade3'), [[2000, 2400]]);
+  assert.deepEqual(detailSpans(legs, 'sp', '50'), [[0, 1500], [5000, 6000]]);
+  assert.deepEqual(detailSpans(legs, 'sp', '30'), []);
+});
+
+/* Owner 2026-10-19: "also total climbing makes it tougher. Everything above 2000 m of climbing then it is shown as
+   tough". */
+test('a day of 2000 m climbed or more is a tough day, whatever its longest climb', () => {
+  const at = (patch) => kinds(Object.assign(ordinary(), patch));
+  assert.equal(TOUGHER.climbedM, 2000);
+  assert.deepEqual(at({ upM: 1999 }), []);
+  assert.deepEqual(at({ upM: 2000 }), ['climbed']);
+  assert.deepEqual(tougherLines(Object.assign(ordinary(), { upM: 4185 })).find(x => x.kind === 'climbed'), { kind: 'climbed', upM: 4185 });
+});
+
+/* Owner 2026-10-19: "Show the avg speed". The riding distance over the riding time, stops not counted. */
+test('the average speed is the distance over the riding time', () => {
+  assert.equal(avgKmh(151700, 9 * 3600 + 40 * 60).toFixed(1), '15.7');
+  assert.equal(avgKmh(0, 3600), null);
+  assert.equal(avgKmh(1000, 0), null);
+});

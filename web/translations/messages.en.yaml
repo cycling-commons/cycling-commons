@@ -2650,6 +2650,9 @@ map:
   d_route_climbs_h: 'Climbs on this route'
   d_route_climb_at: '{u} {n}'
   d_route_climbs_wait: 'Looking for climbs on the route…'
+  d_route_roads_h: "Roads on this route"
+  d_route_roads_wait: "Reading the roads of the route…"
+  d_route_roads_surface: "Surface"
   d_along_route_h: 'In the Commons along the route'
   d_along_route_within: 'Within {r} of the route'
   d_along_route_wait: 'Looking along the route…'

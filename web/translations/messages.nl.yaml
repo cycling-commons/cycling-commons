@@ -2032,6 +2032,9 @@ map:
   d_route_climbs_h: 'Beklimmingen op deze route'
   d_route_climb_at: '{u} {n}'
   d_route_climbs_wait: 'Beklimmingen op de route zoeken…'
+  d_route_roads_h: "Wegen op deze route"
+  d_route_roads_wait: "De wegen van de route worden gelezen…"
+  d_route_roads_surface: "Ondergrond"
   d_along_route_h: 'In de Commons langs de route'
   d_along_route_within: 'Binnen {r} van de route'
   d_along_route_wait: 'Langs de route zoeken…'

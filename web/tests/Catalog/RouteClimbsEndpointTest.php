@@ -189,6 +189,38 @@ final class RouteClimbsEndpointTest extends WebTestCase
         self::assertStringContainsString('public', (string) $client->getResponse()->headers->get('Cache-Control'));
     }
 
+    /**
+     * The reach of a route's along list, as the planner's (owner 2026-10-19: "make that selectable up till 5km like
+     * we have in the user route planner"): 250 m, 500 m, 1 km, 2 km or 5 km; anything else is 400.
+     */
+    public function testAlongReachesAsFarAsTheRiderPicksUpToFiveKilometres(): void
+    {
+        $client = static::createClient();
+        self::ensureCoverageSchema($this->db());
+        $route = $this->seedRoute('unverified');
+        // About 1.1 km south of the route's line at 50.40.
+        $this->db()->executeStatement(
+            "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
+             VALUES ('B', 'Far fountain', ST_SetSRID(ST_MakePoint(5.81, 50.39), 4326), 'BE', 'verified', 'manual', :ref, '{}', NOW(), NOW())",
+            ['ref' => 'along-far-'.bin2hex(random_bytes(6))],
+        );
+
+        $names = function (int $r) use ($client, $route): array {
+            $client->request('GET', '/map/route/'.$route.'/along?r='.$r);
+            self::assertResponseIsSuccessful();
+            /** @var array{radiusM: int, groups: list<array{items: list<array{name: string}>}>} $body */
+            $body = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+            self::assertSame($r, $body['radiusM']);
+
+            return array_merge(...array_map(static fn (array $g): array => array_column($g['items'], 'name'), $body['groups']));
+        };
+        self::assertNotContains('Far fountain', $names(250));
+        self::assertContains('Far fountain', $names(2000));
+
+        $client->request('GET', '/map/route/'.$route.'/along?r=300');
+        self::assertResponseStatusCodeSame(400);
+    }
+
     public function testAlongARouteWaitingForReviewAnswersOnlyWhoMayPreviewIt(): void
     {
         $client = static::createClient();

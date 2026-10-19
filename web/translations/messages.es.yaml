@@ -2657,6 +2657,9 @@ map:
   d_route_climbs_h: 'Subidas en esta ruta'
   d_route_climb_at: '{u} {n}'
   d_route_climbs_wait: 'Buscando subidas en la ruta…'
+  d_route_roads_h: "Vías de esta ruta"
+  d_route_roads_wait: "Leyendo las vías de la ruta…"
+  d_route_roads_surface: "Firme"
   d_along_route_h: 'En el Commons, a lo largo de la ruta'
   d_along_route_within: 'A menos de {r} de la ruta'
   d_along_route_wait: 'Buscando a lo largo de la ruta…'

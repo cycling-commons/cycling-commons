@@ -35,6 +35,7 @@ import { showPendingShape, fitPendingShape, clearPendingShape } from './pending-
 import { clearCorrections } from './corrections.js';
 import { markOpened } from './desk-seen.js';
 import { routeClimbsSlot } from './route-climbs.js';
+import { routeRoadsSlot, hydrateRouteRoads, clearRouteRoads } from './route-roads.js';
 import { hydrateRouteClimbs, hydrateRouteAlong, releaseRouteList } from './listed-place.js';
 import { routeAlongSlot } from './along-list.js';
 import { voteHref } from './vote-link.js';
@@ -863,7 +864,7 @@ function buildRecord(layer, f){
 
   return `<div class="cc-d-head"><span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}"><i class="cc-g">${layerGlyph(layer)}</i> ${layer.label}</span>${share}</div>
     <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${hiddenSlot}${desc}${diff}${elev}${len}${grad}
-    <ul class="cc-d-rec">${rows}</ul>${layer.key==='experience' ? routeClimbsSlot(f, D.routeClimbsWait||'Looking for climbs on the route…')+routeAlongSlot(f, D.alongRouteWait||'Looking along the route…') : ''}${fresh}${survey}${mine}${up}
+    <ul class="cc-d-rec">${rows}</ul>${layer.key==='experience' ? routeRoadsSlot(f, D.routeRoadsWait||'Reading the roads of the route…')+routeClimbsSlot(f, D.routeClimbsWait||'Looking for climbs on the route…')+routeAlongSlot(f, D.alongRouteWait||'Looking along the route…') : ''}${fresh}${survey}${mine}${up}
     <div class="cc-d-src">${D.source||'Source'} · ${who || srcLine(f, osmHref)}${
       who ? `<div class="cc-d-prov">${srcLine(f, osmHref)}</div>` : ''}</div>${act}${moderate}${histSlot}${reportLink}`;
 }
@@ -1236,7 +1237,8 @@ export function renderDrawerBody(layer, f){
   }
   startPhotoWatch(f.name);
   if(layer.key==='experience' && f.id!=null && f.state!=='submitted') hydrateRouteCommunity(f.id);
-  if(layer.key==='experience' && f.id!=null){ hydrateRouteClimbs(f.id); hydrateRouteAlong(f.id); }   // climbs on and places along this route, map-and-search.md §6.3
+  clearRouteRoads();
+  if(layer.key==='experience' && f.id!=null){ hydrateRouteRoads(f.id, f.geom && f.geom.path); hydrateRouteClimbs(f.id); hydrateRouteAlong(f.id); }   // its roads, climbs on and places along this route, map-and-search.md §6.3
   if(CC_CONFIRMABLE.has(layer.key) && f.id!=null) hydrateItemConfirm(f.id);
   /* Pending shape: show After first; fit so a moved summit is on screen. */
   const pShape = f.pending && f.pending.shape;
@@ -1448,6 +1450,7 @@ export function foldDrawer(folded){
 }
 
 export function closeDrawer(){
+  clearRouteRoads();                                 // the route card's lit stretches (route-roads.js)
   // Closing mid-pick tears the picking session down (no orphaned map handler).
   if(isPicking()) cancelPicking();
   // Race-guard: close invalidates in-flight coverage POI detail and town-card nearby.
