@@ -753,6 +753,7 @@ final class MapController extends AbstractController
                 'barStops' => $t->trans('map.plan_bar_stops'),
                 // The day (route-planner.md section 4.4).
                 'feelsLike' => $t->trans('map.plan_feels_like'),
+                'avgSpeed' => $t->trans('map.plan_avg_speed'),
                 'hm' => $t->trans('map.plan_hm'),
                 'h' => $t->trans('map.plan_h'),
                 'min' => $t->trans('map.plan_min'),
@@ -779,6 +780,7 @@ final class MapController extends AbstractController
                 'rough' => $t->trans('map.plan_rough'),
                 'steepest' => $t->trans('map.plan_steepest'),
                 'longestClimb' => $t->trans('map.plan_longest_climb'),
+                'climbedDay' => $t->trans('map.plan_climbed_day'),
                 'waterGap' => $t->trans('map.plan_water_gap'),
                 'fillWater' => $t->trans('map.plan_fill_water'), 'fillWaterNone' => $t->trans('map.plan_fill_water_none'), 'fillWaterName' => $t->trans('map.plan_fill_water_name'), 'fillWaterUseless' => $t->trans('map.plan_fill_water_useless'), 'fillWaterDone' => $t->trans('map.plan_fill_water_done'), 'fillWaterUndone' => $t->trans('map.plan_fill_water_undone'), 'fillWaterH' => $t->trans('map.plan_fill_water_h'), 'fillWaterAlready' => $t->trans('map.plan_fill_water_already'), 'fillWaterFull' => $t->trans('map.plan_fill_water_full'),
                 // What a water stop is, in the legend's words (KindIcons, B): the notice names a place by it.

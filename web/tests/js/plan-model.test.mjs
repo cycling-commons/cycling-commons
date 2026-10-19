@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const HEIGHTS = JSON.parse(readFileSync(new URL('./fixtures/plan-heights.json', import.meta.url), 'utf8'));
 import {
-  MAX_STOPS, WORK_KEEP_MS, workFresh, rideFromGpx, simplifyTrack, SHAPE_M, thinLine, ALONG_MAX_POINTS, waterGapSpan, bestWaterStop, legGoesRound, whyThisWay, sliceAlong, stopIndexAt, stopRows, stopKey, legKeys, nearLine, insertIndex, figures, cleanHeights, HEIGHT_NOISE_M, profileRuns, pointAt, gpxText, barText, createHistory, tickStepKm, surfaceMix,
+  MAX_STOPS, WORK_KEEP_MS, workFresh, rideFromGpx, simplifyTrack, SHAPE_M, thinLine, ALONG_MAX_POINTS, waterGapSpan, bestWaterStop, legGoesRound, whyThisWay, sliceAlong, stopIndexAt, stopRows, stopKey, legKeys, nearLine, insertIndex, figures, cleanHeights, HEIGHT_NOISE_M, profileRuns, pointAt, gpxText, barText, createHistory, tickStepKm, surfaceMix, roadDetail, detailSpans, avgKmh,
   PACE, flatSpeed, rideTime, surfaceBars, gradientBars, roundedHm, steepestKm, longestClimb, waterGap, sunTimes, windShares,
   durationText, TOUGHER, tougherLines, forecastPageUrl, FORECAST, forecastPoint, heightTicks,
 } from '../../assets/map/plan-model.js';
@@ -408,9 +408,11 @@ test('every bike type has a reference rider', () => {
   }
 });
 
-test('the flat speed of the road rider at 150 W is about 29 km/h, and the E-bike stops being helped at 25 km/h', () => {
+// Owner 2026-10-19: "at 150w make it more like 28 km an hour for flat".
+test('the flat speed of the road rider at 150 W is 28 km/h, and the E-bike stops being helped at 25 km/h', () => {
   const road = kmh(flatSpeed('Road'));
-  assert.ok(road > 27 && road < 31, `road flat speed ${road}`);
+  assert.ok(Math.abs(road - 28) < 0.15, `road flat speed ${road}`);
+  assert.ok(kmh(flatSpeed('Gravel')) < road, 'a gravel bike is slower on the flat');
   assert.ok(kmh(flatSpeed('MTB')) < road, 'knobby tyres and an upright rider are slower');
   assert.ok(Math.abs(kmh(flatSpeed('E-bike')) - 25) < 0.5, `e-bike flat speed ${kmh(flatSpeed('E-bike'))}`);
 });

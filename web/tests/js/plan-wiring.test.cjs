@@ -687,13 +687,13 @@ test('on a wide screen the ride details sit on the right, and a place drawer tak
   assert.match(plan, /new MutationObserver\(syncSide\)\.observe\(spot, \{ attributes: true, attributeFilter: \['class'\] \}\)/, 'closing a place does not bring the details back');
   assert.match(plan, /const MAP_COVERS = \[[^\]]*'#planSide'\]/, 'fitting the ride ignores the side');
   assert.match(read('assets/styles/map.css'), /\.map-wrap\.cc-side-on \.cc-plan-strip\{right:var\(--side-w\)\}/, 'the strip runs under the side');
-  assert.ok(controller.includes("'map.plan_side_hide'") || twig.includes("'map.plan_side_hide'"));
+  assert.ok(controller.includes("'map.plan_side_left'") || twig.includes("'map.plan_side_left'"));
 });
 
 test('details closed off the right side come back with one click in their heading (owner 2026-10-17)', () => {
-  assert.match(twig, /<button type="button" class="dl-all ico" id="planSideBack" hidden title="\{\{ 'map\.plan_side_show'\|trans \}\}"/);
+  assert.match(twig, /<button type="button" class="dl-all ico cc-side-move" id="planSideBack" hidden title="\{\{ 'map\.plan_side_show'\|trans \}\}"/);
   assert.match(plan, /const back = \$\('planSideBack'\); if\(back\) back\.hidden = !\(WIDE\.matches && sideClosed && !asleep\);/);
-  assert.match(plan, /\$\('planSideBack'\)\?\.addEventListener\('click', \(\) => \{ sideClosed = false; syncSide\(\); \}\);/);
+  assert.match(plan, /\$\('planSideBack'\)\?\.addEventListener\('click', \(\) => \{ sideClosed = false; keepSide\(\); syncSide\(\); \}\);/);
   for (const l of ['en', 'fr', 'nl', 'de', 'es']) assert.match(read(`translations/messages.${l}.yaml`), /^ {2}plan_side_show: "/m);
 });
 
@@ -820,8 +820,8 @@ test('the start date opens our own calendar, in the site style, the forecast day
   }
 });
 
-test('each line of what makes it tougher lights its stretches under the veil (owner 2026-10-18)', () => {
-  assert.match(plan, /const TOUGH_PART = \{ long: 'all', steep: 'steep', climb: 'climbrun', rough: 'rough', busy: 'busy', water: 'water', daylight: 'dark', wind: 'wind-into', rain: 'rain', heat: 'hour-hot', cold: 'hour-cold', ice: 'hour-ice' \};/);
+test('each line of what makes it tough lights its stretches under the veil (owner 2026-10-18)', () => {
+  assert.match(plan, /const TOUGH_PART = \{ long: 'all', steep: 'steep', climb: 'climbrun', climbed: 'climb', rough: 'rough', busy: 'busy', water: 'water', daylight: 'dark', wind: 'wind-into', rain: 'rain', heat: 'hour-hot', cold: 'hour-cold', ice: 'hour-ice' \};/);
   assert.match(plan, /parts\[i\] \? `<li data-part="\$\{parts\[i\]\}" tabindex="0">/);
   assert.match(plan, /<li class="cc-plan-gap" tabindex="0" data-part="water">/, 'the water gap does not veil the map');
   assert.match(plan, /const FOCUS_LAYERS = \['plan-gap', /, 'the water gap goes under the veil');
@@ -858,4 +858,125 @@ test('a map point moves onto the road a bike would take before it becomes a chec
 test('the guide stays the top layer: frames go under it and no ring lies on it (owner 2026-10-18)', () => {
   assert.match(read('assets/styles/map.css'), /\.cc-guide-glow\{position:fixed;z-index:1295;/);
   assert.match(plan, /for\(const \[x, y\] of spotPoints\(\)\.filter\(\(\[x, y\]\) => !under\(x, y\)\)\)\{/);
+});
+
+test('a leg never rides an earlier leg\'s road twice where there is another way (owner 2026-10-18)', () => {
+  const av = (plan.match(/async function avoidRepeats\(myGen\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.match(av, /asks\.push\(\{ i, a: ride\.stops\[i\], b: ride\.stops\[i \+ 1\], avoid: avoidPoints\(leg, runs\) \}\)/);
+  assert.match(av, /alt\.distM <= leg\.distM \* REPEAT\.maxGrowth/);
+  assert.match(av, /if\(repeatedM\(repeatRuns\(trial, q\.i\)\) >= was\) return;/, 'the other way is taken even when it repeats as much');
+  assert.match(av, /ride\.stops\[i \+ 1\]\.way === 'shortest'/, 'a leg set to the shortest way is overridden');
+  assert.match(plan, /if\(await avoidRepeats\(myGen\)\) finishRouting\(\);/);
+});
+
+test('the repeat check asks all its legs in one request, at most three rounds (owner 2026-10-18)', () => {
+  const av = (plan.match(/async function avoidRepeats\(myGen\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.match(twig, /detours: path\('map_plan_detours'\)/);
+  assert.match(av, /for\(let round = 0; round < REPEAT_ROUNDS; round\+\+\)\{/);
+  assert.match(av, /const alts = await routeDetours\(asks, ride\.bike\);/);
+  assert.doesNotMatch(av, /routeLeg\(/, 'a repeat check asks leg by leg');
+  assert.match(av, /const leg = ride\.legs\[q\.i\], alt = alts\[k\], was = repeatedM\(repeatRuns\(ride\.legs, q\.i\)\);/, 'the repeat is not measured again after an earlier leg moved');
+  assert.match(plan, /const REPEAT_ROUNDS = 3;/);
+});
+
+test('a spent leg budget says tomorrow to a visitor and a few minutes to a rider (owner 2026-10-18)', () => {
+  assert.match(plan, /return \{ limited: true, tomorrow: until === 'tomorrow' \};/);
+  assert.match(plan, /spentLeg\.tomorrow \? \(P\(\)\.rateLimitedDay/);
+});
+
+test('a ride\'s neighbouring legs are routed in one request, the rest leg by leg (owner 2026-10-18)', () => {
+  assert.match(twig, /legs: path\('map_plan_legs'\)/);
+  assert.match(plan, /for\(const \[a, b\] of legRuns\(needed\.map\(\(\[i\]\) => i\)\)\)\{/);
+  assert.match(plan, /const got = await routeLegs\(ride\.stops\.slice\(a, b \+ 2\), ride\.bike\);/);
+  assert.match(plan, /if\(ride\.legs\[i\]\) continue;   \/\/ routed with its neighbours/, 'a leg is routed twice');
+  const runs = (plan.match(/function legRuns\(idx\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.match(runs, /way === 'shortest'\) continue;/, 'a shortest-way leg goes in a batch');
+});
+
+test('a reopened ride takes its legs from this browser before it asks our server (owner 2026-10-18)', () => {
+  const ra = (plan.match(/async function routeAll\(\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  const kept = ra.indexOf('const kept = await storedLegs(unknown);');
+  assert.ok(kept > 0, 'routeAll does not read the kept legs');
+  assert.ok(kept < ra.indexOf('routeLegs('), 'the kept legs are read after the server is asked');
+  assert.match(ra, /if\(myGen !== gen\) return;\n    kept\.forEach\(\(leg, k\) => legCache\.set\(k, leg\)\);/, 'a newer routing is overwritten by an old read');
+  const fin = (plan.match(/function finishRouting\(\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.match(fin, /keepLegs\(ride\.legs\);/, 'a routed ride is not kept');
+});
+
+test('the legs left to plan show under the status line, always (owner 2026-10-18)', () => {
+  assert.match(twig, /<div class="cc-ride-left" id="planLegsLeft" hidden><\/div>/);
+  assert.match(twig, /budget: path\('map_plan_budget'\)/);
+  assert.equal((plan.match(/showLegsLeft\(d\.budget\);/g) || []).length, 5, 'a leg answer does not update the legs left');
+  assert.match(plan, /until = d\.until \|\| ''; showLegsLeft\(d\.budget\);/, 'a spent budget does not show 0 left');
+  assert.match(plan, /everOpened = true; askLegsLeft\(\);/, 'opening the planner does not ask the legs left');
+  for (const l of ['en', 'fr', 'nl', 'de', 'es']) for (const k of ['plan_legs_left_day', 'plan_legs_left_window']) assert.match(read(`translations/messages.${l}.yaml`), new RegExp(`^ {2}${k}: ".*\\{n\\}.*\\{max\\}`, 'm'));
+});
+
+test('a ride file keeps its roads: its legs are matched in one request and kept under any bike (owner 2026-10-18)', () => {
+  assert.match(twig, /match: path\('map_plan_match'\)/);
+  const apply = (plan.match(/async function applyRideFile\(r, fileName\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  const asked = apply.indexOf('await routeMatch(r.track, ride.bike)'), routed = apply.indexOf('afterChange();');
+  assert.ok(asked > 0, 'a file\'s legs are not matched');
+  assert.ok(asked < routed, 'the legs are routed before the file\'s roads come back, spending them twice');
+  assert.match(apply, /fileLegs\.set\(fileLegKey\(stops\[i\], stops\[i \+ 1\]\), leg\)/);
+  assert.match(apply, /if\(ride\.stops !== stops\) return;/, 'a file matched late overwrites the ride the rider moved on to');
+  assert.match(plan, /const f = fileLegs\.get\(fileLegKey\(ride\.stops\[i\], ride\.stops\[i \+ 1\]\)\);/, 'a bike change drops the file\'s roads');
+  assert.match(plan, /if\(!leg \|\| !leg\.routed \|\| leg\.fromFile \|\|/, 'the repeat check moves a leg off the file\'s roads');
+  assert.match(read('assets/map/leg-store.js'), /'fromFile', 'matched'\]/, 'a kept leg forgets it came from a file');
+  for (const l of ['en', 'fr', 'nl', 'de', 'es']) assert.match(read(`translations/messages.${l}.yaml`), /^ {2}plan_matching: ".*\{name\}/m);
+});
+
+test('the checkpoints shrink as the map zooms out (owner 2026-10-18)', () => {
+  const css = read('assets/styles/map.css');
+  assert.match(plan, /const MARKER_ZOOM = \[9\.5, 11\.5\];/);
+  assert.match(plan, /map\.on\('zoom', sizeMarkers\)/, 'the size does not follow the zoom');
+  assert.match(css, /\.cc-mk-m \.cc-plan-mk:not\(\.scrub\)\{width:19px;height:19px;/);
+  assert.match(css, /\.cc-mk-s \.cc-plan-mk:not\(\.scrub\)\{width:15px;height:15px;/);
+});
+
+test('the day and the start time labels read as small as the name\'s; the fields keep their size (owner 2026-10-18)', () => {
+  const css = read('assets/styles/map.css');
+  const name = (css.match(/\.cc-plan-field span\{([^}]*)\}/) || [])[1] || '';
+  const when = (css.match(/\.cc-plan-when \.cc-plan-date > span:first-child,\.cc-plan-when \.cc-plan-date > label\{([^}]*)\}/) || [])[1] || '';
+  for (const rule of ['font-size:.64rem', 'letter-spacing:.12em']) assert.ok(name.includes(rule) && when.includes(rule), `the labels differ on ${rule}`);
+  assert.match(css, /\.cc-plan-when \.cc-plan-date\{font-size:\.76rem\}/, 'the fields changed size');
+});
+
+test('the scope follows the start, never a refresh after a pan or a search (owner 2026-10-18)', () => {
+  const along = (plan.match(/async function renderAlong\(\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.doesNotMatch(along, /followRideScope\(/, 'a refresh puts the ride\'s scope back');
+  assert.match(plan, /map\.on\('moveend', \(\) => \{ if\(!asleep && ride\.stops\.length >= 2\)\{ scheduleAlong\(\);/, 'the refresh after a pan is the case this guards');
+});
+
+test('Search & region puts the ride to sleep at once; the planner wakes it (owner 2026-10-18)', () => {
+  assert.match(plan, /if\(e\.detail && e\.detail\.key === 'search'\) sleepRide\(\); renderBar\(\); syncPlanning\(\);/, 'opening Search & region leaves the ride on the map');
+  const sleep = (plan.match(/function sleepRide\(\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.match(sleep, /asleep = true; everOpened = false; gen\+\+;/, 'a routing in flight draws the ride again, or Add to ride stays on the drawers');
+  for (const src of ['plan', 'plan-straight', 'plan-alt', 'plan-gap', 'plan-hl', 'plan-rain', 'plan-wind']) assert.ok(sleep.includes(`'${src}'`), `the ${src} source stays drawn`);
+  assert.match(sleep, /markers\.forEach\(m => m\.remove\(\)\); markers = \[\];/, 'the checkpoints stay');
+  assert.match(sleep, /showStrip\(false\);/, 'the strip stays');
+  assert.match(sleep, /showStrip\(false\);\n  restoreRideScope\(\);/, 'the ride\'s scope stays');
+  assert.match(plan, /if\(asleep\)\{ asleep = false; afterChange\(\); return; \}/, 'the planner does not wake the ride');
+});
+
+test('a sleeping ride asks nothing and moves no scope: every timed refresh checks it when it fires (owner 2026-10-18)', () => {
+  const body = name => (plan.match(new RegExp(`async function ${name}\\(\\)\\{\\n([\\s\\S]*?)\\n\\}`)) || [])[1] || '';
+  assert.match(body('renderAlong'), /^[\s\S]{0,260}if\(asleep\) return;/, 'the along refresh after a camera move puts the ride\'s scope back');
+  assert.match(body('fetchWeather'), /^\s*if\(asleep\) return;/, 'a sleeping ride asks the forecast');
+  assert.match(plan, /tileTimer = setTimeout\(\(\) => \{ if\(!asleep && ride\.stops\.length >= 2/);
+  assert.match(plan, /map\.on\('moveend', \(\) => \{ if\(!asleep && ride\.stops\.length >= 2\)/);
+  assert.match(plan, /map\.on\('idle', \(\) => \{ if\(!asleep && ride\.stops\.length >= 2\)/);
+  assert.match(plan, /clearTimeout\(alongTimer\); clearTimeout\(weatherTimer\); clearTimeout\(tileTimer\);/);
+});
+
+/* Owner 2026-10-19: "there is no option to move the ride details to the right again. i wonder if we need to add the
+   option to add them to the left drawer anyway". Both ways are a labelled button, and the place is kept. */
+test('the ride details move left or right with a labelled button, and stay where the rider put them', () => {
+  const h3 = twig.slice(twig.indexOf('id="planLineToggle"'), twig.indexOf('</h3>', twig.indexOf('id="planLineToggle"')));
+  assert.match(h3, /id="planSideBack"[^>]*>[\s\S]*?<span>\{\{ 'map\.plan_side_show'\|trans \}\}<\/span><\/button>/);
+  assert.match(h3, /id="planSideX"[^>]*>[\s\S]*?<span>\{\{ 'map\.plan_side_left'\|trans \}\}<\/span><\/button>/);
+  assert.match(plan, /let sideClosed = sideStored\(\)/);
+  assert.match(plan, /\$\('planSideX'\)\?\.addEventListener\('click', \(\) => \{ sideClosed = true; keepSide\(\); syncSide\(\); \}\);/);
+  assert.doesNotMatch(plan, /e\.detail\.key === 'plan'\) sideClosed = false/, 'opening the planner puts the details back on the right');
+  for (const l of ['en', 'fr', 'nl', 'de', 'es']) assert.match(read(`translations/messages.${l}.yaml`), /^ {2}plan_side_left: "/m, l);
 });

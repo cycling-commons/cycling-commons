@@ -9,7 +9,7 @@
 import { map, flyToPin } from './map-init.js';
 import { I18N, D, tpl, trVal } from './i18n.js';
 import { escPend, txtOn, gradColor, photonLang } from './util.js';
-import { uKm, uM, uElev, uElevValue, uElevUnit } from './units.js';
+import { uKm, uM, uElev, uElevValue, uElevUnit, uDistUnit, uSpeed } from './units.js';
 import { highlightAt, clearHighlight } from './drawer.js';
 import { pinElFor } from './pin-fan.js';
 import { liftInfoLayersAboveRoutes } from './render.js';
@@ -23,7 +23,7 @@ import { CATALOG } from './catalog.js';
 import { layerGlyph, waterKind } from './icons.js';
 import { scopeKey, planScopeFor } from './ride-scope.js';
 import { keepCameraForNextScope } from './scope-ui.js';
-import { MAX_STOPS, ALONG_MAX_POINTS, thinLine, CORRIDOR_M, workFresh, rideFromGpx, waterGapSpan, bestWaterStop, stopRows, legGoesRound, whyThisWay, sliceAlong, stopIndexAt, legKeys, insertIndex, figures, profileRuns, pointAt, gpxText, barText, createHistory, coverPadding, tickStepKm, gradientSpans, surfaceSpans, rideTime, surfaceBars, gradientBars, durationText, tougherLines, rideFeel, rideHours, defaultStartMin, forecastPageUrl, forecastPoint, heightTicks, tileSurfaceClass, mergeSurfaces, streetAt, stopStreet, roadAt, steepestKm, longestClimb, waterGap, sunTimes, windShares, windSpans, hourSpan } from './plan-model.js';
+import { MAX_STOPS, ALONG_MAX_POINTS, thinLine, CORRIDOR_M, workFresh, rideFromGpx, waterGapSpan, bestWaterStop, stopRows, legGoesRound, whyThisWay, sliceAlong, stopIndexAt, legKeys, stopKey, insertIndex, REPEAT, repeatRuns, repeatedM, avoidPoints, figures, profileRuns, pointAt, gpxText, barText, createHistory, coverPadding, tickStepKm, gradientSpans, surfaceSpans, rideTime, surfaceBars, gradientBars, durationText, tougherLines, rideFeel, rideHours, defaultStartMin, forecastPageUrl, forecastPoint, heightTicks, tileSurfaceClass, mergeSurfaces, roadDetail, detailSpans, avgKmh, streetAt, stopStreet, roadAt, steepestKm, longestClimb, waterGap, sunTimes, windShares, windSpans, hourSpan } from './plan-model.js';
 
 const CC_PLAN = window.CC_PLAN || {};
 const P = () => I18N.plan || {};
@@ -598,7 +598,7 @@ function wayText(w){
   if(w.kind === 'shortest') return P().wayShortest || 'This is about the shortest way your bike may ride here.';
   if(w.kind === 'surface') return tpl(P().waySurface || 'The shortest way is {alt}, with {unpaved} of gravel or dirt. Your bike avoids that, so this way is {cur}.', { ...d, unpaved: fmtKm(w.unpavedM) });
   if(w.kind === 'climb') return tpl(P().wayClimb || 'The shortest way is {alt}, but climbs {m} more. This way is {cur}.', { ...d, m: uElev(w.upM) });
-  if(w.kind === 'busy') return tpl(P().wayBusy || 'The shortest way is {alt}, with {busy} on busy roads without a cycle lane. This way is {cur}.', { ...d, busy: fmtKm(w.busyM) });
+  if(w.kind === 'busy') return tpl(P().wayBusy || 'The shortest way is {alt}, with {busy} on main roads without a cycle lane. This way is {cur}.', { ...d, busy: fmtKm(w.busyM) });
   if(w.kind === 'cycle') return tpl(P().wayCycle || 'The shortest way is {alt}, only {alt_cycle} of it on cycle paths. This way is {cur}, {cur_cycle} of it on cycle paths, away from cars.', { ...d, alt_cycle: fmtKm(w.altCycleM), cur_cycle: fmtKm(w.curCycleM) });
   if(w.kind === 'signals') return tpl(P().waySignals || 'The shortest way is {alt}, past {alt_n} traffic lights. This way is {cur}, past {cur_n}.', { ...d, alt_n: w.altSignals, cur_n: w.curSignals });
   // Nothing measured stands out: say what the planner weighs, never a reason it did not find.
@@ -623,7 +623,10 @@ function renderFigures(){
   if(tEl) tEl.textContent = day ? hmText(day.seconds) : '';
   // A flat ride feels like itself: the flat equivalent shows only when it is more than 5 % longer (owner 2026-10-17).
   const feels = day && day.flatKm > f.distM / 1000 * 1.05;
-  if(tSub){ tSub.textContent = feels ? tpl(P().feelsLike || 'feels like {d} flat', { d: uKm(day.flatKm, 0) }) : ''; tSub.hidden = !feels; }
+  // The average speed of the riding time, before the flat equivalent (owner 2026-10-19: "Show the avg speed").
+  const avg = day ? avgKmh(f.distM, day.seconds) : null;
+  const sub = [avg != null ? tpl(P().avgSpeed || 'avg {s}', { s: uSpeed(avg, 1) }) : '', feels ? tpl(P().feelsLike || 'feels like {d} flat', { d: uKm(day.flatKm, 0) }) : ''].filter(Boolean).join(' · ');
+  if(tSub){ tSub.textContent = sub; tSub.hidden = !sub; }
   const arr = $('planArrive');
   // The finish: the riding time plus 5 % for lights, crossings and traffic, to five minutes; stops are the rider's (owner 2026-10-17).
   const at = $('planArriveT');
@@ -714,8 +717,8 @@ function partLabel(cls){ const d = { paved: P().partPaved || 'on asphalt', grave
 const SURF_PARTS = new Set(['paved', 'gravel', 'rough', 'unknown']);
 const MAP_PART = { ...PART_COLOUR, all: '#FF5A1F', flat: '#8C8167', descend: '#5D8FB0', 'wind-into': '#B8501A', 'wind-side': '#8C8167', 'wind-with': '#2E78C2',
   steep: '#7B4F9D', climbrun: '#7B4F9D', busy: '#B8501A', rain: '#3A6FC4', dark: '#1F2A44', 'hour-hot': '#C0561E', 'hour-cold': '#3A6FC4', 'hour-ice': '#3A6FC4' };
-/* What each line of what makes it tougher lights on the map (owner 2026-10-18: "then also the veil trick"). */
-const TOUGH_PART = { long: 'all', steep: 'steep', climb: 'climbrun', rough: 'rough', busy: 'busy', water: 'water', daylight: 'dark', wind: 'wind-into', rain: 'rain', heat: 'hour-hot', cold: 'hour-cold', ice: 'hour-ice' };
+/* What each line of what makes it tough lights on the map (owner 2026-10-18: "then also the veil trick"). */
+const TOUGH_PART = { long: 'all', steep: 'steep', climb: 'climbrun', climbed: 'climb', rough: 'rough', busy: 'busy', water: 'water', daylight: 'dark', wind: 'wind-into', rain: 'rain', heat: 'hour-hot', cold: 'hour-cold', ice: 'hour-ice' };
 /* The day as the panel reads it now: riding time, total, the forecast of the hours ridden and how they feel. */
 function dayNow(){
   const day = rideTime(dayLegs(), ride.bike), total = figures(ride.legs).distM;
@@ -905,7 +908,7 @@ function renderTougher(day, f){
   const waterKm = alongRows ? waterGap(nearRows().concat(stopRows(ride.stops, ride.legs)), f.distM) : null;
   const busyM = ride.legs.reduce((t, l) => t + (l && l.routed && l.surfaces ? (l.surfaces.busy || 0) : 0), 0);
   const found = tougherLines({
-    distM: f.distM, steep: steepestKm(ride.legs), climb: longestClimb(ride.legs), roughM: day.metres.rough, waterKm, busyM,
+    distM: f.distM, upM: f.upM, steep: steepestKm(ride.legs), climb: longestClimb(ride.legs), roughM: day.metres.rough, waterKm, busyM,
     sun: start ? sunTimes(start.lat, start.lng, rideDate()) : null, rideS: day.seconds, startAt: startAt(), forecast: fc, feel,
   });
   const lines = [];
@@ -916,9 +919,10 @@ function renderTougher(day, f){
     if(x.kind === 'long') lines.push(tpl(P().longDay || '{d}: a long day', { d: uKm(x.distM / 1000, 0) }));
     else if(x.kind === 'steep') lines.push(tpl(P().steepest || 'Steepest km: {g} % at km {at}', { g: x.grad.toFixed(0), at: x.atKm.toFixed(0) }));
     else if(x.kind === 'climb') lines.push(tpl(P().longestClimb || 'Longest climb: {d}, {m} up, {g} %', { d: uKm(x.km, 1), m: uElev(x.upM), g: x.grad.toFixed(1) }));
+    else if(x.kind === 'climbed') lines.push(tpl(P().climbedDay || '{m} of climbing in total', { m: uElev(x.upM) }));
     else if(x.kind === 'rough') lines.push(tpl(P().rough || '{d} of rough surface, cobbles and the like', { d: uKm(x.roughM / 1000, 0) }));
     else if(x.kind === 'water'){ waterAt = lines.length; lines.push(tpl(P().waterGap || '{d} without water or food along the way', { d: uKm(x.km, 0) })); }
-    else if(x.kind === 'busy') lines.push(tpl(P().busy || '{d} on busy roads without a cycle lane', { d: fmtKm(x.busyM) }));
+    else if(x.kind === 'busy') lines.push(tpl(P().busy || '{d} on main roads without a cycle lane', { d: fmtKm(x.busyM) }));
     else if(x.kind === 'daylight'){
       lines.push(tpl(P().daylight || 'Daylight {d}, {from} to {to}', { d: durationText(x.sun.daylightS, durWords(), 1), from: clockText(x.sun.sunrise), to: clockText(x.sun.sunset) }));
       if(x.over === 'over') lines.push(P().daylightShort || 'The riding time is longer than the daylight.');
@@ -1489,10 +1493,16 @@ function renderBar(){
 /* ---------- the ride's details on the right (route-planner.md section 3, owner 2026-10-17) ----------
    A wide screen is wider than high: the details (#planFigsGrp) leave the panel for a side of their own on the right,
    with the ride bar's Open and Clear. A place's drawer takes that side while it is open; closed, the details come back.
-   The side's close button puts them back in the panel until the planner is opened again. On a phone they stay in the
-   panel's sheet. */
+   "Show in the panel" puts them back in the panel and "Show on the right" there sends them back; the place is kept
+   (sideStored()). On a phone they stay in the panel's sheet. */
 const WIDE = window.matchMedia('(min-width:821px)');
-let sideClosed = false, figsHome = null, legendSync = null;
+/* Where the rider put the details, right or in the panel, kept in this browser (owner 2026-10-19: "there is no
+   option to move the ride details to the right again. i wonder if we need to add the option to add them to the left
+   drawer anyway"); a per-viewer convenience: without storage they start on the right. */
+const SIDE_KEY = 'cc-plan-side';
+function sideStored(){ try { return localStorage.getItem(SIDE_KEY) === 'panel'; } catch(e){ return false; } }
+function keepSide(){ try { localStorage.setItem(SIDE_KEY, sideClosed ? 'panel' : 'right'); } catch(e){ /* kept for this visit only */ } }
+let sideClosed = sideStored(), figsHome = null, legendSync = null;
 function spotOpen(){ const d = document.getElementById('drawer'); return !!d && d.classList.contains('open'); }
 function syncSide(){
   const side = $('planSide'), body = $('planSideBody'), figs = $('planFigsGrp'), wrap = document.querySelector('.map-wrap');
@@ -1749,8 +1759,8 @@ export function initPlan(){
   syncSide();
   wireWeatherHover($('planWeatherGrp'));
   // Optional: a page and a script of different builds must not stop the planner before it restores the ride.
-  $('planSideX')?.addEventListener('click', () => { sideClosed = true; syncSide(); });
-  $('planSideBack')?.addEventListener('click', () => { sideClosed = false; syncSide(); });
+  $('planSideX')?.addEventListener('click', () => { sideClosed = true; keepSide(); syncSide(); });
+  $('planSideBack')?.addEventListener('click', () => { sideClosed = false; keepSide(); syncSide(); });
   WIDE.addEventListener('change', syncSide);
   // A place's drawer says nothing when it opens or closes; its class does.
   const spot = document.getElementById('drawer');

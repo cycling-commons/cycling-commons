@@ -667,7 +667,8 @@ export function tickStepKm(totalKm){
    asphalt, the paved descent cap in km/h. Round numbers for a steady day on a
    loaded bike, the same for everyone: there is no personal level. */
 export const PACE = {
-  'Road':      { watts: 150, cda: 0.36, kg: 90,  crr: 0.005, capKmh: 42 },
+  // 28 km/h on the flat at 150 W (owner 2026-10-19: "at 150w make it more like 28 km an hour for flat").
+  'Road':      { watts: 150, cda: 0.41, kg: 90,  crr: 0.005, capKmh: 42 },
   'Gravel':    { watts: 150, cda: 0.40, kg: 92,  crr: 0.006, capKmh: 38 },
   'MTB':       { watts: 140, cda: 0.45, kg: 94,  crr: 0.009, capKmh: 35 },
   'E-bike':    { watts: 100, cda: 0.50, kg: 105, crr: 0.007, capKmh: 35, motorW: 250, assistKmh: 25 },
@@ -738,6 +739,8 @@ export function rideTime(legs, bike){
   const flatSeconds = distM / flatSpeed(bike);
   return { seconds, flatSeconds, flatKm: seconds / flatSeconds * distM / 1000, parts, metres };
 }
+/** The average speed of the riding time, km/h: the distance over the time ridden, stops not counted; null without both. */
+export function avgKmh(distM, seconds){ return distM > 0 && seconds > 0 ? distM / seconds * 3.6 : null; }
 /* One bar of the day graphic: the parts of one split with their share, in a fixed order, empty parts left out. */
 function barsOf(parts, order){
   const total = order.reduce((t, k) => t + (parts[k] || 0), 0);
@@ -773,11 +776,14 @@ export const TOUGHER = {
   climbKm: 5,
   /** ... or climbs this much or more, metres. */
   climbUpM: 300,
+  /** The whole day climbs this much or more, metres (owner 2026-10-19: "Everything above 2000m of climbing"). */
+  climbedM: 2000,
   /** This much or more on rough surface (cobbles, dirt and the like), km. */
   roughKm: 5,
   /** The longest stretch without water or food is longer than this, km. */
   waterKm: 40,
-  /** This much or more on busy roads without a cycle lane, km. */
+  /** This much or more on main roads without a cycle lane (motorway, trunk, primary and secondary roads by their
+      OpenStreetMap class, not measured traffic), km. */
   busyKm: 5,
   /** The riding time plus this does not fit in the daylight, seconds: an hour to spare. */
   daylightSpareS: 3600,
@@ -852,8 +858,8 @@ export function rideFeel(fc, paceKmh){
   return out;
 }
 
-/** The lines of "What makes it tougher" (route-planner.md section 4.4), each factor only past its TOUGHER baseline, in
-    the panel's order: distance, steepest kilometre, longest climb, rough surface, water, busy roads, daylight, wind,
+/** The lines of "What makes it tough" (route-planner.md section 4.4), each factor only past its TOUGHER baseline, in
+    the panel's order: distance, steepest kilometre, longest climb, rough surface, water, main roads, daylight, wind,
     heat, rain. Every input may be missing; a missing one gives no line. `o`: distM, steep (steepestKm()), climb
     (longestClimb()), roughM, waterKm (waterGap()), busyM, sun (sunTimes()), rideS (the riding time), forecast (the
     weather answer for the ride's day). An empty list is a ride with nothing out of the ordinary. */
@@ -862,6 +868,7 @@ export function tougherLines(o){
   if(o.distM > t.longKm * 1000) out.push({ kind: 'long', distM: o.distM });
   if(o.steep && o.steep.grad >= t.steepGrad) out.push({ kind: 'steep', grad: o.steep.grad, atKm: o.steep.atKm });
   if(o.climb && (o.climb.km >= t.climbKm || o.climb.upM >= t.climbUpM)) out.push({ kind: 'climb', km: o.climb.km, upM: o.climb.upM, grad: o.climb.grad });
+  if(Number.isFinite(o.upM) && o.upM >= t.climbedM) out.push({ kind: 'climbed', upM: o.upM });
   if(o.roughM >= t.roughKm * 1000) out.push({ kind: 'rough', roughM: o.roughM });
   if(o.waterKm != null && o.waterKm > t.waterKm) out.push({ kind: 'water', km: o.waterKm });
   if(o.busyM >= t.busyKm * 1000) out.push({ kind: 'busy', busyM: o.busyM });
@@ -1068,7 +1075,7 @@ export function legGoesRound(leg, a, b){
   return leg.distM >= 1.3 * straight && leg.distM - straight >= 500;
 }
 /** Why the leg takes the way it does, against the shortest way the same bike may ride (`alt`): the main reason, in this
-    order, gravel or dirt the bike avoids, climbing it saves, busy roads it keeps off, cycle paths it keeps to, traffic
+    order, gravel or dirt the bike avoids, climbing it saves, main roads it keeps off, cycle paths it keeps to, traffic
     lights it keeps clear of; `shortest` when the two are about equal; `other` when nothing measured stands out, which
     claims no reason (owner 2026-10-16: "asphalt vs asphalt"); null with nothing to compare. */
 export function whyThisWay(cur, alt){

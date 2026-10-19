@@ -41,7 +41,10 @@ final class LegSurfaces
         'path' => 'rough',
         'impassable' => 'rough',
     ];
-    /** The road classes a rider calls busy, when no lane of their own runs along. */
+    /**
+     * The main roads, by their OpenStreetMap class, when no lane of their own runs along (owner 2026-10-19: "where did
+     * you get the busy from?"): a road class, never measured traffic. The figures call them main roads.
+     */
     private const array BUSY_CLASSES = ['motorway', 'trunk', 'primary', 'secondary'];
     private const array OWN_LANES = ['dedicated', 'separated'];
     /** A cycle path, away from cars: a cycleway of its own, or a road whose cycle lane is kerbed off. */

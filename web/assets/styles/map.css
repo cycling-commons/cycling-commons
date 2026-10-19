@@ -2303,8 +2303,13 @@
   .cc-plan-fig-half[hidden]{display:none}
   .cc-plan-fig-half span em{display:block;font-style:normal;text-transform:none;letter-spacing:0;color:rgb(var(--chrome-fg) / .8);margin-top:.15rem}
   .cc-plan-fig-half span em:empty{display:none}
-  .cc-plan-fig .cc-info-wrap{position:relative;text-transform:none;letter-spacing:0}
-  /* What makes it tougher and Weather are headings like Your ride (owner 2026-10-17). */
+  .cc-plan-fig .cc-info-wrap{position:static;text-transform:none;letter-spacing:0}
+  /* The bubble of a figure's info icon hangs from the whole row of figures, as wide as the panel or the side it sits
+     in, so it is never cut at their edge (owner 2026-10-19: one word a line, then "Icon is on wrong layer": cut at
+     the side's left edge), in the sentence type, not the figure's mono capitals. */
+  .cc-plan-figs{position:relative}
+  .cc-plan-fig .cc-info-pop{left:0;right:0;width:auto;font-family:var(--sans);font-size:.78rem;letter-spacing:0;text-transform:none;color:var(--chrome-fg-solid);z-index:20}
+  /* What makes it tough and Weather are headings like Your ride (owner 2026-10-17). */
   .cc-plan-tougher h4,#planSide .cc-plan-tougher h4{font-family:var(--mono);font-size:.74rem;letter-spacing:.18em;font-weight:700;color:var(--chrome-head);text-transform:uppercase;margin:0 0 .7rem}
   #planSide .cc-plan-tougher,#p-plan .cc-plan-tougher{margin-top:1.6rem}
   /* The guide reads on a blurred map (owner 2026-10-17). */
@@ -2330,7 +2335,9 @@
   /* The details' heading as one row: the eye beside the words, the side's close button at the right edge, both one
      size (owner 2026-10-18: "not aligned, and on the right of the drawer"). */
   #planFigsGrp > h3{display:flex;align-items:center}
-  #planSideX,#planSideBack{padding:.2rem .35rem;display:inline-flex;align-items:center}
+  #planSideX,#planSideBack{padding:.2rem .45rem;display:inline-flex;align-items:center;gap:.3rem}
+  /* Both ways are said in words (owner 2026-10-19): an arrow alone was not found. */
+  .cc-side-move span{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
   /* The id rules above outrank the hidden attribute's display:none, so it is said again here: one of the two shows at a time. */
   #planSideX[hidden],#planSideBack[hidden]{display:none}
   #planSideX{margin-left:auto}

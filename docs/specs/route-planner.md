@@ -33,7 +33,7 @@ different product and stays out.
 | A start, stops and an end, set by clicking the map or by adding a place the Commons knows | Turn-by-turn directions or navigation |
 | The line follows roads, chosen by our routing engine for the rider's bike type | Alternatives, "avoid this area", "prefer quiet roads" sliders |
 | Distance, metres climbed, metres descended, and the height profile | Calories, training figures, a personal pace or level |
-| The riding time of one general reference rider per bike type, the flat-equivalent distance, and what makes the day tougher: steepness, water gaps, busy roads, daylight, the forecast (section 4.4) | Comparing a ride against the rider's own history or fitness; there is no usage data and none is collected for it |
+| The riding time of one general reference rider per bike type, the flat-equivalent distance, and what makes the day tougher: steepness, water gaps, main roads, daylight, the forecast (section 4.4) | Comparing a ride against the rider's own history or fitness; there is no usage data and none is collected for it |
 | What the Commons has along the ride (a tap, a toilet, a climb, a view), each addable as a stop | Multi-day plans, round-trip generation |
 | Keep the ride as a file on the rider's own device, the GPX, and open it again to carry on; open another app's GPX, converted to checkpoints (section 6.1) | A copy of a ride on our server; public or shared plans, comments, ratings, a feed |
 | Download the ride as a GPX (GPS Exchange Format) file for a device or another planner | Sending to a device or an app for the rider |
@@ -116,15 +116,19 @@ shows, which is the point.
   graphic, the day and start time, the finish, what makes it tough and
   the weather) leaves the panel for a side of its own along the map's right
   edge (`#planSide`), the drawer's 320 px and colours. Its one control is a
-  close button ("Hide the ride details", `map.plan_side_hide`, `#planSideX`)
-  in the details' heading, at its right edge, the eye's size (owner 2026-10-18), (owner 2026-10-17: Clear there read
+  labelled button ("Show in the panel", `map.plan_side_left`, `#planSideX`)
+  in the details' heading, at its right edge (owner 2026-10-18), (owner 2026-10-17: Clear there read
   as vague; Clear stays in the panel's file row, Open is the rail's icon). A place's drawer (380 px, above it)
   takes the right edge while it is open, folded or not; when it closes, the
   details come back (`syncSide()` in `plan.js` follows the drawer's class).
-  The side's close button puts the details back in the panel until the
-  planner is opened again, or until the arrow button in their heading
-  ("Show on the right", `#planSideBack`, `map.plan_side_show`) sends them
-  back to the right. While the side shows, the ride bar does not
+  "Show in the panel" puts the details back in the left panel, and "Show on
+  the right" in their heading there (`#planSideBack`, `map.plan_side_show`)
+  sends them back to the right; both are said in words beside their arrow
+  (owner 2026-10-19: "there is no option to move the ride details to the
+  right again. i wonder if we need to add the option to add them to the left
+  drawer anyway"). The place the rider picked is kept in this browser
+  (`cc-plan-side`, `panel` or `right`) and stays when the planner is opened
+  again; without storage the details start on the right. While the side shows, the ride bar does not
   (the side carries its figures), and what sits on the
   map's right steps aside: the top-right buttons, the key, the height strip
   (which ends at the side; its tab, once folded, centres on the map the side
@@ -509,7 +513,7 @@ so it still never takes a road a cyclist may not use. `whyThisWay()` compares
 the two and one sentence under the leg names the main reason, in this order:
 gravel or dirt the bike avoids ("The shortest way is 4.4 km, with 3.1 km of
 gravel or dirt. Your bike avoids that, so this way is 7.6 km."), climbing it
-saves (40 m or more), busy roads it keeps off (500 m or more), cycle paths
+saves (40 m or more), main roads it keeps off (500 m or more), cycle paths
 it keeps to (500 m more and a 20-point larger share: "The shortest way is
 5.3 km, only 0.6 km of it on cycle paths. This way is 6.6 km, 5.4 km of it
 on cycle paths, away from cars."), or traffic lights it keeps clear of (4 or
@@ -644,7 +648,7 @@ no account data: the pace is general, and it stays general (section 1).
 
   | Bike | W | CdA m² | kg | Crr paved | cap km/h |
   |---|---|---|---|---|---|
-  | Road | 150 | 0.36 | 90 | 0.005 | 42 |
+  | Road | 150 | 0.41 | 90 | 0.005 | 42 |
   | Gravel | 150 | 0.40 | 92 | 0.006 | 38 |
   | MTB | 140 | 0.45 | 94 | 0.009 | 35 |
   | E-bike | 100 own, 250 motor to 25 km/h | 0.50 | 105 | 0.007 | 35 |
@@ -656,7 +660,16 @@ no account data: the pace is general, and it stays general (section 1).
   Gravel rolls at 0.012, rough road at 0.020, an unknown surface at 0.007,
   whatever the bike. These are round numbers for a steady day on a loaded
   bike, not racing figures; they are the same for everyone, which is the
-  point.
+  point. The road rider's drag area is set so 150 W holds 28.0 km/h on the
+  flat; on the flat the others then hold: Gravel 27.6, MTB 24.4, Handbike
+  23.9, Trike 26.1, Recumbent 32.3, Tandem 33.0, E-bike 25 km/h.
+- **The average speed** (owner 2026-10-19: "Show the avg speed") opens the
+  tile's second line, "avg 15.7 km/h" (`avgKmh()`: the distance over the
+  riding time, stops not counted, one decimal, mph for a rider who reads
+  miles), before the flat equivalent when that shows: "avg 15.7 km/h · feels
+  like 282 km flat". The tile's info bubble says what the time takes in: one
+  steady effort for the bike type, slower on every climb the steeper it is,
+  slower on gravel and rough road, held back on descents, stops not counted.
 - **Feels like N flat km.** The same model, the same bike, on smooth level
   asphalt: the ride's time divided by the flat speed. A ride whose flat
   equivalent is no more than 5 % longer than itself shows no second line:
@@ -694,9 +707,10 @@ no account data: the pace is general, and it stays general (section 1).
   | Distance | the ride is longer than 100 km | `longKm` 100 |
   | Steepest kilometre | it averages 8 % or more | `steepGrad` 8 |
   | Longest climb | it is 5 km or longer, or climbs 300 m or more | `climbKm` 5, `climbUpM` 300 |
+  | Total climbing | the whole day climbs 2000 m or more ("4,185 m of climbing in total"; owner 2026-10-19: "Everything above 2000m of climbing then it is shown as tough"), the line lighting the climbing stretches | `climbedM` 2000 |
   | Rough surface | 5 km or more on rough surface | `roughKm` 5 |
   | Water and food | the longest stretch without is longer than 40 km | `waterKm` 40 |
-  | Busy roads | 5 km or more without a cycle lane | `busyKm` 5 |
+  | Main roads | 5 km or more without a cycle lane | `busyKm` 5 |
   | Daylight | the riding time plus an hour does not fit in the daylight, or the daylight is under 10 hours | `daylightSpareS` 3600, `daylightMinS` 36000 |
   | Wind | the day's highest wind speed is 30 km/h or more (Beaufort 5 and up), or its gusts reach 50 km/h or more | `windKmh` 30, `gustKmh` 50 |
   | Heat | the day's highest temperature is 30 °C or more | `heatC` 30 |
@@ -758,10 +772,14 @@ no account data: the pace is general, and it stays general (section 1).
     title and accessible name, and the line itself, hovered or focused,
     paints that stretch on the map as a yellow highlighter band under the
     ride (`sliceAlong()`, layer `plan-gap`; blue read as a river).
-  - **Busy roads**: the kilometres on trunk, primary and secondary roads
-    without a dedicated or separated cycle lane, from 5 km, read per edge
-    from the engine (`LegSurfaces`: `road_class` and `cycle_lane`), carried
-    with the leg as `surfaces.busy` metres.
+  - **Main roads**: the kilometres on motorway, trunk, primary and secondary
+    roads without a dedicated or separated cycle lane, from 5 km, read per
+    edge from the engine (`LegSurfaces`: `road_class` and `cycle_lane`),
+    carried with the leg as `surfaces.busy` metres. A road class from
+    OpenStreetMap, never measured traffic, so the line says "main roads",
+    not "busy roads" (owner 2026-10-19: "where did you get the busy from?",
+    option A). Where measured traffic (traffic-measurements.md) is shown one
+    day, it takes this place.
   - **Daylight** for the ride's date: a date field under the figures, today
     by default, kept with the browser's draft and never in the ride file
     (a kept ride is ridden on many days). The date reads in the page's
