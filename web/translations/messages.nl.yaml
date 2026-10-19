@@ -1260,6 +1260,8 @@ map:
   fade_roads: "Wegen zonder fietsers vervagen"
   fade_roads_hint: "Snelwegen, autowegen en wegen waar fietsers het fietspad ernaast moeten nemen, flauw getekend"
   relief_hint: "De hellingen gearceerd en het land verhoogd, twee keer zijn echte hoogte. Kantel de kaart door met de rechtermuisknop te slepen (Ctrl-slepen op een Mac)."
+  relief_shade: "Reliëfschaduw"
+  relief_shade_hint: "De hellingen gearceerd op de platte kaart."
   gone_places: 'Verwijderde plekken'
   legend_quality: 'Streepjes: kwaliteit van het wegdek (glad → ruw), waar bekend'
   legend_route_national: 'Nationale en internationale routes'
@@ -2096,6 +2098,7 @@ map:
   mly_none: 'Geen straatbeeld hier.'
   mly_zoom: 'Zoom in en klik op een groene stip om straatbeeld te openen.'
   locate_me: 'Toon mijn locatie'
+  north_up: "Noorden boven"
   locate_unavailable: 'Locatie niet beschikbaar'
   locate_denied: 'Locatie is geblokkeerd voor deze site. Sta het toe in de instellingen van je browser en laad de pagina opnieuw.'
   locate_failed: 'Je locatie kon niet worden gevonden. Probeer het zo nog eens.'

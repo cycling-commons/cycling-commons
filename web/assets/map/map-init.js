@@ -166,7 +166,9 @@ export function initMapControls({toast}={}){
     + '© DLR e.V. 2010-2014 · © Airbus Defence and Space GmbH 2014-2018 '
     + `(<a href="${creditsUrl}">credits</a>)`
   }),'bottom-right');
-  map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-left');
+  /* The compass with the zoom buttons (owner 2026-10-19: "can we add a compass when you click it the map always
+     rotates North up"): its needle shows where north is; a click turns the map north up and keeps the tilt. */
+  map.addControl(new maplibregl.NavigationControl({showCompass:true, visualizePitch:false}),'bottom-left');
   map.addControl(locateControl(toast),'bottom-left');
   map.addControl({
     onAdd(m){

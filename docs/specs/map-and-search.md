@@ -352,8 +352,9 @@ map module opens `#drawer` behind its back.
   orange **"!"** mark (owner 2026-10-15): hover or focus opens it, a click on
   the mark keeps it open, and the next click folds it back into the "!"
   (`#fpillMark`, `aria-expanded`; `filter-pill-mark.test.cjs`). It sits at
-  the map's left edge above the zoom buttons and their zoom-level badge (9.2rem
-  up; owner 2026-10-16: at 7.6rem it sat on the badge), and just above the
+  the map's left edge above the zoom buttons, the compass and their zoom-level
+  badge (13.2rem up; owner 2026-10-19: with the compass the column grew and at
+  9.2rem the mark sat on the badge again), and just above the
   ride's profile strip while that is open, opening to the right (owner
   2026-10-15: centred, it covered the strip). The Plan icon wears the
   same dot while a stop of a ride is on the map
@@ -386,8 +387,14 @@ map module opens `#drawer` behind its back.
   markup's own `.f-match` / `.f-optin` declaration, so a filter group added
   later resets without anybody editing the reset.
 - **The bottom-left corner is the map's own controls** (`initMapControls`,
-  map-init.js), bottom to top: zoom in and out, **Locate me**, and the live zoom
-  badge. The same controls at every screen width. The attribution box at
+  map-init.js), bottom to top: zoom in and out with the **compass** under them,
+  **Locate me**, and the live zoom badge. The same controls at every screen
+  width. The compass (owner 2026-10-19: "can we add a compass when you click it
+  the map always rotates North up") is MapLibre's own (`NavigationControl`,
+  `showCompass:true, visualizePitch:false`): its needle shows where north is,
+  and a click turns the map north up and keeps the tilt, so the 3D relief keeps
+  its view; its label is "North up" in the page language
+  (`NavigationControl.ResetBearing`). The attribution box at
   bottom-right is capped at the map width minus 4.5rem
   (`.maplibregl-ctrl-bottom-right{max-width}`, map.css), so the long notice
   (OSM, DEM, imagery provider) wraps inside its own box and its last line, the
@@ -921,6 +928,21 @@ map overlays (`#ovRelief`, `relief.js`), shades the slopes and raises the ground
 true height, so flat land still shows its dikes and dunes, and tilts the map to 55° when it is
 flat; switched off, the shading and the raised ground go and the map lies flat again. Tilting
 is MapLibre's own: a right-drag, or Ctrl and drag on a Mac (the switch's hint says so).
+
+**Hillshade** (owner 2026-10-19: "Add option for hillshading also in flat view"), the row above
+it (`#ovHillshade`, `setHillshade()` in `relief.js`), shades the slopes on the flat map: the same
+`hillshade` layer and tiles, no raised ground and no tilt. The two switches share that one
+layer, which stays while either is on (`syncShade()`), so turning the 3D relief off keeps the
+shading while Hillshade is on. Switching Hillshade on switches the 3D relief off, which lays
+the map flat again (pitch 0) and shows its row as off (owner 2026-10-19: "when clicking
+Hillshade deselect 3d terrain and undo the map tilt"). Its strength is `hillshade-exaggeration` 0.525 (`RELIEF.shading`),
+half as strong again as the first 0.35 (owner 2026-10-19: "50% higher the strength of the
+hillshade"). It is drawn over our lines, the routes, the route network and the surface lines
+among them, so they are shaded with the ground, and under the planned ride, the pins and the
+labels (owner 2026-10-19: "Can we draw the hillshade/3d relief over the routes when on"):
+`shadeBeforeId()` in `relief-order.js` puts it right above our last line that is not the
+planned ride's, and under the basemap's labels when no line of ours is drawn. After every style
+change it finds its place again, once a frame and only when it is out of place. Both rows show only where the relief tiles are proxied.
 
 - **Source.** The public Terrain Tiles (Mapzen's terrarium encoding, on Amazon's open-data
   store), z0 to 15. The browser asks our own `/tiles/relief/{z}/{x}/{y}.png`; nginx fetches the

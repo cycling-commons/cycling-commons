@@ -1878,6 +1878,8 @@ map:
   fade_roads: "Fade roads bikes may not ride"
   fade_roads_hint: "Motorways, trunk roads and roads where bikes must use the cycle path beside them, drawn faint"
   relief_hint: "The slopes shaded and the ground raised, twice its true height. Tilt the map with a right-drag (Ctrl-drag on a Mac)."
+  relief_shade: "Hillshade"
+  relief_shade_hint: "The slopes shaded on the flat map."
   gone_places: 'Removed places'
   legend_quality: 'Ticks: surface quality (smooth → rough), where recorded'
   legend_route_national: 'National & international routes'
@@ -2714,6 +2716,7 @@ map:
   mly_none: 'No street-level imagery here.'
   mly_zoom: 'Zoom in and click a green dot to open street-level here.'
   locate_me: 'Show my location'
+  north_up: "North up"
   locate_unavailable: 'Location not available'
   locate_denied: 'Location is blocked for this site. Allow it in your browser settings, then reload the page.'
   locate_failed: 'Your location could not be found. Try again in a moment.'

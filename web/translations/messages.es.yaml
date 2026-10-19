@@ -1885,6 +1885,8 @@ map:
   fade_roads: "Atenuar las carreteras sin bicis"
   fade_roads_hint: "Autopistas, autovías y carreteras donde las bicis deben ir por el carril de al lado, dibujadas tenues"
   relief_hint: "Las pendientes sombreadas y el terreno elevado, al doble de su altura real. Inclina el mapa arrastrando con el botón derecho (Ctrl y arrastrar en un Mac)."
+  relief_shade: "Sombreado del relieve"
+  relief_shade_hint: "Las pendientes sombreadas en el mapa plano."
   gone_places: 'Lugares retirados'
   legend_quality: 'Marcas: calidad del firme (liso → irregular), donde está registrada'
   legend_route_national: 'Rutas nacionales e internacionales'
@@ -2721,6 +2723,7 @@ map:
   mly_none: 'Aquí no hay imágenes a pie de calle.'
   mly_zoom: 'Acerca el mapa y pulsa un punto verde para abrir la vista a pie de calle.'
   locate_me: 'Mostrar mi ubicación'
+  north_up: "Norte arriba"
   locate_unavailable: 'Ubicación no disponible'
   locate_denied: 'La ubicación está bloqueada para este sitio. Permítela en los ajustes del navegador y vuelve a cargar la página.'
   locate_failed: 'No se ha podido encontrar tu ubicación. Inténtalo de nuevo en un momento.'

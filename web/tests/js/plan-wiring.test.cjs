@@ -180,7 +180,7 @@ test('the legend and the height strip fold with an animation, a short soft one f
   assert.match(css, /\.cc-plan-strip\.folded\{transform:translateY\(100%\)\}/);
   // Less motion is a 0.12 s change over the page-wide stop, never a jump.
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)\{\n    \.cc-plan-strip\{transition:transform \.12s ease!important\}/);
-  assert.match(css, /\.map-wrap \.legend\{transition:bottom \.12s ease,padding \.12s ease!important\}/);
+  assert.match(css, /\.map-wrap \.legend\{transition:bottom \.12s ease,padding \.12s ease,transform \.12s ease!important\}/);
   assert.match(plan, /function showStrip\(on\)\{/);
 });
 

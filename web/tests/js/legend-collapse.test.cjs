@@ -77,7 +77,7 @@ test('the starting state is decided by room, and only once', () => {
 
 test('aria-expanded follows the panel, in both directions', () => {
   assert.match(panels, /lgToggle\.setAttribute\('aria-expanded', open\?'true':'false'\)/);
-  assert.match(panels, /lgToggle\.onclick=\(\)=>\{ legend\.classList\.toggle\('collapsed'\); sync\(\); \}/);
+  assert.match(panels, /lgToggle\.onclick=\(\)=>\{ legend\.classList\.toggle\('collapsed'\); foldedByDrawer=false; sync\(\); \}/);
   // The markup ships the desktop truth; panels.js corrects it on a phone.
   assert.match(twig, /id="lgToggle"[\s\S]{0,200}aria-expanded="true"/);
   assert.match(twig, /aria-controls="lgBody"/);
@@ -166,4 +166,19 @@ test('the fold button shows its L shortcut: a keyboard and a keycap, hidden with
 test('open, the fold button sits top right and the first key shown takes the row beside it', () => {
   assert.match(css, /\.legend:not\(\.collapsed\) \.lg-toggle\{position:absolute;top:\.6rem;right:\.75rem;margin:0\}/);
   assert.match(css, /\.legend:not\(\.collapsed\) \.lg-body > :not\(\[hidden\]\):not\(:not\(\[hidden\]\) ~ \*\) > h4:first-of-type\{display:flex;align-items:center;min-height:1\.8rem;margin-top:0;padding-right:5\.4rem\}/);
+});
+
+test('a place drawer folds the key while open and gives it back on close (owner 2026-10-18)', () => {
+  const panels = fs.readFileSync(path.join(ROOT, 'assets/map/panels.js'), 'utf8');
+  assert.match(panels, /if\(open && !legend\.classList\.contains\('collapsed'\)\)\{ legend\.classList\.add\('collapsed'\); foldedByDrawer=true; sync\(\); \}/);
+  assert.match(panels, /else if\(!open && foldedByDrawer\)\{ legend\.classList\.remove\('collapsed'\); foldedByDrawer=false; sync\(\); \}/);
+  assert.match(panels, /lgToggle\.onclick=\(\)=>\{ legend\.classList\.toggle\('collapsed'\); foldedByDrawer=false; sync\(\); \};/, 'a rider\'s own fold is undone by the drawer');
+});
+
+/* Owner 2026-10-19: "legend toggle buttons are overlayed the right drawer". */
+test('the folded key steps aside of an open drawer, as the top-right buttons do, and stays put on a phone', () => {
+  const css = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', '..', 'assets/styles/map.css'), 'utf8');
+  assert.match(css, /\.map-wrap\.drawer-open \.legend\{transform:translateX\(calc\(-1 \* min\(380px, 90vw\)\)\)\}/);
+  assert.match(css, /\.map-wrap\.drawer-folded \.legend\{transform:translateX\(calc\(-1 \* var\(--fold-nudge, 30px\)\)\)\}/);
+  assert.match(css, /\.map-wrap\.drawer-open \.legend,\.map-wrap\.drawer-folded \.legend\{transform:none\}/, 'the phone sheet leaves the key where it is');
 });

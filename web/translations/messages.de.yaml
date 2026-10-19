@@ -1263,6 +1263,8 @@ map:
   fade_roads: "Straßen ohne Radverkehr abschwächen"
   fade_roads_hint: "Autobahnen, Kraftstraßen und Straßen, auf denen Räder den Radweg daneben nehmen müssen, blass gezeichnet"
   relief_hint: "Die Hänge schattiert und das Gelände erhöht, doppelt so hoch wie in Wirklichkeit. Neige die Karte durch Ziehen mit der rechten Maustaste (Ctrl-Ziehen auf dem Mac)."
+  relief_shade: "Schummerung"
+  relief_shade_hint: "Die Hänge schattiert auf der flachen Karte."
   gone_places: 'Entfernte Orte'
   legend_quality: 'Striche: Belagsqualität (glatt → rau), wo erfasst'
   legend_route_national: 'Nationale und internationale Routen'
@@ -2099,6 +2101,7 @@ map:
   mly_none: 'Keine Straßenansicht hier.'
   mly_zoom: 'Hineinzoomen und einen grünen Punkt anklicken, um die Straßenansicht zu öffnen.'
   locate_me: 'Meinen Standort zeigen'
+  north_up: "Norden oben"
   locate_unavailable: 'Standort nicht verfügbar'
   locate_denied: 'Der Standort ist für diese Seite gesperrt. Erlaube ihn in den Browsereinstellungen und lade die Seite neu.'
   locate_failed: 'Dein Standort wurde nicht gefunden. Versuche es gleich noch einmal.'

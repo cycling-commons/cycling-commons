@@ -907,6 +907,7 @@ final class MapController extends AbstractController
             'mapUi' => [
                 'GeolocateControl.FindMyLocation' => $t->trans('map.locate_me'),
                 'GeolocateControl.LocationNotAvailable' => $t->trans('map.locate_unavailable'),
+                'NavigationControl.ResetBearing' => $t->trans('map.north_up'),
             ],
             'd' => array_map(static fn (string $id): string => $t->trans('map.'.$id), $drawer) + [
                 // Curator duplicate-resolve panel (?finding=<id>). Translated

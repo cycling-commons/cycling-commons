@@ -788,7 +788,11 @@
   .legend.collapsed{padding:.3rem;max-width:none}
   .legend.collapsed .lg-toggle{margin-bottom:0}
   /* folding, not snapping (owner 2026-10-15): the body shrinks into the corner and fades */
-  .legend{transition:padding .28s ease}
+  .legend{transition:padding .28s ease,transform .2s ease}
+  /* A place's drawer folds the key (panels.js), and the folded key steps aside of the drawer as the top-right
+     buttons do, never over it (owner 2026-10-19: "legend toggle buttons are overlayed the right drawer"). */
+  .map-wrap.drawer-open .legend{transform:translateX(calc(-1 * min(380px, 90vw)))}
+  .map-wrap.drawer-folded .legend{transform:translateX(calc(-1 * var(--fold-nudge, 30px)))}
   .legend .lg-body{overflow:hidden;max-height:80vh;max-width:17.5rem;transition:max-height .28s ease,max-width .28s ease,opacity .2s ease}
   .legend.collapsed .lg-body{max-height:0;max-width:0;opacity:0;visibility:hidden}
   /* one width for the content, whatever the fold: a shrinking width rewrapped the text and the box shot up mid-fold */
@@ -872,7 +876,9 @@
      rule the toast and the tooltip follow. bottom clears the attribution strip
      (10px gutter plus up to three wrapped lines of .7rem mono), the same
      clearance as .zoom-hint, so the pill reads above the credits. */
-  .fpill{position:absolute;left:.75rem;bottom:9.2rem;z-index:1200;
+  /* bottom clears the corner's controls too, the compass included, so the folded "!" never covers the zoom number
+     (owner 2026-10-19: "the icon sits over the zoom value. put it a bit up"). */
+  .fpill{position:absolute;left:.75rem;bottom:13.2rem;z-index:1200;
     display:flex;align-items:center;gap:.6rem;background:var(--ink);color:var(--paper);
     padding:.3rem;border-radius:30px;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);
     font-size:.78rem;max-width:min(92vw,26rem)}
@@ -1873,7 +1879,7 @@
        same idea done better for a thumb, so folding is a desktop affordance. */
     .cc-drawer-fold{display:none}
     .cc-drawer.open.folded{transform:translateY(max(0px, calc(100% - 50svh)))}
-    .map-wrap.drawer-open .tr,.map-wrap.drawer-folded .tr{transform:none}
+    .map-wrap.drawer-open .tr,.map-wrap.drawer-folded .tr,.map-wrap.drawer-open .legend,.map-wrap.drawer-folded .legend{transform:none}
     .cc-drawer{--peek:7.5rem}
     .cc-drawer.open{transform:translateY(max(0px, calc(100% - 50svh)))}                 /* half (default) — max() keeps a SHORT sheet anchored at the bottom instead of lifting it above its natural position */
     .cc-drawer.open.s-full{transform:none}                                     /* full */
@@ -2145,7 +2151,7 @@
   @media (prefers-reduced-motion: reduce){
     .cc-plan-strip{transition:transform .12s ease!important}
     .legend .lg-body{transition:max-height .12s ease,max-width .12s ease,opacity .12s ease!important}
-    .map-wrap .legend{transition:bottom .12s ease,padding .12s ease!important}
+    .map-wrap .legend{transition:bottom .12s ease,padding .12s ease,transform .12s ease!important}
     .map-wrap .fpill,.map-wrap .cc-plan-bar{transition:bottom .12s ease!important}
   }
   .cc-plan-strip[hidden]{display:none}
@@ -2167,7 +2173,7 @@
   .map-wrap .maplibregl-ctrl-bottom-right,.map-wrap .maplibregl-ctrl-bottom-left{transition:bottom .3s ease}
   .map-wrap.cc-strip-on .cc-plan-bar{bottom:calc(140px + 3.4rem)}
   .map-wrap.cc-strip-on .legend{bottom:calc(140px + 3.4rem)}
-  .map-wrap.cc-strip-on .fpill{bottom:calc(140px + 9.2rem)}
+  .map-wrap.cc-strip-on .fpill{bottom:calc(140px + 13.2rem)}
   .cc-plan-fig-wide{grid-column:1 / -1}
   .cc-plan-fig-wide span em{font-style:normal;text-transform:none;letter-spacing:0;color:rgb(var(--chrome-fg) / .8)}
   /* the day: the time bar, the date, what makes it tough (route-planner.md section 4.4) */
