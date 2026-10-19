@@ -1,0 +1,24 @@
+docs/specs/map-and-search.md
+  h_fb5318cde6cf17 1150-1151,1159-1169,1222-1224
+web/assets/map/places.js
+  h_fb5318cde6cf17 17,33-35,43
+web/assets/map/scope-ui.js
+  h_fb5318cde6cf17 308-315
+web/assets/map/scope.js
+  h_fb5318cde6cf17 435-438
+web/assets/map/search-ui.js
+  h_fb5318cde6cf17 8,134-137,141,191,225
+web/tests/js/scope.test.cjs
+  h_fb5318cde6cf17 1375-1387
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d6c07b7eb3ba2b444b12b83f581b57336bcc5c02",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
