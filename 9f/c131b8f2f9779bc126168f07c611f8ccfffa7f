@@ -1,0 +1,40 @@
+docs/specs/route-planner.md
+  h_fb5318cde6cf17 972-973,1135-1158
+web/assets/map/plan-model.js
+  h_fb5318cde6cf17 499-540,567
+web/assets/map/plan.js
+  h_fb5318cde6cf17 66,80-170,697-699,751-752,835-853,856
+web/assets/styles/map.css
+  h_fb5318cde6cf17 2138-2140
+web/config/services.yaml
+  h_fb5318cde6cf17 174-175
+web/src/Controller/MapController.php
+  h_fb5318cde6cf17 736-742
+web/src/Elevation/LegSurfaces.php
+  h_fb5318cde6cf17 22-27,51-61,72,96,113,117-131,142-159,174-175,177-193,229-231,233-237
+web/templates/map/index.html.twig
+  h_fb5318cde6cf17 579-580
+web/tests/Elevation/LegSurfacesTest.php
+  h_fb5318cde6cf17 10,27-30,32-47,54,78
+web/translations/messages.de.yaml
+  h_fb5318cde6cf17 1412-1426
+web/translations/messages.en.yaml
+  h_fb5318cde6cf17 2027-2041
+web/translations/messages.es.yaml
+  h_fb5318cde6cf17 2034-2048
+web/translations/messages.fr.yaml
+  h_fb5318cde6cf17 1407-1421
+web/translations/messages.nl.yaml
+  h_fb5318cde6cf17 1409-1423
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9fc131b8f2f9779bc126168f07c611f8ccfffa7f",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
