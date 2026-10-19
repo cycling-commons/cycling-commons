@@ -305,6 +305,14 @@ export function liftScopeForHit(ll, rid){
   return true;
 }
 
+/** The rider chose this hit in the search box: the lifted scope is theirs now. Closing the drawer keeps it,
+ *  and it is stored as their own, so a reload keeps it too (map-and-search.md §4.5, owner 2026-10-19: "Again
+ *  I have searched for Hoorn and I am still in Wallonia", after the sign-in for marking roads reloaded the map). */
+export function keepHitScope(){
+  _riderScope = null;
+  if(window.CCScope && window.CCScope.save) window.CCScope.save();
+}
+
 /** Put the rider's own scope back after a lift; a no-op when nothing was lifted. */
 export function restoreHitScope(){
   const prev = _riderScope;

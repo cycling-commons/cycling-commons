@@ -1372,3 +1372,16 @@ test('an ordinary union is unchanged by the wrapping arithmetic', () => {
   const b = CCScope.bbox();
   assert.ok(b[0] < b[2], 'an ordinary scope box stays west < east');
 });
+
+/* A scope a search pick lifted to is the rider's (map-and-search.md §4.5, owner 2026-10-19: "Again I have searched
+   for Hoorn and I am still in Wallonia", after the sign-in for marking roads reloaded the map): save() stores the
+   scope in force as the rider's own, with no change event, so the camera stays where the pick put it. */
+test('save stores the scope in force without a change', () => {
+  boot();
+  CCScope.set({ kind: 'region', regionIds: [24], countryCode: 'BE' }, { persist: false });
+  assert.equal(store.get('cc-scope'), undefined, 'a lift is not stored');
+  events = [];
+  CCScope.save();
+  assert.ok(String(store.get('cc-scope')).includes('flanders'), 'the scope in force is stored');
+  assert.equal(events.length, 0, 'saving changes nothing on the map');
+});

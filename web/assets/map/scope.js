@@ -432,6 +432,10 @@
       return this.get();
     },
 
+    /** Store the scope in force as the rider's own, with no change (no event, so nothing moves): a scope a search
+     *  pick lifted to (map-and-search.md §4.5). */
+    save() { persist(scope); return this.get(); },
+
     setRegion(slugOrId, opts) {
       const r = bySlug.get(slugOrId) || byId.get(slugOrId);
       return r ? this.set(regionScope(r), opts) : this.get();

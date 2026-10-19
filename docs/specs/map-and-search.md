@@ -1147,7 +1147,8 @@ This section owns region scoping: the Search & region panel's Region group
     (region, country or myArea) whose region set already holds the target's.
   - **Never persisted** (`persist:false`, like the ride check's): neither
     `localStorage` nor `?scope=` changes, so a reload is still the rider's own
-    scope.
+    scope. A pick in the search box is the one exception (below): the rider
+    chose it.
   - **The rider's scope comes back when the rider drops what they went to see**
     (`restoreHitScope()`, called from `closeDrawer()`), unpersisted too. It
     follows the same life as a picked route (§6.3): opening another place over
@@ -1155,6 +1156,17 @@ This section owns region scoping: the Search & region panel's Region group
     region; the hand-closed drawer gives it back. A scope the rider picks
     themselves in the meantime, or one a loaded ride asks for, retires the
     memo: that scope is theirs, and nothing may put the old one back over it.
+  - **A hit picked in the search box keeps its scope** (owner 2026-10-19:
+    "When I close the Hoorn right drawer it goes back to Wallonia"). The rider
+    went there to look, so the pick retires the memo (`keepHitScope()`,
+    `scope-ui.js`): a place, a town or a typed point, and the drawer's close
+    leaves the map where it is. The pick's scope is also stored as the
+    rider's own (`CCScope.save()`: `localStorage` and `?scope=`, no change
+    event, so the camera stays on the pick), as a region picked in the same
+    panel is, and a reload keeps it (owner 2026-10-19: "Again I have searched
+    for Hoorn and I am still in Wallonia", after the sign-in for marking
+    roads reloaded the map). A deep link, a drawer row and a ride-check row lift for the
+    drawer's life only, as above.
   - **The hit's own framing is the last word** (§8): the lift claims the
     camera for that scope change, so the map lands on the place and not on the
     region around it, and the scope does not draw until the framing has landed,
@@ -1207,7 +1219,9 @@ This section owns region scoping: the Search & region panel's Region group
   opening a town whose coordinates fall **outside the current scope's bbox**
   lifts the scope to the town's own region through the one hit mechanism above
   (`liftScopeForHit`, `persist:false`: localStorage/URL keep the saved scope,
-  which also comes back the moment the card is closed). Without this, the
+  which also comes back the moment the card is closed, unless the town was
+  picked in the search box: that scope stays and is stored, as for any search
+  pick). Without this, the
   scope-exempt town drawer would fill with nearby items while the scoped map
   rendered the same area empty, the worst case being a myArea scope with an
   **empty derived set** (base location outside every onboarded region), where

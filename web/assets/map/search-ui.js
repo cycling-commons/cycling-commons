@@ -5,7 +5,7 @@ import { I18N, D, tpl } from './i18n.js';
 import { escPend, slug, txtOn, photonLang, COORD_COLOR } from './util.js';
 import { CATALOG, layerByKey, LETTER_KEY } from './catalog.js';
 import { searchGate } from './search-gate.js';
-import { scopeLabel, liftScopeForHit, noteCoverageSearchHit } from './scope-ui.js';
+import { scopeLabel, liftScopeForHit, keepHitScope, noteCoverageSearchHit } from './scope-ui.js';
 import { itemIndex, idxIds, rebuildItemIndex, dropPendingFromIndex } from './item-index.js';
 import { openPlace, openFeatureById, openRouteById } from './places.js';
 import { COVERAGE_ON, covScopeIsZero, covScopeQuery, openCoverageByRef } from './coverage.js';
@@ -131,12 +131,14 @@ export function initSearchUi(){
     }
     /* A hit the rider's scope does not draw sits in some region: look there
        before opening it (docs/specs/map-and-search.md §4.5, §8). The hit's own
-       region, never its country, transiently, and the hit's own framing has the
-       last word; closing its drawer puts the rider's scope back. A hit already
-       in scope moves nothing (liftScopeForHit answers that itself). */
+       region, never its country, unpersisted, and the hit's own framing has the
+       last word. The rider picked it, so the scope stays when its drawer closes
+       (keepHitScope()). A hit already in scope moves nothing (liftScopeForHit
+       answers that itself). */
     function followHit(m){
       if(!Array.isArray(m.ll)) return;                 // a town row has no point here: openPlace lifts for it
       liftScopeForHit(m.ll, m.rid);
+      keepHitScope();
     }
     function pickS(i){ const m=sMatches[i]; if(!m) return;
       if(m.widen){ m.go(); return; }
@@ -186,7 +188,7 @@ export function initSearchUi(){
       const name=window.Cc.formatLatLng(p.lat, p.lng);
       // No scope test: the rider named the point, so openPlace widens for it.
       return {name, key:slug(name), kind:D.goToPoint||'Go to this point', badge:'\u2295', color:COORD_COLOR,
-        coord:true, ll:[p.lat, p.lng], go:()=>openPlace(name, {ll:[p.lat, p.lng], point:true})};
+        coord:true, ll:[p.lat, p.lng], go:()=>openPlace(name, {ll:[p.lat, p.lng], point:true, chosen:true})};
     }
     // docs/specs/map-and-search.md §7.2 — Photon, never Nominatim; silent degrade.
     let _phAbort=null, _phHits=[], _phQ='';
@@ -220,7 +222,7 @@ export function initSearchUi(){
               // rider's own language, so the country name needs no lookup here.
               return {name, key:slug(name), kind:'Town', badge:'◎', color:'#3E7D8C', town:true, ph:1,
                 country:p.country||null, countrycode:p.countrycode||null,
-                go:()=>openPlace(name, {ll:[+c[1],+c[0]], osm})}; });
+                go:()=>openPlace(name, {ll:[+c[1],+c[0]], osm, chosen:true})}; });
           _phQ=slug(q);
           if(!sRes.hidden) runS();
         })

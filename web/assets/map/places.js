@@ -14,7 +14,7 @@ import { openDrawer, showDrawer, osmDrawer, waterDrawer, highlightAt, clearHighl
 import { TOWN_ZOOM } from './town-pin.js';
 import { openLightbox } from './lightbox.js';
 import { COVERAGE_ON, openCoverageByRef, invalidateCoverageDrawer } from './coverage.js';
-import { liftScopeForHit } from './scope-ui.js';
+import { liftScopeForHit, keepHitScope } from './scope-ui.js';
 import { showRouteCorrections } from './corrections.js';
 import { layerGlyph } from './icons.js';
 import { watchJson } from './commons-photo.js';
@@ -30,8 +30,9 @@ const NEARBY_KM = 5;
 
 export function openPlace(name, meta){
   /* docs/specs/map-and-search.md §4.5, §8: a town outside the rider's scope
-     lifts the scope to that town's own region, transiently (persist:false);
-     closing the card puts the rider's scope back. Before the framing below:
+     lifts the scope to that town's own region, unpersisted; closing the card
+     puts the rider's scope back, unless the rider picked the town in the
+     search box (meta.chosen): that scope is theirs (keepHitScope()). Before the framing below:
      the lift holds the camera, so this card's own fit is the last word.
      CCScope owns the comparison: a scope box may cross the antimeridian and
      read west > east (RFC 7946 §5.2), which no inline test gets right. meta.ll
@@ -39,6 +40,7 @@ export function openPlace(name, meta){
   if(window.CCScope && window.CCScope.bboxHasPoint && !window.CCScope.bboxHasPoint(meta.ll[1], meta.ll[0])){
     liftScopeForHit(meta.ll);
   }
+  if(meta.chosen) keepHitScope();
   // A · segments are corridor data, not places — they would flood the card.
   const near = nearbyItems(meta.ll, NEARBY_KM).filter(n=>n.e.letter!=='A');
   renderPlaceCard(name, meta, near);
