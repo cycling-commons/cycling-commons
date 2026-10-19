@@ -1,0 +1,74 @@
+web/assets/map/route-roads-model.js
+  s_266155a992380b::t_20be620a53e84d 1-32
+web/assets/map/drawer.js
+  s_266155a992380b::t_e2744716fd99b5 38,867,1240,1453
+  s_266155a992380b::t_40f2799fc8b72f 1241
+web/assets/map/route-roads.js
+  s_266155a992380b::t_ec93acfc69f86d 10,31-32
+  s_266155a992380b::t_06347997f46750 1-2,4-9,11-30,33-40,44-45,47-49,52,55-65,68-81,84-87
+  s_266155a992380b::t_4fd33948559c0d 3,41-43
+  s_266155a992380b::t_5297d1d46b5089 50-51
+  s_266155a992380b::t_40f2799fc8b72f 46,53-54,66-67,82-83
+docs/specs/route-domain.md
+  s_266155a992380b::t_f38e6a67558cfd 776-777,782-785,788-797
+  s_266155a992380b::t_b4d9033fb3a638 762-766
+  s_266155a992380b::t_40f2799fc8b72f 767-768,786-787
+  s_266155a992380b::t_4fd33948559c0d 778-781
+  s_266155a992380b::t_6a3ffb7f566d8b 798
+web/src/Catalog/RouteRoads.php
+  s_266155a992380b::t_52ff802fe7a9f6 1-53,56-65
+  s_266155a992380b::t_7f3f7a6d01d0f0 54-55
+web/tests/Elevation/LegSurfacesTest.php
+  s_266155a992380b::t_4fcc813a030f6e 139-142,146-153,156-167,172,175-208
+  s_266155a992380b::t_f19ca6d61fd5e4 143-145,154-155,168-171
+  s_266155a992380b::t_655971eebc53ec 254
+  s_266155a992380b::t_b9b7d484e449cc 212-253
+  s_266155a992380b::t_0b48ed89ce895d 211
+  s_266155a992380b::t_e8c34dab5b1184 173-174,209-210
+web/src/Controller/MapController.php
+  s_266155a992380b::t_52ff802fe7a9f6 31,358-369,373
+  s_266155a992380b::t_9b9e5cf70d2129 349-357
+  s_266155a992380b::t_e2744716fd99b5 659
+  s_266155a992380b::t_e8007ab4384251 348
+web/assets/styles/map.css
+  s_266155a992380b::t_4fd33948559c0d 1564-1569
+  s_266155a992380b::t_349675fa405af8 1570-1571
+web/tests/js/route-roads.test.mjs
+  s_266155a992380b::t_97aebb88625651 62-68,72-73
+  s_266155a992380b::t_4fd33948559c0d 51-61
+  s_266155a992380b::t_5739dbecec0188 1-44,46-50
+  s_266155a992380b::t_40f2799fc8b72f 45,69-71
+web/assets/map/plan-model.js
+  s_f2df2a2aa8a918::t_70fa422cfa9907 440-477
+web/tests/Catalog/RouteClimbsEndpointTest.php
+  s_266155a992380b::t_9b9e5cf70d2129 192-223
+web/tests/Catalog/RouteRoadsEndpointTest.php
+  s_266155a992380b::t_4ec7380eb5e126 1-81
+web/assets/map/listed-place.js
+  s_266155a992380b::t_40f2799fc8b72f 199-200,203
+  s_266155a992380b::t_97aebb88625651 8,23,198,201-202,204,206-209,212,220-225
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9f3d11986738bd1627fb77770c8efc16bd155760",
+  "prompts": {},
+  "sessions": {
+    "s_266155a992380b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d6d2a9c8-dd96-48df-be16-07f9aa0ce892",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f2df2a2aa8a918": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed0d77c5-c8d0-43ea-9923-231bd4b99809",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
