@@ -45,16 +45,19 @@ def offline(monkeypatch, tmp_path):
     monkeypatch.setattr(run, "_ownership", lambda workdir: None)
     monkeypatch.setattr(run, "_line_run_lock", lambda family: contextlib.nullcontext(True))
     monkeypatch.delenv("COVERAGE_FIRST_PUBLISH_PARTIAL", raising=False)
+    # The way table is a database write; the tests that are about it record it.
+    monkeypatch.setattr(run, "_way_surface_pass", lambda *a, **k: [])
     return tmp_path
 
 
 def test_run_surface_fresh_extract_counts_and_succeeds(offline, contract, monkeypatch, capsys):
     """The rebind fix: a FRESH extract must reach the tally, not the except."""
-    def fake_extract(filtered, contract, *, classified_out, todo_out, gaps_out,
+    def fake_extract(filtered, contract, *, classified_out, todo_out, gaps_out, ways_out,
                      ridtok="", cctok="", route_way_ids=frozenset(), keep=None):
         classified_out.write_text('{"f":1}\n{"f":2}\n')
         todo_out.write_text('{"f":3}\n')
         gaps_out.write_text("2100\t1360\t1.0\t0.0\t1\n")
+        ways_out.write_text("1\tgravel\t\\N\t\\N\n")
         return SurfaceCounts(classified=2, todo=1, cells=1)
 
     monkeypatch.setattr(run, "extract_region", fake_extract)
@@ -70,10 +73,10 @@ def test_run_surface_feeds_the_routes_way_ids_to_the_extract(offline, contract, 
     """Route-awareness is wired through the runner, not just available."""
     seen = {}
 
-    def fake_extract(filtered, contract, *, classified_out, todo_out, gaps_out,
+    def fake_extract(filtered, contract, *, classified_out, todo_out, gaps_out, ways_out,
                      ridtok="", cctok="", route_way_ids=frozenset(), keep=None):
         seen["way_ids"] = route_way_ids
-        for p in (classified_out, todo_out, gaps_out):
+        for p in (classified_out, todo_out, gaps_out, ways_out):
             p.write_text("")
         return SurfaceCounts(0, 0, 0)
 
@@ -90,7 +93,7 @@ def test_run_surface_says_so_when_route_awareness_is_missing(offline, contract,
     # The arm still builds, but the log must say why the Zuiderdijk would show
     # class-gated homework only.
     def fake_extract(filtered, contract, *, keep=None, **kw):
-        for key in ("classified_out", "todo_out", "gaps_out"):
+        for key in ("classified_out", "todo_out", "gaps_out", "ways_out"):
             kw[key].write_text("")
         return SurfaceCounts(0, 0, 0)
 
@@ -106,12 +109,13 @@ def test_a_failed_reextract_leaves_no_stale_surface_stamp(offline, contract, mon
     the next run's _extract_is_current would call them current."""
     calls = []
 
-    def good_extract(filtered, contract, *, classified_out, todo_out, gaps_out, ridtok="",
+    def good_extract(filtered, contract, *, classified_out, todo_out, gaps_out, ways_out, ridtok="",
                      cctok="", route_way_ids=frozenset(), keep=None):
         calls.append("good")
         classified_out.write_text('{"f":1}\n')
         todo_out.write_text('{"f":2}\n')
         gaps_out.write_text("1\t1\t1.0\t0.0\t1\n")
+        ways_out.write_text("1\tgravel\t\\N\t\\N\n")
         return SurfaceCounts(classified=1, todo=1, cells=1)
 
     monkeypatch.setattr(run, "extract_region", good_extract)
@@ -120,7 +124,7 @@ def test_a_failed_reextract_leaves_no_stale_surface_stamp(offline, contract, mon
     stamp = offline / "surface_europe-netherlands.stamp"
     assert stamp.exists()
 
-    def raising_extract(filtered, contract, *, classified_out, todo_out, gaps_out, ridtok="",
+    def raising_extract(filtered, contract, *, classified_out, todo_out, gaps_out, ways_out, ridtok="",
                         cctok="", route_way_ids=frozenset(), keep=None):
         calls.append("raise")
         # A killed osmium/tippecanoe leaves the outputs it had already
@@ -128,6 +132,7 @@ def test_a_failed_reextract_leaves_no_stale_surface_stamp(offline, contract, mon
         classified_out.write_text('{"partial":1}\n')
         todo_out.write_text('{"partial":1}\n')
         gaps_out.write_text("1\t1\t1.0\t0.0\t1\n")
+        ways_out.write_text("1\tgravel\t\\N\t\\N\n")
         raise RuntimeError("osmium killed")
 
     monkeypatch.setattr(run, "extract_region", raising_extract)
@@ -278,11 +283,12 @@ def tiled(offline, contract, monkeypatch):
         return {"countries": {}}
     monkeypatch.setattr(run, "publish_countries", fake_publish)
     monkeypatch.setattr(run, "prune_family", lambda family, manifest: [])
-    def fake_extract(filtered, contract, *, classified_out, todo_out, gaps_out, ridtok="", cctok="",
+    def fake_extract(filtered, contract, *, classified_out, todo_out, gaps_out, ways_out, ridtok="", cctok="",
                      route_way_ids=frozenset(), keep=None):
         classified_out.write_text('{"f":1}\n')
         todo_out.write_text('{"f":2}\n')
         gaps_out.write_text("1\t1\t1.0\t0.0\t1\n")
+        ways_out.write_text("1\tgravel\t\\N\t\\N\n")
         return SurfaceCounts(classified=1, todo=1, cells=1)
     monkeypatch.setattr(run, "extract_region", fake_extract)
     return calls
@@ -474,11 +480,12 @@ def test_a_dev_fixture_surface_run_extracts_and_tiles_nothing(offline, contract,
     monkeypatch.setenv("COVERAGE_PBF_PATH", str(fixture))
     seen = {}
 
-    def fake_extract(filtered, contract, *, classified_out, todo_out, gaps_out, cctok="", keep=None, **kw):
+    def fake_extract(filtered, contract, *, classified_out, todo_out, gaps_out, ways_out, cctok="", keep=None, **kw):
         seen["cctok"] = cctok
         classified_out.write_text('{"f":1}\n')
         todo_out.write_text('{"f":2}\n')
         gaps_out.write_text("1\t1\t1.0\t0.0\t1\n")
+        ways_out.write_text("1\tgravel\t\\N\t\\N\n")
         return SurfaceCounts(classified=1, todo=1, cells=1)
     monkeypatch.setattr(run, "extract_region", fake_extract)
     monkeypatch.setattr(run, "read_live_manifest", lambda family: pytest.fail("a dev run reads no manifest"))
@@ -510,11 +517,12 @@ def _outline(id_, cc, box):
 def test_only_outlines_near_a_region_invalidate_its_extract(offline, contract, monkeypatch):
     calls = []
 
-    def fake_extract(filtered, contract, *, classified_out, todo_out, gaps_out, keep=None, **kw):
+    def fake_extract(filtered, contract, *, classified_out, todo_out, gaps_out, ways_out, keep=None, **kw):
         calls.append(1)
         classified_out.write_text('{"f":1}\n')
         todo_out.write_text('{"f":2}\n')
         gaps_out.write_text("1\t1\t1.0\t0.0\t1\n")
+        ways_out.write_text("1\tgravel\t\\N\t\\N\n")
         return SurfaceCounts(classified=1, todo=1, cells=1)
     monkeypatch.setattr(run, "extract_region", fake_extract)
     _boxed_pbf(offline / "europe-netherlands-latest.osm.pbf", (3.3, 50.7, 7.3, 53.6))
@@ -625,10 +633,11 @@ def test_complete_countries_groups_regions_by_country():
 
 
 def test_an_empty_todo_arm_is_published_without_that_arm(tiled, offline, contract, monkeypatch):
-    def only_classified(filtered, contract, *, classified_out, todo_out, gaps_out, **kw):
+    def only_classified(filtered, contract, *, classified_out, todo_out, gaps_out, ways_out, **kw):
         classified_out.write_text('{"f":1}\n')
         todo_out.write_text("")
         gaps_out.write_text("")
+        ways_out.write_text("1\tgravel\t\\N\t\\N\n")
         return SurfaceCounts(classified=1, todo=0, cells=0)
     monkeypatch.setattr(run, "extract_region", only_classified)
     assert _run_surface(["europe/netherlands"], offline, contract) == 0
@@ -695,7 +704,7 @@ def _swap_pbf_under(offline):
 def test_a_pbf_replaced_mid_surface_extract_is_re_extracted(offline, contract, monkeypatch):
     calls = []
 
-    def extract(filtered, contract, *, classified_out, todo_out, gaps_out, ridtok="",
+    def extract(filtered, contract, *, classified_out, todo_out, gaps_out, ways_out, ridtok="",
                 cctok="", route_way_ids=frozenset(), keep=None):
         calls.append("extract")
         if len(calls) == 1:
@@ -703,6 +712,7 @@ def test_a_pbf_replaced_mid_surface_extract_is_re_extracted(offline, contract, m
         classified_out.write_text('{"f":1}\n')
         todo_out.write_text('{"f":2}\n')
         gaps_out.write_text("1\t1\t1.0\t0.0\t1\n")
+        ways_out.write_text("1\tgravel\t\\N\t\\N\n")
         return SurfaceCounts(classified=1, todo=1, cells=1)
 
     monkeypatch.setattr(run, "extract_region", extract)
@@ -864,10 +874,10 @@ def test_a_shared_region_extracts_one_surface_share_per_country(offline, contrac
     (offline / "europe-ireland-and-northern-ireland-latest.osm.pbf").write_bytes(b"pbf")
     seen = []
 
-    def fake_extract(filtered, contract, *, classified_out, todo_out, gaps_out,
+    def fake_extract(filtered, contract, *, classified_out, todo_out, gaps_out, ways_out,
                      ridtok="", cctok="", route_way_ids=frozenset(), keep=None):
-        seen.append((classified_out.name, gaps_out.name, cctok, keep))
-        for p in (classified_out, todo_out, gaps_out):
+        seen.append((classified_out.name, gaps_out.name, ways_out.name, cctok, keep))
+        for p in (classified_out, todo_out, gaps_out, ways_out):
             p.write_text("")
         return SurfaceCounts(0, 0, 0)
 
@@ -875,9 +885,11 @@ def test_a_shared_region_extracts_one_surface_share_per_country(offline, contrac
     assert _run_surface([SHARED], offline, contract, extract_only=True, publish=False) == 0
     assert seen == [
         ("surface_europe-ireland-and-northern-ireland_gb_classified.geojsonl",
-         "surface_europe-ireland-and-northern-ireland_gb_gapcells.tsv", "|GB|", "keep GB"),
+         "surface_europe-ireland-and-northern-ireland_gb_gapcells.tsv",
+         "surface_europe-ireland-and-northern-ireland_gb_ways.tsv", "|GB|", "keep GB"),
         ("surface_europe-ireland-and-northern-ireland_ie_classified.geojsonl",
-         "surface_europe-ireland-and-northern-ireland_ie_gapcells.tsv", "|IE|", "keep IE"),
+         "surface_europe-ireland-and-northern-ireland_ie_gapcells.tsv",
+         "surface_europe-ireland-and-northern-ireland_ie_ways.tsv", "|IE|", "keep IE"),
     ]
 
 
@@ -944,3 +956,103 @@ def test_the_world_grid_takes_each_share_of_a_shared_region_under_its_country(of
                "surface_europe-ireland-and-northern-ireland_gb_gapcells.tsv"],
         "IE": ["surface_europe-ireland-and-northern-ireland_ie_gapcells.tsv"],
     }
+
+
+# ── The way table (coverage_way_surface) ───────────────────────────────────
+
+def test_a_missing_ways_file_re_extracts_the_region(tiled, offline, contract, monkeypatch):
+    calls = []
+    fake = run.extract_region
+
+    def counting(*a, **kw):
+        calls.append(1)
+        return fake(*a, **kw)
+    monkeypatch.setattr(run, "extract_region", counting)
+    _run_surface(["europe/netherlands"], offline, contract, extract_only=True)
+    _run_surface(["europe/netherlands"], offline, contract, extract_only=True)
+    assert calls == [1]
+    (offline / "surface_europe-netherlands_ways.tsv").unlink()
+    _run_surface(["europe/netherlands"], offline, contract, extract_only=True)
+    assert calls == [1, 1], "the ways file is an output like the other three"
+
+
+def test_the_ways_file_is_a_build_input(tiled, offline, contract):
+    _run_surface(["europe/netherlands"], offline, contract, extract_only=True)
+    before = run._surface_inputs(offline, ["europe-netherlands"])
+    (offline / "surface_europe-netherlands_ways.tsv").write_text("1\tgravel\t\\N\tgrade1\n")
+    assert run._surface_inputs(offline, ["europe-netherlands"]) != before
+
+
+@pytest.fixture()
+def way_loads(monkeypatch):
+    calls = []
+
+    def record(complete, workdir, onboarded, retire):
+        calls.append((dict(complete), tuple(retire)))
+        return []
+    monkeypatch.setattr(run, "_way_surface_pass", record)
+    return calls
+
+
+def test_the_way_table_loads_whether_or_not_the_run_publishes(tiled, offline, contract, way_loads):
+    assert _run_surface(["europe/netherlands"], offline, contract, publish=False) == 0
+    assert _run_surface(["europe/netherlands"], offline, contract) == 0
+    assert way_loads == [({"NL": ["europe/netherlands"]}, ()), ({"NL": ["europe/netherlands"]}, ())]
+
+
+def test_an_extract_only_or_dev_run_loads_no_way_table(tiled, offline, contract, way_loads, monkeypatch):
+    _run_surface(["europe/netherlands"], offline, contract, extract_only=True)
+    fixture = offline / "fixture.osm.pbf"
+    fixture.write_bytes(b"pbf")
+    monkeypatch.setenv("COVERAGE_PBF_PATH", str(fixture))
+    _run_surface(["dev/fixture"], offline, contract)
+    assert way_loads == []
+
+
+def test_retire_reaches_the_way_table(tiled, offline, contract, way_loads):
+    assert _run_surface(["europe/netherlands"], offline, contract, retire=("xx",)) == 0
+    assert way_loads == [({"NL": ["europe/netherlands"]}, ("xx",))]
+
+
+def test_a_failed_way_table_load_fails_the_run_but_still_publishes(tiled, offline, contract, monkeypatch):
+    monkeypatch.setattr(run, "_way_surface_pass", lambda *a, **k: ["NL ways"])
+    assert _run_surface(["europe/netherlands"], offline, contract) == 1
+    assert tiled["published"][1] == ["NL"]
+
+
+def _share(workdir, slug, ways):
+    for arm in ("classified", "todo"):
+        (workdir / f"surface_{slug}_{arm}.geojsonl").write_text('{"f":1}\n')
+    (workdir / f"surface_{slug}_ways.tsv").write_text("".join(line + "\n" for line in ways))
+    (workdir / f"surface_{slug}.stamp").write_text("w")
+
+
+def test_the_way_table_load_end_to_end(db, tmp_path, capsys):
+    db.commit()
+    db.autocommit = True
+    _share(tmp_path, "north-america-us-california", ["7\tpaved\t\\N\t\\N", "8\tdirt\tbad\tgrade3"])
+    _share(tmp_path, "north-america-us-colorado", ["7\tpaved\t\\N\t\\N", "9\t\\N\t\\N\tgrade5"])
+    _share(tmp_path, "europe-netherlands", ["5\tgravel\t\\N\t\\N"])
+    (tmp_path / "surface_europe-netherlands_ways.tsv").unlink()
+    complete = {"NL": ["europe/netherlands"],
+                "US": ["north-america/us/california", "north-america/us/colorado"]}
+    failed = run._load_way_surfaces(db, complete, tmp_path, ONBOARDED, ())
+    out = capsys.readouterr()
+    # One country's missing file costs that country only.
+    assert failed == ["NL ways"]
+    assert "[surface] NL: way table load FAILED" in out.err
+    assert "[surface] US: 3 ways in the table" in out.out
+    assert db.execute("SELECT way_id, country_code, surface, smoothness, tracktype "
+                      "FROM coverage_way_surface ORDER BY way_id").fetchall() == [
+        (7, "US", "paved", None, None), (8, "US", "dirt", "bad", "grade3"), (9, "US", None, None, "grade5")]
+    inputs = run._surface_inputs(tmp_path, ["north-america-us-california", "north-america-us-colorado"])
+    assert db.execute("SELECT inputs, ways FROM coverage_way_surface_country "
+                      "WHERE country_code = 'US'").fetchone() == (inputs, 3)
+
+    assert run._load_way_surfaces(db, {"US": complete["US"]}, tmp_path, ONBOARDED, ()) == []
+    assert "[surface] US: way table unchanged, not reloaded" in capsys.readouterr().out
+
+    assert run._load_way_surfaces(db, {}, tmp_path, ONBOARDED, ("us",)) == []
+    assert "[surface] US: retired, 3 ways removed from the way table" in capsys.readouterr().out
+    assert db.execute("SELECT count(*) FROM coverage_way_surface").fetchone() == (0,)
+    assert db.execute("SELECT count(*) FROM coverage_way_surface_country").fetchone() == (0,)

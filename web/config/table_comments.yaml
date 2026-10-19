@@ -39,6 +39,14 @@ tables:
     coverage_source: >-
         One harvested extract (a country or region file), named by slug. Every coverage_poi
         row points at the source it came from, so a re-import can replace exactly its own rows.
+    # Pipeline-owned (pipeline/coverage/way_surface.py). Reloaded per country by the surface run.
+    coverage_way_surface: >-
+        What OpenStreetMap records about one way the surface pipeline reads: its surface class,
+        smoothness and tracktype, one row per way id with at least one of them, and the country
+        that owns it. The route planner reads a ride's ways here (route-planner.md section 4.4a).
+    coverage_way_surface_country: >-
+        One country whose ways are loaded into coverage_way_surface, with the inputs fingerprint
+        of that load. A way of a loaded country that is not in the table has nothing recorded.
     coverage_run: >-
         One run of the coverage pipeline (pipeline/coverage/tracker.py): who started it, when,
         how many regions it asked for and loaded, and the archive it published. The nightly

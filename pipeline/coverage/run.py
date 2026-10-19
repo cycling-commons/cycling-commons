@@ -47,6 +47,7 @@ from .tiles import (TILE_PROFILE, artifact_bounds, build_gaps_pmtiles, build_pmt
                     build_roadpieces_pmtiles, build_routes_pmtiles, build_surface_pmtiles, export_geojsonl,
                     verify_pmtiles)
 from .tracker import RunTracker
+from . import way_surface
 
 GEOFABRIK_BASE = "https://download.geofabrik.de"
 
@@ -347,9 +348,12 @@ def _surface_inputs(workdir: pathlib.Path, regions: list[str]) -> str:
     """Fingerprint of a country's surface build inputs, for the rebuild rule.
 
     Each region's stamp names the contract and the outlines near that region
-    its extract was shaped by."""
+    its extract was shaped by. The way table file is an input too: a smoothness
+    or tracktype edit can change it and nothing else, and the way table's
+    marker row holds this same fingerprint (coverage.way_surface)."""
     slugs = [r.replace("/", "-") for r in regions]
     files = [workdir / f"surface_{s}_{arm}.geojsonl" for s in slugs for arm in ("classified", "todo")]
+    files += [workdir / f"surface_{s}_ways.tsv" for s in slugs]
     return inputs_fingerprint(files, contract_fingerprint(),
                               *(_stamp_text(workdir, "surface", r) for r in sorted(regions)),
                               TILE_PROFILE["surface"])
@@ -476,6 +480,7 @@ def _surface_share(region: str, country_code: str | None, pbf: pathlib.Path, wan
     out = workdir / f"surface_{slug}_classified.geojsonl"
     todo_out = workdir / f"surface_{slug}_todo.geojsonl"
     gaps_out = workdir / f"surface_{slug}_gapcells.tsv"
+    ways_out = workdir / f"surface_{slug}_ways.tsv"
 
     # The per-region EXTRACT is the expensive step (osmium plus a full
     # node-location pass over a national PBF), so it is cached.
@@ -484,12 +489,12 @@ def _surface_share(region: str, country_code: str | None, pbf: pathlib.Path, wan
     # and its stamp names the contract that shaped it and the outlines
     # near the region. The contract matters as much as the data: adding
     # a highway type or a surface class changes what SHOULD be in the
-    # file while leaving the PBF untouched. All three outputs are
+    # file while leaving the PBF untouched. All four outputs are
     # checked, not just the classified one.
     stamp = workdir / f"surface_{slug}.stamp"
     if all(_extract_is_current(f, pbf, contract_path(), stamp,
                                extra_inputs=(wayids_path,), expected=want)
-           for f in (out, todo_out, gaps_out)):
+           for f in (out, todo_out, gaps_out, ways_out)):
         print(f"[surface] {name}: extract unchanged, reusing {out.name}")
         return
     # Removed before the extract starts, not only written after:
@@ -512,24 +517,24 @@ def _surface_share(region: str, country_code: str | None, pbf: pathlib.Path, wan
               "for route-awareness)")
     fresh = extract_region(
         filtered, contract, classified_out=out, todo_out=todo_out,
-        gaps_out=gaps_out, cctok=f"|{country_code}|",
+        gaps_out=gaps_out, ways_out=ways_out, cctok=f"|{country_code}|",
         route_way_ids=route_way_ids,
         keep=owners.keeper(country_code) if owners else None)
-    # Written only once all three files are complete: a run killed
+    # Written only once all four files are complete: a run killed
     # mid-extract leaves no stamp, so the next run re-extracts.
     stamp.write_text(want, encoding="utf-8")
     stamp.with_suffix(".src").write_text(source, encoding="utf-8")
     print(f"[surface] {name}: {fresh.classified} classified, "
           f"{fresh.todo} to record, {fresh.cells} grid cells, "
-          f"{fresh.foreign} owned by a neighbour")
+          f"{fresh.foreign} owned by a neighbour, {fresh.ways} for the way table")
 
 
 def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
                   publish: bool = True, retire: tuple[str, ...] = (),
                   rebuilt: list[str] | None = None,
                   onboarded: dict[str, tuple[str, ...]] | None = None) -> int:
-    """The line path: PBF -> osmium -> GeoJSONL -> tippecanoe, per country. No
-    database beyond the outline snapshot and the run lock.
+    """The line path: PBF -> osmium -> GeoJSONL -> tippecanoe, per country. The
+    database holds the outline snapshot, the run lock and the way table.
 
     Deliberately not folded into the per-region loop above: that loop exists to
     keep coverage_poi in step, and lines never touch it. Sharing it would mean
@@ -546,6 +551,11 @@ def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
     build costs that country only. The world gap grid is merged from every
     onboarded region's current cell file, and is not rebuilt while any
     onboarded region has none.
+
+    Each complete country's way table rows (coverage.way_surface) load from
+    the same extracts whether or not the run publishes: the table is no bucket
+    artifact, and the planner reads it as soon as it is in. A retired country
+    leaves the table too.
     """
     failed = []
     wants: dict[str, str] = {}
@@ -586,6 +596,10 @@ def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
     if all(r.startswith("dev/") for r in regions) and not retire:
         print(f"[surface] {_peak()}")
         return 1 if failed else 0
+    # Before the manifest read, so neither a bucket outage nor a refused first
+    # publish holds the table back.
+    if complete or retire:
+        failed.extend(_way_surface_pass(complete, workdir, onboarded, retire))
     live = {"version": 2, "countries": {}}
     if publish:
         try:
@@ -655,6 +669,54 @@ def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
             failed.append("publish")
     print(f"[surface] {_peak()}")
     return 1 if failed else 0
+
+
+def _way_surface_pass(complete: dict[str, list[str]], workdir: pathlib.Path,
+                      onboarded: dict[str, tuple[str, ...]], retire: tuple[str, ...]) -> list[str]:
+    """The way table load on its own session, under the harvest's session budget."""
+    dsn = os.environ.get("DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons")
+    try:
+        with psycopg.connect(dsn, autocommit=True) as conn:
+            apply_session_budget(conn)
+            return _load_way_surfaces(conn, complete, workdir, onboarded, retire)
+    except Exception as exc:  # noqa: BLE001 - the tiles still build and publish
+        print(f"[surface] way table FAILED: {exc}", file=sys.stderr)
+        return ["ways"]
+
+
+def _load_way_surfaces(conn, complete: dict[str, list[str]], workdir: pathlib.Path,
+                       onboarded: dict[str, tuple[str, ...]], retire: tuple[str, ...]) -> list[str]:
+    """Retire, then load each complete country's way table rows; returns what failed.
+
+    A country reloads when its build fingerprint differs from its marker row's,
+    from every share file of every region it is built from. One country failing
+    keeps its last load serving and costs that country only.
+    """
+    way_surface.ensure_schema(conn)
+    failed = []
+    for code in retire:
+        cc = code.upper()
+        try:
+            n = way_surface.retire_country(conn, cc)
+            print(f"[surface] {cc}: retired, {n} ways removed from the way table")
+        except Exception as exc:  # noqa: BLE001 - one country must not stop the rest
+            print(f"[surface] {cc}: way table retire FAILED: {exc}", file=sys.stderr)
+            failed.append(f"{cc} ways")
+    for cc, members in complete.items():
+        if cc.lower() in retire:
+            continue
+        try:
+            slugs = [_line_key(r, cc, onboarded) for r in members]
+            files = [workdir / f"surface_{s}_ways.tsv" for s in slugs]
+            n = way_surface.load_country(conn, cc, files, _surface_inputs(workdir, slugs))
+            if n is None:
+                print(f"[surface] {cc}: way table unchanged, not reloaded")
+            else:
+                print(f"[surface] {cc}: {n} ways in the table")
+        except Exception as exc:  # noqa: BLE001 - one country must not stop the rest
+            print(f"[surface] {cc}: way table load FAILED: {exc}", file=sys.stderr)
+            failed.append(f"{cc} ways")
+    return failed
 
 
 def _peak() -> str:

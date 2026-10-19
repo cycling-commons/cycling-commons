@@ -409,3 +409,101 @@ def test_write_cells_round_trips(tmp_path):
     path = tmp_path / "c.tsv"
     assert grid.write_cells(path) == 1
     assert len(list(merge_gap_cells({"BE": [path]}, 12))) == 1
+
+
+# ── The way table: each way's recorded answer, for the planner ─────────────
+
+_GATE_OSM = """<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="test">
+  <node id="1" version="1" lat="50.70" lon="4.10"/>
+  <node id="2" version="1" lat="50.70" lon="4.11"/>
+  <way id="11" version="1">
+    <nd ref="1"/><nd ref="2"/>
+    <tag k="highway" v="track"/><tag k="surface" v="gravel"/>
+    <tag k="smoothness" v="bad"/><tag k="tracktype" v="grade2"/>
+  </way>
+  <way id="12" version="1">
+    <nd ref="1"/><nd ref="2"/>
+    <tag k="highway" v="track"/>
+    <tag k="smoothness" v="bumpy"/><tag k="tracktype" v="grade9"/>
+  </way>
+  <way id="13" version="1">
+    <nd ref="1"/><nd ref="2"/>
+    <tag k="highway" v="motorway"/><tag k="tracktype" v="grade1"/>
+  </way>
+</osm>
+"""
+
+
+def test_the_collector_keeps_only_contract_tracktype_and_smoothness_values(tmp_path, contract):
+    # The real handler over a real file: an unlisted value is dropped, never
+    # guessed, and a highway the layer does not select carries nothing at all.
+    from coverage.surface import stream_surface_ways
+
+    osm = tmp_path / "gate.osm"
+    osm.write_text(_GATE_OSM)
+    ways = []
+    stream_surface_ways(osm, contract, ways.append)
+    by_ref = {w.ref: w for w in ways}
+    assert set(by_ref) == {"way/11", "way/12"}
+    assert (by_ref["way/11"].sm, by_ref["way/11"].tt) == ("bad", "grade2")
+    assert (by_ref["way/12"].sm, by_ref["way/12"].tt) == ("", "")
+
+
+def test_tracktype_values_are_the_five_osm_grades(contract):
+    spec = contract.surface["tracktype"]
+    assert spec["tag"] == "tracktype"
+    assert spec["values"] == ["grade1", "grade2", "grade3", "grade4", "grade5"]
+
+
+def test_tracktype_rides_no_tile(tmp_path, contract):
+    # The way table is its only reader: a tile prop nobody draws is bytes in
+    # every tile a rider downloads.
+    out = tmp_path / "tt.geojsonl"
+    write_geojsonl([SurfaceWay("way/5", "gravel", "track", "", [(4.1, 50.7), (4.2, 50.8)],
+                               tt="grade3")], out)
+    assert "tt" not in json.loads(out.read_text().strip())["properties"]
+    assert "tt" not in contract.surface["tileProps"]
+
+
+def test_the_ways_file_lists_each_way_with_a_recorded_answer(tmp_path, contract, monkeypatch):
+    from coverage import surface as mod
+
+    ways = [
+        SurfaceWay("way/1", "gravel", "track", "", [(4.1, 50.7), (4.11, 50.7)], sm="bad", tt="grade2"),
+        SurfaceWay("way/2", "paved", "primary", "", [(4.1, 50.7), (4.11, 50.7)]),
+        SurfaceWay("way/3", "unverified", "track", "", [(4.1, 50.7), (4.11, 50.7)], tt="grade4"),
+        SurfaceWay("way/4", "unverified", "residential", "", [(4.1, 50.7), (4.11, 50.7)], sm="good"),
+        SurfaceWay("way/5", "unverified", "track", "", [(4.1, 50.7), (4.11, 50.7)]),
+        SurfaceWay("way/6", "paved", "primary", "", [(9.1, 45.7), (9.11, 45.7)], sm="excellent"),
+    ]
+    monkeypatch.setattr(mod, "stream_surface_ways", lambda pbf, contract, emit: [emit(w) for w in ways])
+    ways_out = tmp_path / "w.tsv"
+    counts = mod.extract_region(
+        tmp_path / "ignored.pbf", contract,
+        classified_out=tmp_path / "c.geojsonl", todo_out=tmp_path / "t.geojsonl",
+        gaps_out=tmp_path / "g.tsv", ways_out=ways_out,
+        keep=lambda coords: coords[0][0] < 9.0)
+    # COPY text format: tab-separated, \N for NULL. A way with nothing
+    # recorded (way/5) has no row, and a way the owner rule gives to another
+    # country (way/6) has none either.
+    assert ways_out.read_text().splitlines() == [
+        "1\tgravel\tbad\tgrade2",
+        "2\tpaved\t\\N\t\\N",
+        "3\t\\N\t\\N\tgrade4",
+        "4\t\\N\tgood\t\\N",
+    ]
+    assert counts.ways == 4
+
+
+def test_no_ways_file_is_written_unless_asked(tmp_path, contract, monkeypatch):
+    from coverage import surface as mod
+
+    monkeypatch.setattr(mod, "stream_surface_ways",
+                        lambda pbf, contract, emit: emit(_way("way/1", "gravel", "track")))
+    counts = mod.extract_region(
+        tmp_path / "ignored.pbf", contract,
+        classified_out=tmp_path / "c.geojsonl", todo_out=tmp_path / "t.geojsonl",
+        gaps_out=tmp_path / "g.tsv")
+    assert counts.ways == 0
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["c.geojsonl", "g.tsv", "t.geojsonl"]

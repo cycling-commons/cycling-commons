@@ -472,6 +472,17 @@
       ],
       "minZoom": 13
     },
+    "tracktype": {
+      "_comment": "OSM tracktype, how firm a track is (grade1 solid to grade5 soft). Read by the surface pass for the way table only (coverage_way_surface, which the route planner reads by Valhalla way id), never a tile prop: no layer draws it. Same gate as quality: an OSM value not named here is dropped at extract time, not guessed.",
+      "tag": "tracktype",
+      "values": [
+        "grade1",
+        "grade2",
+        "grade3",
+        "grade4",
+        "grade5"
+      ]
+    },
     "_roadTypeChannel": "Road type is NOT a colour in this scale (owner 2026-08-12). `highway=cycleway` used to override the surface class, which answered two questions with one key. The raw highway value rides every feature as `hw` (tileProps) and the client draws a cycleway as a pale core inside whatever surface colour it has."
   },
   "routes": {

@@ -268,6 +268,14 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
                 "classified arm, and a promise the extractor does not emit is a client "
                 "reading absent data as 'nobody has said'")
 
+    # tracktype gates the way table the same way quality gates `sm`: the value
+    # list is what survives the extract.
+    for required in ("tag", "values"):
+        if required not in surface.get("tracktype", {}):
+            raise ValueError(f"contract surface.tracktype section missing {required!r}")
+    if not surface["tracktype"]["values"]:
+        raise ValueError("contract surface.tracktype.values must name at least one value")
+
     for required in ("cellZoom", "minZoom", "maxZoom", "tileProps"):
         if required not in surface.get("gaps", {}):
             raise ValueError(f"contract surface.gaps section missing {required!r}")

@@ -24,6 +24,12 @@ Three artifacts, from ONE pass over the PBF (2026-08-12):
   of to-do network sit inside it. The same question as the to-do arm at
   planning scale, for ~1% of the bytes.
 
+The same pass also writes the **way table file**: each way's recorded surface
+class, smoothness and tracktype by OSM way id, which the runner loads into
+`coverage_way_surface` (coverage.way_surface) for the route planner to look up
+the ways Valhalla routes over. It is the one table this pass feeds, keyed by
+way id with no geometry; the tiles read nothing from it.
+
 **What the to-do arm deliberately leaves out, and why it is the interesting
 part.** It used to be every untagged way, all nine highway classes, and it cost
 as much as the classified arm (Belgium: 42 MB against 43). Measured against our
@@ -43,6 +49,7 @@ objects, and the machine that builds these has less RAM than France needs.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import math
 import re
@@ -61,6 +68,9 @@ from coverage.ownership import anchor_point
 # than shipped for the client to guess at.
 _MTB_SCALE = re.compile(r"[0-6][+-]?")
 
+# NULL in PostgreSQL COPY text format, for the way table file.
+_NULL = "\\N"
+
 
 @dataclass(frozen=True)
 class SurfaceWay:
@@ -78,6 +88,9 @@ class SurfaceWay:
     # honest absence: no tick means nobody has said, never "probably fine".
     sm: str = ""
     mtb: str = ""                  # mtb:scale, '0'-'6' with optional +/-
+    # OSM tracktype when it is one the contract names (surface.tracktype), else
+    # ''. Read by the way table only: no tile carries it.
+    tt: str = ""
 
 
 def canonical_class(surface: str | None, highway: str, contract: Contract) -> str | None:
@@ -140,6 +153,7 @@ class _Collector(osmium.SimpleHandler):
         # contract does not name is dropped at extract time, not shipped for
         # the client to invent a colour for (contract surface.quality).
         self._smoothness = frozenset(contract.surface["quality"]["values"])
+        self._tracktype = frozenset(contract.surface["tracktype"]["values"])
 
     def way(self, w) -> None:
         tags = {t.k: t.v for t in w.tags}
@@ -161,6 +175,9 @@ class _Collector(osmium.SimpleHandler):
         mtb = tags.get("mtb:scale", "")
         if not _MTB_SCALE.fullmatch(mtb):
             mtb = ""
+        tt = tags.get("tracktype", "")
+        if tt not in self._tracktype:
+            tt = ""
         # 'way/<id>', NOT 'w<id>'. This ref is what the
         # drawer hands to /improve, and materialize-on-edit then creates an A
         # item carrying it as source_ref — which every other path in the
@@ -177,7 +194,7 @@ class _Collector(osmium.SimpleHandler):
         # rendered from a localised dictionary at draw time, so gluing the two
         # here would freeze one English word into a name field for good.
         self._emit(SurfaceWay(f"way/{w.id}", cls, highway, tags.get("name", ""), coords,
-                              sm=sm, mtb=mtb))
+                              sm=sm, mtb=mtb, tt=tt))
 
 
 def stream_surface_ways(pbf_path: Path, contract: Contract,
@@ -358,14 +375,16 @@ class SurfaceCounts:
     todo: int
     cells: int
     foreign: int = 0
+    ways: int = 0                  # rows in the way table file
 
 
 def extract_region(pbf_path: Path, contract: Contract, *,
                    classified_out: Path, todo_out: Path, gaps_out: Path,
+                   ways_out: Path | None = None,
                    ridtok: str = "", cctok: str = "",
                    route_way_ids: frozenset[int] | set[int] = frozenset(),
                    keep: Callable[[list[tuple[float, float]]], bool] | None = None) -> SurfaceCounts:
-    """One pass over a filtered PBF -> all three artifacts' GeoJSONL.
+    """One pass over a filtered PBF -> all three artifacts' GeoJSONL, and the way table file.
 
     Written straight through to disk: a country's ways never accumulate in
     memory, which is what lets a 5 GB France extract run on a host with a few
@@ -382,20 +401,33 @@ def extract_region(pbf_path: Path, contract: Contract, *,
     `keep` is the border owner rule (coverage.ownership): a way another country
     owns is dropped before it reaches any arm or the grid. None keeps every way,
     which is what a dev/ region gets.
+
+    `ways_out` is the way table's file (coverage.way_surface): one line per kept
+    way with at least one recorded answer, as PostgreSQL COPY text,
+    `<way id>\\t<surface class>\\t<smoothness>\\t<tracktype>`, with `\\N` for an
+    answer nobody has recorded. A surface class is NULL for `unverified`. Every
+    value comes from a contract list, so none needs COPY escaping.
     """
     spec = contract.surface
     untagged_class = spec["untaggedClass"]
     todo_highways = set(spec["todo"]["highways"])
     grid = GapGrid(spec["gaps"]["cellZoom"])
-    counts = {"classified": 0, "todo": 0, "foreign": 0}
+    counts = {"classified": 0, "todo": 0, "foreign": 0, "ways": 0}
 
-    with classified_out.open("w", encoding="utf-8") as cf, \
-            todo_out.open("w", encoding="utf-8") as tf:
+    with contextlib.ExitStack() as files:
+        cf = files.enter_context(classified_out.open("w", encoding="utf-8"))
+        tf = files.enter_context(todo_out.open("w", encoding="utf-8"))
+        wf = files.enter_context(ways_out.open("w", encoding="utf-8")) if ways_out else None
+
         def emit(way: SurfaceWay) -> None:
             if keep is not None and not keep(way.coords):
                 counts["foreign"] += 1
                 return
             unrecorded = way.cls == untagged_class
+            if wf is not None and (not unrecorded or way.sm or way.tt):
+                wf.write(f"{way.ref.rsplit('/', 1)[1]}\t{_NULL if unrecorded else way.cls}"
+                         f"\t{way.sm or _NULL}\t{way.tt or _NULL}\n")
+                counts["ways"] += 1
             if not unrecorded:
                 cf.write(feature_json(way, ridtok=ridtok, cctok=cctok) + "\n")
                 counts["classified"] += 1
@@ -417,7 +449,7 @@ def extract_region(pbf_path: Path, contract: Contract, *,
 
     cells = grid.write_cells(gaps_out)
     return SurfaceCounts(classified=counts["classified"], todo=counts["todo"], cells=cells,
-                         foreign=counts["foreign"])
+                         foreign=counts["foreign"], ways=counts["ways"])
 
 
 def selector_expressions(contract: Contract) -> list[str]:

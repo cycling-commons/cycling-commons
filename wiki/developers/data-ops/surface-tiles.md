@@ -8,10 +8,11 @@ built.
 
 It shares its source with [Harvesting OSM coverage](harvesting.md), the same Geofabrik extracts, the
 same `osmium tags-filter` step, and diverges completely after that. Coverage produces **points** and
-loads them into PostGIS. Surface produces **lines**, and touches **no database at all**: points go
+loads them into PostGIS. Surface produces **lines**, and the lines touch **no database**: points go
 through `coverage_poi` because the serve endpoints and the dedupe need SQL, and lines need neither,
 so ways stream from the PBF straight to GeoJSONL and on into tippecanoe. That is what makes
-country-scale line data affordable.
+country-scale line data affordable. The one thing the pass does put in the database is a small
+table of what each way records, for the route planner ([The way table](#the-way-table)).
 
 ## Running it
 
@@ -80,7 +81,7 @@ work than the gravel network around them.
 
 <figure class="gis-fig"><svg viewBox="0 0 640 400" role="img" aria-labelledby="sf3-t sf3-d" xmlns="http://www.w3.org/2000/svg">
 <title id="sf3-t">One walk over each country's ways produces all three artifacts</title>
-<desc id="sf3-d">A flowchart. At the top, a box labelled region PBF leads by an arrow to a box labelled osmium tags-filter, which leads to a box labelled one streaming pass. From that single box three arrows fan down to three boxes: classified, to record, and gap counts. Each of those leads down in turn to its own artifact: surface dot pmtiles, surface-todo dot pmtiles and surface-gaps dot pmtiles. A note at the side reads no database. The diagram makes the point that the expensive step, walking the ways, happens once and feeds all three outputs, rather than once per artifact.</desc>
+<desc id="sf3-d">A flowchart. At the top, a box labelled region PBF leads by an arrow to a box labelled osmium tags-filter, which leads to a box labelled one streaming pass. From that single box three arrows fan down to three boxes: classified, to record, and gap counts. Each of those leads down in turn to its own artifact: surface dot pmtiles, surface-todo dot pmtiles and surface-gaps dot pmtiles. A note at the side reads no database for the tiles. The diagram makes the point that the expensive step, walking the ways, happens once and feeds all three outputs, rather than once per artifact.</desc>
 <defs><marker id="gis-arrow-fS3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs>
 <rect class="gis-box gis-ink gis-fill-paper" x="20" y="28" width="170" height="56" rx="8"/><text class="gis-label-sm" x="105" y="62" text-anchor="middle">region PBF</text>
 <line class="gis-ink" x1="194" y1="56" x2="228" y2="56" marker-end="url(#gis-arrow-fS3)"/>
@@ -91,7 +92,7 @@ work than the gravel network around them.
 <path class="gis-ink" d="M 545 120 L 320 120 L 320 152" fill="none"/>
 <path class="gis-ink" d="M 545 120 L 525 120 L 525 152" fill="none"/>
 <line class="gis-ink" x1="115" y1="156" x2="115" y2="190" marker-end="url(#gis-arrow-fS3)"/><line class="gis-ink" x1="115" y1="252" x2="115" y2="306" marker-end="url(#gis-arrow-fS3)"/><line class="gis-ink" x1="320" y1="156" x2="320" y2="190" marker-end="url(#gis-arrow-fS3)"/><line class="gis-ink" x1="320" y1="252" x2="320" y2="306" marker-end="url(#gis-arrow-fS3)"/><line class="gis-ink" x1="525" y1="156" x2="525" y2="190" marker-end="url(#gis-arrow-fS3)"/><line class="gis-ink" x1="525" y1="252" x2="525" y2="306" marker-end="url(#gis-arrow-fS3)"/><rect class="gis-box gis-ink gis-fill-paper" x="20" y="196" width="190" height="56" rx="8"/><text class="gis-label-sm" x="115" y="230" text-anchor="middle">classified</text><rect class="gis-box gis-ink gis-fill-paper" x="225" y="196" width="190" height="56" rx="8"/><text class="gis-label-sm" x="320" y="230" text-anchor="middle">to record</text><rect class="gis-box gis-ink gis-fill-paper" x="430" y="196" width="190" height="56" rx="8"/><text class="gis-label-sm" x="525" y="230" text-anchor="middle">gap counts</text><rect class="gis-box gis-ink gis-fill-paper" x="20" y="312" width="190" height="56" rx="8"/><text class="gis-label-mono" x="115" y="346" text-anchor="middle">surface</text><rect class="gis-box gis-ink gis-fill-paper" x="225" y="312" width="190" height="56" rx="8"/><text class="gis-label-mono" x="320" y="346" text-anchor="middle">surface-todo</text><rect class="gis-box gis-ink gis-fill-paper" x="430" y="312" width="190" height="56" rx="8"/><text class="gis-label-mono" x="525" y="346" text-anchor="middle">surface-gaps</text>
-<text class="gis-label-sm" x="20" y="392">no PostGIS anywhere in this path</text>
+<text class="gis-label-sm" x="20" y="392">no PostGIS anywhere in the tiles' path</text>
 </svg>
 <figcaption>The expensive half of a continental build is walking the ways, and it happens <strong>once</strong>. Each way is written out and dropped as it arrives, so a country never accumulates in memory, the reason a 5&nbsp;GB France extract builds on a laptop-sized machine at a peak of about 2&nbsp;GB, most of which is osmium's node-location index rather than our ways. Only the grid keeps state, and it is bounded by area rather than by roads: about a thousand cells per country, three numbers each.</figcaption></figure>
 
@@ -206,8 +207,30 @@ make surface-tiles regions=$(make -s coverage-regions) ARGS="--retire lu"
 ```
 
 `--retire <cc>` is the only thing that ever removes a country's entry from a
-manifest. Use `ARGS=--no-publish` for size experiments on one country without
-touching the live manifest at all.
+manifest, and it also removes the country from the way table. Use
+`ARGS=--no-publish` for size experiments on one country without touching the
+live manifest at all; the way table still loads.
+
+## The way table
+
+The route planner says what a ride's roads are made of from what
+OpenStreetMap records, not from what the routing engine guesses where a road
+has no `surface` tag. The same streaming pass writes a fourth file per country,
+`surface_<slug>_ways.tsv`: one line per way it keeps that has a surface class,
+a smoothness or a tracktype recorded.
+
+<!-- CODE-ILLUSTRATIVE two lines of a way file: way id, surface class, smoothness, tracktype, \N for none -->
+```text
+107819295	paved	good	\N
+3	\N	\N	grade4
+```
+
+`pipeline/coverage/way_surface.py` loads each country into
+`coverage_way_surface` in one transaction, and marks it loaded in
+`coverage_way_surface_country`. A country whose file has not changed is not
+loaded again, and a failed load leaves last week's rows in place. The planner
+then reads a way the table does not hold, on a road the pass reads, as
+"surface not recorded".
 
 ## The routes build, and why it runs first
 

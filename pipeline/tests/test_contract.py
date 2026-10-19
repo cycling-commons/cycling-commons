@@ -367,3 +367,15 @@ def test_rejects_a_name_or_tags_key_not_in_the_stored_tags(tmp_path):
     bad.write_text(json.dumps(raw), encoding="utf-8")
     with pytest.raises(ValueError, match="nameOrTags"):
         load_contract(bad)
+
+
+@pytest.mark.parametrize("breakage", [
+    lambda s: s.pop("tracktype"),
+    lambda s: s["tracktype"].pop("values"),
+    lambda s: s["tracktype"].update(values=[]),
+])
+def test_rejects_a_malformed_surface_tracktype(tmp_path, breakage):
+    raw = _raw()
+    breakage(raw["surface"])
+    with pytest.raises(ValueError, match="surface.tracktype"):
+        load_contract(_reload(tmp_path, raw))
