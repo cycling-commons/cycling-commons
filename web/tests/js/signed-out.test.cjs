@@ -18,22 +18,25 @@ const ROOT = path.join(__dirname, '..', '..');
 const read = p => fs.readFileSync(path.join(ROOT, p), 'utf8');
 const script = read('assets/js/signed-out.js');
 const plan = read('assets/map/plan.js');
+const legStore = read('assets/map/leg-store.js');
 const base = read('templates/base.html.twig');
 
 function run(hash) {
   const store = new Map([['cc-plan-draft', '{}'], ['cc-plan-history', '{}'], ['cc-theme', 'dark']]);
-  const replaced = [];
+  const replaced = [], deleted = [];
   const context = {
     location: { hash, pathname: '/nl/', search: '?x=1' },
     localStorage: { removeItem: k => store.delete(k) },
+    indexedDB: { deleteDatabase: name => deleted.push(name) },
     history: { replaceState: (s, t, url) => replaced.push(url) },
   };
   vm.runInNewContext(script, context);
-  return { store, replaced };
+  return { store, replaced, deleted };
 }
 
 test('after signing out the planner keys go, and nothing else does', () => {
-  const { store, replaced } = run('#signed-out');
+  const { store, replaced, deleted } = run('#signed-out');
+  assert.deepEqual(deleted, ['cc-plan'], 'the legs routed for the ride stay');
   assert.equal(store.has('cc-plan-draft'), false);
   assert.equal(store.has('cc-plan-history'), false);
   assert.equal(store.get('cc-theme'), 'dark', 'the display preferences stay');
@@ -42,8 +45,9 @@ test('after signing out the planner keys go, and nothing else does', () => {
 
 test('any other visit leaves the ride alone', () => {
   for (const hash of ['', '#map', '#signed-outx']) {
-    const { store, replaced } = run(hash);
+    const { store, replaced, deleted } = run(hash);
     assert.equal(store.size, 3, `${hash || 'no hash'} removed something`);
+    assert.deepEqual(deleted, [], `${hash || 'no hash'} deleted the legs`);
     assert.deepEqual(replaced, []);
   }
 });
@@ -52,6 +56,9 @@ test('the script forgets exactly the keys the planner writes', () => {
   const keys = [...plan.matchAll(/const (?:DRAFT|HISTORY)_KEY = '([^']+)';/g)].map(m => m[1]).sort();
   assert.deepEqual(keys, ['cc-plan-draft', 'cc-plan-history']);
   for (const k of keys) assert.ok(script.includes(`'${k}'`), `signed-out.js does not remove ${k}`);
+  const db = (legStore.match(/export const LEG_DB = '([^']+)';/) || [])[1];
+  assert.equal(db, 'cc-plan');
+  assert.ok(script.includes(`deleteDatabase('${db}')`), 'signed-out.js does not delete the legs\' database');
 });
 
 test('every page of the base layout carries the script', () => {

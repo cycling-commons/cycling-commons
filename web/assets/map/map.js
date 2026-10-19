@@ -5,7 +5,7 @@ import { I18N, LAYER_L10N, D, tpl, VALUE_TR, trVal, sourceLabel, isRiderSource }
 import { escPend, pinPoint, featureLL, attachPhotos, deskRiderHtml } from './util.js';
 import { uKm } from './units.js';
 import { map, initMapControls, addSatellite, markStyleReady, initCoordPopup,
-         localiseBasemapLabels, fadeHighways, fadeHighwaysSoon } from './map-init.js';
+         localiseBasemapLabels, fadeHighways, showSmallRoads, fadeHighwaysSoon, addCycleways } from './map-init.js';
 import { initRideCheck } from './ride-check.js';
 import { initPlan } from './plan.js';
 import { initPresets } from './presets.js';
@@ -50,7 +50,7 @@ import { layerGlyph } from './icons.js';
 
 
 
-  const bootMap=()=>{ markStyleReady(); localiseBasemapLabels(); fadeHighways(); map.on('styledata', fadeHighwaysSoon); addSatellite(); addMapillary(); addWaterOsm(); addCoverage();
+  const bootMap=()=>{ markStyleReady(); localiseBasemapLabels(); showSmallRoads(); fadeHighways(); addCycleways(); map.on('styledata', fadeHighwaysSoon); addSatellite(); addMapillary(); addWaterOsm(); addCoverage();
     OSM_BULK.forEach(([key, data, src])=>addOsmDots(key, data, src));
     renderScopeChips(); applyScope(curScope(), {fit:false}); setupConfClusters();
     // Cluster markers on settle (moveend/idle), never per render frame during a fly.

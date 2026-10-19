@@ -1875,6 +1875,8 @@ map:
   surfaces: 'Surfaces'
   route_network: 'Routes'
   relief_3d: "3D relief"
+  fade_roads: "Fade roads bikes may not ride"
+  fade_roads_hint: "Motorways, trunk roads and roads where bikes must use the cycle path beside them, drawn faint"
   relief_hint: "The slopes shaded and the ground raised, twice its true height. Tilt the map with a right-drag (Ctrl-drag on a Mac)."
   gone_places: 'Removed places'
   legend_quality: 'Ticks: surface quality (smooth → rough), where recorded'
@@ -1960,7 +1962,7 @@ map:
   plan_guide_8: "See a tap, a café, a viewpoint or a climb on the map? Click its pin: a panel opens with what it is and an <i>Add to ride</i> button. Or right-click the pin to add it straight away."
   plan_guide_9: "Ctrl+Z undoes, Ctrl+Shift+Z redoes (Ctrl+Y works too). On a Mac, ⌘ instead of Ctrl, and ⌘-click for a right-click."
   plan_guide_privacy_h: "Your privacy"
-  plan_guide_privacy: "We keep no copy of your ride. Our server only handles the requests that draw it: the roads between your checkpoints, what lies along the way and the weather. It keeps none of them; only the forecast for a point near the middle of your ride stays on our server for three hours, so we ask the weather service less often. Your ride stays in this browser for 7 days after your last change. Use <i>Download GPX</i> to keep it."
+  plan_guide_privacy: "We keep no copy of your ride. Our server only handles the requests that draw it: the roads between your checkpoints, the track of a file you open, what lies along the way and the weather. It keeps none of them; only the forecast for a point near the middle of your ride stays on our server for three hours, so we ask the weather service less often. Your ride stays in this browser for 7 days after your last change. Use <i>Download GPX</i> to keep it."
   plan_guide_show: "Show this guide when I open the planner"
   plan_guide_close: "Got it"
   plan_guide_open: "How it works"
@@ -1987,7 +1989,8 @@ map:
   plan_open: "Open a GPX"
   plan_opened: "Opened {name}."
   plan_open_not_gpx: "This file holds no ride we can open."
-  plan_converted: "Opened {name}, made in another app, as {n} checkpoints. The planner routes between them for your bike, so a road can differ from the file."
+  plan_converted: "Opened {name}, made in another app, as {n} checkpoints. The ride follows the roads in the file; a leg you change is routed for your bike."
+  plan_matching: "Following the roads of {name}…"
   plan_open_no_stops: "This GPX has no checkpoints to open."
   plan_open_too_many: "This GPX has more checkpoints than a ride holds ({n})."
   plan_replace_h: "Open this file instead of your ride?"
@@ -2032,7 +2035,7 @@ map:
   plan_unit_time: "Time"
   plan_unit_dist: "Distance"
   plan_under_min: "under 1 min"
-  plan_tougher_h: "What makes it tougher"
+  plan_tougher_h: "What makes it tough"
   plan_tougher_none: "Nothing out of the ordinary"
   plan_long_day: "{d}: a long day"
   plan_steepest: "Steepest km: {g} % at km {at}"
@@ -2132,7 +2135,10 @@ map:
   plan_engine_down: "The routing engine did not answer. Try again in a moment."
   plan_max_stops: "A ride holds at most {n} checkpoints."
   plan_already: "That place is already in your ride."
-  plan_rate_limited: "Too many legs in a short time. Wait a minute, then try again."
+  plan_rate_limited: "Too many legs in a short time. Wait a few minutes, then try again."
+  plan_rate_limited_day: "This connection has planned many legs today. Try again tomorrow, or sign in to plan more."
+  plan_legs_left_day: "{n} of {max} legs left today"
+  plan_legs_left_window: "{n} of {max} legs left for the next 10 minutes"
   plan_bar_stops: "{n} checkpoints"
   plan_bar_open: "Open"
   d_plan_add: "+ Add to ride"

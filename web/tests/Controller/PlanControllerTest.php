@@ -187,6 +187,24 @@ final class PlanControllerTest extends WebTestCase
         self::post($client, '/map/plan/leg', 'plan-leg', self::leg());
 
         self::assertResponseStatusCodeSame(429);
+        // A visitor's budget is the day's: the planner says "tomorrow", not "in a few minutes", and none is left.
+        $spent = self::json($client);
+        self::assertSame('tomorrow', $spent['until']);
+        self::assertSame(0, $spent['budget']['left']);
+    }
+
+    /** The legs left, read when the planner opens, spend nothing (owner 2026-10-18). */
+    public function testTheBudgetSaysTheLegsLeftAndSpendsNone(): void
+    {
+        $client = static::createClient();
+        $limit = self::limit('plan_leg_anon');
+        self::post($client, '/map/plan/budget', 'plan-leg', []);
+        self::assertResponseIsSuccessful();
+        self::assertSame(['budget' => ['left' => $limit, 'limit' => $limit, 'per' => 'day']], self::json($client));
+        self::post($client, '/map/plan/budget', 'plan-leg', []);
+        self::assertSame($limit, self::json($client)['budget']['left'], 'reading the budget spent a leg');
+        self::post($client, '/map/plan/leg', 'plan-leg', self::leg());
+        self::assertSame($limit - 1, self::json($client)['budget']['left']);
     }
 
     public function testASignedInRiderSpendsTheirOwnBudgetNotTheVisitors(): void
@@ -318,6 +336,100 @@ final class PlanControllerTest extends WebTestCase
         self::assertSame(['snapped' => false], self::json($client));
         foreach ([['point' => [5.18, 52.699], 'bike' => 'Unicycle'], ['point' => 'here', 'bike' => 'Road'], ['bike' => 'Road']] as $bad) {
             self::post($client, '/map/plan/snap', 'plan-leg', $bad);
+            self::assertResponseStatusCodeSame(400);
+        }
+    }
+
+    /**
+     * A leg may be asked to keep off up to 40 points (route-planner.md section 4.2); more, or a point that is not one,
+     * is refused before the engine is asked.
+     */
+    public function testALegRefusesTooManyOrBadPointsToKeepOff(): void
+    {
+        $client = static::createClient();
+        $ask = ['a' => [5.80, 50.40], 'b' => [5.83, 50.40], 'bike' => 'Road'];
+        self::post($client, '/map/plan/leg', 'plan-leg', $ask + ['avoid' => array_fill(0, 41, [5.81, 50.40])]);
+        self::assertResponseStatusCodeSame(400);
+        self::post($client, '/map/plan/leg', 'plan-leg', $ask + ['avoid' => [[5.81, 50.40], 'here']]);
+        self::assertResponseStatusCodeSame(400);
+        self::post($client, '/map/plan/leg', 'plan-leg', $ask + ['avoid' => [[5.81, 50.40]]]);
+        self::assertResponseIsSuccessful();
+    }
+
+    /**
+     * A ride's legs in one request (route-planner.md section 8): without an engine the answer is `legs: null`, so the
+     * planner asks leg by leg; a bad stop, one stop, too many stops or an unknown bike is refused.
+     */
+    public function testLegsInOneRequestFallBackWithoutAnEngineAndRefuseABadAsk(): void
+    {
+        $client = static::createClient();
+        self::post($client, '/map/plan/legs', 'plan-leg', ['stops' => [[5.80, 50.40], [5.83, 50.40], [5.85, 50.42]], 'bike' => 'Road']);
+        self::assertResponseIsSuccessful();
+        self::assertSame(['legs' => null, 'budget' => ['left' => 98, 'limit' => self::limit('plan_leg_anon'), 'per' => 'day']], self::json($client), 'two legs spent of the day');
+        foreach ([
+            ['stops' => [[5.80, 50.40]], 'bike' => 'Road'],
+            ['stops' => array_fill(0, 51, [5.80, 50.40]), 'bike' => 'Road'],
+            ['stops' => [[5.80, 50.40], 'here'], 'bike' => 'Road'],
+            ['stops' => [[5.80, 50.40], [5.83, 50.40]], 'bike' => 'Unicycle'],
+        ] as $bad) {
+            self::post($client, '/map/plan/legs', 'plan-leg', $bad);
+            self::assertResponseStatusCodeSame(400);
+        }
+    }
+
+    /**
+     * The repeat check's legs in one request (route-planner.md section 4.2): without an engine each leg answers
+     * `routed: false`; a bad leg, a bad avoid list, no legs, too many or an unknown bike is refused.
+     */
+    public function testDetoursAnswerEachLegAndRefuseABadAsk(): void
+    {
+        $client = static::createClient();
+        $leg = ['a' => [5.80, 50.40], 'b' => [5.83, 50.40], 'avoid' => [[5.81, 50.40]]];
+        self::post($client, '/map/plan/detours', 'plan-leg', ['legs' => [$leg, $leg], 'bike' => 'Road']);
+        self::assertResponseIsSuccessful();
+        self::assertSame(['legs' => [['routed' => false], ['routed' => false]], 'budget' => ['left' => 98, 'limit' => self::limit('plan_leg_anon'), 'per' => 'day']], self::json($client));
+        foreach ([
+            ['legs' => [], 'bike' => 'Road'],
+            ['legs' => array_fill(0, 50, $leg), 'bike' => 'Road'],
+            ['legs' => [['a' => [5.80, 50.40], 'b' => 'there', 'avoid' => []]], 'bike' => 'Road'],
+            ['legs' => [[...$leg, 'avoid' => array_fill(0, 41, [5.81, 50.40])]], 'bike' => 'Road'],
+            ['legs' => [$leg], 'bike' => 'Unicycle'],
+        ] as $bad) {
+            self::post($client, '/map/plan/detours', 'plan-leg', $bad);
+            self::assertResponseStatusCodeSame(400);
+        }
+    }
+
+    /**
+     * A ride file's legs on its own roads (route-planner.md section 6.1): without an engine each piece is its own
+     * line, unmatched; a short piece, too many pieces or points, or an unknown bike is refused.
+     */
+    public function testMatchAnswersEachPieceAndRefusesABadAsk(): void
+    {
+        $client = static::createClient();
+        $piece = [[5.80, 50.40], [5.81, 50.40], [5.83, 50.41]];
+        self::post($client, '/map/plan/match', 'plan-leg', ['legs' => [$piece, $piece], 'bike' => 'Road']);
+        self::assertResponseIsSuccessful();
+        $answer = self::json($client);
+        self::assertCount(2, $answer['legs']);
+        foreach ($answer['legs'] as $leg) {
+            self::assertTrue($leg['routed']);
+            self::assertTrue($leg['fromFile']);
+            self::assertFalse($leg['matched'], 'without an engine a piece is matched');
+            self::assertSame($piece, $leg['coordinates'], 'the file\'s own line does not stand in');
+            self::assertEqualsWithDelta(2510.0, $leg['distanceM'], 5.0, '709 m east, then 1801 m north-east');
+        }
+        self::assertSame(98, $answer['budget']['left'], 'one leg spent per piece');
+        foreach ([
+            ['legs' => [], 'bike' => 'Road'],
+            ['legs' => [[[5.80, 50.40]]], 'bike' => 'Road'],
+            ['legs' => array_fill(0, 50, $piece), 'bike' => 'Road'],
+            ['legs' => [array_fill(0, 2001, [5.80, 50.40])], 'bike' => 'Road'],
+            ['legs' => array_fill(0, 16, array_fill(0, 1900, [5.80, 50.40])), 'bike' => 'Road'],
+            ['legs' => [[[5.80, 50.40], 'there']], 'bike' => 'Road'],
+            ['legs' => [$piece], 'bike' => 'Unicycle'],
+        ] as $bad) {
+            self::post($client, '/map/plan/match', 'plan-leg', $bad);
             self::assertResponseStatusCodeSame(400);
         }
     }

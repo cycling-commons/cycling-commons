@@ -113,7 +113,7 @@ shows, which is the point.
   open it takes their place, and when it closes they come back"). Above
   820 px, while a ride of two or more stops is awake (section 6.0), the
   "Your ride" group (`#planFigsGrp`: the figures, the riding time, the day
-  graphic, the day and start time, the finish, what makes it tougher and
+  graphic, the day and start time, the finish, what makes it tough and
   the weather) leaves the panel for a side of its own along the map's right
   edge (`#planSide`), the drawer's 320 px and colours. Its one control is a
   close button ("Hide the ride details", `map.plan_side_hide`, `#planSideX`)
@@ -181,7 +181,8 @@ shows, which is the point.
   second name field (owner 2026-10-15).
 - **The ride outlives the panel.** Closing the panel keeps the line and the
   stops on the map. While a ride with at least two stops is on the map and the
-  panel is closed, a **ride bar** sits at the foot of the map: "42.3 km ·
+  panel is closed, a **ride bar** sits at the foot of the map (not while
+  Search & region is open, which puts the ride to sleep, section 6.0): "42.3 km ·
   610 m ↑ · 3 stops", with Open and Clear. Opening a place closes the panel
   as always (map-and-search.md section 4.0); the place drawer then carries
   **Add to ride** (section 4.3), and that button reopens the panel. This
@@ -296,7 +297,30 @@ both: the start, with the flag beside its S, and the end's own marker is
 hidden until the map zooms in far enough to part them (owner 2026-10-17:
 the S, the flag and the last stop were drawn on top of each other).
 `joinEnds()` in `plan.js` decides it after every zoom.
+The markers shrink as the map zooms out (owner 2026-10-18: "checkpoint
+numbers must be smaller in a zoomed out window"): 24 px from zoom 11.5,
+19 px from zoom 9.5, 15 px below it, the number and the flag with them
+(`sizeMarkers()`, `MARKER_ZOOM`, body classes `cc-mk-m` and `cc-mk-s`).
 
+- **Never the same road twice** (owner 2026-10-18: rides are mostly round
+  trips; a leg came back along the road the leg before went out on). Once the
+  legs are routed, each leg is set against the legs before it
+  (`repeatRuns()`): a stretch within 20 m of an earlier leg for 400 m or more,
+  past 300 m from the leg's own ends, is ridden twice. Such a leg is asked
+  again with points every 250 m along that stretch to keep off (`avoid`, at
+  most 40, the engine's `exclude_locations`); the other way is taken when it
+  repeats less and is at most twice as long (`REPEAT` in `plan-model.js`), else
+  the shared road is the only sensible way and stays. A leg the rider set to
+  the shortest way keeps it. Each leg is asked once per set of legs before it
+  (`repeatChecked`). All legs that repeat are asked in one request,
+  `POST /map/plan/detours` (owner 2026-10-18: a reopened ride asked them one
+  after another); the answers are taken in ride order, so a leg an earlier
+  leg's other way already took off the shared road keeps its own. A leg that
+  repeats only after an earlier leg took its other way is asked in a next
+  request, three requests at most per routing (`REPEAT_ROUNDS` in `plan.js`).
+  Measured on the owner's ride (dev engine, road bike):
+  Kolhorn to Hoorn after Medemblik to Kolhorn shared 8.3 km; the other way
+  shares none and is 26.0 km instead of 24.0 km, through Hoogwoud.
 - **A map point goes onto the road** a bike would take there (owner
   2026-10-18: a checkpoint dropped in a field routed up a farm's driveway and
   back). A click, or a stop dragged and dropped, asks `POST /map/plan/snap`
@@ -329,7 +353,13 @@ the S, the flag and the last stop were drawn on top of each other).
   meaning. One rule says what a place is to the ride (`drawer.js`
   `planPlace()`), for the drawer button and the pins alike, and one
   synchronous event carries it from a pin to the planner (`util.js`
-  `offerToRide()`, `cc:place-menu`). The stops' info box says so (below).
+  `offerToRide()`, `cc:place-menu`). Every pin answers it: the catalogue's pins
+  (`render.js`), the clustered pins of confirmed and provider places
+  (`osm-pools.js`, owner 2026-10-18: a RIVM water pin copied its coordinates;
+  OpenStreetMap places are drawn there too), a climb's summit flag, steep
+  markers and line (`render.js`, `offerMark()`, the line's `contextmenu`) and the
+  coverage icons (`coverage.js`). Marks that are no place offer nothing: a
+  count bubble, a route's line, a numbered junction. The stops' info box says so (below).
   A right-click on a tile pin looks 10 px round the pointer (owner
   2026-10-16: the narrow tip of a drop fell through), and a right-click the
   planner takes shows no coordinates popup: the pin's handler marks the click
@@ -523,19 +553,52 @@ takes the map to the stop (owner 2026-10-14); hovering a row rings it.
 - **Distance** is the sum of the routed legs' lengths, from the engine.
 - **Climbed and descended** are read from the leg heights with one rule,
   `cleanHeights()` in `plan-model.js`: the samples are smoothed by a
-  three-sample moving average; then a height counts only once it is 3 m
+  three-sample moving average; then a height counts only once it is 5 m
   (`HEIGHT_NOISE_M`) or more from the last height that counted, and the
   samples between two counted heights lie on the straight line between
   them. Every rise of the cleaned heights is climbed and every drop is
-  descended. The 3 m rule is there because the elevation model is a
-  surface model in whole metres: trees, roofs and rounding add up over a
-  long ride (owner 2026-10-17, "Strava also always has this wrong"). A
-  loop of 53 km around Hoorn, between -4 and 6 m, read 245 m climbed and
-  15 minutes of climbing without it, and reads 43 m and none with it; a
-  52 km loop from Stavelot to Spa reads 996 m instead of 1159 m. The
-  fixture `tests/js/fixtures/plan-heights.json` holds both. The rule is simpler than a climb's
+  descended. The rule is there because the elevation model is a surface
+  model in whole metres: trees, roofs and rounding add up over a long ride
+  (owner 2026-10-17, "Strava also always has this wrong"). A loop of 53 km
+  around Hoorn, between -4 and 6 m, reads 245 m climbed without it and 25 m
+  with it; a 52 km loop from Stavelot to Spa reads 1159 m without it and
+  932 m with it. The fixture `tests/js/fixtures/plan-heights.json` holds
+  both. The 5 m is set against what riders' own devices counted (owner
+  2026-10-18: "we are too much"), each ride matched as a ride file (section
+  6.1) and read from our heights:
+
+  | Ride | Device | 3 m | 4 m | 5 m | 6 m |
+  |---|---|---|---|---|---|
+  | Liège-Bastogne-Liège, 254 km (Strava, Garmin) | 4,424 | 4,741 | 4,585 | 4,441 | 4,307 |
+  | Flat, 43 km (Wahoo) | 9 | 58 | 13 | 16 | 13 |
+  | Flat, 35 km (Wahoo) | 2 | 3 | 0 | 0 | 0 |
+  | Flat, 42 km (Wahoo) | 7 | 44 | 18 | 21 | 13 |
+  | Coast, 55 km | 127 | 48 | 37 | 15 | 6 |
+
+  5 m is the nearest over the five, 152 m off in all against 483 m at 3 m.
+  A device's distance can differ from the ride's for another reason: the
+  four flat rides' matched lengths are within 0.1 km of the devices', but
+  Strava's GPX of the Liège ride measures 250.7 km along its own points and
+  the devices said 254.3 km. A GPX holds no distance, and points one second
+  apart cut every bend; the ride is measured along the roads (251.7 km). The rule is simpler than a climb's
   (climb-elevation.md section 4b counts only the climbing of one hill) and
-  it is the same for every ride, so two rides compare.
+  it is the same for every ride, so two rides compare. The heights are
+  cleaned over the ride as one line, not leg by leg (`cleanRide()`, owner
+  2026-10-18: a round trip of 49 legs around Hoorn read 115 m climbed and
+  123 m descended, as every leg started its own filter and the joins were
+  never counted); a leg without heights breaks the line. The climbed and
+  descended figures, the time split by gradient, the gradient stretches lit
+  on the map and the GPX heights all read the same cleaned line. The same
+  ride reads 84 m climbed and 84 m descended at the 3 m of that day, 36 m
+  at 5 m.
+- **A leg all at 0 m keeps its heights** when the engine has heights in the
+  one-degree squares it crosses (`ElevationClient::tilesLoaded()`, owner
+  2026-10-18: the last leg into Hoorn along the Markermeer lost its
+  heights). Every sample exactly 0 is also how the engine answers without
+  tiles, so such a leg asks once more: a 5 x 5 grid of points over each
+  square, in one request; a square with one height that is not 0 has its
+  tiles loaded, and the leg's 0 m is the ground. Without that, or past
+  four squares, the leg keeps its line and has no heights, as before.
 - The figures follow the rider's distance and elevation units
   (account-and-auth.md section 9).
 
@@ -618,7 +681,7 @@ no account data: the pace is general, and it stays general (section 1).
   minute reads "under 1 min", never "0 min"; in the distance view a part
   under 50 m reads "under 0.1 km", never "0 km" (`map.plan_under_dist`,
   owner 2026-10-18).
-- **What makes it tougher**, under the bar: one line per factor, and only
+- **What makes it tough** (`map.plan_tougher_h`; "tougher" until owner 2026-10-18), under the bar: one line per factor, and only
   when that factor makes the ride tougher than an ordinary one (owner
   2026-10-17: "a baseline"). The baselines are set in one place, `TOUGHER`
   in `plan-model.js`, and `tougherLines()` decides the lines from them;
@@ -731,9 +794,10 @@ no account data: the pace is general, and it stays general (section 1).
     It offers 09:00, or on today past 09:00 the next half hour, never past
     22:00 (`defaultStartMin()`), and is kept with the browser's draft like
     the day, never in the ride file. The day and the start time sit at the
-    top of the panel under the name, the ride's base facts, at a size read at
-    a glance (owner 2026-10-18: "too small") (`#planWhen`,
-    owner 2026-10-17); the day is any date from today on. In the details,
+    top of the panel under the name, the ride's base facts (`#planWhen`,
+    owner 2026-10-17), each label beside its field in the small capitals of
+    "Name your ride" (0.64rem, owner 2026-10-18), the fields at a size read
+    at a glance; the day is any date from today on. In the details,
     the finish stands beside the riding time, two tiles of one row (owner
     2026-10-17): "Finish time ~ 11:35" (`map.plan_finish_h`), the start plus
     the riding time plus 5 % for lights, crossings and traffic
@@ -754,7 +818,7 @@ no account data: the pace is general, and it stays general (section 1).
     leg, `runs` from `/map/plan/leg`, where the map's own surface line was
     read that reading winning), into the wind, across it and with it their
     stretches (`windSpans()`). Pale bar colours get a deeper tone on the map.
-    Each line of what makes it tougher lights its own (owner 2026-10-18), the
+    Each line of what makes it tough lights its own (owner 2026-10-18), the
     veil with it (`TOUGH_PART`): a long day the whole ride; the steepest
     kilometre and the longest climb their stretch (`longestClimb()` says
     where it starts, `fromM`); rough surface its runs; busy roads their
@@ -764,14 +828,14 @@ no account data: the pace is general, and it stays general (section 1).
     daylight the stretch ridden in the dark, or the last hour before sunset;
     heat, cold and ice the stretch of their hour (ice from its hour on), at
     the average pace.
-  - **What makes it tougher** and **Weather** are headings of the same size
+  - **What makes it tough** and **Weather** are headings of the same size
     as Your ride (owner 2026-10-17).
-  - **Weather**, a list under what makes it tougher, whenever a forecast
+  - **Weather**, a list under what makes it tough, whenever a forecast
     came back (owner 2026-10-17: "no forecast shown?" when nothing passed
     its baseline): the temperature ("Up to 12 °C"), the wind with the
     kilometres into it and with it, and the rain ("0.4 mm of rain", "No
     rain" under 0.1 mm, `map.plan_dry`), for the hours ridden. A fact that
-    passes its baseline reads under what makes it tougher instead, so each
+    passes its baseline reads under what makes it tough instead, so each
     shows once. The forecast credit closes this list (`renderWeather()`).
     The eye reads it as a chart (owner 2026-10-17: "show some nice weather
     graphs instead of dry text"), the words staying for a screen reader:
@@ -802,7 +866,7 @@ no account data: the pace is general, and it stays general (section 1).
     riding into the wind" (`map.plan_cold_feel`); at 27 °C or over, the
     heat index with the humidity (NOAA, `heatIndexC()`), "Up to 31 °C with
     65 % humidity: feels like 35 °C" (`map.plan_heat_humid`). Under the
-    chart while ordinary; a line of what makes it tougher at a wind chill
+    chart while ordinary; a line of what makes it tough at a wind chill
     of 0 °C or colder (`TOUGHER.coldFeelC`) or a heat index of 32 °C or
     more (`TOUGHER.heatFeelC`, NOAA's "extreme caution").
   - **What is watched** (owner 2026-10-17): above the chart, three icons,
@@ -818,7 +882,7 @@ no account data: the pace is general, and it stays general (section 1).
     weather code or snowfall, or frost on a damp road (the ground at 0 °C
     or under, the air at 1 °C or under without a ground figure, with rain
     that hour or the three before, or the air within 1 °C of its dew
-    point). A line of what makes it tougher, "Chance of ice from 07:00:
+    point). A line of what makes it tough, "Chance of ice from 07:00:
     frost on damp roads" (`map.plan_ice`), and a drawn snowflake on the
     chart's temperature line at that hour.
   - **The map steps back** while a stat or the weather is pointed at (owner
@@ -840,8 +904,13 @@ no account data: the pace is general, and it stays general (section 1).
     chart, or at a part of the wind bar, draws arrows along the ride, about
     every 1.5 km (6 to 40), pointing where the wind blows that hour or over
     the hours ridden (`windArrows()`, layer `plan-wind`); the harder the wind,
-    the bigger the arrows: 60 % in a calm, full size at 20 km/h, 1.45 times
-    at 40 and 1.85 at 60 (`WIND_SCALE`; owner 2026-10-17).
+    the longer and the bigger the arrows (owner 2026-10-17; longer
+    2026-10-18: "bigger/longer when there is more wind"). One arrow per band
+    of the Beaufort scale, the same head on a longer shaft each band
+    (`WIND_ARROWS`): under 12 km/h 6 px, from 12 14 px, from 20 24 px, from
+    29 34 px, from 39 46 px. Within a band the arrow also grows with the
+    wind: 80 % in a calm, full size at 20 km/h, 1.2 times at 40 and 1.4 at
+    60 (`WIND_SCALE`), and 0.85 times at zoom 8 to 1.25 times at zoom 14.
   - **The forecast** for that date, through our server (section 8), each
     past its baseline above, for **the hours ridden** (`rideHours()`): from
     the hour of the start time to the hour the riding time ends, the
@@ -1067,6 +1136,21 @@ so the rider sees a ride waits. Opening the planner wakes it (`asleep` in
 `plan.js`): the legs are routed and everything is drawn, and from then on
 in that visit a closed panel shows the ride bar as section 3 says.
 
+**Search & region puts the ride to sleep** (owner 2026-10-18: "when user
+clicks on search & region you immediately should stop showing any planner
+related stuff"; a ride of Wallonia stayed on the map, strip and ride bar
+and all, while the rider searched Hoorn). Opening Search & region
+(`sleepRide()`) makes the map the plain map at once, as at page load: the
+line, the checkpoints, the strip, the ride bar, the details and Add to ride
+on the drawers go, a routing in flight is dropped, and the scope goes back
+to the rider's own unless they picked another. Opening the planner wakes the
+ride: its legs come from the browser (section 6.0), so nothing is asked of
+the engine, and the scope follows the ride again. While it sleeps, every
+timed refresh checks it when it fires, not only when it was set (the along
+list, the forecast, the tile surfaces): the along refresh after Search &
+region's own camera move put the scope back on the ride two seconds later
+(owner 2026-10-18).
+
 **A data system, not a users system** (owner 2026-10-15): nothing of a
 ride is stored on our server. A ride to keep is a file the rider downloads
 and opens again (6.1); no account is needed for it and no account holds
@@ -1118,6 +1202,27 @@ else its waypoints, becomes the stops, at most 50 (`MAX_STOPS`):
   checkpoints. The planner routes between them for your bike, so a road can
   differ from the file."
 
+**The file's roads are kept** (owner 2026-10-18: Liège-Bastogne-Liège, a
+250.7 km Strava track, opened as 50 checkpoints routed round the Stockeu
+instead of up it, and took another climb out of Stavelot). The track is cut
+at the checkpoints (`trackPieces()` in `plan-model.js`, one piece per leg, a
+point every 20 m at most, `PIECE_STEP_M`), and `applyRideFile()` sends the
+pieces in one request, `POST /map/plan/match` (section 8), before any leg is
+routed. Each piece comes back matched to the roads, or as its own line
+where the match falls short, with its heights and surfaces; the planner
+keeps those legs (`fromFile`) and routes only a leg the rider changes. A
+leg from the file skips the repeat check (section 4.2), and keeps the
+file's roads when the rider picks another bike (`fileLegs`, by its two
+stops). The planner's own GPX does the same: its track is cut at its
+waypoints (`stopsOnTrack()`, the nearest track point within 30 m, searched
+on from the previous one), so a saved ride opens on the roads it was saved
+with. Measured on the dev engine: 50 checkpoints routed cover 78.5 % of
+the LBL track within 50 m; matched, 100 % (48 of 49 legs matched, one on
+the file's own line), 251.7 km against the file's 250.7 km, one request of
+1.6 s. A standing device's points are dropped by their distance to the
+last point kept, not to the point before (owner 2026-10-18): on a slow
+climb a device writes a point every 3 m, and every one of them went.
+
 Measured on five Strava tracks (2026-10-16, road bike, dev engine): 3,315 to
 13,024 points converted in 8 to 30 ms. Within 50 m, the routed ride covers
 the track of a 51 km and a 78 km ride for 85 % and 79 % with 25 stops, 95 %
@@ -1142,7 +1247,9 @@ is not written (section 4.4).
 ### 6.2 The GPX
 
 The GPX is written **in the browser** from the ride on screen, by one
-writer (`gpxText()`): a GPX 1.1 file with one `<trk>` whose points carry the elevations, and one `<wpt>` per
+writer (`gpxText()`): a GPX 1.1 file with one `<trk>` whose points carry the elevations, the cleaned
+heights of section 4.4 to a tenth of a metre, so a device or a ride site counting the file's climbing counts what
+the planner counts (owner 2026-10-18: the raw samples carry a surface model's noise), and one `<wpt>` per
 stop, named by the stop's name, a place stop with a `<link>` to its page on
 the Commons. The file is named after the ride ("La Redoute loop.gpx";
 "Ride.gpx" when unnamed), and carries the extensions of 6.1. No server

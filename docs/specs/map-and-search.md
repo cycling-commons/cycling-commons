@@ -367,7 +367,10 @@ map module opens `#drawer` behind its back.
   compact: rows 1.55rem apart, tight headings and buttons (owner 2026-10-15). The L key presses its
   fold button (the three stripes), except inside a text field or with Ctrl, Alt or the command key
   held; the button shows it, a small keyboard and a keycap "L" left of the stripes, hidden on a
-  screen without a hover (a phone has no L to press; owner 2026-10-17). Open, that button sits in the
+  screen without a hover (a phone has no L to press; owner 2026-10-17). A place's drawer folds the
+  key while it is open and opens it again when it closes, if the drawer was what folded it; the
+  rider's own fold or unfold in between stays theirs (owner 2026-10-18: the key lay over the place's
+  buttons). Open, that button sits in the
   top right and the first key shown (Road surface, else Routes) takes the row beside it, so the panel
   starts with its heading and no empty row; folded, the button is the whole panel again. Each key's heading (Road surface, Routes) starts with an eye, open while any of its rows
   shows and shut while none does: it switches all that key's rows off while any is on, else all on,
@@ -1600,7 +1603,13 @@ class is trunk or the tiles mark it `bicycle=no` or `bicycle=use_sidepath`
 (ride the cycle path beside it), `NO_BIKE_FADE`. The OpenFreeMap tiles carry
 `bicycle` from zoom 10: around Hoorn at zoom 12, 99 secondary roads say
 `no` and 83 `use_sidepath` (measured 2026-10-17). A layer whose opacity is
-already a zoom expression keeps it. It runs again on every `styledata`, so a
+already a zoom expression keeps it. A switch in the Layers panel's overlays,
+"Fade roads bikes may not ride" (`#ovFadeRoads`, `map.fade_roads`), turns it
+off and on (owner 2026-10-18): on unless the rider turned it off, kept in this
+browser (`localStorage` `cc-fade-roads`, a display preference); off, each road
+layer gets back the opacity it had before (`setHighwayFade()`). The cycle path
+layer below stays either way; map presets do not hold this switch yet. It
+runs again on every `styledata`, so a
 reloaded style cannot bring the roads back; a layer already faded is skipped,
 so the run fires no further style change. Shields and names stay.
 

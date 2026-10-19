@@ -11,7 +11,8 @@ import { staysAccessible, shownAnyway } from './render.js';
 import { modeShows, placeKey } from './filters.js';
 import { fanPin, fanOffsetOf, scheduleFanOut } from './pin-fan.js';
 import { splitPool, mergeListed, listedLettersChanged } from './ride-places.js';
-import { openDrawer, osmDrawer, waterDrawer } from './drawer.js';
+import { openDrawer, osmDrawer, waterDrawer, planPlace } from './drawer.js';
+import { offerToRide } from './util.js';
 
 export function addWaterOsm(){
   if(!window.CC_WATER_OSM || osmLayers['water']) return;
@@ -200,7 +201,10 @@ export function confLeafPin(st, p, co){
   const tip = drawerF.name+' · '+drawerF.headline + (note ? ' · '+note : '');
   el.setAttribute('aria-label', drawerF.name+', '+drawerF.headline + (note ? ', '+note : ''));
   // stopPropagation: no rendered layer under this DOM pin — without it the map would re-scope (docs/specs/map-and-search.md §4.5).
-  el.addEventListener('click', e=>{ e.stopPropagation(); openDrawer(st.layer, drawerF); flyToPin(lngLat); });
+  // While a ride is planned, a right-click or a command-click puts the place in the ride, or takes it out, as on every
+  // other pin (route-planner.md section 4.3; owner 2026-10-18: a RIVM water pin copied its coordinates instead).
+  el.addEventListener('contextmenu', e=>{ if(offerToRide(planPlace(st.layer, drawerF))){ e.preventDefault(); e.stopPropagation(); } });
+  el.addEventListener('click', e=>{ e.stopPropagation(); if(e.metaKey && offerToRide(planPlace(st.layer, drawerF))){ e.preventDefault(); return; } openDrawer(st.layer, drawerF); flyToPin(lngLat); });
   el.addEventListener('mouseenter', ()=>showTip(tip, lngLat, fanOffsetOf(el)));
   el.addEventListener('mouseleave', hideTip);
   el.addEventListener('focus', ()=>showTip(tip, lngLat, fanOffsetOf(el)));

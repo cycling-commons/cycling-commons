@@ -73,7 +73,7 @@ test('every stop row, a map point too, takes the map to its stop when its name i
 });
 
 
-test('the day: the time tile, the time bar, the date and what makes it tougher, with the forecast through our server', () => {
+test('the day: the time tile, the time bar, the date and what makes it tough, with the forecast through our server', () => {
   for (const id of ['planTime', 'planTimeSub', 'planDayFx', 'planDaySvg', 'planDate', 'planTougher']) assert.ok(twig.includes(`id="${id}"`), `no ${id} in the map template`);
   assert.ok(/rideTime\(dayLegs\(\), ride\.bike\)/.test(plan), 'the figures do not run the day\'s model');
   for (const needle of ['steepestKm(', 'longestClimb(', 'waterGap(', 'sunTimes(', 'windShares(']) assert.ok(plan.includes(needle), `plan.js does not use ${needle}`);
@@ -487,7 +487,7 @@ test('the guide opens with the planner, remembers the rider\'s choice, and opens
    routing and left the stops list and the line one step behind (2026-10-15). */
 test('a change whose legs are all known still redraws the line and the stops', () => {
   const all = (plan.match(/async function routeAll\(\)\{([\s\S]*?)\n\}/) || [])[1] || '';
-  assert.match(all, /if\(!needed\.length\)\{ drawRide\(\); renderStops\(\); finishRouting\(\); return; \}/);
+  assert.match(all, /if\(!needed\.length\)\{ drawRide\(\); renderStops\(\); if\(await avoidRepeats\(myGen\)\) finishRouting\(\); return; \}/);
 });
 
 /* Reaching a water stop off the line can change the route itself, so the dry
@@ -670,7 +670,7 @@ test('the forecast of the hours ridden always shows: what is not tougher reads u
 test('the ride kept from the last visit sleeps until the planner opens (owner 2026-10-17)', () => {
   assert.match(plan, /paintBikes\(\); asleep = true; \}/, 'the kept ride is routed and drawn as the map page opens');
   assert.doesNotMatch(plan, /d\.stops\.length\)\{[^\n]*afterChange\(\); \}/, 'the kept ride still wakes on page load');
-  assert.match(plan, /if\(activePanel\(\) === 'plan'\)\{ everOpened = true; if\(asleep\)\{ asleep = false; afterChange\(\); return; \} \}/, 'opening the planner does not wake the ride');
+  assert.match(plan, /if\(activePanel\(\) === 'plan'\)\{ everOpened = true; askLegsLeft\(\); if\(asleep\)\{ asleep = false; afterChange\(\); return; \} \}/, 'opening the planner does not wake the ride');
   assert.match(plan, /function planning\(\)\{ return activePanel\(\) === 'plan' \|\| \(!asleep && ride\.stops\.length > 0\); \}/, 'a sleeping ride still takes map clicks');
   assert.match(plan, /function drawRide\(\)\{\n  if\(asleep\) return;/);
   assert.match(plan, /const show = !asleep && activePanel\(\) !== 'plan'/, 'the ride bar shows for a sleeping ride');
@@ -710,12 +710,15 @@ test('the map key drags into the ride details and snaps in, and back out (owner 
 });
 
 test('pointing at the wind draws its direction along the ride; cold, humidity and ice get their lines (owner 2026-10-17)', () => {
-  assert.match(plan, /map\.addLayer\(\{ id: 'plan-wind', type: 'symbol', source: 'plan-wind', layout: \{ 'icon-image': 'plan-wind-arrow'/);
+  assert.match(plan, /map\.addLayer\(\{ id: 'plan-wind', type: 'symbol', source: 'plan-wind', layout: \{ 'icon-image': WIND_IMAGE,/);
   assert.match(plan, /windArrows\(h \? h\.fromDeg : null, h \? h\.windKmh : null\);/, 'the hour pointed at in the chart does not turn the arrows');
   assert.match(plan, /windArrows\(\.\.\.\(cls && cls\.startsWith\('wind-'\) \? ridingWind\(\) : \[null, null\]\)\);/, 'the wind bar does not draw the arrows');
-  // The harder the wind, the bigger its arrows (owner 2026-10-17).
-  assert.match(plan, /const WIND_SCALE = \['interpolate', \['linear'\], \['get', 'kmh'\], 0, 0\.6, 20, 1, 40, 1\.45, 60, 1\.85\];/);
-  assert.match(plan, /'icon-size': \['interpolate', \['linear'\], \['zoom'\], 8, \['\*', 0\.7, WIND_SCALE\], 14, \['\*', 1\.1, WIND_SCALE\]\]/);
+  // The harder the wind, the longer and bigger its arrows (owner 2026-10-17, longer 2026-10-18).
+  assert.match(plan, /const WIND_ARROWS = \[\[0, 6\], \[12, 14\], \[20, 24\], \[29, 34\], \[39, 46\]\];/);
+  assert.match(plan, /const WIND_IMAGE = \['step', \['get', 'kmh'\], 'plan-wind-arrow-0', \.\.\.WIND_ARROWS\.slice\(1\)\.flatMap/);
+  assert.match(plan, /, H = 16 \+ shaft, /, 'a stronger wind does not get a longer shaft');
+  assert.match(plan, /const WIND_SCALE = \['interpolate', \['linear'\], \['get', 'kmh'\], 0, 0\.8, 20, 1, 40, 1\.2, 60, 1\.4\];/);
+  assert.match(plan, /'icon-size': \['interpolate', \['linear'\], \['zoom'\], 8, \['\*', 0\.85, WIND_SCALE\], 14, \['\*', 1\.25, WIND_SCALE\]\]/);
   assert.match(plan, /const feel = rideFeel\(fc, day\.seconds > 0 \? f\.distM \/ 1000 \/ \(day\.seconds \/ 3600\) : 0\);/, 'the wind chill does not count the riding pace');
   for (const k of ['plan_cold_feel', 'plan_heat_humid', 'plan_ice', 'plan_ice_freezing', 'plan_ice_snow', 'plan_ice_frost']) {
     assert.ok(controller.includes(`'map.${k}'`), `map.${k} is not translated`);

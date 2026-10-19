@@ -8,6 +8,7 @@ namespace App\Elevation;
 
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
  * The surfaces under a planned leg (docs/specs/route-planner.md section 4.4),
@@ -87,7 +88,7 @@ final class LegSurfaces
         $url = $this->endpoints?->forShape($coords) ?? $this->valhallaUrl;
         $shape = array_map(static fn (array $c): array => ['lat' => $c[0], 'lon' => $c[1]], $coords);
         try {
-            $res = $this->http->request('POST', rtrim($url, '/').'/trace_attributes', [
+            return $this->http->request('POST', rtrim($url, '/').'/trace_attributes', [
                 'json' => [
                     'shape' => $shape,
                     'costing' => 'bicycle',
@@ -114,7 +115,7 @@ final class LegSurfaces
         // Where each surface class starts along the leg, one run per class change (route-planner.md section 4.4a): the
         // panel lights up the stretches of one class on the map when the rider points at it.
         $runs = [];
-        // The busy stretches, [from, to] metres along the leg: what makes it tougher lights them up (section 4.4).
+        // The busy stretches, [from, to] metres along the leg: what makes it tough lights them up (section 4.4).
         $busyRuns = [];
         $at = 0.0;
         foreach ($edges as $edge) {

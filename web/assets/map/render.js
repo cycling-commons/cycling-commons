@@ -74,15 +74,24 @@ export const boundLayerIds=new Set();   // delegated click/hover handlers are at
 export const layerTarget=new Map();     // layer id -> {layer, f}
 /* Handler functions stored so map.off() can use the same reference map.on() was given. */
 const boundHandlers=new Map();          // layer id -> [[event, fn], …]
+/* While a ride is planned, a right-click or a command-click on any mark of a place puts the place in the ride, or
+   takes it out (route-planner.md section 4.3): a DOM mark answers here; true when the planner took it. */
+function offerMark(el, layer, f){
+  el.addEventListener('contextmenu', e=>{ if(offerToRide(planPlace(layer,f))){ e.preventDefault(); e.stopPropagation(); } });
+  return e=>e.metaKey && offerToRide(planPlace(layer,f));
+}
 function bindLayer(id){
   if(boundLayerIds.has(id)) return;
   const onClick=e=>{ if(plannerTakesLineClick(e)) return; const t=layerTarget.get(id); if(t) openDrawer(t.layer, t.f); };
+  // A climb's line is the climb too (owner 2026-10-18: every pin, as the guide says); a route's line offers nothing.
+  const onMenu=e=>{ const t=layerTarget.get(id); if(t && offerToRide(planPlace(t.layer, t.f)) && e.originalEvent){ e.originalEvent.preventDefault(); e.originalEvent.ccTaken=true; } };
   const onEnter=()=>map.getCanvas().style.cursor='pointer';
   const onLeave=()=>map.getCanvas().style.cursor='';
   map.on('click',id,onClick);
+  map.on('contextmenu',id,onMenu);
   map.on('mouseenter',id,onEnter);
   map.on('mouseleave',id,onLeave);
-  boundHandlers.set(id,[['click',onClick],['mouseenter',onEnter],['mouseleave',onLeave]]);
+  boundHandlers.set(id,[['click',onClick],['contextmenu',onMenu],['mouseenter',onEnter],['mouseleave',onLeave]]);
   boundLayerIds.add(id);
 }
 /* Everything a layer id owns, released together. */
@@ -504,7 +513,8 @@ export function render(){
             fEl.tabIndex=0; fEl.setAttribute('role','button');
             fEl.setAttribute('aria-label', `${f.name} — ${D.climbFinish||'SUMMIT'}`);
             // stopPropagation: see the steep-marker handler below.
-            const openHere=e=>{ e.stopPropagation(); openDrawer(layer,f); flyToPin([summitAt[1],summitAt[0]]); };
+            const cmdSummit=offerMark(fEl, layer, f);
+            const openHere=e=>{ e.stopPropagation(); if(cmdSummit(e)){ e.preventDefault(); return; } openDrawer(layer,f); flyToPin([summitAt[1],summitAt[0]]); };
             fEl.addEventListener('click',openHere);
             fEl.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openHere(e); }});
             const fm=new maplibregl.Marker({element:fEl,anchor:'bottom-left',offset:[-2,2]})
@@ -516,7 +526,8 @@ export function render(){
             sEl.className='cc-steep'; sEl.textContent=f.steep.pct;
             sEl.title=`${D.steepest||'Steepest pitch'} · ${f.steep.pct}`;
             // stopPropagation: MapLibre hit-tests canvas under DOM markers; races _historyReq otherwise.
-            sEl.addEventListener('click',e=>{ e.stopPropagation(); openDrawer(layer,f); flyToPin([f.steep.at[1],f.steep.at[0]]); });
+            const cmdSteep=offerMark(sEl, layer, f);
+            sEl.addEventListener('click',e=>{ e.stopPropagation(); if(cmdSteep(e)){ e.preventDefault(); return; } openDrawer(layer,f); flyToPin([f.steep.at[1],f.steep.at[0]]); });
             const sm=new maplibregl.Marker({element:sEl,anchor:'center'})
               .setLngLat([f.steep.at[1],f.steep.at[0]]).addTo(map);
             markers.push(sm);
@@ -528,7 +539,8 @@ export function render(){
             rEl.textContent=f.steepPoint.pct || (D.riderRamp||'ramp');
             rEl.title=[D.riderSteepest||'Steepest point, marked by a rider',
                        f.steepPoint.pct, f.steepPoint.note].filter(Boolean).join(' · ');
-            rEl.addEventListener('click',e=>{ e.stopPropagation(); openDrawer(layer,f); flyToPin([f.steepPoint.at[1],f.steepPoint.at[0]]); });
+            const cmdRamp=offerMark(rEl, layer, f);
+            rEl.addEventListener('click',e=>{ e.stopPropagation(); if(cmdRamp(e)){ e.preventDefault(); return; } openDrawer(layer,f); flyToPin([f.steepPoint.at[1],f.steepPoint.at[0]]); });
             const rm=new maplibregl.Marker({element:rEl,anchor:'center'})
               .setLngLat([f.steepPoint.at[1],f.steepPoint.at[0]]).addTo(map);
             markers.push(rm);

@@ -1257,6 +1257,8 @@ map:
   surfaces: 'Ondergrond'
   route_network: 'Routes'
   relief_3d: "3D-reliëf"
+  fade_roads: "Wegen zonder fietsers vervagen"
+  fade_roads_hint: "Snelwegen, autowegen en wegen waar fietsers het fietspad ernaast moeten nemen, flauw getekend"
   relief_hint: "De hellingen gearceerd en het land verhoogd, twee keer zijn echte hoogte. Kantel de kaart door met de rechtermuisknop te slepen (Ctrl-slepen op een Mac)."
   gone_places: 'Verwijderde plekken'
   legend_quality: 'Streepjes: kwaliteit van het wegdek (glad → ruw), waar bekend'
@@ -1342,7 +1344,7 @@ map:
   plan_guide_8: "Zie je een kraan, een café, een uitzicht of een klim op de kaart? Klik op de pin: er opent een paneel met wat het is en een knop <i>Aan rit toevoegen</i>. Of klik met de rechterknop op de pin om hem meteen toe te voegen."
   plan_guide_9: "Ctrl+Z maakt ongedaan, Ctrl+Shift+Z voert opnieuw uit (Ctrl+Y kan ook). Op een Mac ⌘ in plaats van Ctrl, en ⌘-klik voor de rechterknop."
   plan_guide_privacy_h: "Je privacy"
-  plan_guide_privacy: "We bewaren geen kopie van je rit. Onze server verwerkt alleen de verzoeken die hem tekenen: de wegen tussen je checkpoints, wat er langs de route ligt en het weer. Hij bewaart er geen van; alleen de weersverwachting voor een punt bij het midden van je rit blijft drie uur op onze server, zodat we de weerdienst minder vaak vragen. Je rit blijft 7 dagen na je laatste wijziging in deze browser. Bewaar hem met <i>GPX downloaden</i>."
+  plan_guide_privacy: "We bewaren geen kopie van je rit. Onze server verwerkt alleen de verzoeken die hem tekenen: de wegen tussen je checkpoints, het spoor van een bestand dat je opent, wat er langs de route ligt en het weer. Hij bewaart er geen van; alleen de weersverwachting voor een punt bij het midden van je rit blijft drie uur op onze server, zodat we de weerdienst minder vaak vragen. Je rit blijft 7 dagen na je laatste wijziging in deze browser. Bewaar hem met <i>GPX downloaden</i>."
   plan_guide_show: "Toon deze uitleg als ik de planner open"
   plan_guide_close: "Begrepen"
   plan_guide_open: "Zo werkt het"
@@ -1369,7 +1371,8 @@ map:
   plan_open: "Een GPX openen"
   plan_opened: "{name} is geopend."
   plan_open_not_gpx: "Dit bestand bevat geen rit die we kunnen openen."
-  plan_converted: "{name}, gemaakt in een andere app, is geopend met {n} checkpoints. De planner zoekt de weg ertussen voor je fiets, dus een weg kan anders zijn dan in het bestand."
+  plan_converted: "{name}, gemaakt in een andere app, is geopend met {n} checkpoints. De rit volgt de wegen uit het bestand; een deel dat je verandert, zoekt de planner voor je fiets."
+  plan_matching: "De wegen van {name} volgen…"
   plan_open_no_stops: "Deze GPX heeft geen checkpoints om te openen."
   plan_open_too_many: "Deze GPX heeft meer checkpoints dan een rit telt ({n})."
   plan_replace_h: "Dit bestand openen in plaats van je rit?"
@@ -1414,7 +1417,7 @@ map:
   plan_unit_time: "Tijd"
   plan_unit_dist: "Afstand"
   plan_under_min: "minder dan 1 min"
-  plan_tougher_h: "Wat het zwaarder maakt"
+  plan_tougher_h: "Wat het zwaar maakt"
   plan_tougher_none: "Niets bijzonders"
   plan_long_day: "{d}: een lange dag"
   plan_steepest: "Steilste km: {g} % bij km {at}"
@@ -1514,7 +1517,10 @@ map:
   plan_engine_down: "De routeplanner antwoordde niet. Probeer het zo nog eens."
   plan_max_stops: "Een rit heeft hoogstens {n} checkpoints."
   plan_already: "Die plek zit al in je rit."
-  plan_rate_limited: "Te veel delen in korte tijd. Wacht een minuut en probeer het opnieuw."
+  plan_rate_limited: "Te veel delen in korte tijd. Wacht een paar minuten en probeer het opnieuw."
+  plan_rate_limited_day: "Deze verbinding heeft vandaag veel delen gepland. Probeer het morgen opnieuw, of log in om meer te plannen."
+  plan_legs_left_day: "Nog {n} van {max} delen vandaag"
+  plan_legs_left_window: "Nog {n} van {max} delen voor de komende 10 minuten"
   plan_bar_stops: "{n} checkpoints"
   plan_bar_open: "Openen"
   d_plan_add: "+ Aan rit toevoegen"

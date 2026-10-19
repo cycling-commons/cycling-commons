@@ -64,17 +64,32 @@ export function localiseBasemapLabels(){
    reloaded style or a switched theme cannot bring the roads back; a layer already faded is left as it is. */
 export const HIGHWAY_FADE = 0.1;
 export const NO_BIKE_FADE = ['case', ['any', ['==', ['get', 'class'], 'trunk'], ['match', ['get', 'bicycle'], ['no', 'use_sidepath'], true, false]], HIGHWAY_FADE, 1];
+/* The rider's switch in the Layers panel (owner 2026-10-18), on unless turned off, kept in this browser. Off, every
+   road layer gets the opacity it had before the fade. */
+const FADE_KEY = 'cc-fade-roads';
+let fadeOn = (() => { try { return localStorage.getItem(FADE_KEY) !== 'off'; } catch(e){ return true; } })();
+const fadeOriginal = new Map();   // layer id -> its own opacity before the fade (undefined: none)
+export const highwayFadeOn = () => fadeOn;
+export function setHighwayFade(next){
+  fadeOn = !!next;
+  try { localStorage.setItem(FADE_KEY, fadeOn ? 'on' : 'off'); } catch(e){ /* private mode: this visit only */ }
+  if(fadeOn) fadeHighways();
+  else for(const [id, own] of fadeOriginal){ if(map.getLayer(id)) map.setPaintProperty(id, 'line-opacity', own); }
+  return fadeOn;
+}
 export function fadeHighways(){
+  if(!fadeOn) return 0;
   // The layer order and each layer by id: cheap, where getStyle() would serialise the whole style on every run.
   const ids = typeof map.getLayersOrder === 'function' ? map.getLayersOrder() : ((map.getStyle() || {}).layers || []).map(l => l.id);
   let n = 0;
   for(const id of ids){
     const layer = map.getLayer(id);
     if(!layer || layer.type !== 'line' || layer.source !== 'openmaptiles' || (layer.sourceLayer || layer['source-layer']) !== 'transportation') continue;
-    const own = map.getPaintProperty(id, 'line-opacity');
+    const own = fadeOriginal.has(id) ? fadeOriginal.get(id) : map.getPaintProperty(id, 'line-opacity');
+    if(!fadeOriginal.has(id)) fadeOriginal.set(id, own);
     const want = /motorway/.test(id) ? HIGHWAY_FADE : own == null || own === 1 ? NO_BIKE_FADE : typeof own === 'number' ? ['case', NO_BIKE_FADE[1], HIGHWAY_FADE * own, own] : null;
     if(want == null) continue;
-    if(JSON.stringify(own) === JSON.stringify(want)) continue;   // faded already: setting it again would only fire another style change
+    if(JSON.stringify(map.getPaintProperty(id, 'line-opacity')) === JSON.stringify(want)) continue;   // faded already: setting it again would only fire another style change
     map.setPaintProperty(id, 'line-opacity', want);
     n++;
   }

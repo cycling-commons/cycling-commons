@@ -1882,6 +1882,8 @@ map:
   surfaces: 'Firmes'
   route_network: 'Rutas'
   relief_3d: "Relieve 3D"
+  fade_roads: "Atenuar las carreteras sin bicis"
+  fade_roads_hint: "Autopistas, autovías y carreteras donde las bicis deben ir por el carril de al lado, dibujadas tenues"
   relief_hint: "Las pendientes sombreadas y el terreno elevado, al doble de su altura real. Inclina el mapa arrastrando con el botón derecho (Ctrl y arrastrar en un Mac)."
   gone_places: 'Lugares retirados'
   legend_quality: 'Marcas: calidad del firme (liso → irregular), donde está registrada'
@@ -1967,7 +1969,7 @@ map:
   plan_guide_8: "¿Ves una fuente, un café, un mirador o una subida en el mapa? Haz clic en su pin: se abre un panel con lo que es y un botón <i>Añadir a la salida</i>. O clic derecho en el pin para añadirlo enseguida."
   plan_guide_9: "Ctrl+Z deshace, Ctrl+Mayús+Z rehace (Ctrl+Y también). En un Mac, ⌘ en lugar de Ctrl, y ⌘-clic para un clic derecho."
   plan_guide_privacy_h: "Tu privacidad"
-  plan_guide_privacy: "No guardamos ninguna copia de tu salida. Nuestro servidor solo procesa las peticiones que la dibujan: las carreteras entre tus puntos de control, lo que hay a lo largo del recorrido y el tiempo. No guarda ninguna; solo la previsión para un punto cerca del centro de tu salida se queda tres horas en nuestro servidor, para consultar menos a menudo el servicio del tiempo. Tu salida se queda en este navegador 7 días desde tu último cambio. Para conservarla, usa <i>Descargar GPX</i>."
+  plan_guide_privacy: "No guardamos ninguna copia de tu salida. Nuestro servidor solo procesa las peticiones que la dibujan: las carreteras entre tus puntos de control, la traza de un archivo que abres, lo que hay a lo largo del recorrido y el tiempo. No guarda ninguna; solo la previsión para un punto cerca del centro de tu salida se queda tres horas en nuestro servidor, para consultar menos a menudo el servicio del tiempo. Tu salida se queda en este navegador 7 días desde tu último cambio. Para conservarla, usa <i>Descargar GPX</i>."
   plan_guide_show: "Mostrar esta guía cuando abra el planificador"
   plan_guide_close: "Entendido"
   plan_guide_open: "Cómo funciona"
@@ -1994,7 +1996,8 @@ map:
   plan_open: "Abrir un GPX"
   plan_opened: "Abierta: {name}."
   plan_open_not_gpx: "Este archivo no contiene ninguna salida que podamos abrir."
-  plan_converted: "{name}, creado en otra aplicación, se ha abierto con {n} puntos de control. El planificador traza la ruta entre ellos para tu bici, así que una carretera puede diferir del archivo."
+  plan_converted: "{name}, creado en otra aplicación, se ha abierto con {n} puntos de control. La salida sigue las carreteras del archivo; un tramo que cambies se traza para tu bici."
+  plan_matching: "Siguiendo las carreteras de {name}…"
   plan_open_no_stops: "Este GPX no tiene puntos de control que abrir."
   plan_open_too_many: "Este GPX tiene más puntos de control de los que tiene una salida ({n})."
   plan_replace_h: "¿Abrir este archivo en lugar de tu salida?"
@@ -2039,7 +2042,7 @@ map:
   plan_unit_time: "Tiempo"
   plan_unit_dist: "Distancia"
   plan_under_min: "menos de 1 min"
-  plan_tougher_h: "Lo que lo hace más duro"
+  plan_tougher_h: "Lo que lo hace duro"
   plan_tougher_none: "Nada fuera de lo común"
   plan_long_day: "{d}: un día largo"
   plan_steepest: "Km más empinado: {g} % en el km {at}"
@@ -2139,7 +2142,10 @@ map:
   plan_engine_down: "El motor de rutas no respondió. Inténtalo de nuevo en un momento."
   plan_max_stops: "Una salida tiene como máximo {n} puntos de control."
   plan_already: "Ese lugar ya está en tu salida."
-  plan_rate_limited: "Demasiados tramos en poco tiempo. Espera un minuto y vuelve a intentarlo."
+  plan_rate_limited: "Demasiados tramos en poco tiempo. Espera unos minutos y vuelve a intentarlo."
+  plan_rate_limited_day: "Esta conexión ya ha planificado muchos tramos hoy. Vuelve a intentarlo mañana, o inicia sesión para planificar más."
+  plan_legs_left_day: "Te quedan {n} de {max} tramos hoy"
+  plan_legs_left_window: "Te quedan {n} de {max} tramos para los próximos 10 minutos"
   plan_bar_stops: "{n} puntos de control"
   plan_bar_open: "Abrir"
   d_plan_add: "+ Añadir a la salida"

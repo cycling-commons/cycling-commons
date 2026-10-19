@@ -1260,6 +1260,8 @@ map:
   surfaces: 'Beläge'
   route_network: 'Routen'
   relief_3d: "3D-Relief"
+  fade_roads: "Straßen ohne Radverkehr abschwächen"
+  fade_roads_hint: "Autobahnen, Kraftstraßen und Straßen, auf denen Räder den Radweg daneben nehmen müssen, blass gezeichnet"
   relief_hint: "Die Hänge schattiert und das Gelände erhöht, doppelt so hoch wie in Wirklichkeit. Neige die Karte durch Ziehen mit der rechten Maustaste (Ctrl-Ziehen auf dem Mac)."
   gone_places: 'Entfernte Orte'
   legend_quality: 'Striche: Belagsqualität (glatt → rau), wo erfasst'
@@ -1345,7 +1347,7 @@ map:
   plan_guide_8: "Siehst du einen Brunnen, ein Café, eine Aussicht oder einen Anstieg auf der Karte? Klick auf die Nadel: Ein Feld öffnet sich mit dem, was es ist, und einem Knopf <i>Zur Fahrt hinzufügen</i>. Oder Rechtsklick auf die Nadel, um es sofort hinzuzufügen."
   plan_guide_9: "Strg+Z macht rückgängig, Strg+Umschalt+Z stellt wieder her (Strg+Y geht auch). Auf einem Mac ⌘ statt Strg, und ⌘-Klick für einen Rechtsklick."
   plan_guide_privacy_h: "Deine Privatsphäre"
-  plan_guide_privacy: "Wir behalten keine Kopie deiner Fahrt. Unser Server verarbeitet nur die Anfragen, die sie zeichnen: die Straßen zwischen deinen Checkpoints, was entlang der Strecke liegt, und das Wetter. Er behält keine davon; nur die Vorhersage für einen Punkt nahe der Mitte deiner Fahrt bleibt drei Stunden auf unserem Server, damit wir den Wetterdienst seltener fragen. Deine Fahrt bleibt nach deiner letzten Änderung 7 Tage in diesem Browser. Zum Behalten <i>GPX herunterladen</i>."
+  plan_guide_privacy: "Wir behalten keine Kopie deiner Fahrt. Unser Server verarbeitet nur die Anfragen, die sie zeichnen: die Straßen zwischen deinen Checkpoints, den Track einer Datei, die du öffnest, was entlang der Strecke liegt, und das Wetter. Er behält keine davon; nur die Vorhersage für einen Punkt nahe der Mitte deiner Fahrt bleibt drei Stunden auf unserem Server, damit wir den Wetterdienst seltener fragen. Deine Fahrt bleibt nach deiner letzten Änderung 7 Tage in diesem Browser. Zum Behalten <i>GPX herunterladen</i>."
   plan_guide_show: "Diese Anleitung zeigen, wenn ich den Planer öffne"
   plan_guide_close: "Verstanden"
   plan_guide_open: "So geht's"
@@ -1372,7 +1374,8 @@ map:
   plan_open: "GPX öffnen"
   plan_opened: "{name} ist geöffnet."
   plan_open_not_gpx: "Diese Datei enthält keine Fahrt, die wir öffnen können."
-  plan_converted: "{name}, erstellt in einer anderen App, ist mit {n} Checkpoints geöffnet. Der Planer sucht den Weg dazwischen für dein Rad, eine Straße kann also von der Datei abweichen."
+  plan_converted: "{name}, erstellt in einer anderen App, ist mit {n} Checkpoints geöffnet. Die Fahrt folgt den Straßen aus der Datei; einen Abschnitt, den du änderst, führt der Planer für dein Rad."
+  plan_matching: "Den Straßen von {name} folgen…"
   plan_open_no_stops: "Dieses GPX hat keine Checkpoints zum Öffnen."
   plan_open_too_many: "Dieses GPX hat mehr Checkpoints, als eine Fahrt hat ({n})."
   plan_replace_h: "Diese Datei statt deiner Fahrt öffnen?"
@@ -1417,7 +1420,7 @@ map:
   plan_unit_time: "Zeit"
   plan_unit_dist: "Strecke"
   plan_under_min: "unter 1 Min."
-  plan_tougher_h: "Was es schwerer macht"
+  plan_tougher_h: "Was es schwer macht"
   plan_tougher_none: "Nichts Außergewöhnliches"
   plan_long_day: "{d}: ein langer Tag"
   plan_steepest: "Steilster km: {g} % bei km {at}"
@@ -1517,7 +1520,10 @@ map:
   plan_engine_down: "Die Routing-Engine hat nicht geantwortet. Versuche es gleich noch einmal."
   plan_max_stops: "Eine Fahrt hat höchstens {n} Checkpoints."
   plan_already: "Dieser Ort ist schon in deiner Fahrt."
-  plan_rate_limited: "Zu viele Abschnitte in kurzer Zeit. Warte eine Minute und versuche es erneut."
+  plan_rate_limited: "Zu viele Abschnitte in kurzer Zeit. Warte ein paar Minuten und versuche es erneut."
+  plan_rate_limited_day: "Diese Verbindung hat heute schon viele Abschnitte geplant. Versuche es morgen erneut, oder melde dich an, um mehr zu planen."
+  plan_legs_left_day: "Heute noch {n} von {max} Abschnitten"
+  plan_legs_left_window: "Noch {n} von {max} Abschnitten für die nächsten 10 Minuten"
   plan_bar_stops: "{n} Checkpoints"
   plan_bar_open: "Öffnen"
   d_plan_add: "+ Zur Fahrt hinzufügen"

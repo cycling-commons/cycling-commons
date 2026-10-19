@@ -6,7 +6,7 @@
    generic '.grp .chips .chip' toggler, or that assignment clobbers them. */
 import { I18N, D, tpl, CC_SEASON_LABEL, CC_BIKE_LABEL } from './i18n.js';
 import { txtOn, currentSeason } from './util.js';
-import { map, satelliteConfigured } from './map-init.js';
+import { map, satelliteConfigured, setHighwayFade, highwayFadeOn } from './map-init.js';
 import { CATALOG, catalogRows, catalogUtility, catalogVotable, catalogModeration,
          active, layerByKey, mode, setMode,
          resolveInitialMode, MODE_LS_KEY } from './catalog.js';
@@ -154,6 +154,9 @@ export function initLayerList(){
     };
   }
 
+  // Roads a bike may not ride, faded (map-init.js), the rider's switch, kept in this browser.
+  const fadeBtn=document.getElementById('ovFadeRoads');
+  if(fadeBtn){ paintOverlay(fadeBtn, highwayFadeOn()); fadeBtn.onclick=()=>paintOverlay(fadeBtn, setHighwayFade(!highwayFadeOn())); }
   // 3D relief: the slopes shaded and the ground raised (relief.js); the button exists only where the tiles are proxied.
   const reliefBtn=document.getElementById('ovRelief');
   if(reliefBtn) reliefBtn.onclick=()=>paintOverlay(reliefBtn, setRelief(!reliefVisible()));
@@ -323,7 +326,16 @@ export function initRailChrome(){
     };
     legend.classList.toggle('collapsed', window.matchMedia('(max-width:760px)').matches);
     sync();
-    lgToggle.onclick=()=>{ legend.classList.toggle('collapsed'); sync(); };
+    // A place's drawer folds the key while it is open, and opens it again on close if the drawer was what folded it
+    // (owner 2026-10-18: the key lay over the place's buttons). The rider's own fold or unfold in between is theirs.
+    let foldedByDrawer=false;
+    lgToggle.onclick=()=>{ legend.classList.toggle('collapsed'); foldedByDrawer=false; sync(); };
+    const spot=document.getElementById('drawer');
+    if(spot) new MutationObserver(()=>{
+      const open=spot.classList.contains('open');
+      if(open && !legend.classList.contains('collapsed')){ legend.classList.add('collapsed'); foldedByDrawer=true; sync(); }
+      else if(!open && foldedByDrawer){ legend.classList.remove('collapsed'); foldedByDrawer=false; sync(); }
+    }).observe(spot,{attributes:true,attributeFilter:['class']});
     // L does what the toggle does (owner 2026-10-15); a field keeps its letter, a modifier its shortcut.
     document.addEventListener('keydown',e=>{
       if(e.key!=='l'&&e.key!=='L') return;

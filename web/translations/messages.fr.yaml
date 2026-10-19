@@ -1255,6 +1255,8 @@ map:
   surfaces: 'Revêtements'
   route_network: 'Itinéraires'
   relief_3d: "Relief 3D"
+  fade_roads: "Estomper les routes interdites aux vélos"
+  fade_roads_hint: "Autoroutes, voies rapides et routes où les vélos doivent prendre la piste à côté, tracées en pâle"
   relief_hint: "Les pentes ombrées et le terrain en relief, deux fois sa hauteur réelle. Inclinez la carte en glissant avec le clic droit (Ctrl-glisser sur Mac)."
   gone_places: 'Lieux retirés'
   legend_quality: 'Traits : qualité du revêtement (lisse → dégradé), là où elle est renseignée'
@@ -1340,7 +1342,7 @@ map:
   plan_guide_8: "Vous voyez une fontaine, un café, un point de vue ou une montée sur la carte ? Cliquez sur son épingle : un panneau s'ouvre avec ce que c'est et un bouton <i>Ajouter à la sortie</i>. Ou clic droit sur l'épingle pour l'ajouter tout de suite."
   plan_guide_9: "Ctrl+Z annule, Ctrl+Maj+Z rétablit (Ctrl+Y aussi). Sur un Mac, ⌘ au lieu de Ctrl, et ⌘-clic pour un clic droit."
   plan_guide_privacy_h: "Votre vie privée"
-  plan_guide_privacy: "Nous ne gardons aucune copie de votre sortie. Notre serveur traite seulement les demandes qui la dessinent : les routes entre vos points de contrôle, ce qui se trouve le long du parcours et la météo. Il n’en garde aucune ; seules les prévisions pour un point proche du milieu de votre sortie restent trois heures sur notre serveur, pour interroger moins souvent le service météo. Votre sortie reste 7 jours dans ce navigateur après votre dernière modification. Pour la garder, utilisez <i>Télécharger le GPX</i>."
+  plan_guide_privacy: "Nous ne gardons aucune copie de votre sortie. Notre serveur traite seulement les demandes qui la dessinent : les routes entre vos points de contrôle, la trace d’un fichier que vous ouvrez, ce qui se trouve le long du parcours et la météo. Il n’en garde aucune ; seules les prévisions pour un point proche du milieu de votre sortie restent trois heures sur notre serveur, pour interroger moins souvent le service météo. Votre sortie reste 7 jours dans ce navigateur après votre dernière modification. Pour la garder, utilisez <i>Télécharger le GPX</i>."
   plan_guide_show: "Afficher ce guide quand j'ouvre le planificateur"
   plan_guide_close: "Compris"
   plan_guide_open: "Comment ça marche"
@@ -1367,7 +1369,8 @@ map:
   plan_open: "Ouvrir un GPX"
   plan_opened: "Ouvert : {name}."
   plan_open_not_gpx: "Ce fichier ne contient aucune sortie que nous pouvons ouvrir."
-  plan_converted: "{name}, créé dans une autre application, est ouvert avec {n} points de contrôle. Le planificateur trace la route entre eux pour votre vélo : une route peut différer du fichier."
+  plan_converted: "{name}, créé dans une autre application, est ouvert avec {n} points de contrôle. La sortie suit les routes du fichier ; un tronçon que vous modifiez est tracé pour votre vélo."
+  plan_matching: "Suivi des routes de {name}…"
   plan_open_no_stops: "Ce GPX n'a aucun point de contrôle à ouvrir."
   plan_open_too_many: "Ce GPX a plus de points de contrôle qu'une sortie n'en compte ({n})."
   plan_replace_h: "Ouvrir ce fichier à la place de votre sortie ?"
@@ -1412,7 +1415,7 @@ map:
   plan_unit_time: "Temps"
   plan_unit_dist: "Distance"
   plan_under_min: "moins d’une min"
-  plan_tougher_h: "Ce qui rend la sortie plus dure"
+  plan_tougher_h: "Ce qui rend la sortie dure"
   plan_tougher_none: "Rien d’inhabituel"
   plan_long_day: "{d} : une longue journée"
   plan_steepest: "Km le plus raide : {g} % au km {at}"
@@ -1512,7 +1515,10 @@ map:
   plan_engine_down: "Le moteur de routage n'a pas répondu. Réessayez dans un instant."
   plan_max_stops: "Une sortie compte au plus {n} points de contrôle."
   plan_already: "Ce lieu est déjà dans votre sortie."
-  plan_rate_limited: "Trop de tronçons en peu de temps. Attendez une minute, puis réessayez."
+  plan_rate_limited: "Trop de tronçons en peu de temps. Attendez quelques minutes, puis réessayez."
+  plan_rate_limited_day: "Cette connexion a déjà planifié beaucoup de tronçons aujourd'hui. Réessayez demain, ou connectez-vous pour en planifier davantage."
+  plan_legs_left_day: "Encore {n} tronçons sur {max} aujourd'hui"
+  plan_legs_left_window: "Encore {n} tronçons sur {max} pour les 10 prochaines minutes"
   plan_bar_stops: "{n} points de contrôle"
   plan_bar_open: "Ouvrir"
   d_plan_add: "+ Ajouter à la sortie"

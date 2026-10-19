@@ -147,6 +147,41 @@ final class ElevationClientTest extends TestCase
         self::assertNull($client->profile([[50.1, 5.1], [50.2, 5.2]]));
     }
 
+    public function testALegAllAtSeaLevelKeepsItsZerosWhereTheEngineHasHeights(): void
+    {
+        // The last leg into Hoorn along the Markermeer: every sample 0 m (owner 2026-10-18). The engine has heights
+        // elsewhere in that square, so its tiles are loaded and 0 m is the ground.
+        $zeros = array_map(static fn (int $i): array => [$i * 30, 0], range(0, 4));
+        $probe = array_fill(0, 25, 0);
+        $probe[7] = -3;
+        $bodies = [];
+        $http = new MockHttpClient(static function (string $method, string $url, array $options) use (&$bodies, $zeros, $probe): MockResponse {
+            $body = json_decode((string) $options['body'], true, 512, \JSON_THROW_ON_ERROR);
+            $bodies[] = $body;
+
+            return new MockResponse((string) json_encode(isset($body['range']) ? ['range_height' => $zeros] : ['height' => $probe]));
+        });
+        $client = new ElevationClient($http, new NullLogger(), 'http://valhalla.test', 'Copernicus DEM GLO-30');
+
+        self::assertSame([[0.0, 0.0], [30.0, 0.0], [60.0, 0.0], [90.0, 0.0], [120.0, 0.0]], $client->profile([[52.636, 5.040], [52.641, 5.048]]));
+        self::assertCount(2, $bodies);
+        self::assertCount(25, $bodies[1]['shape'], 'one 5 x 5 grid over the one square the leg lies in');
+        self::assertSame(['lat' => 52.1, 'lon' => 5.1], $bodies[1]['shape'][0]);
+    }
+
+    public function testALegAllAtZeroInASquareWithoutHeightsIsNoProfile(): void
+    {
+        $zeros = array_map(static fn (int $i): array => [$i * 30, 0], range(0, 4));
+        $http = new MockHttpClient(static function (string $method, string $url, array $options) use ($zeros): MockResponse {
+            $body = json_decode((string) $options['body'], true, 512, \JSON_THROW_ON_ERROR);
+
+            return new MockResponse((string) json_encode(isset($body['range']) ? ['range_height' => $zeros] : ['height' => array_fill(0, 25, 0)]));
+        });
+        $client = new ElevationClient($http, new NullLogger(), 'http://valhalla.test', 'Copernicus DEM GLO-30');
+
+        self::assertNull($client->profile([[52.636, 5.040], [52.641, 5.048]]));
+    }
+
     public function testAProfileAroundSeaLevelIsKeptThoughMostSamplesAreZero(): void
     {
         // Near Hoorn the land lies at sea level: real heights of 0 m, with a

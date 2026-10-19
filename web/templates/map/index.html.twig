@@ -259,6 +259,8 @@
         <h3>{{ 'map.map_overlays'|trans }}</h3>
         <button class="layer ov-row" id="ovSurface" type="button" hidden aria-pressed="false"><span class="sw" style="--c:#C8923A;--ic:#101E16"><i class="sw-g">▰</i></span><span class="nm">{{ 'map.surfaces'|trans }}</span><span class="ct">{{ 'map.overlay_off'|trans }}</span></button>
         <button class="layer ov-row" id="ovRoutes" type="button" hidden aria-pressed="false"><span class="sw" style="--c:#7A4FCF;--ic:#EFE6D4"><i class="sw-g">⤳</i></span><span class="nm">{{ 'map.route_network'|trans }}</span><span class="ct">{{ 'map.overlay_off'|trans }}</span></button>
+        {# Roads a bike may not ride, faded on the basemap; on unless the rider turns it off (map-and-search.md section 4.1). #}
+        <button class="layer ov-row" id="ovFadeRoads" type="button" aria-pressed="true" title="{{ 'map.fade_roads_hint'|trans }}"><span class="sw" style="--c:#B9B2A2;--ic:#101E16"><i class="sw-g">▱</i></span><span class="nm">{{ 'map.fade_roads'|trans }}</span><span class="ct">{{ 'map.overlay_on'|trans }}</span></button>
         {# 3D relief: the slopes shaded and the ground raised, only where nginx proxies the relief tiles. #}
         {% if relief_tiles|default(false) %}
         <button class="layer ov-row" id="ovRelief" type="button" aria-pressed="false" title="{{ 'map.relief_hint'|trans }}"><span class="sw" style="--c:#8A7A5A;--ic:#F3EBD8"><i class="sw-g">▲</i></span><span class="nm">{{ 'map.relief_3d'|trans }}</span><span class="ct">{{ 'map.overlay_off'|trans }}</span></button>
@@ -551,6 +553,8 @@
         <div class="hint" id="planInstr" style="margin-top:0">{{ 'map.plan_instr'|trans }}</div>
         <ul class="cc-plan-stops" id="planStops"></ul>
         <div class="cc-ride-status" id="planStatus" role="status"></div>
+        {# The legs left to plan, always shown (owner 2026-10-18). #}
+        <div class="cc-ride-left" id="planLegsLeft" hidden></div>
       </div>
       <div class="grp cc-plan" id="planFigsGrp" hidden>
         {# Show or hide the ride line (owner 2026-10-15); the stops stay. plan.js keeps the choice. #}
@@ -565,7 +569,7 @@
           <div class="cc-plan-fig cc-plan-fig-half" id="planArrive" hidden><b id="planArriveT"></b><span>{{ 'map.plan_finish_h'|trans }} <span class="cc-info-wrap"><button type="button" class="cc-info" aria-expanded="false" aria-controls="planFinishTip" aria-label="{{ 'map.plan_finish_h'|trans }}">i</button><span class="cc-info-pop" id="planFinishTip" role="tooltip">{{ 'map.plan_finish_note'|trans }}</span></span></span></div>
         </div>
         {# The day (route-planner.md section 4.4): the time bar by what the rider
-           is doing, the day of the ride, and what makes it tougher. plan.js
+           is doing, the day of the ride, and what makes it tough. plan.js
            fills all three; the forecast comes through POST /map/plan/weather. #}
         {# The profile is the strip at the foot of the map; once closed it comes back from here. #}
         <button type="button" class="cc-plan-stripopen" id="planStripOpen" hidden>{{ 'map.plan_strip_show'|trans }}</button>
@@ -1125,7 +1129,7 @@ window.CC_VENDOR = {{ {
     save: path('map_presets_save'), token: csrf_token('map-preset')
   } : {}))|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT') b-or constant('JSON_UNESCAPED_SLASHES'))|raw }};
   window.CC_PLAN = {{ ({
-    leg: path('map_plan_leg'), legToken: csrf_token('plan-leg'), snap: path('map_plan_snap'),
+    leg: path('map_plan_leg'), legs: path('map_plan_legs'), detours: path('map_plan_detours'), budget: path('map_plan_budget'), match: path('map_plan_match'), legToken: csrf_token('plan-leg'), snap: path('map_plan_snap'),
     along: path('map_plan_along'), alongToken: csrf_token('plan-along'),
     weather: path('map_plan_weather'), weatherToken: csrf_token('plan-weather'),
     nearby: path('map_coverage_nearby'),

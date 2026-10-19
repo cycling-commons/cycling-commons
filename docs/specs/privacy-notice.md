@@ -294,8 +294,11 @@ which version each account has seen is kept.
   public after review and without a name, and for how long;
   `privacy.collect_contribute_roadmap`, `privacy.retention_roadmap`,
   roadmap-and-changelog.md section 8.8); `privacy.change.v5_rides` (the ride
-  planner on the map: a ride stays in the rider's browser for seven days and
-  in the GPX they download, we keep no copy, and its leg requests reach only
+  planner on the map: a ride stays in the rider's browser for seven days, with
+  the roads routed for it in the browser's own database (route-planner.md
+  section 6.0, owner 2026-10-18), and in the GPX they download, we keep no copy;
+  the track of a GPX they open reaches our server only to be matched to the
+  roads and is not kept (route-planner.md section 6.1, owner 2026-10-18), and its leg requests reach only
   our own routing engine; `privacy.collect_rides` and the sentence on the
   ride in `privacy.cookies_local_body`, [route-planner.md](route-planner.md)
   section 7); `privacy.change.v6_forecast`

@@ -1919,6 +1919,7 @@
   .cc-ride-status{margin-top:.5rem;font-size:.8rem;color:var(--ochre)}
   .cc-ride-status.is-busy{display:flex;align-items:center;gap:.5rem}
   .cc-ride-status.is-done{color:rgb(var(--chrome-fg) / .68)}
+  .cc-ride-left{margin-top:.25rem;font-size:.75rem;color:rgb(var(--chrome-fg) / .68)}
   .cc-ride-status .cc-ride-lnk{color:var(--trail);text-decoration:underline;cursor:pointer}
   .cc-ride-note{margin:.55rem 0 .15rem;font-size:.72rem;line-height:1.4;color:rgb(var(--chrome-fg) / .68)}
   /* results live in the standard drawer (.cc-near list styles); just the Clear action */
@@ -2074,6 +2075,12 @@
   /* A round ride zoomed out: the start carries the finish flag beside its S. */
   .cc-plan-mk.start.loop{width:auto;padding:0 .35rem;border-radius:12px;display:flex;gap:.25rem;align-items:center}
   .cc-plan-mk.scrub{width:14px;height:14px;background:#fff;border:3px solid var(--trail);cursor:default}
+  /* Zoomed out the checkpoints shrink (plan.js sizeMarkers()): a size smaller, then the smallest. */
+  .cc-mk-m .cc-plan-mk:not(.scrub){width:19px;height:19px;font-size:.54rem;border-width:1.5px}
+  .cc-mk-s .cc-plan-mk:not(.scrub){width:15px;height:15px;font-size:.46rem;border-width:1.5px;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+  .cc-mk-m .cc-plan-mk svg{width:10px;height:10px}
+  .cc-mk-s .cc-plan-mk svg{width:8px;height:8px}
+  .cc-mk-m .cc-plan-mk.start.loop,.cc-mk-s .cc-plan-mk.start.loop{width:auto;padding:0 .25rem}
   /* the ride bar at the foot of the map while the panel is closed */
   .cc-plan-bar{position:absolute;left:50%;bottom:1.1rem;transform:translateX(-50%);z-index:3;display:flex;align-items:center;gap:.6rem;background:rgb(var(--chrome-glass) / .92);color:var(--chrome-fg-solid);backdrop-filter:blur(8px);border-radius:12px;padding:.55rem .8rem .55rem 1rem;box-shadow:0 6px 24px rgba(0,0,0,.25);max-width:calc(100% - 2rem)}
   .cc-plan-bar[hidden]{display:none}
@@ -2118,7 +2125,7 @@
   .map-wrap.cc-strip-on .fpill{bottom:calc(140px + 9.2rem)}
   .cc-plan-fig-wide{grid-column:1 / -1}
   .cc-plan-fig-wide span em{font-style:normal;text-transform:none;letter-spacing:0;color:rgb(var(--chrome-fg) / .8)}
-  /* the day: the time bar, the date, what makes it tougher (route-planner.md section 4.4) */
+  /* the day: the time bar, the date, what makes it tough (route-planner.md section 4.4) */
   .cc-plan-dayfx{margin-top:.5rem;background:rgb(var(--chrome-fg) / .06);border-radius:8px;padding:.45rem .6rem .3rem}
   .cc-plan-dayfx[hidden]{display:none}
   .cc-plan-stripopen{margin-top:.5rem;background:none;border:1px solid rgb(var(--chrome-fg) / .28);border-radius:5px;color:var(--chrome-fg-solid);font-family:var(--mono);font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .55rem;cursor:pointer}
@@ -2262,10 +2269,9 @@
   .cc-wx-w.on{color:var(--chrome-fg-solid)}
   .cc-wx-w.on svg{color:var(--trail)}
   .cc-wx-w b{font-weight:600}
-  /* The day and the start time, readable at a glance (owner 2026-10-18: "too small"). */
-  /* The labels larger and on one line; the fields keep their size (owner 2026-10-18). */
+  /* The labels in the small capitals of "Name your ride", on one line; the fields keep their size (owner 2026-10-18). */
   .cc-plan-when .cc-plan-date{font-size:.76rem}
-  .cc-plan-when .cc-plan-date > span:first-child,.cc-plan-when .cc-plan-date > label{white-space:nowrap}
+  .cc-plan-when .cc-plan-date > span:first-child,.cc-plan-when .cc-plan-date > label{font-size:.64rem;letter-spacing:.12em;white-space:nowrap}
   .cc-plan-when .cc-plan-date + .cc-plan-date{margin-top:.7rem}
   /* The details' heading as one row: the eye beside the words, the side's close button at the right edge, both one
      size (owner 2026-10-18: "not aligned, and on the right of the drawer"). */

@@ -93,8 +93,8 @@ test('hills keep most of their climbing through the noise rule', () => {
 
 test('a bump under the noise threshold is not climbed, one over it is', () => {
   const bump = rise => [10, 10, 10, 10 + rise, 10 + rise, 10 + rise, 10, 10, 10].map((h, i) => [i * 30, h]);
-  assert.equal(HEIGHT_NOISE_M, 3);
-  assert.equal(figures([{ routed: true, line: [], distM: 240, heights: bump(2) }]).upM, 0);
+  assert.equal(HEIGHT_NOISE_M, 5);
+  assert.equal(figures([{ routed: true, line: [], distM: 240, heights: bump(4) }]).upM, 0);
   assert.ok(figures([{ routed: true, line: [], distM: 240, heights: bump(8) }]).upM >= 5);
   assert.equal(cleanHeights(bump(2)).length, 9);
 });
@@ -391,7 +391,7 @@ test('surfaceMix sums the legs and leaves what the engine did not say as unknown
 
 /* The day (route-planner.md section 4.4): one reference rider per bike type,
    the riding time from the gradient of every step and the rolling resistance
-   of the leg's surfaces, the flat equivalent, and what makes it tougher. */
+   of the leg's surfaces, the flat equivalent, and what makes it tough. */
 const kmh = ms => ms * 3.6;
 // A leg of `km` kilometres at a constant gradient in percent, sampled every 30 m, with an optional surface mix.
 const slope = (km, grad, surfaces = null) => {
@@ -786,7 +786,7 @@ test('the best water stop carries whether it is food and whether its water is dr
   assert.equal(best.potable, null);
 });
 
-/* ---------- durations and what makes it tougher (route-planner.md section 4.4) ---------- */
+/* ---------- durations and what makes it tough (route-planner.md section 4.4) ---------- */
 const EN = { hm: '{h}h {m}m', h: '{h}h', min: '{m}m' };
 const FR = { hm: '{h} h {m} min', h: '{h} h', min: '{m} min' };
 

@@ -60,3 +60,16 @@ test('the rider is told in the stops\' info box, in all five languages', () => {
     assert.match(read(`translations/messages.${l}.yaml`), /^ {2}plan_help_place: "/m, `messages.${l}.yaml lacks map.plan_help_place`);
   }
 });
+
+test('a clustered pin (a confirmed or provider place, osm-pools.js) answers a right-click as every pin does (owner 2026-10-18)', () => {
+  const pools = fs.readFileSync(path.join(ROOT, 'assets/map/osm-pools.js'), 'utf8');
+  assert.match(pools, /el\.addEventListener\('contextmenu', e=>\{ if\(offerToRide\(planPlace\(st\.layer, drawerF\)\)\)\{ e\.preventDefault\(\); e\.stopPropagation\(\); \} \}\);/, 'a RIVM water pin copied its coordinates instead');
+  assert.match(pools, /if\(e\.metaKey && offerToRide\(planPlace\(st\.layer, drawerF\)\)\)\{ e\.preventDefault\(\); return; \}/);
+});
+
+test('every mark of a place takes a right-click: a climb\'s summit, its steep markers and its line too (owner 2026-10-18)', () => {
+  const render = fs.readFileSync(path.join(ROOT, 'assets/map/render.js'), 'utf8');
+  for (const el of ['fEl', 'sEl', 'rEl']) assert.match(render, new RegExp(`offerMark\\(${el}, layer, f\\)`), `${el} offers nothing`);
+  assert.match(render, /map\.on\('contextmenu',id,onMenu\);/, 'a climb line copies coordinates');
+  assert.match(render, /e\.originalEvent\.ccTaken=true;/, 'the coordinates popup is not told');
+});

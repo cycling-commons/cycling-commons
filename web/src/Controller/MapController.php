@@ -709,6 +709,7 @@ final class MapController extends AbstractController
                 // Opening a ride file (route-planner.md section 6.1).
                 'opened' => $t->trans('map.plan_opened'),
                 'converted' => $t->trans('map.plan_converted'),
+                'matching' => $t->trans('map.plan_matching'),
                 'openRefused' => ['not_gpx' => $t->trans('map.plan_open_not_gpx'), 'no_stops' => $t->trans('map.plan_open_no_stops'), 'too_many' => $t->trans('map.plan_open_too_many'), 'bad_point' => $t->trans('map.plan_open_not_gpx')],
                 'routing' => $t->trans('map.plan_routing'),
                 'routed' => $t->trans('map.plan_routed'),
@@ -716,6 +717,9 @@ final class MapController extends AbstractController
                 'maxStops' => $t->trans('map.plan_max_stops'),
                 'already' => $t->trans('map.plan_already'),
                 'rateLimited' => $t->trans('map.plan_rate_limited'),
+                'rateLimitedDay' => $t->trans('map.plan_rate_limited_day'),
+                'legsLeftDay' => $t->trans('map.plan_legs_left_day'),
+                'legsLeftWindow' => $t->trans('map.plan_legs_left_window'),
                 'barStops' => $t->trans('map.plan_bar_stops'),
                 // The day (route-planner.md section 4.4).
                 'feelsLike' => $t->trans('map.plan_feels_like'),
@@ -732,7 +736,7 @@ final class MapController extends AbstractController
                 'roads' => ['road' => $t->trans('map.plan_road_road'), 'track' => $t->trans('map.plan_road_track'), 'path' => $t->trans('map.plan_road_path'), 'cycleway' => $t->trans('map.plan_road_cycleway')],
                 'stopsShow' => $t->trans('map.plan_stops_show'), 'stopsHide' => $t->trans('map.plan_stops_hide'), 'stopsSum' => $t->trans('map.plan_stops_sum'),
                 'underMin' => $t->trans('map.plan_under_min'),
-                // What makes it tougher, each line past its baseline (TOUGHER in plan-model.js).
+                // What makes it tough, each line past its baseline (TOUGHER in plan-model.js).
                 'tougherNone' => $t->trans('map.plan_tougher_none'),
                 'longDay' => $t->trans('map.plan_long_day'),
                 'rough' => $t->trans('map.plan_rough'),

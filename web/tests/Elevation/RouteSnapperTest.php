@@ -88,6 +88,54 @@ final class RouteSnapperTest extends TestCase
         self::assertSame(1000.0, $result['distanceM']);
     }
 
+    /** A whole ride in one call: each leg its own line and length; a leg missing makes the ride null (route-planner.md section 8). */
+    public function testARideSnapsEachLegInOneCall(): void
+    {
+        $legA = self::encode([[50.0, 5.0], [50.001, 5.001]]);
+        $legB = self::encode([[50.001, 5.001], [50.002, 5.002]]);
+        $reply = json_encode(['trip' => ['legs' => [
+            ['shape' => $legA, 'summary' => ['length' => 0.5]],
+            ['shape' => $legB, 'summary' => ['length' => 0.75]],
+        ]]], \JSON_THROW_ON_ERROR);
+        $stops = [[50.0, 5.0], [50.001, 5.001], [50.002, 5.002]];
+
+        $legs = $this->snapper(new MockResponse($reply))->snapEach($stops);
+        self::assertNotNull($legs);
+        self::assertCount(2, $legs);
+        self::assertSame([[5.0, 50.0], [5.001, 50.001]], $legs[0]['coordinates']);
+        self::assertSame(500.0, $legs[0]['distanceM']);
+        self::assertSame(750.0, $legs[1]['distanceM']);
+
+        self::assertNull($this->snapper(new MockResponse($reply))->snapEach([...$stops, [50.003, 5.003]]), 'a leg missing');
+        self::assertNull($this->snapper(new MockResponse('never called'), '')->snapEach($stops), 'no engine');
+    }
+
+    /** A file's track pieces are matched to the roads, each on its own: trace_route, map_snap, the bike's costing. */
+    public function testATrackPieceIsMatchedToTheRoadsOnItsOwn(): void
+    {
+        $bodies = [];
+        $shape = self::encode([[50.0, 5.0], [50.001, 5.001], [50.002, 5.002]]);
+        $http = new MockHttpClient(static function (string $method, string $url, array $options) use (&$bodies, $shape): MockResponse {
+            $bodies[] = [$url, json_decode((string) $options['body'], true, 512, \JSON_THROW_ON_ERROR)];
+
+            return new MockResponse((string) json_encode(['trip' => ['legs' => [['shape' => $shape, 'summary' => ['length' => 0.3]]]]]));
+        });
+        $snapper = new RouteSnapper($http, new NullLogger(), 'http://valhalla.test');
+        $long = array_map(static fn (int $i): array => [50.0 + $i * 1e-5, 5.0], range(0, 4999));
+
+        $out = $snapper->matchMany([[[50.0, 5.0], [50.002, 5.002]], $long], BikeType::Road);
+
+        self::assertCount(2, $out);
+        self::assertSame(300.0, $out[0]['distanceM'] ?? null);
+        self::assertSame('http://valhalla.test/trace_route', $bodies[0][0]);
+        self::assertSame('map_snap', $bodies[0][1]['shape_match']);
+        self::assertSame('bicycle', $bodies[0][1]['costing']);
+        self::assertArrayHasKey('bicycle', $bodies[0][1]['costing_options']);
+        self::assertCount(RouteSnapper::MAX_MATCH_POINTS, $bodies[1][1]['shape'], 'a long piece is not thinned');
+        self::assertSame(['lat' => 50.0, 'lon' => 5.0], $bodies[1][1]['shape'][0]);
+        self::assertSame(['lat' => 50.0 + 4999 * 1e-5, 'lon' => 5.0], $bodies[1][1]['shape'][RouteSnapper::MAX_MATCH_POINTS - 1], 'the last point is dropped');
+    }
+
     /** No route is null, not an exception: the editor keeps its straight line. */
     public function testAnErrorReplyIsNull(): void
     {
@@ -157,6 +205,24 @@ final class RouteSnapperTest extends TestCase
         self::assertNotNull($snapper->snap([50.0, 5.0], [50.001, 5.001], BikeType::Road, shortest: true));
 
         self::assertSame(['bicycle' => ['bicycle_type' => 'Road', 'shortest' => true]], $this->lastBody['costing_options']);
+    }
+
+    /**
+     * Never the same road twice (route-planner.md section 4.2, owner 2026-10-18): the points of a road another leg
+     * already takes go to the engine as `exclude_locations`; without them the request carries none.
+     */
+    public function testRoadsToKeepOffGoToTheEngineAsExcludedLocations(): void
+    {
+        $shape = self::encode([[50.0, 5.0], [50.001, 5.001]]);
+        $reply = static fn (): MockResponse => new MockResponse(json_encode(['trip' => ['legs' => [['shape' => $shape, 'summary' => ['length' => 0.1]]]]], \JSON_THROW_ON_ERROR));
+        $snapper = new RouteSnapper($this->recording($reply()), new NullLogger(), 'http://valhalla.test');
+
+        self::assertNotNull($snapper->snap([50.0, 5.0], [50.01, 5.01], BikeType::Road, false, [[50.004, 5.004], [50.006, 5.006]]));
+        self::assertSame([['lat' => 50.004, 'lon' => 5.004], ['lat' => 50.006, 'lon' => 5.006]], $this->lastBody['exclude_locations']);
+
+        $snapper = new RouteSnapper($this->recording($reply()), new NullLogger(), 'http://valhalla.test');
+        self::assertNotNull($snapper->snap([50.0, 5.0], [50.01, 5.01], BikeType::Road));
+        self::assertArrayNotHasKey('exclude_locations', $this->lastBody);
     }
 
     public function testTheClimbEditorSnapSendsNoCostingOptions(): void

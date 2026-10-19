@@ -47,6 +47,56 @@ export function nearLine(line, pt){
   return best;
 }
 
+/** Never the same road twice (route-planner.md section 4.2, owner 2026-10-18): a stretch of a leg counts as ridden
+    twice when it runs within `tolM` of an earlier leg for `minRunM` or more, past `endM` from the leg's own ends (legs
+    meet at a checkpoint anyway); the leg is then asked again keeping off points every `avoidStepM` along it, at most
+    `maxAvoid`, and the other way is taken when it repeats less and is at most `maxGrowth` times as long. */
+export const REPEAT = { tolM: 20, endM: 300, minRunM: 400, stepM: 50, avoidStepM: 250, maxAvoid: 40, maxGrowth: 2 };
+/* Points every stepM metres along a line, with their metres along it. */
+function samplesAlong(line, stepM){
+  const P = proj(line[0]), out = [];
+  let acc = 0, next = 0;
+  for(let i = 1; i < line.length; i++){
+    const a = P(line[i - 1]), b = P(line[i]), len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    while(next <= acc + len){ const t = len > 0 ? (next - acc) / len : 0; out.push([[line[i - 1][0] + (line[i][0] - line[i - 1][0]) * t, line[i - 1][1] + (line[i][1] - line[i - 1][1]) * t], next]); next += stepM; }
+    acc += len;
+  }
+  return { points: out, totalM: acc };
+}
+/** The stretches of leg `i`, [fromM, toM] in metres along its own line, that an earlier leg already rides. */
+export function repeatRuns(legs, i){
+  const leg = legs[i];
+  if(!leg || !leg.routed || !Array.isArray(leg.line) || leg.line.length < 2) return [];
+  const pad = 0.0005;   // about 35 m: a box test before the exact distance
+  const others = legs.slice(0, i).filter(l => l && l.routed && Array.isArray(l.line) && l.line.length > 1).map(l => {
+    let w = 180, s = 90, e = -180, n = -90;
+    for(const [x, y] of l.line){ if(x < w) w = x; if(x > e) e = x; if(y < s) s = y; if(y > n) n = y; }
+    return { line: l.line, w: w - pad, s: s - pad, e: e + pad, n: n + pad };
+  });
+  if(!others.length) return [];
+  const { points, totalM } = samplesAlong(leg.line, REPEAT.stepM);
+  const runs = []; let start = null, last = null;
+  const close = () => { if(start != null && last - start >= REPEAT.minRunM) runs.push([start, last]); start = null; };
+  for(const [p, at] of points){
+    const inner = at >= REPEAT.endM && at <= totalM - REPEAT.endM;
+    const near = inner && others.some(o => p[0] >= o.w && p[0] <= o.e && p[1] >= o.s && p[1] <= o.n && nearLine(o.line, p).distM <= REPEAT.tolM);
+    if(near){ if(start == null) start = at; last = at; } else close();
+  }
+  close();
+  return runs;
+}
+/** Metres ridden twice in those stretches. */
+export const repeatedM = runs => runs.reduce((t, [a, b]) => t + (b - a), 0);
+/** The points a leg is asked to keep off for its repeated stretches, [lng, lat], every avoidStepM, at most maxAvoid. */
+export function avoidPoints(leg, runs){
+  if(!leg || !Array.isArray(leg.line) || leg.line.length < 2 || !runs.length) return [];
+  const { points } = samplesAlong(leg.line, REPEAT.stepM);
+  let picked = [];
+  for(const [a, b] of runs){ for(let d = a; d <= b; d += REPEAT.avoidStepM){ const p = points.reduce((best, x) => Math.abs(x[1] - d) < Math.abs(best[1] - d) ? x : best, points[0]); picked.push(p[0]); } }
+  if(picked.length > REPEAT.maxAvoid){ const k = picked.length / REPEAT.maxAvoid; picked = Array.from({ length: REPEAT.maxAvoid }, (_, i) => picked[Math.floor(i * k)]); }
+  return picked;
+}
+
 /** Where a place goes: after the leg that passes closest, at the end with fewer than two stops, -1 when it is in the ride already. */
 export function insertIndex(stops, legs, place){
   if(place.item && stops.some(s => s.item === place.item)) return -1;
@@ -61,8 +111,10 @@ export function insertIndex(stops, legs, place){
 }
 
 /** A rise or drop smaller than this, metres, is noise of the elevation model: whole-metre heights, trees and roofs
-    in a surface model (route-planner.md section 4.4). */
-export const HEIGHT_NOISE_M = 3;
+    in a surface model (route-planner.md section 4.4). Set against what riders' own devices counted (owner
+    2026-10-18): Liège-Bastogne-Liège 4,424 m (5 m reads 4,441 m, 3 m read 4,741 m), flat rides of 35 to 43 km 2 to
+    9 m (5 m reads 0 to 21 m, 3 m read 3 to 58 m). */
+export const HEIGHT_NOISE_M = 5;
 
 /** A leg's heights as the figures read them, one rule for every ride (route-planner.md section 4.4): a three-sample
     moving average, then a height counts only once it is HEIGHT_NOISE_M or more from the last height that counted,
@@ -82,6 +134,29 @@ export function cleanHeights(heights){
   return out;
 }
 
+/** The cleaned heights of every leg, cleaned over the ride as one line (owner 2026-10-18: cleaned leg by leg, a
+    round trip climbed 115 m and descended 123 m, as every leg started its own filter and the joins were never
+    counted): one array per leg, aligned to its `heights`, null for a leg without heights, which breaks the line. */
+export function cleanRide(legs){
+  const out = legs.map(() => null);
+  let run = [];
+  const flush = () => {
+    if(!run.length) return;
+    const all = []; let off = 0;
+    for(const i of run){ const hs = legs[i].heights; for(const [d, h] of hs) all.push([off + d - hs[0][0], h]); off += hs[hs.length - 1][0] - hs[0][0]; }
+    const sm = cleanHeights(all);
+    let k = 0;
+    for(const i of run){ const n = legs[i].heights.length; out[i] = sm.slice(k, k + n); k += n; }
+    run = [];
+  };
+  legs.forEach((leg, i) => {
+    if(!leg || !leg.routed) return;
+    if(Array.isArray(leg.heights) && leg.heights.length > 1) run.push(i); else flush();
+  });
+  flush();
+  return out;
+}
+
 /* Climbed and descended over the cleaned heights: every rise and every drop. */
 function climbOf(heights){
   const sm = cleanHeights(heights);
@@ -92,12 +167,18 @@ function climbOf(heights){
 
 /** Distance over the routed legs, climbed and descended over the legs with heights. */
 export function figures(legs){
-  let distM = 0, upM = 0, downM = 0;
-  for(const leg of legs){
-    if(!leg || !leg.routed) continue;
+  let distM = 0, upM = 0, downM = 0, last = null;
+  const clean = cleanRide(legs);
+  legs.forEach((leg, i) => {
+    if(!leg || !leg.routed) return;
     distM += leg.distM || 0;
-    if(Array.isArray(leg.heights) && leg.heights.length > 1){ const c = climbOf(leg.heights); upM += c.up; downM += c.down; }
-  }
+    const sm = clean[i];
+    if(!sm){ last = null; return; }
+    // From the previous leg's last height on: the join is climbed or descended as any other step.
+    let prev = last === null ? sm[0] : last;
+    for(const h of sm){ const d = h - prev; if(d > 0) upM += d; else downM -= d; prev = h; }
+    last = sm[sm.length - 1];
+  });
   return { distM, upM, downM };
 }
 
@@ -189,16 +270,21 @@ export function gpxText(ride, o){
   const itemUrl = (o && o.itemUrl) || null;
   const meta = ride.bike ? `<cc:bike>${xml(ride.bike)}</cc:bike>` : '';
   const pts = [];
+  // The cleaned heights, as the planner counts its climbing, over the ride as one line (owner 2026-10-18: a device
+  // that adds up the raw samples shows the surface model's noise as climbing); to a tenth of a metre, so a gentle
+  // slope stays smooth.
+  const cleaned = cleanRide(ride.legs || []);
   (ride.legs || []).forEach((leg, li) => {
     if(!leg || !leg.routed) return;
     const hs = Array.isArray(leg.heights) && leg.heights.length ? leg.heights : null;
+    const clean = cleaned[li];
     leg.line.forEach((p, i) => {
       if(li > 0 && i === 0) return;   // the join point is the previous leg's last point
       let ele = '';
       if(hs){
         const d = i / Math.max(1, leg.line.length - 1) * leg.distM;
-        const h = hs.reduce((b, x) => Math.abs(x[0] - d) < Math.abs(b[0] - d) ? x : b, hs[0]);
-        ele = `<ele>${Math.round(h[1])}</ele>`;
+        let k = 0; for(let j = 1; j < hs.length; j++) if(Math.abs(hs[j][0] - d) < Math.abs(hs[k][0] - d)) k = j;
+        ele = `<ele>${Math.round((clean ? clean[k] : hs[k][1]) * 10) / 10}</ele>`;
       }
       pts.push(`<trkpt lat="${p[1].toFixed(6)}" lon="${p[0].toFixed(6)}">${ele}</trkpt>`);
     });
@@ -245,7 +331,10 @@ export function rideFromGpx(text){
     stops.push(stop);
   }
   const meta = (src.match(/<metadata\b[^>]*>([\s\S]*?)<\/metadata>/) || [null, ''])[1];
-  return { name: (tagText(meta, 'name') || '').slice(0, 80), bike: tagText(meta, 'cc:bike'), stops };
+  // The roads the ride took when it was saved: its track cut at its checkpoints, matched again when it opens.
+  const line = gpxPoints(src, 'trkpt');
+  const track = line.length > 1 && stops.length > 1 ? trackPieces(line, stopsOnTrack(line, stops)) : null;
+  return { name: (tagText(meta, 'name') || '').slice(0, 80), bike: tagText(meta, 'cc:bike'), stops, ...(track ? { track } : {}) };
 }
 
 /* Points of one GPX element, written open (`<trkpt ...>...</trkpt>`) or closed (`<trkpt .../>`), the attributes in
@@ -267,10 +356,16 @@ function gpxPoints(src, tag){
 function foreignRide(src){
   const track = gpxPoints(src, 'trkpt'), route = gpxPoints(src, 'rtept'), marks = gpxPoints(src, 'wpt');
   const [from, all] = track.length ? ['track', track] : route.length ? ['route', route] : ['waypoints', marks];
-  // A device standing still writes the same place again and again: one checkpoint for it.
-  const line = all.filter((p, i) => i === 0 || metres([all[i - 1].lat, all[i - 1].lng], [p.lat, p.lng]) >= 5);
+  // A device standing still writes the same place again and again: one point for it. Measured from the last point
+  // kept, not the one before: a slow climb writes a point every 3 m, and every one of them would go (owner
+  // 2026-10-18: the Stockeu and the Roche-aux-Faucons lost their climbs).
+  const line = [];
+  for(const p of all){ const last = line[line.length - 1]; if(!last || metres([last.lat, last.lng], [p.lat, p.lng]) >= 5) line.push(p); }
   if(!line.length) return { error: 'no_stops' };
-  const kept = from !== 'track' && line.length <= MAX_STOPS ? line : simplifyTrack(line, MAX_STOPS).map(p => Object.assign({}, p, { name: from === 'track' ? '' : p.name }));
+  const at = from !== 'track' && line.length <= MAX_STOPS ? null : simplifyTrackAt(line, MAX_STOPS);
+  const kept = at ? at.map(i => Object.assign({}, line[i], { name: from === 'track' ? '' : line[i].name })) : line;
+  // A track's own roads, cut at the checkpoints kept, for the engine to match (route-planner.md section 6.1).
+  const pieces = from === 'track' && at ? trackPieces(line, at) : null;
   const meta = (src.match(/<metadata\b[^>]*>([\s\S]*?)<\/metadata>/) || [null, ''])[1];
   const head = (src.match(from === 'route' ? /<rte\b[^>]*>([\s\S]*?)<rtept\b/ : /<trk\b[^>]*>([\s\S]*?)<trkseg\b/) || [null, ''])[1];
   return {
@@ -278,6 +373,7 @@ function foreignRide(src){
     bike: null,
     stops: kept.map(p => ({ lat: p.lat, lng: p.lng, name: p.name })),
     converted: { from, points: all.length },
+    ...(pieces ? { track: pieces } : {}),
   };
 }
 
@@ -302,8 +398,12 @@ export const SHAPE_M = 25;
     stretches, each split at its middle along the line, so a long straight road is not left to the engine's own
     choice of road. Points are `{lat, lng}`; a line of `max` points or fewer comes back whole. */
 export function simplifyTrack(points, max){
+  return simplifyTrackAt(points, max).map(i => points[i]);
+}
+/** simplifyTrack()'s points as their indexes in `points`, ascending. */
+export function simplifyTrackAt(points, max){
   const n = points.length;
-  if(n <= max || max < 2) return points.slice(0, Math.max(max, 0) || n);
+  if(n <= max || max < 2) return Array.from({ length: Math.min(n, Math.max(max, 0) || n) }, (_, i) => i);
   const P = proj([points[0].lng, points[0].lat]);
   const xy = points.map(p => P([p.lng, p.lat]));
   const along = [0];
@@ -435,11 +535,12 @@ function joinSpans(spans, joinM){
     split reads them, so the stretches lit on the map are the minutes of the bar. */
 export function gradientSpans(legs, cls){
   const spans = []; let off = 0;
-  for(const leg of legs){
+  const clean = cleanRide(legs);
+  for(const [li, leg] of legs.entries()){
     if(!leg || !leg.routed) continue;
     const hs = leg.heights;
     if(!Array.isArray(hs) || hs.length < 2){ if(cls === 'flat') spans.push([off, off + (leg.distM || 0)]); off += leg.distM || 0; continue; }
-    const sm = cleanHeights(hs), sum = hs[hs.length - 1][0] - hs[0][0], k = sum > 0 ? leg.distM / sum : 1;
+    const sm = clean[li], sum = hs[hs.length - 1][0] - hs[0][0], k = sum > 0 ? leg.distM / sum : 1;
     for(let i = 1; i < hs.length; i++){
       const len = hs[i][0] - hs[i - 1][0]; if(!(len > 0)) continue;
       const g = (sm[i] - sm[i - 1]) / len;
@@ -519,11 +620,10 @@ function sharesOf(leg){
   if(!(total > 0)) return { paved: 1, gravel: 0, rough: 0, unknown: 0 };
   return { paved: (s.paved || 0) / total, gravel: (s.gravel || 0) / total, rough: (s.rough || 0) / total, unknown: (s.unknown || 0) / total };
 }
-/* The steps of a leg as [metres, gradient]: the cleaned heights (the climbed rule's), scaled to the leg's length; a leg without heights is one flat step. */
-function stepsOf(leg){
+/* The steps of a leg as [metres, gradient]: its cleaned heights (the climbed rule's, cleanRide()), scaled to the leg's length; a leg without heights is one flat step. */
+function stepsOf(leg, sm){
   const hs = leg.heights;
-  if(!Array.isArray(hs) || hs.length < 2) return [[leg.distM, 0]];
-  const sm = cleanHeights(hs);
+  if(!Array.isArray(hs) || hs.length < 2 || !sm) return [[leg.distM, 0]];
   const steps = []; let sum = 0;
   for(let i = 1; i < hs.length; i++){ const len = hs[i][0] - hs[i - 1][0]; if(!(len > 0)) continue; steps.push([len, Math.max(-0.3, Math.min(0.3, (sm[i] - sm[i - 1]) / len))]); sum += len; }
   if(!steps.length || !(sum > 0)) return [[leg.distM, 0]];
@@ -537,13 +637,14 @@ export function rideTime(legs, bike){
   const parts = { paved: 0, gravel: 0, rough: 0, unknown: 0, climb: 0, flat: 0, descend: 0 };
   /* The same two splits in metres, for the bars' distance view (owner 2026-10-15). */
   const metres = { paved: 0, gravel: 0, rough: 0, unknown: 0, climb: 0, flat: 0, descend: 0 };
-  for(const leg of legs){
+  const clean = cleanRide(legs);
+  for(const [li, leg] of legs.entries()){
     if(!leg || !leg.routed || !(leg.distM > 0)) continue;
     const mix = sharesOf(leg);
     const crr = mix.paved * r.crr + mix.unknown * SURFACE_CRR.unknown + mix.gravel * SURFACE_CRR.gravel + mix.rough * SURFACE_CRR.rough;
     const cap = ((mix.paved + mix.unknown) * r.capKmh + mix.gravel * Math.min(r.capKmh, SURFACE_CAP_KMH.gravel) + mix.rough * Math.min(r.capKmh, SURFACE_CAP_KMH.rough)) / 3.6;
     distM += leg.distM;
-    for(const [len, g] of stepsOf(leg)){
+    for(const [len, g] of stepsOf(leg, clean[li])){
       const t = len / speedAt(r, g, crr, cap);
       seconds += t;
       // Gravel on a climb is gravel time too (owner 2026-10-15): the surface split covers every step.
