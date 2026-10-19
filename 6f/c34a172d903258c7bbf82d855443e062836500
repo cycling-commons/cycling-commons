@@ -1,0 +1,19 @@
+web/src/Elevation/LegSurfaces.php
+  s_266155a992380b::t_655971eebc53ec 81,98,132,143,165
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6fc34a172d903258c7bbf82d855443e062836500",
+  "prompts": {},
+  "sessions": {
+    "s_266155a992380b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d6d2a9c8-dd96-48df-be16-07f9aa0ce892",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
