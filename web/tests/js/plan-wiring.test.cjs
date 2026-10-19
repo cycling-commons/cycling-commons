@@ -574,14 +574,14 @@ test('the way text names what was measured, and the plain answer claims nothing'
   assert.doesNotMatch(read('translations/messages.en.yaml'), /suit your bike less/);
 });
 
-/* A ride outside the map's scope moves it, and the map goes to the ride (owner 2026-10-16: a GPX of North Holland
-   opened in Wallonia neither panned nor showed places). */
-test('a planned ride outside the scope widens it for as long as it is planned, and the map goes to a file at once', () => {
-  assert.match(plan, /import \{ rideScopeFor, scopeKey, scopeCovers \} from '\.\/ride-scope\.js';/);
+/* While a ride is planned the scope is its start's region, and the map goes to the ride (owner 2026-10-16: a GPX of
+   North Holland opened in Wallonia neither panned nor showed places; owner 2026-10-19: the circle near Spa stayed). */
+test('a planned ride takes the scope to its start region for as long as it is planned, and the map goes to a file at once', () => {
+  assert.match(plan, /import \{ scopeKey, planScopeFor \} from '\.\/ride-scope\.js';/);
   const along = (plan.match(/async function renderAlong\(\)\{([\s\S]*?)\n\}/) || [])[1] || '';
-  assert.match(along, /followRideScope\(d\.regions\);/);
-  const follow = (plan.match(/function followRideScope\(regions\)\{([\s\S]*?)\n\}/) || [])[1] || '';
-  assert.match(follow, /if\(scopeCovers\(cur, regions\)\) return;/);
+  assert.doesNotMatch(along, /followRideScope\(/, 'the regions the line crosses widen the scope again');
+  const follow = (plan.match(/function followRideScope\(region\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.match(follow, /const next = planScopeFor\(cur, region\); if\(!next\) return;/);
   assert.match(follow, /keepCameraForNextScope\(\);/, 'the scope change keeps the camera on the ride');
   assert.match(follow, /S\.set\(next, \{ persist: false \}\);/, 'never stored as the rider\'s own scope');
   const clear = (plan.match(/function clearRide\(\)\{([\s\S]*?)\n\}/) || [])[1] || '';
@@ -620,14 +620,14 @@ test('the start search sends Photon a rounded middle of the map, and the scope f
   const fn = plan.slice(plan.indexOf('async function searchStart'), plan.indexOf('function setBike'));
   assert.ok(fn.includes("'&lat=' + c.lat.toFixed(1) + '&lon=' + c.lng.toFixed(1)"), 'the start search sends Photon more than a 0.1° point');
   assert.ok(!/toFixed\([2-9]\)/.test(fn), 'the start search sends a finer point than the privacy notice says');
-  assert.ok(/regionOfPointPrecise\(r\.lng, r\.lat\)\.then\(reg => \{ if\(reg\) followRideScope\(\[reg\]\); \}\)/.test(fn), 'a start picked outside the scope leaves the scope where it was');
+  assert.ok(/regionOfPointPrecise\(r\.lng, r\.lat\)\.then\(reg => \{ if\(reg\) followRideScope\(reg\); \}\)/.test(fn), 'a start picked outside the scope leaves the scope where it was');
 });
 
-test('the scope follows the stops as soon as they are on the map, and a stop clicked in the list', () => {
-  assert.match(plan, /routeAll\(\); followStopsScope\(ride\.stops\); saveDraft\(\);/, 'a new stop leaves the scope where it was until the legs are routed');
-  assert.match(plan, /flyToPin\(\[s\.lng, s\.lat\]\); followStopsScope\(\[s\]\);/, 'a stop clicked in the list does not take the scope to its region');
-  const fn = plan.slice(plan.indexOf('function followStopsScope'), plan.indexOf('function restoreRideScope'));
-  assert.ok(fn.includes('followRideScope(regions)'), 'the stops do not use the ride\'s own scope rule');
+test('the scope follows the start as soon as it is on the map, and a stop clicked in the list', () => {
+  assert.match(plan, /routeAll\(\); followStopScope\(ride\.stops\[0\]\); saveDraft\(\);/, 'a new start leaves the scope where it was until the legs are routed');
+  assert.match(plan, /flyToPin\(\[s\.lng, s\.lat\]\); followStopScope\(s\);/, 'a stop clicked in the list does not take the scope to its region');
+  const fn = plan.slice(plan.indexOf('function followStopScope'), plan.indexOf('function restoreRideScope'));
+  assert.ok(fn.includes('followRideScope(r)'), 'the start does not use the ride\'s own scope rule');
 });
 
 test('another rail panel, or the drawer closing, takes the guide away without changing its tick', () => {

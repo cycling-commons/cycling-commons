@@ -21,7 +21,7 @@ import { isPicking } from './picking.js';
 import { setPlanning, isLineOrArea } from './plan-state.js';
 import { CATALOG } from './catalog.js';
 import { layerGlyph, waterKind } from './icons.js';
-import { rideScopeFor, scopeKey, scopeCovers } from './ride-scope.js';
+import { scopeKey, planScopeFor } from './ride-scope.js';
 import { keepCameraForNextScope } from './scope-ui.js';
 import { MAX_STOPS, ALONG_MAX_POINTS, thinLine, CORRIDOR_M, workFresh, rideFromGpx, waterGapSpan, bestWaterStop, stopRows, legGoesRound, whyThisWay, sliceAlong, stopIndexAt, legKeys, insertIndex, figures, profileRuns, pointAt, gpxText, barText, createHistory, coverPadding, tickStepKm, gradientSpans, surfaceSpans, rideTime, surfaceBars, gradientBars, durationText, tougherLines, rideFeel, rideHours, defaultStartMin, forecastPageUrl, forecastPoint, heightTicks, tileSurfaceClass, mergeSurfaces, streetAt, stopStreet, roadAt, steepestKm, longestClimb, waterGap, sunTimes, windShares, windSpans, hourSpan } from './plan-model.js';
 
@@ -208,7 +208,7 @@ async function searchStart(qy){
     if(!ride.stops.length) setStatus(P().startClick || 'Click the map where you start.');
     // The scope follows the start as it follows a ride (owner 2026-10-17: Hoorn picked, the chip still said Near Spa).
     const S = window.CCScope;
-    if(S && S.regionOfPointPrecise) S.regionOfPointPrecise(r.lng, r.lat).then(reg => { if(reg) followRideScope([reg]); }).catch(() => {}); };
+    if(S && S.regionOfPointPrecise) S.regionOfPointPrecise(r.lng, r.lat).then(reg => { if(reg) followRideScope(reg); }).catch(() => {}); };
 }
 function setBike(b){ ride.bike = b; paintBikes(); afterChange(); }
 /* A place from the drawer or the along list: in at its km along, or out again. */
@@ -226,17 +226,16 @@ function clearRide(){
   afterChange();
   restoreRideScope();
 }
-/* A ride outside the map's scope widens it to the regions the ride crosses, for as long as it is planned
-   (route-planner.md section 5, owner 2026-10-16: a GPX of North Holland opened while the map looked at Wallonia
-   showed no places), as the ride check does. Never stored as the rider's own scope; the chip says it comes from
-   the ride. A scope that already shows the whole ride, its country or Everywhere, stays. */
+/* While a ride is planned the map's scope is the region of its start (route-planner.md section 5, owner 2026-10-19:
+   "just load the region our ride is in (startpoint of the ride if it spans multiple). Do not show the lighter
+   circle"), whatever the rider's own scope was. Never stored as the rider's own scope; the chip says it comes from
+   the ride. */
 let scopeBefore = null, scopeSet = null;
-function followRideScope(regions){
+function followRideScope(region){
   const S = window.CCScope;
-  if(!S || !Array.isArray(regions) || !regions.length) return;
+  if(!S || !region) return;
   const cur = S.get();
-  if(scopeCovers(cur, regions)) return;
-  const next = rideScopeFor(regions); if(!next) return;
+  const next = planScopeFor(cur, region); if(!next) return;
   if(scopeBefore == null) scopeBefore = cur;
   // The ride's own framing stays the last word; the scope change would otherwise move the camera.
   keepCameraForNextScope();
@@ -246,19 +245,14 @@ function followRideScope(regions){
   const line = document.getElementById('regionLine');
   if(line) line.textContent = line.textContent + ' · ' + (I18N.rcScopeFromRide || 'from your ride');
 }
-/* The scope follows the stops as soon as they are on the map (owner 2026-10-17: a map point clicked near
-   Hoorn left the scope near Spa), before any leg is routed; the along answer widens it to every region the
-   line crosses. A stop outside every region asks nothing. */
-function followStopsScope(stops){
+/* The scope follows the start as soon as it is on the map (owner 2026-10-17: a map point clicked near Hoorn left
+   the scope near Spa), before any leg is routed; a stop clicked in the Checkpoints list takes it to that stop's
+   region. A stop outside every region asks nothing. */
+function followStopScope(stop){
   const S = window.CCScope;
-  if(!S || !S.regionOfPointPrecise || !stops.length) return;
+  if(!S || !S.regionOfPointPrecise || !stop) return;
   const myGen = gen;
-  Promise.all(stops.map(s => S.regionOfPointPrecise(s.lng, s.lat))).then(found => {
-    if(myGen !== gen) return;
-    const regions = [];
-    for(const r of found) if(r && !regions.some(x => x.id === r.id)) regions.push(r);
-    if(regions.length) followRideScope(regions);
-  }).catch(() => {});
+  S.regionOfPointPrecise(stop.lng, stop.lat).then(r => { if(myGen === gen && r) followRideScope(r); }).catch(() => {});
 }
 /* The rider's own scope back when the ride is cleared, unless they picked another since. */
 function restoreRideScope(){
@@ -290,7 +284,7 @@ function applyStep(st){
 /* Ctrl+Z, or the command key with Z on a Mac: the ride before the last change. */
 function undo(){ const prev = history.undo(step(true)); if(prev) applyStep(prev); }
 function redo(){ const next = history.redo(step(true)); if(next) applyStep(next); }
-function afterChange(){ pendingFill = null; if(altPinned && !legKeys(ride.stops, ride.bike).includes(altPinned)){ altPinned = null; paintAlt(null); } alongRows = null; syncStart(); renderStops(); drawRide(); routeAll(); followStopsScope(ride.stops); saveDraft(); syncPlanning(); paintDrawerButtons(); }
+function afterChange(){ pendingFill = null; if(altPinned && !legKeys(ride.stops, ride.bike).includes(altPinned)){ altPinned = null; paintAlt(null); } alongRows = null; syncStart(); renderStops(); drawRide(); routeAll(); followStopScope(ride.stops[0]); saveDraft(); syncPlanning(); paintDrawerButtons(); }
 
 async function routeAll(){
   const myGen = ++gen;
@@ -1180,7 +1174,6 @@ async function renderAlong(){
   const myGen = gen;
   const d = await fetchAlong(thinLine(line, ALONG_MAX_POINTS));
   if(myGen !== gen || !d) return;
-  followRideScope(d.regions);
   const rows = [];
   (d.climbs || []).forEach(c => rows.push({ letter: 'N', ridden: true, item: 'N:' + c.id, name: c.name, ll: c.ll, alongKm: c.alongKm, distM: c.distM || 0 }));
   (d.groups || []).forEach(gr => gr.items.forEach(it => rows.push({ letter: gr.letter, item: gr.letter + ':' + it.id, name: it.name, ll: it.ll, alongKm: it.alongKm, distM: it.distM, truncated: gr.truncated })));
@@ -1596,7 +1589,7 @@ export function initPlan(){
     if(e.target.closest('[data-up]')) moveStop(i, -1);
     else if(e.target.closest('[data-down]')) moveStop(i, 1);
     else if(e.target.closest('[data-rm]')) removeStop(i);
-    else if(e.target.closest('[data-fly]')){ const s = ride.stops[i]; flyToPin([s.lng, s.lat]); followStopsScope([s]); }
+    else if(e.target.closest('[data-fly]')){ const s = ride.stops[i]; flyToPin([s.lng, s.lat]); followStopScope(s); }
   });
   $('planStops').addEventListener('mouseover', e => { const li = e.target.closest('.cc-plan-stop'); if(!li) return; const s = ride.stops[Number(li.dataset.i)]; if(s) highlightAt([s.lat, s.lng], [0, 0], null); });
   $('planStops').addEventListener('mouseleave', clearHighlight);

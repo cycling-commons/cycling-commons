@@ -28,13 +28,14 @@ export function rideScopeFor(regions){
 }
 
 /**
- * Whether a scope already shows every region a ride crosses, so the ride need not move it (route-planner.md
- * section 5, owner 2026-10-16). A wider scope, the ride's country or Everywhere, covers it: narrowing that to the
- * ride's regions would hide what the rider chose to see. No scope, or a ride outside every region, asks nothing.
+ * The planner's scope: the region of the ride's start, whatever the rider's scope was (route-planner.md section 5,
+ * owner 2026-10-19: "just load the region our ride is in (startpoint of the ride if it spans multiple). Do not show
+ * the lighter circle"). A My area circle, a country or Everywhere gives way to it, and a ride over several regions
+ * shows its start's. Null when the scope is that region already, or the start lies in no region.
  */
-export function scopeCovers(scope, regions){
-  if(!scope || scope.kind === 'everywhere' || !Array.isArray(regions)) return true;
-  return regions.every(r => !r || (scope.kind === 'country'
-    ? r.countryCode === scope.countryCode
-    : (scope.regionIds || []).includes(r.id)));
+export function planScopeFor(scope, start){
+  const next = rideScopeFor([start]);
+  if(!next) return null;
+  const ids = scope && scope.kind === 'region' ? scope.regionIds || [] : [];
+  return ids.length === 1 && ids[0] === next.regionIds[0] ? null : next;
 }

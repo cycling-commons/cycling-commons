@@ -414,8 +414,8 @@ location"). The first block of the panel (`#planStart`):
    only, biased to the map's centre rounded to 0.1° (about 10 km; the privacy
    notice's Photon row says so), towns listed before streets. Picking a
    row flies the map there (zoom 13 for a town, 16 for a street) and says
-   "Click the map where you start." The scope follows the start picked as it
-   follows a ride (section 5, `followRideScope`): Hoorn picked while the map
+   "Click the map where you start." The scope follows the start picked, as for
+   any ride (section 5, `followRideScope`): Hoorn picked while the map
    looked near Spa takes the scope to North Holland, and clearing the ride
    gives the rider's own scope back (owner 2026-10-17).
 3. **The first click** sets the start, as before.
@@ -1078,22 +1078,27 @@ unnamed places in one list tell apart; where the street has no name, the
 group alone (owner 2026-10-17). The same title goes into the ride when the
 place is added as a checkpoint.
 
-**The ride moves the map's scope when it leaves it** (owner 2026-10-16: a
-GPX of North Holland opened while the map looked at Wallonia showed no
-places on the map). The answer also names the regions the line crosses, in
-ride order (`regions`, `RideCheckService::crossedRegions()`, the ride
-check's own list). When the scope does not already show every one of them
-(`scopeCovers()` in `ride-scope.js`: a region scope holding them all, their
-country, or Everywhere), the planner sets the scope to the ride's regions
-(`rideScopeFor()`), never stored as the rider's own, the camera kept on the
-ride, and the scope chip says "from your ride", as the ride check does.
-Clearing the ride gives the rider's scope back, unless they picked another
-since. A file just opened is framed by its checkpoints at once, before any
-leg is routed (`fitRide()`). The stops move the scope the same way as soon as
-they are on the map, before any leg is routed (`followStopsScope()`, owner
-2026-10-17): a map point clicked near Hoorn while the scope looked near Spa
-takes it to North Holland. A stop clicked in the Checkpoints list takes the
-scope to that stop's region when the scope does not show it.
+**While a ride is planned, the map's scope is its start's region** (owner
+2026-10-19: "when opening the route planner it still keeps my default
+openings screen with the circle. It should not do that. just load the region
+our ride is in (startpoint of the ride if it spans multiple). Do not show the
+lighter circle"). Whatever the rider's own scope is, a My area circle, a
+country, Everywhere or another region, the planner sets the scope to the one
+region the start lies in (`planScopeFor()` in `ride-scope.js`), never stored
+as the rider's own, the camera kept on the ride, and the scope chip says
+"from your ride", as the ride check does. A ride over several regions shows
+its start's region only; the along list still reads the whole corridor from
+the server. A start in no onboarded region leaves the scope alone. The start
+moves the scope as soon as it is on the map, before any leg is routed
+(`followStopScope()`): a map point clicked near Hoorn while the scope looked
+near Spa takes it to North Holland. A stop clicked in the Checkpoints list
+takes the scope to that stop's region; the next change to the ride takes it
+back to the start's. The along answer never moves the scope: the list is
+asked again after every pan, and a town picked in North Holland while a ride
+in Wallonia was planned had its scope put back on Wallonia by the next
+refresh (owner 2026-10-18). Clearing the ride gives the rider's scope back,
+unless they picked another since. A file just opened is framed by its
+checkpoints at once, before any leg is routed (`fitRide()`).
 
 The list renders with `along-list.js` as the ride check renders it, one
 group per letter with its count, the first rows shown and the rest folded,
