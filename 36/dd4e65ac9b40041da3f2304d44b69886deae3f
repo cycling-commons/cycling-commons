@@ -1,0 +1,20 @@
+docs/specs/map-and-search.md
+  h_fb5318cde6cf17 1279,1630-1667
+web/assets/map/map-init.js
+  h_fb5318cde6cf17 98-146,152
+web/assets/map/spotlight.js
+  h_fb5318cde6cf17 55-60,74,78,112
+web/tests/js/fade-highways.test.mjs
+  h_fb5318cde6cf17 6,21,28-30,32-33,35,51-114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "36dd4e65ac9b40041da3f2304d44b69886deae3f",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
