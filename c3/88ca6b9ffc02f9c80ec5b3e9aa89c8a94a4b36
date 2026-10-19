@@ -1,0 +1,106 @@
+docs/specs/map-and-search.md
+  h_fb5318cde6cf17 3103-3107
+docs/specs/privacy-notice.md
+  h_fb5318cde6cf17 51-52,315-324
+docs/specs/route-planner.md
+  h_fb5318cde6cf17 1003-1059
+docs/specs/traffic-measurements.md
+  h_fb5318cde6cf17 97-102,333-334,435-436,480-482,489-490,498-514,518-519,598-783
+web/assets/lib/traffic-colours.js
+  h_fb5318cde6cf17 10-15,42-54
+web/assets/map/drawer.js
+  h_fb5318cde6cf17 792-806,811-812
+web/assets/map/map.js
+  h_fb5318cde6cf17 33,226-227,329
+web/assets/map/scout-traffic.js
+  h_fb5318cde6cf17 10,24-26
+web/assets/map/tile-sources.js
+  h_fb5318cde6cf17 95-116
+web/assets/map/traffic-layer.js
+  h_fb5318cde6cf17 5-8,11-12,14,21,24,68,80-82,86-90,92-93,96-98,120,142-143,146-147
+web/assets/styles/map.css
+  h_fb5318cde6cf17 219-253
+web/config/packages/csrf.yaml
+  h_fb5318cde6cf17 25-26
+web/config/packages/doctrine.yaml
+  h_fb5318cde6cf17 11-13
+web/config/packages/rate_limiter.yaml
+  h_fb5318cde6cf17 102-103,114-122
+web/config/table_comments.yaml
+  h_fb5318cde6cf17 120-128
+web/src/Controller/MapController.php
+  h_fb5318cde6cf17 105-108,537-543
+web/src/Controller/ModerateTrafficController.php
+  h_fb5318cde6cf17 26,80-81
+web/src/Controller/TrafficController.php
+  h_fb5318cde6cf17 13,28,30,64-97,105-106,125
+web/src/Legal/PrivacyNoticeVersions.php
+  h_fb5318cde6cf17 29-30,36
+web/src/Traffic/Command/TrafficDumpCommand.php
+  h_fb5318cde6cf17 9-10,22-23,31,37-38,77-98
+web/src/Traffic/TrafficCipher.php
+  h_fb5318cde6cf17 15-17,30-34,47,62
+web/src/Traffic/TrafficDisclosure.php
+  h_fb5318cde6cf17 129-135
+web/src/Traffic/TrafficKeys.php
+  h_fb5318cde6cf17 15-16,34-38,50-51,53,69-80
+web/src/Traffic/TrafficLine.php
+  h_fb5318cde6cf17 39,41
+web/src/Traffic/TrafficView.php
+  h_fb5318cde6cf17 25-26,32,47-48,71-93,100,117-127,131-133,137
+web/templates/map/index.html.twig
+  h_fb5318cde6cf17 282,483-499,770-810,1327-1331
+web/templates/moderate/traffic.html.twig
+  h_fb5318cde6cf17 25,32,37-52
+web/templates/pages/privacy.html.twig
+  h_fb5318cde6cf17 66-67,248
+web/tests/Legal/PrivacyNoticeVersionTest.php
+  h_fb5318cde6cf17 119-127,133
+web/tests/Smoke/MapToolsLockedTest.php
+  h_fb5318cde6cf17 39,48-49,51
+web/tests/Traffic/ModerateTrafficControllerTest.php
+  h_fb5318cde6cf17 13,197-239
+web/tests/Traffic/TrafficAccountDeletionTest.php
+  h_fb5318cde6cf17 11-12,43-44,46-51,55
+web/tests/Traffic/TrafficDumpCommandTest.php
+  h_fb5318cde6cf17 10-11,35,45-69
+web/tests/Traffic/TrafficViewTest.php
+  h_fb5318cde6cf17 12,191-192,200-209,211-269
+web/tests/js/scout-traffic.test.cjs
+  h_fb5318cde6cf17 245-246
+web/tests/js/tile-sources.test.mjs
+  h_fb5318cde6cf17 99-115
+web/tests/js/traffic-layer.test.mjs
+  h_fb5318cde6cf17 9,48-65
+web/translations/messages.de.yaml
+  h_fb5318cde6cf17 1570-1583,1820,1840-1861,2963-2966
+web/translations/messages.en.yaml
+  h_fb5318cde6cf17 2185-2198,2435,2455-2476,2977-2980
+web/translations/messages.es.yaml
+  h_fb5318cde6cf17 2192-2205,2442,2462-2483,2984-2987
+web/translations/messages.fr.yaml
+  h_fb5318cde6cf17 1565-1578,1815,1835-1856,2958-2961
+web/translations/messages.nl.yaml
+  h_fb5318cde6cf17 1567-1580,1817,1837-1858,2962-2965
+web/translations/privacy.de.yaml
+  h_fb5318cde6cf17 39,50,122,189
+web/translations/privacy.en.yaml
+  h_fb5318cde6cf17 39,50,122,189
+web/translations/privacy.es.yaml
+  h_fb5318cde6cf17 39,50,122,189
+web/translations/privacy.fr.yaml
+  h_fb5318cde6cf17 39,50,122,189
+web/translations/privacy.nl.yaml
+  h_fb5318cde6cf17 39,50,122,189
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c388ca6b9ffc02f9c80ec5b3e9aa89c8a94a4b36",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
