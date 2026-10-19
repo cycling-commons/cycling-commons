@@ -58,7 +58,7 @@ final class ReleaseNotes
     public const array RELEASES = [
         [
             'version' => '0.9.7-beta',
-            'date' => '2026-10-17',
+            'date' => '2026-10-20',
             'sections' => [
                 'public' => [
                     'changelog.v097_planner',
@@ -70,6 +70,9 @@ final class ReleaseNotes
                     'changelog.v097_websites',
                     'changelog.v097_map_polish',
                     'changelog.v097_map_keys',
+                    'changelog.v097_route_roads',
+                    'changelog.v097_road_safety',
+                    'changelog.v097_map_look',
                     'changelog.v097_fixes',
                 ],
                 'rider' => [
@@ -90,6 +93,9 @@ final class ReleaseNotes
                 'changelog.v097_websites' => 'improved',
                 'changelog.v097_map_polish' => 'improved',
                 'changelog.v097_map_keys' => 'improved',
+                'changelog.v097_route_roads' => 'improved',
+                'changelog.v097_road_safety' => 'new',
+                'changelog.v097_map_look' => 'improved',
                 'changelog.v097_fixes' => 'fixed',
                 'changelog.v097_proposals' => 'new',
                 'changelog.v097_mail_why' => 'fixed',
