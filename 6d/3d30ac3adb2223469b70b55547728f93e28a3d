@@ -1,0 +1,22 @@
+docs/specs/route-planner.md
+  h_fb5318cde6cf17 417-418,1081-1101
+web/assets/map/plan.js
+  h_fb5318cde6cf17 24,211,229-232,234,236,238,248-251,253,255,287,1592
+web/assets/map/ride-scope.js
+  h_fb5318cde6cf17 31-34,36-40
+web/tests/js/plan-wiring.test.cjs
+  h_fb5318cde6cf17 577-580,582-584,623,626-630
+web/tests/js/ride-scope.test.mjs
+  h_fb5318cde6cf17 10,46-49,51-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6d3d30ac3adb2223469b70b55547728f93e28a3d",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
