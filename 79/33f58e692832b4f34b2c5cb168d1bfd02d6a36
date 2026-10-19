@@ -1,0 +1,200 @@
+web/tests/Elevation/RouteSnapperTest.php
+  s_f2df2a2aa8a918::t_05078fc0d1b82e 210-227
+  s_f2df2a2aa8a918::t_f211c0e593fe51 91-112
+  s_f2df2a2aa8a918::t_1fb333fac935f6 113-138
+web/assets/map/map-init.js
+  s_f2df2a2aa8a918::t_fd5632bd4717b6 67-79,81,88-89,92
+web/assets/map/osm-pools.js
+  s_f2df2a2aa8a918::t_eff015a5eaf05f 14-15,204-207
+web/src/Elevation/ElevationClient.php
+  s_f2df2a2aa8a918::t_007198de22297a 31-36,133-135,143,146,161,191-192,195,219-224,238-281
+  s_f2df2a2aa8a918::t_5441bff55d77cf 11,144-145,147-160,162-167,179,183-190,193-194,196-197,282
+  s_f2df2a2aa8a918::t_eb56a285a5fd09 283
+web/assets/map/plan-model.js
+  s_f2df2a2aa8a918::t_e6269770bbf8ae 286-287
+  s_f2df2a2aa8a918::t_007198de22297a 137-159,170-173,175-181,273-276,280,623
+  s_f2df2a2aa8a918::t_70fa422cfa9907 334-337,365-367,401-404,406
+  s_f2df2a2aa8a918::t_968864cb58ee8b 117
+  s_f2df2a2aa8a918::t_3948907623ca1f 368,376
+  s_f2df2a2aa8a918::t_6a853d205e0989 50-99
+  s_f2df2a2aa8a918::t_eba7e682c2b019 114-116
+  s_f2df2a2aa8a918::t_9a67d932544f31 359-363
+  s_f2df2a2aa8a918::t_a8932617e3abf4 624
+  s_266155a992380b::t_c4460fe70c5775 538-539,543,626,640-641,647
+docs/specs/map-and-search.md
+  s_f2df2a2aa8a918::t_e95db2005ca50f 1608
+  s_f2df2a2aa8a918::t_caabe294a48b19 370-371
+  s_f2df2a2aa8a918::t_06bc636b0dc855 372-373
+  s_f2df2a2aa8a918::t_8cb8fc33797f32 1606-1607
+  s_f2df2a2aa8a918::t_f7d5b287f9055d 1609-1611
+  s_266155a992380b::t_b2360a6eaf62ac 1612
+web/translations/messages.en.yaml
+  s_f2df2a2aa8a918::t_fd5632bd4717b6 1878-1879
+  s_f2df2a2aa8a918::t_2207c2d7fa043f 1965,1992-1993
+  s_266155a992380b::t_26d099aeab1446 2038,2138-2141
+web/assets/map/leg-store.js
+  s_f2df2a2aa8a918::t_11acf5fad3db61 1-15,17-24,29-54,56-82
+  s_266155a992380b::t_abff5c7d6f4464 16,26-28
+  s_266155a992380b::t_bc1cf9c2d152c3 25,55
+web/assets/map/plan.js
+  s_f2df2a2aa8a918::t_9de9a2f327af76 64,123-126,128-135
+  s_f2df2a2aa8a918::t_a16817f27fd8e6 112,303,319,362,1281-1286,1492
+  s_f2df2a2aa8a918::t_7a95c964425f42 304-307,309-310
+  s_f2df2a2aa8a918::t_085b5b67ee0a68 127
+  s_f2df2a2aa8a918::t_4d7d1bb3b9c5f7 371
+  s_f2df2a2aa8a918::t_5f20c3d695e2e6 61
+  s_f2df2a2aa8a918::t_2207c2d7fa043f 298,340
+  s_f2df2a2aa8a918::t_6a853d205e0989 301,326-327,347,358-359,361
+  s_f2df2a2aa8a918::t_7543b0ffe4dcef 308,338-339,341-346,348-357,360,365-366
+  s_f2df2a2aa8a918::t_bde696e9685a82 136-138
+  s_f2df2a2aa8a918::t_688e2e78b22f4a 299-300
+  s_f2df2a2aa8a918::t_593e63725f033a 302
+  s_f2df2a2aa8a918::t_ac0968ecce157f 316-318
+  s_f2df2a2aa8a918::t_4165289d17827d 320-322
+  s_f2df2a2aa8a918::t_1a4b8b2775d391 363-364
+  s_f2df2a2aa8a918::t_71e0706523dd17 367-370
+  s_f2df2a2aa8a918::t_df9cc969f1721b 372-373
+  s_f2df2a2aa8a918::t_913ef6efeeca04 1489-1491
+  s_f2df2a2aa8a918::t_3ac6fdec171d3d 1493-1495
+  s_266155a992380b::t_38fef4d06558b9 18,43,139,313,323-324,377-378,383,535,615,789,867,1057,1174-1176,1247-1256,1297-1309,1343,1351,1456-1457,1475-1477,1484,1487-1488,1496,1498,1674,1718-1719
+web/translations/messages.de.yaml
+  s_f2df2a2aa8a918::t_fd5632bd4717b6 1263-1264
+  s_f2df2a2aa8a918::t_2207c2d7fa043f 1350,1377-1378
+  s_266155a992380b::t_eb214efda2d71e 1423,1523-1526
+web/translations/messages.es.yaml
+  s_f2df2a2aa8a918::t_2207c2d7fa043f 1972,1999-2000
+  s_f2df2a2aa8a918::t_fd5632bd4717b6 1885-1886
+  s_266155a992380b::t_71e44ef6df5ff9 2045,2145-2148
+web/translations/privacy.es.yaml
+  s_f2df2a2aa8a918::t_2207c2d7fa043f 37
+  s_266155a992380b::t_06e72ef1dd0fb8 71
+web/translations/privacy.nl.yaml
+  s_f2df2a2aa8a918::t_2207c2d7fa043f 37
+  s_266155a992380b::t_febe83c7bf8b49 71
+web/tests/js/leg-store.test.mjs
+  s_266155a992380b::t_3275df3894d066 29-32,36-40
+  s_f2df2a2aa8a918::t_4d7d1bb3b9c5f7 1-5,7-26,42
+  s_266155a992380b::t_bc1cf9c2d152c3 6,27-28,33-35,41
+web/translations/messages.fr.yaml
+  s_f2df2a2aa8a918::t_2207c2d7fa043f 1345,1372-1373
+  s_f2df2a2aa8a918::t_fd5632bd4717b6 1258-1259
+  s_266155a992380b::t_771033e8a704b0 1418,1518-1521
+web/src/Elevation/RouteSnapper.php
+  s_f2df2a2aa8a918::t_1fb333fac935f6 28-30,71-88,91-112,116-122
+  s_f2df2a2aa8a918::t_7543b0ffe4dcef 12,54-70,89-90,123-130,154,158-170,205
+  s_f2df2a2aa8a918::t_e09dca34075d53 31-33,113-115
+  s_f2df2a2aa8a918::t_7c72ae3b2de447 43-44
+  s_f2df2a2aa8a918::t_376255e7ba8864 45-47,52,147-149
+  s_f2df2a2aa8a918::t_5441bff55d77cf 53,206-252
+web/tests/js/plan-place-menu.test.cjs
+  s_f2df2a2aa8a918::t_4d9eac31d98077 63-68
+  s_f2df2a2aa8a918::t_c97d6fa80ff812 69-75
+web/src/Elevation/LegSurfaces.php
+  s_f2df2a2aa8a918::t_5441bff55d77cf 11
+  s_266155a992380b::t_1c8dc85756646f 91,118
+web/templates/map/index.html.twig
+  s_f2df2a2aa8a918::t_fd5632bd4717b6 262-263
+  s_f2df2a2aa8a918::t_5f20c3d695e2e6 556-557
+  s_266155a992380b::t_c75fa3186e1e05 572,1132
+web/tests/js/signed-out.test.cjs
+  s_f2df2a2aa8a918::t_4d7d1bb3b9c5f7 21,26,30,34,38-39,48,50,59-61
+docs/specs/route-planner.md
+  s_f2df2a2aa8a918::t_7543b0ffe4dcef 308-314
+  s_f2df2a2aa8a918::t_97168725297809 821
+  s_f2df2a2aa8a918::t_eba7e682c2b019 556,560-573,582-583
+  s_f2df2a2aa8a918::t_dcd7dbb713e41e 575-581,585-591
+  s_f2df2a2aa8a918::t_e6269770bbf8ae 1213-1215
+  s_f2df2a2aa8a918::t_95c840ecc072de 300-307,315-316
+  s_f2df2a2aa8a918::t_88f010bb66550f 317-319
+  s_f2df2a2aa8a918::t_b2f59e7b6be692 574
+  s_f2df2a2aa8a918::t_afa4aa2bda5421 592-594
+  s_f2df2a2aa8a918::t_d15206d201f8b3 1210-1212
+  s_f2df2a2aa8a918::t_7131a783e97db6 1216-1218
+  s_266155a992380b::t_010fbc0dbe6441 116,184-185,320-323,356-362,595-601,684,797-800,831,833,838,869,885,907-913,1139-1153,1205-1209,1219-1225,1250-1252
+web/tests/js/plan-wiring.test.cjs
+  s_f2df2a2aa8a918::t_f1abd691274163 76
+  s_266155a992380b::t_d507873bd80f28 490,673,713,716-721
+web/translations/messages.nl.yaml
+  s_f2df2a2aa8a918::t_2207c2d7fa043f 1347,1374-1375
+  s_f2df2a2aa8a918::t_fd5632bd4717b6 1260-1261
+  s_266155a992380b::t_60a905d3d5e93e 1420,1520-1523
+web/src/Controller/PlanController.php
+  s_266155a992380b::t_e8c34dab5b1184 430
+  s_f2df2a2aa8a918::t_7543b0ffe4dcef 108-110,177-178,180,182-206,208-221,225-233,314,344-368,399-401,403
+  s_266155a992380b::t_db39e69a7478fb 427-429
+  s_f2df2a2aa8a918::t_aa921fb5e8bbb1 119,412
+  s_f2df2a2aa8a918::t_bc54504a03886d 49-51,243-245,295-310,312-313,317-343
+  s_f2df2a2aa8a918::t_5f20c3d695e2e6 24,102-104,116,121,163-165,169,179,222-224,316,369-398,402,404,556-561,565,568
+  s_f2df2a2aa8a918::t_1fb333fac935f6 52-54,234-242,246-294,311
+  s_f2df2a2aa8a918::t_5441bff55d77cf 43-45,122-162,166-168,170-176,207,405-411,413-418,431,555
+  s_f2df2a2aa8a918::t_376255e7ba8864 46-48,107,111,113
+  s_266155a992380b::t_ec8de6379bf608 315
+web/translations/privacy.fr.yaml
+  s_f2df2a2aa8a918::t_2207c2d7fa043f 37
+  s_266155a992380b::t_1e07cb108b376a 71
+web/assets/js/signed-out.js
+  s_f2df2a2aa8a918::t_4d7d1bb3b9c5f7 2-7,15-17
+web/assets/styles/map.css
+  s_f2df2a2aa8a918::t_1c50c4258805e2 2078-2080
+  s_f2df2a2aa8a918::t_04fe12e8f3389b 2081-2083
+  s_266155a992380b::t_b074b0733b88f5 1922,2128,2272,2274
+web/translations/privacy.en.yaml
+  s_f2df2a2aa8a918::t_2207c2d7fa043f 37
+  s_266155a992380b::t_18af98a2d401e6 71
+web/assets/map/map.js
+  s_f2df2a2aa8a918::t_0fc45a3e5ab5b0 8,53
+web/assets/map/panels.js
+  s_f2df2a2aa8a918::t_4502367c4c16f9 9
+  s_f2df2a2aa8a918::t_fd5632bd4717b6 157-158
+  s_f2df2a2aa8a918::t_caabe294a48b19 329-337
+  s_f2df2a2aa8a918::t_880d737329792c 159
+  s_f2df2a2aa8a918::t_022308f0d3784d 338
+web/tests/Controller/PlanControllerTest.php
+  s_f2df2a2aa8a918::t_bc54504a03886d 404-405,414-419,421
+  s_f2df2a2aa8a918::t_05078fc0d1b82e 343-358
+  s_f2df2a2aa8a918::t_1fb333fac935f6 403,406-413,422-436
+  s_f2df2a2aa8a918::t_5f20c3d695e2e6 190-207,368,390
+  s_f2df2a2aa8a918::t_2c6829585796d6 380-389,391-402
+  s_f2df2a2aa8a918::t_7a95c964425f42 359-367,369-379
+  s_f2df2a2aa8a918::t_b00f67d0897865 420
+web/translations/privacy.de.yaml
+  s_f2df2a2aa8a918::t_2207c2d7fa043f 37
+  s_266155a992380b::t_77271837f63250 71
+web/tests/Elevation/ElevationClientTest.php
+  s_f2df2a2aa8a918::t_007198de22297a 150-184
+docs/specs/privacy-notice.md
+  s_f2df2a2aa8a918::t_4d7d1bb3b9c5f7 297-298
+  s_f2df2a2aa8a918::t_2207c2d7fa043f 299-301
+web/tests/js/plan-model.test.mjs
+  s_f2df2a2aa8a918::t_eba7e682c2b019 96
+  s_f2df2a2aa8a918::t_233bf6e818154b 97
+  s_266155a992380b::t_ef695bd24d4602 394,789
+web/assets/map/render.js
+  s_f2df2a2aa8a918::t_c97d6fa80ff812 77-82,86-87,91,94,516-517,529-530,542-543
+web/src/Controller/MapController.php
+  s_266155a992380b::t_8245dabcb0be17 712,720-722,739
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7933f58e692832b4f34b2c5cb168d1bfd02d6a36",
+  "prompts": {},
+  "sessions": {
+    "s_266155a992380b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d6d2a9c8-dd96-48df-be16-07f9aa0ce892",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f2df2a2aa8a918": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed0d77c5-c8d0-43ea-9923-231bd4b99809",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
