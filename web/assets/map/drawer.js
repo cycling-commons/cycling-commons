@@ -789,11 +789,27 @@ function buildRecord(layer, f){
   const plan = pp
     ? `<button type="button" class="cc-d-act cc-d-plan" data-plan-add data-plan-item="${escPend(pp.item)}" data-plan-letter="${escPend(pp.letter || '')}" data-plan-name="${escPend(pp.name)}" data-plan-lat="${pp.lat}" data-plan-lng="${pp.lng}">${D.planAdd || '+ Add to ride'}</button>`
     : '';
+  /* How safe did it feel (docs/specs/traffic-measurements.md section 10, owner 2026-10-19 "option A"): a road's card,
+     an OpenStreetMap line or a curated road, opens the felt-safety card for its way. road-safety.js binds the click.
+     A guest gets the tools panel's own sign-in link, back to the mode. */
+  const feltWay = layer.key === 'surface'
+    ? (Number.isInteger(f.wayId) ? f.wayId : (Number((/^way\/(\d+)$/.exec(f.osmRef || '') || [])[1]) || null))
+    : null;
+  const feltPath = f.geom && Array.isArray(f.geom.path) ? f.geom.path : null;
+  const feltAt = f.geom && Array.isArray(f.geom.ll) ? f.geom.ll
+    : (feltPath && feltPath.length ? feltPath[Math.floor(feltPath.length / 2)] : null);
+  const feltLogin = document.querySelector('[data-road-safety-login]');
+  const felt = feltWay && feltAt
+    ? (window.CC_ROAD_SAFETY
+        ? `<button type="button" class="cc-d-act cc-d-felt" data-rs-way="${feltWay}" data-rs-lat="${Number(feltAt[0])}" data-rs-lng="${Number(feltAt[1])}">${escPend(D.roadSafetyAsk || 'How safe did it feel?')}</button>`
+        : (feltLogin ? `<a class="cc-d-act cc-d-felt" href="${escPend(feltLogin.getAttribute('href') || '')}">${escPend(D.roadSafetyAsk || 'How safe did it feel?')}</a>` : ''))
+    : '';
   const grp = (html, cls) => html ? `<div class="cc-d-grp${cls?' '+cls:''}">${html}</div>` : '';
   const act = grp(plan, 'cc-d-grp-plan')
     + grp(confirmPanel + vote, 'cc-d-grp-community')
     + grp(edit, 'cc-d-grp-edit')
-    + grp(osmConfirm + stateRow, 'cc-d-grp-state');
+    + grp(osmConfirm + stateRow, 'cc-d-grp-state')
+    + grp(felt, 'cc-d-grp-felt');
   const desc = f.desc ? `<p class="cc-d-desc">${escPend(f.desc)}${f.descTr?` <span class="cc-d-tr">· ${escPend(D.autoTranslated || 'auto-translated')}</span>`:''}</p>` : '';
   // History slot: real DB ids only; filled async by loadItemHistory (race-guarded).
   const histSlot = f.id!=null ? `<div class="cc-d-hist" id="cc-d-hist-slot" data-item="${f.id}"></div>` : '';

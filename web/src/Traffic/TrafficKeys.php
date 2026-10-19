@@ -12,7 +12,8 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  * The secrets behind traffic storage, all derived from TRAFFIC_SECRET with
  * HKDF-SHA256: one AES-256-GCM key for the waiting room's payloads and two
  * HMAC keys (block, seen). A waiting line is found by its block without its
- * road or time ever being stored readable.
+ * road or time ever being stored readable. Felt-safety marks (§10) wait in a
+ * room of their own under their own pair, `safety-enc` and `safety-block`.
  *
  * TRAFFIC_SECRET is its own variable, never APP_SECRET or ENCRYPTION_SECRET,
  * and there is no fallback: losing it makes every waiting line unreadable,
@@ -30,6 +31,11 @@ final class TrafficKeys
     /** The test environment's key (web/.env.test). Public on purpose; tests only. */
     public const string TEST_SECRET = 'nuBwuANqdfd0r2fBj9Cs+698Zv9KUtJSd6PQH0mhmUo=';
 
+    /** The waiting room's payload key, the default of TrafficCipher. */
+    public const string ENC = 'enc';
+    /** The felt-safety waiting room's payload key (traffic-measurements.md §10). */
+    public const string SAFETY_ENC = 'safety-enc';
+
     /** @var array<string, string> purpose => derived key */
     private array $derived = [];
 
@@ -41,9 +47,10 @@ final class TrafficKeys
     ) {
     }
 
-    public function encryptionKey(): string
+    /** @param self::ENC|self::SAFETY_ENC $purpose */
+    public function encryptionKey(string $purpose = self::ENC): string
     {
-        return $this->derive('enc');
+        return $this->derive($purpose);
     }
 
     /**
@@ -57,6 +64,18 @@ final class TrafficKeys
     {
         return hash_hmac('sha256', implode('|', [$line['way'], $line['dir'], $line['band'], $line['dayType']]),
             $this->derive('block'), true);
+    }
+
+    /**
+     * The felt-safety waiting room's name for a mark's block: one road, part
+     * of the day and day type, across quarters (traffic-measurements.md §10).
+     *
+     * @param array{way: int, band: int, dayType: string, ...} $mark
+     */
+    public function safetyBlockKey(array $mark): string
+    {
+        return hash_hmac('sha256', implode('|', [$mark['way'], $mark['band'], $mark['dayType']]),
+            $this->derive('safety-block'), true);
     }
 
     /** The stored form of a block code the browser sent (64 hex characters). */

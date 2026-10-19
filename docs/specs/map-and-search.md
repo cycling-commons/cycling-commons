@@ -3100,7 +3100,11 @@ as a normal user").
   and Scout, inside the same `ROLE_USER` gate. The panel's order (owner
   2026-09-18): Check my ride, Scout (with the Scout mark, "Add a Scout ride",
   one link for everyone), Add a climb, Propose a route (its own item,
-  `ROLE_USER`, locked when logged out), and Contribute last as the catch-all.
+  `ROLE_USER`, locked when logged out), How safe did a road feel? (Mark a
+  road, which turns on the road-safety mode; logged out it links to login
+  and comes back to the map with the mode on; not on the ride review;
+  [traffic-measurements.md](traffic-measurements.md) section 10), and
+  Contribute last as the catch-all.
   A locked tool shows the same orange button as the others, linking to login,
   with no hint text under it (owner 2026-10-11). Its actions carry the map's
   button colour as an accent: orange outline, panel-coloured text, filled

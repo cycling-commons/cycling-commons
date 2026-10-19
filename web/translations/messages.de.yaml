@@ -1567,6 +1567,20 @@ map:
   scout_hint: 'Markierungen und Abschnitte aus deiner Tourdatei werden zu Einreichungen für die Cycling Commons.'
   propose_route_go: 'Deine Route hochladen'
   propose_route_note: 'Teile eine Runde, die sich lohnt.'
+  road_safety_heading: "Wie sicher fühlte sich eine Straße an?"
+  road_safety_note: "Wähle auf der Karte eine Straße, die du gefahren bist, und sag, ob sie sich sicher oder unsicher anfühlte, für eine Tageszeit."
+  road_safety_go: "Straße markieren"
+  road_safety_felt: "Wie fühlte es sich an?"
+  road_safety_safe: "Sicher"
+  road_safety_unsafe: "Unsicher"
+  road_safety_when: "Wann?"
+  road_safety_band: "Tageszeit"
+  road_safety_day: "Tag"
+  road_safety_workday: "Werktag"
+  road_safety_weekend: "Wochenende oder Feiertag"
+  road_safety_quarter: "Quartal"
+  road_safety_send: "Senden"
+  road_safety_close: "Markieren beenden"
   rc_checking: 'Prüfung läuft…'
   rc_results: 'Ergebnisse'
   rc_clear: 'löschen'
@@ -1803,6 +1817,7 @@ map:
   mtraffic_moderate: '1 bis 3 Autos pro km'
   mtraffic_busy: '3 oder mehr Autos pro km'
   mtraffic_pattern: 'Gepunktet: Radweg. Gestrichelt: Radfahrstreifen. Durchgezogen: Fahrbahn.'
+  mtraffic_felt_only: "Grau: noch kein gemessener Verkehr, nur wie es sich für Radfahrende anfühlte."
   mtraffic_compare: 'Mit den Angaben der Radfahrenden vergleichen'
   d_traffic_group_all: 'Alle Zeiten'
   d_traffic_group_workday: 'Werktage'
@@ -1822,6 +1837,28 @@ map:
   d_traffic_dir_f: 'In eine Richtung'
   d_traffic_dir_b: 'In die andere Richtung'
   d_traffic_none: 'Noch keine Straße hat genug Fahrten in dieser Gruppe.'
+  d_traffic_felt_safe: "Fühlte sich sicher an"
+  d_traffic_felt_mixed: "Gemischtes Gefühl"
+  d_traffic_felt_unsafe: "Fühlte sich unsicher an"
+  d_road_safety_zoom: "Zoom hinein, um eine Straße zu wählen."
+  d_road_safety_pick: "Wähle eine Straße auf der Karte, um zu sagen, wie sicher sie sich anfühlte."
+  d_road_safety_many: "{n} Straßen"
+  d_road_safety_more: "Strg+Klick auf eine weitere Straße fügt sie hinzu, mit den Straßen derselben Art dazwischen (bis etwa 15 km auseinander, höchstens 50 Straßen); auf eine gewählte nimmt sie wieder heraus."
+  d_road_safety_too_many: "Das ist mehr, als eine Antwort fassen kann: Kreuze weniger Zeiten an oder wähle weniger Straßen."
+  d_road_safety_filling: "Die Straßen dazwischen werden hinzugefügt…"
+  d_road_safety_max: "Eine Antwort umfasst höchstens {n} Straßen."
+  d_road_safety_ask: "Wie sicher fühlte es sich an?"
+  d_road_safety_not_piece: "Diese Straße ist nicht in den Straßendaten, darum kann sie nicht markiert werden."
+  d_road_safety_no_tiles: "Straßendaten sind noch nicht verfügbar, daher kann keine Straße markiert werden."
+  d_road_safety_label_p: "Radweg"
+  d_road_safety_label_l: "Radfahrstreifen"
+  d_road_safety_label_r: "Fahrbahn"
+  d_road_safety_quarter: "Q{n} {y}"
+  d_road_safety_quarter_now: "Q{n} {y}, dieses Quartal"
+  d_road_safety_sending: "Wird gesendet…"
+  d_road_safety_sent: "Danke. Deine Markierung wartet, bis genug Radfahrende diese Straße für dieselbe Zeit markiert haben; dann sieht das Kuratorenteam, wie sie sich anfühlte."
+  d_road_safety_limited: "Du hast in der letzten Stunde viele Straßen markiert. Warte eine Weile und sende erneut."
+  d_road_safety_failed: "Das hat nicht geklappt. Versuch es gleich noch einmal."
   d_scout_no_fix: '{n} Tags hatten keinen GPS-Fix und lassen sich nicht setzen'
   d_scout_stretch_to_end: 'Kein ENDE-Tipp. Dieser Abschnitt läuft bis zum Ende der Fahrt. Lege fest, wo er endet, bevor du ihn sendest.'
   d_scout_set_end: 'Ende auf der Karte festlegen'
@@ -2923,6 +2960,10 @@ moderate:
     unplaced: '%n% Straßen mit Daten haben keine Region: Sie wurden gesendet, bevor die Straßendaten Regionen nannten, oder liegen außerhalb jeder bekannten Region.'
     built: 'Zuletzt aktualisiert'
     refresh: 'Die Zahlen werden alle 6 Stunden neu berechnet.'
+    felt_h: "Gefühlte Sicherheit pro Region"
+    felt_lead: "Jede Straße, die jemand auf der Karte als sicher oder unsicher markiert hat, zählt hier ab der ersten Markierung. Im Aufbau: noch nicht genug Markierungen für dieselbe Zeit, daher bleibt verborgen, wie sie sich anfühlte, auch für das Kuratorenteam. Nutzbar: Die Kuratorenkarte zeigt, ob sie sich sicher, gemischt oder unsicher anfühlte."
+    felt_empty: "Noch kein Land hat Straßendaten."
+    felt_unplaced: "%n% markierte Straßen haben keine Region: Die Straßendaten nannten keine, oder sie liegen außerhalb jeder bekannten Region."
     compare_h: 'Nutzbare Straßen: angegeben neben gemessen'
     kicker: 'Gemessener Verkehr'
     heading: 'Angegeben neben gemessen'

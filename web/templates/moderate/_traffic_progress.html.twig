@@ -1,0 +1,39 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  Roads with data per onboarded country and region, counts only
+  (traffic-measurements.md sections 4.6 and 10). A road's own numbers stay
+  hidden until it is usable. `kind` names the data attributes: `progress`
+  for measured traffic, `felt` for felt safety, so each table is found on
+  its own.
+#}
+{% for c in progress.countries %}
+  {# One fold per country: open when it has data, folded when it has none. #}
+  <details class="tprog-country" data-{{ kind }}-country="{{ c.country }}"{{ c.building + c.usable > 0 ? ' open' }}>
+    <summary>
+      {% if c.country|lower in flags %}<img class="flag" src="{{ asset('flags/' ~ c.country|lower ~ '.svg') }}" alt="" width="20" height="15">{% endif %}
+      <span class="name">{{ c.name }}</span>
+      <span class="tot"><span data-building>{{ c.building }}</span> <small>{{ 'moderate.traffic.col_building'|trans }}</small></span>
+      <span class="tot"><span data-usable>{{ c.usable }}</span> <small>{{ 'moderate.traffic.col_usable'|trans }}</small></span>
+    </summary>
+    <div class="tcmp-wrap">
+      <table class="tcmp">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'moderate.traffic.col_area'|trans }}</th>
+            <th scope="col">{{ 'moderate.traffic.col_building'|trans }}</th>
+            <th scope="col">{{ 'moderate.traffic.col_usable'|trans }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in c.regions %}
+            <tr data-{{ kind }}-region="{{ r.name }}">
+              <td>{{ r.name }}</td>
+              <td class="n{{ r.building == 0 ? ' zero' }}" data-building>{{ r.building }}</td>
+              <td class="n{{ r.usable == 0 ? ' zero' }}" data-usable>{{ r.usable }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </details>
+{% endfor %}

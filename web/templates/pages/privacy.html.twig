@@ -63,6 +63,8 @@
       <li>{{ 'privacy.collect_contribute_roadmap'|trans|rich }}</li>
       <li>{{ 'privacy.collect_rides'|trans|rich }}</li>
       <li>{{ 'privacy.collect_map_presets'|trans|rich }}</li>
+      {# traffic-measurements.md section 10: a felt-safety mark, sealed in its waiting room, never next to the account. #}
+      <li data-road-safety>{{ 'privacy.collect_road_safety'|trans|rich }}</li>
       {# contact-and-support.md 5 and 9: a published bug carries only the
          curator's public title and text, to the known-issues page and GitHub. #}
       <li>{{ 'privacy.collect_contribute_bugs'|trans|rich }}</li>
@@ -243,6 +245,7 @@
       <li>{{ 'privacy.retention_ratelimit'|trans|rich }}</li>
       <li>{{ 'privacy.retention_contributions'|trans|rich }}</li>
       <li>{{ 'privacy.retention_traffic'|trans|rich }}</li>
+      <li data-road-safety>{{ 'privacy.retention_road_safety'|trans|rich }}</li>
       {# Threads live as long as the account (owner 2026-10-01,
          ContributionDeletionHook); Trash keeps a row 30 days, then the purge
          (TrashBin::TRASH_DAYS, moderation-and-contribution.md §6, §8). #}

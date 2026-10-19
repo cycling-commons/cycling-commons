@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace App\Traffic\Command;
 
+use App\Traffic\SafetyPool;
+use App\Traffic\SafetyStore;
 use App\Traffic\TrafficPool;
 use App\Traffic\TrafficStore;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -17,7 +19,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\Attribute\When;
 
 /**
- * Prints the traffic tables decrypted, for development only. Encryption is
+ * Prints the traffic tables decrypted, for development only, and the
+ * felt-safety tables after them (traffic-measurements.md §10). Encryption is
  * never switched off; this is how a developer reads what is stored.
  *
  * @see docs/specs/traffic-measurements.md §4.8
@@ -25,12 +28,14 @@ use Symfony\Component\DependencyInjection\Attribute\When;
  * @api
  */
 #[When(env: 'dev')]
-#[AsCommand(name: 'app:traffic:dump', description: 'Print the traffic tables decrypted (development only)')]
+#[AsCommand(name: 'app:traffic:dump', description: 'Print the traffic and felt-safety tables decrypted (development only)')]
 final class TrafficDumpCommand extends Command
 {
     public function __construct(
         private readonly TrafficStore $store,
         private readonly TrafficPool $pool,
+        private readonly SafetyStore $safetyStore,
+        private readonly SafetyPool $safetyPool,
     ) {
         parent::__construct();
     }
@@ -68,6 +73,28 @@ final class TrafficDumpCommand extends Command
         }
         $output->writeln('<info>traffic_pool</info> (the waiting room, decrypted)');
         $waiting->render();
+
+        $felt = new Table($output);
+        $felt->setHeaders(['way', 'region', 'label', 'band', 'day type', 'quarter', 'safe', 'unsafe']);
+        foreach ($this->safetyStore->totals() as $t) {
+            if (null !== $way && $t['way'] !== $way) {
+                continue;
+            }
+            $felt->addRow([$t['way'], $t['region'] ?? '-', $t['label'], $t['band'], $t['dayType'], $t['quarter'], $t['safe'], $t['unsafe']]);
+        }
+        $output->writeln('<info>safety_total</info> (plain counts of felt safety)');
+        $felt->render();
+
+        $marks = new Table($output);
+        $marks->setHeaders(['way', 'label', 'band', 'day type', 'quarter', 'felt']);
+        foreach ($this->safetyPool->waiting() as $m) {
+            if (null !== $way && $m['way'] !== $way) {
+                continue;
+            }
+            $marks->addRow([$m['way'], $m['label'], $m['band'], $m['dayType'], $m['quarter'], $m['felt']]);
+        }
+        $output->writeln('<info>safety_pool</info> (the felt-safety waiting room, decrypted)');
+        $marks->render();
 
         return Command::SUCCESS;
     }

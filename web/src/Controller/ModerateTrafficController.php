@@ -23,6 +23,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * (docs/specs/traffic-measurements.md §4.6). A road-surface item that names an
  * OSM way and says Quiet, Moderate or Busy is listed when that way has a
  * measured group that passed the disclosure rules; nothing else appears.
+ * Above it, how far measured traffic and felt safety have come per region.
  *
  * @api
  */
@@ -76,6 +77,8 @@ final class ModerateTrafficController extends AbstractController
 
         return $this->render('moderate/traffic.html.twig', [
             'progress' => $view->progress(),
+            // Felt safety (traffic-measurements.md §10): roads with marks, counted the same way.
+            'felt_progress' => $view->feltProgress(),
             // Country codes that have a flag in assets/flags, drawn before the country's name.
             'flags' => array_map(static fn (string $f): string => basename($f, '.svg'), glob($this->getParameter('kernel.project_dir').'/assets/flags/*.svg') ?: []),
             'built_at' => $view->builtAt(),

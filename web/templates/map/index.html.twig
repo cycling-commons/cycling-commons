@@ -279,6 +279,7 @@
             <li><span style="--c:#D92D20"></span>{{ 'map.mtraffic_busy'|trans }}</li>
           </ul>
           <p class="traffic-note">{{ 'map.mtraffic_pattern'|trans }}</p>
+          <p class="traffic-note">{{ 'map.mtraffic_felt_only'|trans }}</p>
           <a class="traffic-note" href="{{ path('moderate_traffic') }}">{{ 'map.mtraffic_compare'|trans }} &#8599;</a>
           <p class="traffic-note" id="trafficNote" hidden></p>
         </div>
@@ -478,6 +479,23 @@
         {% include 'map/_locked_tool.html.twig' with {label: 'map.propose_route_go'|trans} only %}
         {% endif %}
       </div>
+
+      {# How safe did a road feel (traffic-measurements.md section 10): a
+         signed-in rider picks a road piece on the map and marks it safe or
+         unsafe; road-safety.js runs the mode. A guest signs in first and comes
+         back to the map with the mode on. Not on the ride review, whose map
+         clicks belong to the ride. #}
+      {% if not scout_review|default(false) %}
+      <div class="grp">
+        <h3>{{ 'map.road_safety_heading'|trans }}</h3>
+        <p class="cc-addclimb-note">{{ 'map.road_safety_note'|trans }}</p>
+        {% if is_granted('ROLE_USER') %}
+        <button class="cc-ride-btn" id="roadSafetyGo" type="button" aria-controls="roadSafety" aria-expanded="false">{{ 'map.road_safety_go'|trans }}</button>
+        {% else %}
+        <a class="cc-addclimb-go cc-locked" data-road-safety-login href="{{ path('login', {_target_path: path('map', {'road-safety': 1})}) }}">{{ 'map.road_safety_go'|trans }}</a>
+        {% endif %}
+      </div>
+      {% endif %}
 
       {# Anything else goes through the wizard, which the map's own orange
          Contribute button opens. Last, because it is the catch-all; said here
@@ -749,6 +767,47 @@
        gradients are derived from the DEM, so the short form belongs in the
        attribution with the full notice one click away. #}
     <div id="map" data-credits="{{ path('credits') }}"></div>
+    {# How safe did a road feel (traffic-measurements.md section 10): the card
+       of the road-safety mode, over the map while the rider picks a road.
+       road-safety.js fills the road, the defaults and the answer. #}
+    {% if is_granted('ROLE_USER') and not scout_review|default(false) %}
+    <section class="cc-rs" id="roadSafety" aria-labelledby="roadSafetyH" hidden>
+      <div class="cc-rs-head">
+        <h3 id="roadSafetyH">{{ 'map.road_safety_heading'|trans }}</h3>
+        <button type="button" class="cc-rs-x" id="roadSafetyX" aria-label="{{ 'map.road_safety_close'|trans }}" title="{{ 'map.road_safety_close'|trans }}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+      <p class="cc-rs-hint" id="roadSafetyHint" role="status"></p>
+      <form class="cc-rs-form" id="roadSafetyForm" hidden>
+        <p class="cc-rs-piece"><span class="cc-rs-sw" id="roadSafetySw" aria-hidden="true"></span><b id="roadSafetyPiece"></b></p>
+        {# Ctrl+click picks several roads for one answer (traffic-measurements.md section 10). #}
+        <p class="cc-rs-more" id="roadSafetyMore"></p>
+        <fieldset class="cc-rs-felt">
+          <legend>{{ 'map.road_safety_felt'|trans }}</legend>
+          <div class="chips">
+            <button type="button" class="chip" data-felt="safe" aria-pressed="false">{{ 'map.road_safety_safe'|trans }}</button>
+            <button type="button" class="chip" data-felt="unsafe" aria-pressed="false">{{ 'map.road_safety_unsafe'|trans }}</button>
+          </div>
+        </fieldset>
+        <fieldset class="cc-rs-when">
+          <legend>{{ 'map.road_safety_when'|trans }}</legend>
+          {# Each field ticks one or more (owner 2026-10-19: "make all fields checkboxes. I ride there all of the time and it is always the same"). #}
+          <p class="cc-rs-sub">{{ 'map.road_safety_band'|trans }}</p>
+          <div class="chips" id="roadSafetyBands" role="group" aria-label="{{ 'map.road_safety_band'|trans }}">
+            {% for b in ['night', 'morning', 'day', 'evening', 'late'] %}<label class="chip"><input type="checkbox" name="band" value="{{ loop.index0 }}">{{ ('map.d_traffic_band_' ~ b)|trans }}</label>{% endfor %}
+          </div>
+          <p class="cc-rs-sub">{{ 'map.road_safety_day'|trans }}</p>
+          <div class="chips" id="roadSafetyDays" role="group" aria-label="{{ 'map.road_safety_day'|trans }}">
+            <label class="chip"><input type="checkbox" name="dayType" value="workday">{{ 'map.road_safety_workday'|trans }}</label>
+            <label class="chip"><input type="checkbox" name="dayType" value="weekend">{{ 'map.road_safety_weekend'|trans }}</label>
+          </div>
+          <p class="cc-rs-sub">{{ 'map.road_safety_quarter'|trans }}</p>
+          <div class="chips" id="roadSafetyQuarters" role="group" aria-label="{{ 'map.road_safety_quarter'|trans }}"></div>
+        </fieldset>
+        <button type="submit" class="cc-rs-send" id="roadSafetySend" disabled>{{ 'map.road_safety_send'|trans }}</button>
+        <p class="cc-rs-status" id="roadSafetyStatus" role="status"></p>
+      </form>
+    </section>
+    {% endif %}
     {# The ride bar (route-planner.md section 3): the planned ride's figures
        while its panel is closed, with a way back in. plan.js fills and shows it. #}
     {# The height profile along the foot of the map (route-planner.md section
@@ -1265,6 +1324,11 @@ window.CC_VENDOR = {{ {
   window.CC_SCOUT_TOKEN = {{ csrf_token('scout-tags')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# The stateless 'scout-traffic' token the traffic step sends with its summary
      (docs/specs/traffic-measurements.md §4.1). #}
+  {# Felt-safety marks from the map (traffic-measurements.md section 10): the
+     endpoint and its stateless 'road-safety' token. #}
+  {% if not scout_review|default(false) %}
+  window.CC_ROAD_SAFETY = {{ {url: path('map_road_safety'), token: csrf_token('road-safety')}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT') b-or constant('JSON_UNESCAPED_SLASHES'))|raw }};
+  {% endif %}
   {% if scout_review|default(false) %}
   window.CC_TRAFFIC_TOKEN = {{ csrf_token('scout-traffic')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {% endif %}

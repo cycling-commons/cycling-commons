@@ -7,6 +7,8 @@ declare(strict_types=1);
 namespace App\Tests\Traffic;
 
 use App\Traffic\Command\TrafficDumpCommand;
+use App\Traffic\SafetyPool;
+use App\Traffic\SafetyStore;
 use App\Traffic\TrafficPool;
 use App\Traffic\TrafficStore;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -30,7 +32,7 @@ final class TrafficDumpCommandTest extends KernelTestCase
         $pool = static::getContainer()->get(TrafficPool::class);
         $pool->add(TrafficStoreTest::line(['way' => 40486875]));
 
-        $tester = new CommandTester(new TrafficDumpCommand($store, $pool));
+        $tester = new CommandTester($this->command());
         $tester->execute(['--way' => '40486875']);
 
         $out = $tester->getDisplay();
@@ -39,5 +41,30 @@ final class TrafficDumpCommandTest extends KernelTestCase
         self::assertMatchesRegularExpression('/\|\s*lines\s*\|\s*day groups\s*\|/', $out);
         self::assertStringContainsString('traffic_pool', $out, 'the waiting room is shown too');
         self::assertDoesNotMatchRegularExpression('/rider|voice/', $out, 'no rider anywhere');
+    }
+
+    private function command(): TrafficDumpCommand
+    {
+        $c = static::getContainer();
+
+        return new TrafficDumpCommand($c->get(TrafficStore::class), $c->get(TrafficPool::class), $c->get(SafetyStore::class), $c->get(SafetyPool::class));
+    }
+
+    /** Felt safety (§10): its counts and its waiting room, decrypted, beside the traffic tables. */
+    public function testFeltSafetyShowsItsCountsAndItsWaitingRoom(): void
+    {
+        self::bootKernel();
+        $mark = SafetyPoolTest::mark(['way' => 40486875]);
+        static::getContainer()->get(SafetyStore::class)->addToTotals([$mark, ['felt' => 'safe'] + $mark]);
+        static::getContainer()->get(SafetyPool::class)->add(['band' => 1] + $mark);
+
+        $tester = new CommandTester($this->command());
+        $tester->execute(['--way' => '40486875']);
+
+        $out = $tester->getDisplay();
+        self::assertStringContainsString('safety_total', $out);
+        self::assertMatchesRegularExpression('/\|\s*1\s*\|\s*1\s*\|/', $out, 'safe 1, unsafe 1');
+        self::assertStringContainsString('safety_pool', $out);
+        self::assertStringContainsString('unsafe', $out, 'the waiting mark, decrypted');
     }
 }

@@ -8,6 +8,8 @@ namespace App\Tests\Traffic;
 
 use App\Entity\User;
 use App\Service\UserDeletionService;
+use App\Traffic\SafetyPool;
+use App\Traffic\SafetyStore;
 use App\Traffic\TrafficStore;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -38,12 +40,19 @@ final class TrafficAccountDeletionTest extends KernelTestCase
             'way' => 11, 'region' => null, 'dir' => 'f', 'label' => 'r', 'band' => 2, 'dayType' => 'workday', 'quarter' => '2026-Q4', 'dayGroup' => 3,
             'distanceM' => 900, 'timeS' => 150, 'passes' => 2, 'nearby' => 0, 'avgSpeedKmh' => 21.6, 'carSpeedBins' => null,
         ]);
+        $c->get(SafetyStore::class)->addToTotals([SafetyPoolTest::mark(['way' => 11])]);
+        $c->get(SafetyPool::class)->add(SafetyPoolTest::mark(['way' => 11]));
         $db = $c->get(Connection::class);
-        $before = $db->fetchAllAssociative('SELECT * FROM traffic_total');
+        $tables = static fn (): array => [
+            $db->fetchAllAssociative('SELECT * FROM traffic_total'),
+            $db->fetchAllAssociative('SELECT * FROM safety_total'),
+            $db->fetchAllAssociative("SELECT encode(id, 'hex') AS id, encode(block_key, 'hex') AS block_key, encode(payload, 'hex') AS payload FROM safety_pool"),
+        ];
+        $before = $tables();
 
         $c->get(UserDeletionService::class)->purge($leaving);
 
-        self::assertSame($before, $db->fetchAllAssociative('SELECT * FROM traffic_total'));
+        self::assertSame($before, $tables(), 'felt-safety marks name nobody either (§10)');
     }
 
     public function testTheClearTextDumpIsNotACommandOutsideDevelopment(): void

@@ -7,6 +7,7 @@ import { map } from './map-init.js';
 import { D, tpl } from './i18n.js';
 import { uKm, uM } from './units.js';
 import { summariseRide, makeChunks, sendChunks, postTraffic, unmatchedStops } from '../lib/traffic-ride.js';
+import { LABEL_COLOURS as LABEL_COLOUR } from '../lib/traffic-colours.js';
 
 const el = id => document.getElementById(id);
 const t = (k, fallback) => (D && D[k]) || fallback;
@@ -20,10 +21,9 @@ const UNMATCHED_RED = '#D92D20';
 const EYE_SVG = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">'
   + '<path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>'
   + '<circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
-/* A sent road takes the colour of where the rider rode relative to the cars:
-   blue bike only, amber a painted cycle lane, purple shared with the cars.
-   Red dashes are what is not sent. */
-const LABEL_COLOUR = { p: '#2F6FDB', l: '#E8A33D', r: '#7A3FB8' };
+/* A sent road takes the colour of where the rider rode relative to the cars
+   (LABEL_COLOUR): blue bike only, amber a painted cycle lane, purple shared
+   with the cars. Red dashes are what is not sent. */
 
 let summary = null;
 let pending = null;

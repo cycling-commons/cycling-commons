@@ -12,7 +12,9 @@ namespace App\Traffic;
  * as associated data, so a blob that was changed, moved to another row, or
  * sealed with another key does not open. The JSON is padded with spaces to a
  * multiple of PAD_STEP bytes, so a blob's size says little about what a
- * waiting line holds.
+ * waiting line holds. The key is the waiting room's (`enc`) unless the
+ * cipher is made for another purpose, such as the felt-safety marks'
+ * (`safety-enc`, traffic-measurements.md §10).
  *
  * @see docs/specs/traffic-measurements.md §4.2
  *
@@ -25,8 +27,11 @@ final class TrafficCipher
     private const int TAG = 16;
     public const int PAD_STEP = 256;
 
-    public function __construct(private readonly TrafficKeys $keys)
-    {
+    /** @param TrafficKeys::ENC|TrafficKeys::SAFETY_ENC $purpose */
+    public function __construct(
+        private readonly TrafficKeys $keys,
+        private readonly string $purpose = TrafficKeys::ENC,
+    ) {
     }
 
     /**
@@ -39,7 +44,7 @@ final class TrafficCipher
         $json .= str_repeat(' ', (self::PAD_STEP - \strlen($json) % self::PAD_STEP) % self::PAD_STEP);
         $nonce = random_bytes(self::NONCE);
         $tag = '';
-        $ct = openssl_encrypt($json, self::CIPHER, $this->keys->encryptionKey(),
+        $ct = openssl_encrypt($json, self::CIPHER, $this->keys->encryptionKey($this->purpose),
             \OPENSSL_RAW_DATA, $nonce, $tag, $row, self::TAG);
         if (false === $ct) {
             throw new \RuntimeException('Traffic payload could not be encrypted.');
@@ -54,7 +59,7 @@ final class TrafficCipher
         if (\strlen($blob) < self::NONCE + self::TAG) {
             throw new \RuntimeException('Traffic payload is too short.');
         }
-        $plain = openssl_decrypt(substr($blob, self::NONCE + self::TAG), self::CIPHER, $this->keys->encryptionKey(),
+        $plain = openssl_decrypt(substr($blob, self::NONCE + self::TAG), self::CIPHER, $this->keys->encryptionKey($this->purpose),
             \OPENSSL_RAW_DATA, substr($blob, 0, self::NONCE), substr($blob, self::NONCE, self::TAG), $row);
         if (false === $plain) {
             throw new \RuntimeException('Traffic payload does not open with this key.');

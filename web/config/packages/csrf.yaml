@@ -22,6 +22,8 @@ framework:
             - map-preset
             - scout-tags
             - scout-traffic
+            # Felt-safety marks from the map (traffic-measurements.md §10).
+            - road-safety
             - time-zone
             - my-area
             - map-hint

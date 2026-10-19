@@ -242,7 +242,8 @@ test('the map key link opens the legend on the map, never the left drawer', () =
 
 test('a sent road takes the colour of its kind; red dashes on top are not sent', () => {
   // Bike only blue, painted cycle lane amber, shared with the cars purple.
-  assert.match(traffic, /const LABEL_COLOUR = \{ p: '#2F6FDB', l: '#E8A33D', r: '#7A3FB8' \}/);
+  assert.match(traffic, /import \{ LABEL_COLOURS as LABEL_COLOUR \} from '\.\.\/lib\/traffic-colours\.js'/);
+  assert.match(read('assets/lib/traffic-colours.js'), /LABEL_COLOURS = Object\.freeze\(\{ p: '#2F6FDB', l: '#E8A33D', r: '#7A3FB8' \}\)/);
   const draw = fn(traffic, 'drawPieces');
   assert.match(draw, /'line-color': \['match', \['get', 'label'\], 'p', LABEL_COLOUR\.p, 'l', LABEL_COLOUR\.l, LABEL_COLOUR\.r\]/);
   assert.doesNotMatch(traffic, /SENT_GREEN|PIECE_CASE|LABEL_CASE/);

@@ -216,6 +216,41 @@
   .traffic-note{margin:0;color:rgb(var(--chrome-fg) / .7);line-height:1.4}
   .traffic-pop{font-size:.78rem;line-height:1.45}
   .traffic-pop p{margin:.25rem 0 0}
+  /* How safe did a road feel (traffic-measurements.md §10): the card of the
+     road-safety mode over the top of the map, no wider than its fields.
+     Buttons squarish, Safe and Unsafe round chips. */
+  .cc-rs{position:absolute;left:50%;top:4.6rem;transform:translateX(-50%);z-index:1250;width:min(22rem,calc(100% - 2rem));max-height:calc(100% - 6rem);overflow:auto;padding:.75rem .9rem .85rem;background:var(--chrome-bg);color:var(--chrome-fg-solid);border:1px solid rgb(var(--chrome-fg) / .18);border-radius:10px;box-shadow:0 18px 48px -16px rgba(0,0,0,.6);font-size:.84rem;line-height:1.45;animation:ccRsIn .18s ease-out}
+  .cc-rs[hidden],.cc-rs-form[hidden]{display:none}
+  .cc-rs-head{display:flex;align-items:flex-start;gap:.5rem}
+  .cc-rs-head h3{flex:1;margin:0;font-size:.95rem}
+  .cc-rs-x{flex:none;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:1px solid rgb(var(--chrome-fg) / .25);border-radius:4px;background:none;color:inherit;cursor:pointer}
+  .cc-rs-x:hover{border-color:var(--trail);color:var(--trail)}
+  .cc-rs-hint{margin:.35rem 0 0;color:rgb(var(--chrome-fg) / .75)}
+  .cc-rs-form{margin-top:.6rem;display:grid;gap:.65rem}
+  .cc-rs-piece{margin:0;display:flex;align-items:center;gap:.45rem}
+  .cc-rs-sw{flex:none;width:1.6rem;height:5px;border-radius:3px;background:var(--c)}
+  .cc-rs fieldset{margin:0;padding:0;border:0;display:grid;gap:.4rem;min-width:0}
+  .cc-rs legend{padding:0;margin-bottom:.3rem;font-weight:700}
+  .cc-rs label{display:grid;gap:.2rem;font-size:.78rem;color:rgb(var(--chrome-fg) / .8)}
+  .cc-rs .chips{display:flex;flex-wrap:wrap;gap:.4rem}
+  .cc-rs-sub{margin:.1rem 0 -.1rem;font-size:.78rem;color:rgb(var(--chrome-fg) / .8)}
+  /* A ticked chip is a checkbox: the box itself is hidden, the chip shows on or off. */
+  .cc-rs label.chip{display:inline-flex;align-items:center;cursor:pointer;font-size:.78rem;color:inherit}
+  .cc-rs label.chip input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+  .cc-rs label.chip:has(input:focus-visible){outline:2px solid var(--trail);outline-offset:2px}
+  .cc-rs .chip{background:none;color:inherit}
+  .cc-rs-send{justify-self:start;font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;padding:.42rem .9rem;border:1.5px solid var(--trail);border-radius:4px;background:var(--trail);color:var(--ink);font-weight:600;cursor:pointer}
+  .cc-rs-send:disabled{opacity:.5;cursor:not-allowed}
+  .cc-rs-send:focus-visible,.cc-rs-x:focus-visible,.cc-rs .chip:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
+  .cc-rs-status{margin:0}
+  .cc-rs-status:empty{display:none}
+  .maplibregl-map.cc-rs-on .maplibregl-canvas{cursor:crosshair!important}
+  @keyframes ccRsIn{from{opacity:0;transform:translate(-50%,-6px)}to{opacity:1;transform:translate(-50%,0)}}
+  @keyframes ccRsFade{from{opacity:0}to{opacity:1}}
+  @media (prefers-reduced-motion:reduce){.cc-rs{animation:ccRsFade .12s ease!important}}
+  /* The card is chrome: a Ctrl+click or a double click on the map never selects its words. */
+  .cc-rs{-webkit-user-select:none;user-select:none}
+  .cc-rs-more{margin:-.2rem 0 .5rem;font-size:.74rem;opacity:.8}
   .ov-row:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:5px}
 
   /* ---------- ACCOUNT + LANGUAGE CHIPS ----------

@@ -117,6 +117,15 @@ tables:
         that left the waiting room together. No rider.
     traffic_seen: >-
         HMACs of the dedupe codes already received, so no ride is counted twice.
+    # Hand-written migration (Version20261019010000), traffic-measurements.md §10.
+    # safety_pool: HMAC block key plus an AES-GCM payload under a random id (SafetyPool).
+    # safety_total: plain way, band, day_type, quarter, label, region and counts (SafetyStore).
+    safety_pool: >-
+        Felt-safety marks waiting until their block (road, part of day, day type) has enough
+        of them. Encrypted; no account, no time column.
+    safety_total: >-
+        Plain counts of safe and unsafe marks per road, part of day, day type and quarter,
+        from marks that left the waiting room together. No rider.
     api_app: >-
         The partner apps that may send contributions through the public API: name, contact
         address, the SHA-256 of the key (never the key), scopes and status.

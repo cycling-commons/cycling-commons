@@ -92,6 +92,28 @@ export function mountInView(map, family, arm, minzoom, onAdd) {
   });
 }
 
+/**
+ * Like mountInView, but onSource(key, sourceId) runs for every source the view
+ * needs, new or already added: two modules that draw on one family (the
+ * curator's traffic layer and the rider's road-safety mode on the road
+ * pieces) each add their own layers whichever added the source first.
+ */
+export function eachSourceInView(map, family, arm, minzoom, onSource) {
+  if (map.getZoom() < minzoom - 1) return;
+  const b = map.getBounds();
+  const entries = familyEntries(family);
+  keysInView(entries, viewBoxes(b.getWest(), b.getSouth(), b.getEast(), b.getNorth())).forEach(key => {
+    const url = entries[key].tiles && entries[key].tiles[arm];
+    if (!url) return;
+    const id = `${family}-${arm}-${key === '*' ? 'all' : key}`;
+    if (!map.getSource(id)) {
+      ensureProtocol();
+      map.addSource(id, { type: 'vector', url: 'pmtiles://' + url });
+    }
+    onSource(key, id);
+  });
+}
+
 /** The newest build stamp in a family, for the data-version readout. */
 export function newestStamp(family) {
   const stamps = Object.values(familyEntries(family)).map(e => (e && e.stamp) || '').filter(Boolean).sort();

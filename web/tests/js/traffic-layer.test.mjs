@@ -6,7 +6,7 @@
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
-import { colourFor, perWay, TRAFFIC_COLOURS } from '../../assets/lib/traffic-colours.js';
+import { colourFor, perWay, feltPerWay, FELT_ONLY_COLOUR, TRAFFIC_COLOURS } from '../../assets/lib/traffic-colours.js';
 
 const layer = readFileSync(new URL('../../assets/map/traffic-layer.js', import.meta.url), 'utf8');
 
@@ -44,4 +44,22 @@ test('a cycle path\'s popup gives the band of the cars beside it as nearby, and 
 test('the layer never shows a number of cars or riders', () => {
   assert.doesNotMatch(layer, /carsPerKm|nearbyPerKm|d\.riders/);
   assert.match(layer, /colourFor\(entry\.traffic\)/);
+});
+
+test('felt safety of the chosen group, per way (traffic-measurements.md §10)', () => {
+  const felt = [
+    { way: 7, group: 'workday', felt: 'unsafe' },
+    { way: 9, group: 'weekend', felt: 'safe' },
+  ];
+  assert.deepEqual([...feltPerWay(felt, 'workday')], [[7, 'unsafe']]);
+  assert.deepEqual([...feltPerWay(felt, 'weekend')], [[9, 'safe']]);
+  assert.equal(feltPerWay(undefined, 'all').size, 0);
+});
+
+test('the popup says felt safe, mixed or unsafe, and a road with felt safety only is drawn grey', () => {
+  assert.match(layer, /'trafficFelt' \+ felt\.charAt\(0\)\.toUpperCase\(\)/);
+  assert.match(layer, /feltPerWay\(data \? data\.felt : \[\], group\)/);
+  assert.match(layer, /if \(!byWay\.has\(way\)\) map\.setFeatureState\([^)]*\{ shown: true, colour: FELT_ONLY_COLOUR \}/);
+  assert.ok(!Object.values(TRAFFIC_COLOURS).includes(FELT_ONLY_COLOUR), 'grey is no traffic band');
+  assert.match(layer, /isPicking\(\)/, 'a rider marking a road gets no popup');
 });

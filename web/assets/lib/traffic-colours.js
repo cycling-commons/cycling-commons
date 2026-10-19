@@ -7,6 +7,12 @@
 
 export const TRAFFIC_COLOURS = { quiet: '#2E7D4F', moderate: '#C98A0B', busy: '#D92D20' };
 const RANK = { quiet: 0, moderate: 1, busy: 2 };
+/* A road with felt safety and no measured traffic yet (§10): drawn, so a
+   curator can open it, in a colour no band uses. */
+export const FELT_ONLY_COLOUR = '#8A8F98';
+/* A road piece by its label: blue cycle path, amber cycle lane, purple shared
+   road (§3.1), in the ride review and the rider's road-safety mode alike. */
+export const LABEL_COLOURS = Object.freeze({ p: '#2F6FDB', l: '#E8A33D', r: '#7A3FB8' });
 
 /** Colour for a band: quiet, moderate or busy. */
 export function colourFor(band) {
@@ -30,6 +36,19 @@ export function perWay(shown, group) {
     }
     cur.directions.push(entry);
     if ((RANK[entry.traffic] ?? 0) > (RANK[cur.traffic] ?? 0)) cur.traffic = entry.traffic;
+  }
+  return out;
+}
+
+/**
+ * Felt safety of one group, per way (§10): safe, mixed or unsafe.
+ *
+ * @returns {Map<number, string>}
+ */
+export function feltPerWay(felt, group) {
+  const out = new Map();
+  for (const entry of felt || []) {
+    if (entry.group === group) out.set(entry.way, entry.felt);
   }
   return out;
 }

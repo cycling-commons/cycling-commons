@@ -36,9 +36,9 @@ final class TrafficLine
      * day type. The totals keep them as bits of one 16-bit set.
      */
     public const array DAY_GROUPS = ['workday' => 12, 'weekend' => 4];
-    private const array LABELS = ['p', 'l', 'r'];
+    public const array LABELS = ['p', 'l', 'r'];
     private const array DIRS = ['f', 'b'];
-    private const array DAY_TYPES = ['workday', 'weekend'];
+    public const array DAY_TYPES = ['workday', 'weekend'];
     private const string FIRST_QUARTER = '2010-Q1';
     /**
      * Seconds in each part of the day (traffic-measurements.md §3.4): night

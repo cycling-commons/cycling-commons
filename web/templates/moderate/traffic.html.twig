@@ -22,50 +22,34 @@
     <p class="lead">{{ 'moderate.traffic.lead'|trans }}</p>
   </div>
 
-  {# Progress from the first ride (traffic-measurements.md section 4.6): roads
-     with data per onboarded country and region, counts only. A road's own
-     numbers stay hidden until it is usable. #}
+  {# Progress from the first ride (traffic-measurements.md section 4.6). #}
   <section class="tprog" aria-labelledby="tprog-h">
     <h2 id="tprog-h">{{ 'moderate.traffic.progress_h'|trans }}</h2>
     <p class="note">{{ 'moderate.traffic.progress_lead'|trans }}</p>
     {% if progress.countries is empty %}
       <p class="note">{{ 'moderate.traffic.progress_empty'|trans }}</p>
     {% else %}
-      {# One fold per country: open when it has data, folded when it has none. #}
-      {% for c in progress.countries %}
-        <details class="tprog-country" data-progress-country="{{ c.country }}"{{ c.building + c.usable > 0 ? ' open' }}>
-          <summary>
-            {% if c.country|lower in flags %}<img class="flag" src="{{ asset('flags/' ~ c.country|lower ~ '.svg') }}" alt="" width="20" height="15">{% endif %}
-            <span class="name">{{ c.name }}</span>
-            <span class="tot"><span data-building>{{ c.building }}</span> <small>{{ 'moderate.traffic.col_building'|trans }}</small></span>
-            <span class="tot"><span data-usable>{{ c.usable }}</span> <small>{{ 'moderate.traffic.col_usable'|trans }}</small></span>
-          </summary>
-          <div class="tcmp-wrap">
-            <table class="tcmp">
-              <thead>
-                <tr>
-                  <th scope="col">{{ 'moderate.traffic.col_area'|trans }}</th>
-                  <th scope="col">{{ 'moderate.traffic.col_building'|trans }}</th>
-                  <th scope="col">{{ 'moderate.traffic.col_usable'|trans }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for r in c.regions %}
-                  <tr data-progress-region="{{ r.name }}">
-                    <td>{{ r.name }}</td>
-                    <td class="n{{ r.building == 0 ? ' zero' }}" data-building>{{ r.building }}</td>
-                    <td class="n{{ r.usable == 0 ? ' zero' }}" data-usable>{{ r.usable }}</td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </details>
-      {% endfor %}
+      {% include 'moderate/_traffic_progress.html.twig' with {progress: progress, flags: flags, kind: 'progress'} only %}
     {% endif %}
     {% if progress.unplaced > 0 %}
       <p class="note">{{ 'moderate.traffic.unplaced'|trans({'%n%': progress.unplaced}) }}</p>
     {% endif %}
+  </section>
+
+  {# Felt safety, marked by hand on the map (traffic-measurements.md section
+     10): roads with marks, counted like the measured ones. #}
+  <section class="tprog" aria-labelledby="tfelt-h">
+    <h2 id="tfelt-h">{{ 'moderate.traffic.felt_h'|trans }}</h2>
+    <p class="note">{{ 'moderate.traffic.felt_lead'|trans }}</p>
+    {% if felt_progress.countries is empty %}
+      <p class="note">{{ 'moderate.traffic.felt_empty'|trans }}</p>
+    {% else %}
+      {% include 'moderate/_traffic_progress.html.twig' with {progress: felt_progress, flags: flags, kind: 'felt'} only %}
+    {% endif %}
+    {% if felt_progress.unplaced > 0 %}
+      <p class="note">{{ 'moderate.traffic.felt_unplaced'|trans({'%n%': felt_progress.unplaced}) }}</p>
+    {% endif %}
+    {# Both counts above are built together, on one cadence. #}
     <p class="note">{{ 'moderate.traffic.built'|trans }} <time datetime="{{ built_at|date('c') }}" data-built-at="{{ built_at|date('c') }}">{{ built_at|cc_datetime }}</time>. {{ 'moderate.traffic.refresh'|trans }}</p>
   </section>
 

@@ -99,6 +99,8 @@ framework:
                 adapter: cache.app
             cache.traffic_submit_limiter:
                 adapter: cache.app
+            cache.road_safety_submit_limiter:
+                adapter: cache.app
     rate_limiter:
         # Traffic summaries from Scout's ride review (traffic-measurements.md
         # §4.1). Per hour and sized for bulk mode: a five-year archive arrives
@@ -109,6 +111,15 @@ framework:
             limit: 120
             interval: '1 hour'
             cache_pool: cache.traffic_submit_limiter
+        # Felt-safety marks from the map (traffic-measurements.md §10), per
+        # user, one token per mark (a road at a time): one answer holds at
+        # most 200 (SafetyMark::MAX_MARKS). Nothing dedupes a mark, so this bounds how
+        # often one account can mark a road.
+        road_safety_submit:
+            policy: sliding_window
+            limit: 200
+            interval: '1 hour'
+            cache_pool: cache.road_safety_submit_limiter
         contribution_submit:
             policy: sliding_window
             limit: 20

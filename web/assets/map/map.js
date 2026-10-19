@@ -30,6 +30,7 @@ import { initCommunity, initCuratorKeys } from './community.js';
 import { initSearchUi } from './search-ui.js';
 import { initScoutReview } from './scout-review.js';
 import { initTrafficLayer } from './traffic-layer.js';
+import { initRoadSafety } from './road-safety.js';
 import { initDuplicateResolve } from './duplicate-resolve.js';
 import { initLayerList, initMapCtrl, initRailChrome, initBestOf, initFilterPill,
          initChips, initViewMode, initAddClimbHere, liftModeFor } from './panels.js';
@@ -222,6 +223,8 @@ import { layerGlyph } from './icons.js';
       return attachPhotos({
         id:s.id, rid:s.rid, name:s.name, headline:`${trVal(s.surface)} · ${trVal(s.smoothness)}`, cur:(s.cls!=='paved'), edit:'road-surface',
         geom:{path:s.path}, surfaceClass:s.cls, width:s.width, smoothness:s.smoothness,
+        // The OSM way it stands for: the card's "How safe did it feel?" opens on it (traffic-measurements.md section 10).
+        wayId:s.wayId,
         /* Who filed it. Every other layer's drawer names the rider; this shape
            carried no contributor, so the drawer cited OSM for values a rider
            typed. by:0 is a rider who has not made their profile public, and
@@ -323,6 +326,7 @@ import { layerGlyph } from './icons.js';
   initRideCheck();
   initPlan();
   initTrafficLayer();
+  initRoadSafety();
 
   initDrawerChrome();
   initScoutReview();

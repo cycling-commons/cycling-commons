@@ -2182,6 +2182,20 @@ map:
   scout_hint: 'Tags and stretches from your ride file become submissions to the Cycling Commons.'
   propose_route_go: 'Upload your route'
   propose_route_note: 'Share a loop worth riding.'
+  road_safety_heading: "How safe did a road feel?"
+  road_safety_note: "Pick a road you rode on the map and say whether it felt safe or unsafe, for a part of the day."
+  road_safety_go: "Mark a road"
+  road_safety_felt: "How did it feel?"
+  road_safety_safe: "Safe"
+  road_safety_unsafe: "Unsafe"
+  road_safety_when: "When?"
+  road_safety_band: "Part of the day"
+  road_safety_day: "Day"
+  road_safety_workday: "Workday"
+  road_safety_weekend: "Weekend or public holiday"
+  road_safety_quarter: "Quarter"
+  road_safety_send: "Send"
+  road_safety_close: "Stop marking roads"
   rc_checking: 'Checking…'
   rc_results: 'results'
   rc_clear: 'clear'
@@ -2418,6 +2432,7 @@ map:
   mtraffic_moderate: '1 to 3 cars per km'
   mtraffic_busy: '3 or more cars per km'
   mtraffic_pattern: 'Dotted: cycle path. Dashed: cycle lane. Solid: shared road.'
+  mtraffic_felt_only: "Grey: no measured traffic yet, only how riders felt it."
   mtraffic_compare: 'Compare with what riders said'
   d_traffic_group_all: 'All times'
   d_traffic_group_workday: 'Workdays'
@@ -2437,6 +2452,28 @@ map:
   d_traffic_dir_f: 'One way'
   d_traffic_dir_b: 'Other way'
   d_traffic_none: 'No road has enough rides in this group yet.'
+  d_traffic_felt_safe: "Felt safe"
+  d_traffic_felt_mixed: "Felt mixed"
+  d_traffic_felt_unsafe: "Felt unsafe"
+  d_road_safety_zoom: "Zoom in to pick a road."
+  d_road_safety_pick: "Pick a road on the map to say how safe it felt."
+  d_road_safety_many: "{n} roads"
+  d_road_safety_more: "Ctrl+click another road to add it and the roads of the same type in between (up to about 15 km apart, at most 50 roads), or a picked road to take it away."
+  d_road_safety_too_many: "That is more than one answer can hold: tick fewer times or pick fewer roads."
+  d_road_safety_filling: "Adding the roads in between…"
+  d_road_safety_max: "One answer covers at most {n} roads."
+  d_road_safety_ask: "How safe did it feel?"
+  d_road_safety_not_piece: "This road is not in the road data, so it cannot be marked."
+  d_road_safety_no_tiles: "Road data is not available yet, so no road can be marked."
+  d_road_safety_label_p: "Cycle path"
+  d_road_safety_label_l: "Cycle lane"
+  d_road_safety_label_r: "Shared road"
+  d_road_safety_quarter: "Q{n} {y}"
+  d_road_safety_quarter_now: "Q{n} {y}, this quarter"
+  d_road_safety_sending: "Sending…"
+  d_road_safety_sent: "Thank you. Your mark waits until enough riders have marked this road for the same time; then curators see how it felt."
+  d_road_safety_limited: "You have marked many roads in the last hour. Wait a while and send again."
+  d_road_safety_failed: "That did not go through. Try again in a moment."
   d_scout_no_fix: '{n} tags had no GPS fix, so they cannot be placed'
   d_scout_stretch_to_end: 'No END tap. This stretch runs to the end of the ride. Set where it ends before you send it.'
   d_scout_set_end: 'Set the end on the map'
@@ -2937,6 +2974,10 @@ moderate:
     unplaced: '%n% roads with data have no region: they were sent before the road data named regions, or lie outside every region we know.'
     built: 'Last built'
     refresh: 'The numbers are rebuilt every 6 hours.'
+    felt_h: "Felt safety per region"
+    felt_lead: "Every road a rider marked as safe or unsafe on the map counts here from the first mark. Building data: not enough marks for the same time yet, so how it felt stays hidden from everyone, curators too. Usable: the curator map says whether it felt safe, mixed or unsafe."
+    felt_empty: "No country has road data yet."
+    felt_unplaced: "%n% marked roads have no region: the road data named none, or they lie outside every region we know."
     compare_h: 'Usable roads: declared beside measured'
     kicker: 'Measured traffic'
     heading: 'Declared beside measured'

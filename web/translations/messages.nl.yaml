@@ -1564,6 +1564,20 @@ map:
   scout_hint: 'Markeringen en trajecten uit je ritbestand worden inzendingen voor de Cycling Commons.'
   propose_route_go: 'Upload je route'
   propose_route_note: 'Deel een lus die het rijden waard is.'
+  road_safety_heading: "Hoe veilig voelde een weg?"
+  road_safety_note: "Kies op de kaart een weg die je reed en zeg of die veilig of onveilig voelde, voor een deel van de dag."
+  road_safety_go: "Markeer een weg"
+  road_safety_felt: "Hoe voelde het?"
+  road_safety_safe: "Veilig"
+  road_safety_unsafe: "Onveilig"
+  road_safety_when: "Wanneer?"
+  road_safety_band: "Deel van de dag"
+  road_safety_day: "Dag"
+  road_safety_workday: "Werkdag"
+  road_safety_weekend: "Weekend of feestdag"
+  road_safety_quarter: "Kwartaal"
+  road_safety_send: "Versturen"
+  road_safety_close: "Stop met wegen markeren"
   rc_checking: 'Controleren…'
   rc_results: 'resultaten'
   rc_clear: 'wissen'
@@ -1800,6 +1814,7 @@ map:
   mtraffic_moderate: '1 tot 3 auto''s per km'
   mtraffic_busy: '3 of meer auto''s per km'
   mtraffic_pattern: 'Gestippeld: fietspad. Gestreept: fietsstrook. Doorgetrokken: rijbaan.'
+  mtraffic_felt_only: "Grijs: nog geen gemeten verkeer, alleen hoe fietsers het voelden."
   mtraffic_compare: 'Vergelijk met wat fietsers zeiden'
   d_traffic_group_all: 'Alle tijden'
   d_traffic_group_workday: 'Werkdagen'
@@ -1819,6 +1834,28 @@ map:
   d_traffic_dir_f: 'De ene kant op'
   d_traffic_dir_b: 'De andere kant op'
   d_traffic_none: 'Nog geen weg heeft genoeg ritten in deze groep.'
+  d_traffic_felt_safe: "Voelde veilig"
+  d_traffic_felt_mixed: "Voelde gemengd"
+  d_traffic_felt_unsafe: "Voelde onveilig"
+  d_road_safety_zoom: "Zoom in om een weg te kiezen."
+  d_road_safety_pick: "Kies een weg op de kaart om te zeggen hoe veilig die voelde."
+  d_road_safety_many: "{n} wegen"
+  d_road_safety_more: "Ctrl+klik op een andere weg om die toe te voegen, met de wegen van hetzelfde soort ertussen (tot zo'n 15 km uit elkaar, hooguit 50 wegen), of op een gekozen weg om die weg te halen."
+  d_road_safety_too_many: "Dat is meer dan één antwoord kan bevatten: vink minder tijden aan of kies minder wegen."
+  d_road_safety_filling: "De wegen ertussen worden toegevoegd…"
+  d_road_safety_max: "Eén antwoord gaat over hooguit {n} wegen."
+  d_road_safety_ask: "Hoe veilig voelde het?"
+  d_road_safety_not_piece: "Deze weg staat niet in de weggegevens, dus je kunt hem niet markeren."
+  d_road_safety_no_tiles: "Weggegevens zijn nog niet beschikbaar, dus er kan geen weg worden gemarkeerd."
+  d_road_safety_label_p: "Fietspad"
+  d_road_safety_label_l: "Fietsstrook"
+  d_road_safety_label_r: "Rijbaan"
+  d_road_safety_quarter: "K{n} {y}"
+  d_road_safety_quarter_now: "K{n} {y}, dit kwartaal"
+  d_road_safety_sending: "Versturen…"
+  d_road_safety_sent: "Dank je. Je markering wacht tot genoeg fietsers deze weg voor dezelfde tijd hebben gemarkeerd; dan zien regiobeheerders hoe die voelde."
+  d_road_safety_limited: "Je hebt het afgelopen uur veel wegen gemarkeerd. Wacht even en verstuur het opnieuw."
+  d_road_safety_failed: "Dat is niet gelukt. Probeer het zo opnieuw."
   d_scout_no_fix: '{n} tags hadden geen GPS-fix en kunnen niet geplaatst worden'
   d_scout_stretch_to_end: 'Geen EINDE-tik. Dit stuk loopt door tot het einde van de rit. Zet waar het eindigt voor je het verstuurt.'
   d_scout_set_end: 'Zet het einde op de kaart'
@@ -2922,6 +2959,10 @@ moderate:
     unplaced: '%n% wegen met gegevens hebben geen regio: ze zijn verstuurd voordat de weggegevens regio’s noemden, of liggen buiten elke bekende regio.'
     built: 'Laatst bijgewerkt'
     refresh: 'De cijfers worden elke 6 uur opnieuw berekend.'
+    felt_h: "Gevoelde veiligheid per regio"
+    felt_lead: "Elke weg die een fietser op de kaart als veilig of onveilig markeerde, telt hier mee vanaf de eerste markering. Data wordt opgebouwd: nog niet genoeg markeringen voor dezelfde tijd, dus hoe die voelde blijft voor iedereen verborgen, ook voor regiobeheerders. Bruikbaar: de kaart van regiobeheerders zegt of die veilig, gemengd of onveilig voelde."
+    felt_empty: "Nog geen land heeft weggegevens."
+    felt_unplaced: "%n% gemarkeerde wegen hebben geen regio: de weggegevens noemden er geen, of ze liggen buiten elke bekende regio."
     compare_h: 'Bruikbare wegen: opgegeven naast gemeten'
     kicker: 'Gemeten verkeer'
     heading: 'Opgegeven naast gemeten'

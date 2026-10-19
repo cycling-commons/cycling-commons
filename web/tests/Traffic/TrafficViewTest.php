@@ -9,6 +9,7 @@ namespace App\Tests\Traffic;
 use App\Entity\User;
 use App\Settings\SettingsRegistry;
 use App\Settings\SystemSettingsWriter;
+use App\Traffic\SafetyStore;
 use App\Traffic\TrafficStore;
 use App\Traffic\TrafficView;
 use Doctrine\ORM\EntityManagerInterface;
@@ -187,7 +188,8 @@ final class TrafficViewTest extends WebTestCase
         self::assertStringNotContainsString('id="trafficCtl"', $html);
     }
 
-    public function testARiderMapHasNeither(): void
+    /** A rider marks felt safety on the road pieces (§10), and has no traffic layer. */
+    public function testARiderMapHasTheRoadPiecesButNoTrafficLayer(): void
     {
         $client = static::createClient();
         $this->user($client, [], false);
@@ -195,6 +197,75 @@ final class TrafficViewTest extends WebTestCase
 
         $html = (string) $client->getResponse()->getContent();
         self::assertStringNotContainsString('id="ovTraffic"', $html);
+        self::assertStringContainsString('"roadpieces":', $html);
+        self::assertStringContainsString('id="roadSafetyGo"', $html);
+    }
+
+    public function testAGuestMapHasNoRoadPiecesAndIsAskedToSignIn(): void
+    {
+        $client = static::createClient();
+        $page = $client->request('GET', '/map');
+
+        $html = (string) $client->getResponse()->getContent();
         self::assertStringNotContainsString('"roadpieces":', $html);
+        self::assertStringNotContainsString('id="roadSafetyGo"', $html);
+        $signIn = $page->filter('a[data-road-safety-login]');
+        self::assertCount(1, $signIn);
+        self::assertStringContainsString('_target_path=', (string) $signIn->attr('href'));
+        self::assertStringContainsString('road-safety', urldecode((string) $signIn->attr('href')));
+    }
+
+    /** @return list<array<string, mixed>> marks of one road this quarter, as they leave the waiting room */
+    private static function marks(string $felt, int $marks): array
+    {
+        $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        $quarter = $now->format('Y').'-Q'.(intdiv((int) $now->format('n') - 1, 3) + 1);
+
+        return array_fill(0, $marks, ['way' => 4521877, 'label' => 'r', 'region' => null, 'band' => 3, 'dayType' => 'workday', 'quarter' => $quarter, 'felt' => $felt]);
+    }
+
+    private function fiveMarks(string $felt = 'unsafe', int $marks = 5): void
+    {
+        static::getContainer()->get(SafetyStore::class)->addToTotals(self::marks($felt, $marks));
+        static::getContainer()->get(TrafficView::class)->invalidate();
+    }
+
+    /** Felt safety travels beside the measured values, per way and group (§10). */
+    public function testTheCuratorListCarriesFeltSafetyPerWayAndGroup(): void
+    {
+        $client = static::createClient();
+        $settings = static::getContainer()->get(SystemSettingsWriter::class);
+        $settings->set(SettingsRegistry::TRAFFIC_MAP_LAYER_LIVE, 1, null);
+        try {
+            $this->fiveMarks();
+            $this->user($client, ['ROLE_CURATOR'], true);
+
+            $client->request('GET', '/map/traffic');
+
+            $body = json_decode((string) $client->getResponse()->getContent(), true);
+            self::assertSame([['way' => 4521877, 'group' => 'workday', 'felt' => 'unsafe']], $body['felt']);
+            self::assertSame([], $body['shown'], 'felt safety alone makes no measured entry');
+        } finally {
+            $settings->set(SettingsRegistry::TRAFFIC_MAP_LAYER_LIVE, 0, null);
+        }
+    }
+
+    public function testFourMarksShowNothing(): void
+    {
+        self::bootKernel();
+        $this->fiveMarks('safe', 4);
+
+        self::assertSame([], static::getContainer()->get(TrafficView::class)->felt());
+    }
+
+    public function testANewMarkDoesNotChangeTheViewUntilTheNextRecompute(): void
+    {
+        self::bootKernel();
+        $this->fiveMarks();
+        $before = static::getContainer()->get(TrafficView::class)->felt();
+
+        static::getContainer()->get(SafetyStore::class)->addToTotals(self::marks('safe', 20));
+
+        self::assertSame($before, static::getContainer()->get(TrafficView::class)->felt());
     }
 }

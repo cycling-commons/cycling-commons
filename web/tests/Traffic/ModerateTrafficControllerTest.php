@@ -10,6 +10,7 @@ use App\Catalog\Entity\Item;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Entity\User;
+use App\Traffic\SafetyStore;
 use App\Traffic\TrafficStore;
 use App\Traffic\TrafficView;
 use Doctrine\ORM\EntityManagerInterface;
@@ -191,6 +192,49 @@ final class ModerateTrafficControllerTest extends WebTestCase
         $summary = $country->filter('summary');
         self::assertSame('1', trim($summary->filter('[data-building]')->text()));
         self::assertCount(1, $country->filter('[data-progress-region="Zuiderland"]'), 'its regions inside the fold');
+    }
+
+    /** Felt-safety marks of the road, as they leave the waiting room (§10). */
+    private function felt(int $marks): void
+    {
+        $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        $quarter = $now->format('Y').'-Q'.(intdiv((int) $now->format('n') - 1, 3) + 1);
+        static::getContainer()->get(SafetyStore::class)->addToTotals(array_fill(0, $marks, [
+            'way' => self::WAY, 'label' => 'r', 'region' => $this->region, 'band' => 1, 'dayType' => 'workday', 'quarter' => $quarter, 'felt' => 'safe',
+        ]));
+        static::getContainer()->get(TrafficView::class)->invalidate();
+    }
+
+    public function testFeltSafetyCountsItsOwnRoadsPerRegion(): void
+    {
+        $client = static::createClient();
+        $this->placed('Zuiderland');
+        $this->felt(1);
+        $this->curator($client);
+
+        $page = $client->request('GET', '/moderate/traffic');
+
+        self::assertResponseIsSuccessful();
+        $row = $page->filter('[data-felt-region="Zuiderland"]');
+        self::assertCount(1, $row);
+        self::assertSame('1', trim($row->filter('[data-building]')->text()));
+        self::assertSame('0', trim($row->filter('[data-usable]')->text()));
+        self::assertCount(0, $page->filter('[data-progress-region="Zuiderland"]'), 'a mark is not measured traffic');
+    }
+
+    public function testARoadWithEnoughMarksIsUsableForFeltSafety(): void
+    {
+        $client = static::createClient();
+        $this->placed('Zuiderland');
+        $this->felt(5);
+        $this->curator($client);
+
+        $page = $client->request('GET', '/moderate/traffic');
+
+        $row = $page->filter('[data-felt-region="Zuiderland"]');
+        self::assertSame('0', trim($row->filter('[data-building]')->text()));
+        self::assertSame('1', trim($row->filter('[data-usable]')->text()));
+        self::assertCount(1, $page->filter('details[data-felt-country="ZZ"]'));
     }
 
     public function testARoadWithTooFewRidersIsNotListed(): void

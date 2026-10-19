@@ -36,6 +36,7 @@ final class MapToolsLockedTest extends WebTestCase
         self::assertStringContainsString('Scout', $html);
         self::assertStringContainsString('Add a climb', $html);
         self::assertStringContainsString('Propose a route', $html);
+        self::assertStringContainsString('How safe did a road feel?', $html);
     }
 
     public function testLoggedOutGetsLockedControlsPointingAtLogin(): void
@@ -44,10 +45,10 @@ final class MapToolsLockedTest extends WebTestCase
         $crawler = $client->request('GET', '/map');
         self::assertResponseIsSuccessful();
 
-        // Two, not four: ride check is open to everyone on purpose. It is the
-        // tool that earns the account rather than requiring one.
+        // Ride check is open to everyone on purpose. It is the tool that earns
+        // the account rather than requiring one.
         $locked = $crawler->filter('#p-tools .cc-locked');
-        self::assertSame(2, $locked->count(), 'add-climb and propose-route are locked');
+        self::assertSame(3, $locked->count(), 'add-climb, propose-route and the road-safety marks are locked');
         foreach ($locked as $node) {
             self::assertStringContainsString('/login', (string) $node->getAttribute('href'));
         }

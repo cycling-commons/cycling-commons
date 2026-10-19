@@ -96,3 +96,20 @@ test('below the floor nothing mounts', () => {
   const map = { getZoom: () => 3, getBounds: () => { throw new Error('not read'); } };
   ts.mountInView(map, 'surface', 'classified', 10, () => assert.fail('mounted'));
 });
+
+test('eachSourceInView hands over a source another module already added', () => {
+  // The traffic layer and the road-safety mode share the road-piece sources (traffic-measurements.md §10).
+  const sources = { 'surface-classified-be': { url: 'already' } };
+  const map = {
+    getZoom: () => 11,
+    getBounds: () => ({ getWest: () => 4.0, getSouth: () => 50.5, getEast: () => 4.6, getNorth: () => 50.9 }),
+    getSource: id => sources[id],
+    addSource: () => assert.fail('added twice'),
+  };
+  const seen = [];
+  ts.eachSourceInView(map, 'surface', 'classified', 10, (key, id) => seen.push([key, id]));
+  ts.eachSourceInView(map, 'surface', 'classified', 10, (key, id) => seen.push([key, id]));
+  assert.deepEqual(seen, [['be', 'surface-classified-be'], ['be', 'surface-classified-be']]);
+  assert.equal(sources['surface-classified-be'].url, 'already');
+  ts.eachSourceInView({ getZoom: () => 3 }, 'surface', 'classified', 10, () => assert.fail('mounted below the floor'));
+});

@@ -94,9 +94,12 @@ feature dropping, feature id = way id. One source layer per country, `roadpieces
 relabel never serves yesterday's pieces.
 
 **Serving.** Through the existing tiles proxy, like the surface family. The
-review page, and the map for a curator with two-factor authentication, emit the
-per-country URLs in `window.CC_TILES.roadpieces` (`RoadPiecesManifest`, from
-`ROADPIECES_MANIFEST_URL` or the pin `ROADPIECES_TILES_URL`). The browser
+review page and the map for any signed-in account emit the per-country URLs in
+`window.CC_TILES.roadpieces` (`RoadPiecesManifest`, from
+`ROADPIECES_MANIFEST_URL` or the pin `ROADPIECES_TILES_URL`): a curator's
+measured-traffic layer and a rider's road-safety mode (§10) draw on them, and
+the map reads their tiles only once one of those is on. A guest's map carries
+none. The browser
 fetches only the tiles a ride touches, through the page's `pmtiles` library,
 and decodes them with `web/assets/lib/road-pieces.js`, a small reader for what
 a road-piece tile holds: line features, their id and string properties. Decoded
@@ -327,7 +330,8 @@ counts lines taken into the waiting room.
 
 `TRAFFIC_SECRET` (32 random bytes, base64), its own variable, never
 `APP_SECRET` or `ENCRYPTION_SECRET`. HKDF-SHA256 derives three subkeys: `enc`
-(AES-256-GCM payloads of the waiting room), `block` and `seen` (HMAC-SHA256). The
+(AES-256-GCM payloads of the waiting room), `block` and `seen` (HMAC-SHA256),
+and two more for felt safety (§10): `safety-enc` and `safety-block`. The
 committed base settings file leaves it empty; the dev stack passes a public
 development key (`developers/docker/compose.yaml`), tests use the committed test
 settings, and staging and production set their own. `TrafficKeys` refuses both
@@ -428,7 +432,8 @@ and `/moderate/traffic` do not depend on it.
 `GET /map/traffic` (`ROLE_CURATOR`, two-factor checked in the controller as
 for every `/map` curator route, `Cache-Control: private, no-store`) returns
 `{groups: [...], shown: [{way, dir, label, group, traffic, nearby, carSpeedBand|null,
-days}]}`, `groups` being the active scheme's in display order. `TrafficView`
+days}], felt: [{way, group, felt}]}`, `groups` being the active scheme's in
+display order and `felt` the felt safety of §10. `TrafficView`
 builds it from the totals of the period by applying §4.4. It is recomputed on a fixed cadence of six hours, never per
 upload, so no single upload can be read off as the difference between two
 views; the cache key carries the scheme, so a scheme change shows at once and
@@ -472,15 +477,17 @@ personal data once it is stored, and account deletion leaves it as it is.
 ### 4.8 Development
 
 `app:traffic:dump [--way=ID]`, registered only in the `dev` environment,
-prints the plain totals and the waiting room's lines, decrypted, as tables. There is no
-switch that turns the waiting room's encryption off.
+prints the plain totals and the waiting room's lines, decrypted, as tables,
+and then the felt-safety counts and waiting marks (§10). There is no switch
+that turns the waiting room's encryption off.
 
 ## 5. Privacy notice and copy
 
 The privacy page has a paragraph on traffic summaries (what is sent, that the
 ride file is not, who sees results) in five locales, and the Scout wiki page
 (`wiki/scout.md`, "Your ride stays yours") says the same; a change to what is
-sent changes both. Copy never states the disclosure constants, the dedupe
+sent changes both. It has one on felt-safety marks too, with their own
+retention line (§10). Copy never states the disclosure constants, the dedupe
 method, endpoints or key handling.
 
 ## 6. Where it lives
@@ -488,20 +495,28 @@ method, endpoints or key handling.
 Pipeline: `pipeline/coverage/roadpieces.py`, `tiles.build_roadpieces_pmtiles`,
 `run.py --roadpieces`. Browser: `web/assets/lib/road-pieces.js`,
 `traffic-match.js`, `traffic-summary.js`, `traffic-ride.js`, `ride-archive.js`,
-`traffic-colours.js`; `web/assets/map/scout-traffic.js`, `scout-bulk.js`,
-`traffic-layer.js`. Server: `web/src/Traffic/` (`TrafficKeys`, `TrafficCipher`,
-`TrafficPool`, `TrafficStore`, `TrafficLine`, `TrafficPayloadRefused`,
-`TrafficIntake`, `TrafficDisclosure`, `TrafficView`, `TrafficProgress`, the
-holidays and dump commands), `TrafficController`, `ModerateTrafficController`,
-`RoadPiecesManifest`. Migrations: `Version20261005020000` (`traffic_seen`),
-`Version20261005030000`, `Version20261007120000`, `Version20261007130000`
-(`traffic_pool`, `traffic_total`) and `Version20261009010000` (BIGINT sums). Tests: `web/tests/Traffic/`,
-`web/tests/js/traffic-*`, `road-pieces`, `ride-archive`, `ride-batch`,
-`scout-traffic`, `pipeline/tests/test_roadpieces.py`.
+`traffic-colours.js`, `road-safety.js`; `web/assets/map/scout-traffic.js`,
+`scout-bulk.js`, `traffic-layer.js`, `road-safety.js`. Server:
+`web/src/Traffic/` (`TrafficKeys`, `TrafficCipher`, `TrafficPool`,
+`TrafficStore`, `TrafficLine`, `TrafficPayloadRefused`, `TrafficIntake`,
+`TrafficDisclosure`, `TrafficView`, `TrafficProgress`, the holidays and dump
+commands; for felt safety `SafetyMark`, `SafetyPool`, `SafetyStore`,
+`SafetyIntake`, `SafetyDisclosure`), `TrafficController`,
+`ModerateTrafficController` (`templates/moderate/traffic.html.twig`,
+`_traffic_progress.html.twig`), `RoadPiecesManifest`. Migrations:
+`Version20261005020000` (`traffic_seen`), `Version20261005030000`,
+`Version20261007120000`, `Version20261007130000` (`traffic_pool`,
+`traffic_total`), `Version20261009010000` (BIGINT sums) and
+`Version20261019010000` (`safety_pool`, `safety_total`). Tests:
+`web/tests/Traffic/` (the `Safety*Test` files for §10),
+`web/tests/js/traffic-*`, `road-safety`, `road-pieces`, `ride-archive`,
+`ride-batch`, `scout-traffic`, `tile-sources`,
+`pipeline/tests/test_roadpieces.py`.
 
 ## 7. Out of scope
 
-Tags in bulk mode; Karoo radar fields (needs a sample file); a public layer;
+Tags in bulk mode; Karoo radar fields (needs a sample file); a public layer
+(also for felt safety, §10);
 writing the road-surface `traffic` field; rider-speed correction (the average
 speed is stored for it); close-pass distance.
 
@@ -580,3 +595,189 @@ different riders, each rider one voice:
   riders; anonymous uploads (one-time tokens, a relay); a versioned traffic key
   with rotation, a key store and a split offline copy; cars per km corrected
   for the rider's own speed.
+
+## 10. Felt safety, marked by hand
+
+**Status:** built 2026-10-19, waiting for the owner's review. Owner
+2026-10-19: "users should be able to manually tag a piece of road where they
+felt safe or not. They click a piece of road and select one of the
+timeframes/year frames we use for the traffic measurements."
+
+**Who and where.** A signed-in rider. The map's Ride tools panel (the
+contribution tools, map-and-search.md section 8.1) has "How safe did a road
+feel?" with a **Mark a road** button (`#roadSafetyGo`), which turns on the
+road-safety mode (`web/assets/map/road-safety.js`): the panel closes, the road
+pieces of §2 are drawn over the map in the colour of their label (blue cycle
+path, amber cycle lane, purple shared road, `LABEL_COLOURS` in
+`traffic-colours.js`) from zoom 14 (the tiles hold z14 only; below it the card
+says "Zoom in to pick a road"), and a click on one picks it, within 8 px. A
+Ctrl+click (Cmd+click on a Mac) adds another road, or takes a picked one away
+again, for one answer over several roads (owner 2026-10-19: "User should be
+able to CTRL + click multiple road pieces together"), at most `MAX_ROADS = 50`
+(`pickPiece()` in `web/assets/lib/road-safety.js`; past it the card says so);
+a plain click starts over with that road. A Ctrl+click that adds a road of the
+same label as the road picked last also takes the roads of that label in
+between (owner 2026-10-19: "on the second ctrl+click it also takes all the
+roads in between those 2 clicks of the same type"): the road-piece tiles of
+the box around both clicks, with a tile to spare, are read (`tilePoints()`,
+at most 7 by 7 tiles, some 15 km across; farther apart nothing is filled),
+and the shortest run by length of touching ways of that label joins the two
+(`chainBetween()`: two ways touch where they share a vertex in the tile; the
+parts of one way clipped by tile edges are one road). The card says "Adding
+the roads in between" while the tiles load. Nothing is added when no run of
+that label joins them (a cycle path that meets the next one only across a
+shared road), when the run would pass `MAX_ROADS`, or when the rider took
+either road away meanwhile; a newer click makes an older fill stand down.
+Measured on dev, 2026-10-19: twelve tiles around two clicks in Hoorn load in
+about 2.2 s, and the search over their 5,274 pieces takes 8 ms. The picked pieces are drawn over in
+the accent orange by their way ids. The card's words cannot be selected by a
+click on the map (`user-select: none`, the selects excepted). The page emits
+`window.CC_TILES.roadpieces` for every signed-in rider, through the same tiles
+proxy as for a curator; the mode mounts their sources with the curator layer's
+(`eachSourceInView()` in `tile-sources.js`), so either may add them first. A
+guest sees the same entry as a link to sign in that returns to
+`/map?road-safety=1`, and the mode opens at once on that return (the parameter
+is dropped from the address). The entry is not on Scout's ride review, whose
+map clicks belong to the ride.
+
+**From a road's card** (owner 2026-10-19, "option A": a feeling is one
+rider's and anonymous, so it is never a field of the road's own settings).
+The card of a road, an OpenStreetMap surface line or a curated road with an
+OSM way (`wayId`), carries "How safe did it feel?" (`drawer.js`, group
+`cc-d-grp-felt`; a guest gets the tools panel's sign-in link). It opens the
+mode on that road (`markWay()` in `road-safety.js`): the map zooms to 14
+when it is further out, the road-piece tile under the road is read
+(`loadPieces()`), and the piece with that way id is picked as a click would
+pick it. A way the road pieces leave out (§2: a motorway, a footway without
+bikes) cannot be marked, and the card says so.
+
+While the mode is on, the map's clicks are claimed (`claimMapClicks()` in
+`picking.js`, as for Scout's stretch end): no drawer opens, the scope does not
+change, the planner adds no stop and the curator's traffic popup stays shut.
+Escape (unless a select has focus) and the card's close button leave it, and
+pressing Mark a road again does too.
+
+**What the rider says.** A card over the top of the map (`#roadSafety`, at
+most 22rem wide) names the piece by its label (Cycle path, Cycle lane, Shared
+road), or "3 roads" when several are picked, says under it that Ctrl+click
+adds or takes away a road, and asks:
+
+- **How did it feel?** Safe or Unsafe, two chips. Send stays off until one is
+  chosen.
+- **When?** One or more of each, as ticked chips (owner 2026-10-19: "make
+  all fields checkboxes. I ride there all of the time and it is always the
+  same"): the parts of the day (the five bands of §3.4), the days (Workday,
+  or Weekend or public holiday) and the quarters: this quarter and the three
+  before it, the last year (`quarterOptions()`). Send waits for a tick in
+  every field. The defaults tick now:
+  the band, day type and quarter of the rider's own clock (`markDefaults()` in
+  `web/assets/lib/road-safety.js`, which calls `timeKey()` of
+  `traffic-summary.js`) and the holiday file of the piece's country
+  (`fetchHolidays()`, the `cc` of the first picked road's tile source layer).
+  Once the rider changes one of the three, the next road keeps their choice;
+  adding or taking away a road keeps the answer chosen.
+
+The card says nothing about what is kept: the privacy notice does (owner
+2026-10-19: "Stop adding such info. we have the privacy policy for that").
+Send marks every picked road at every time ticked with the one answer: one
+mark per road, part of the day, day type and quarter, at most
+`MAX_MARKS = 200` (`markCount()`; past it Send stays off and the card says
+to tick fewer times or pick fewer roads). The answer says the
+mark waits until enough riders have marked the same road for the same time,
+and that curators see it then; a rider over the limit is told to wait, any
+other failure to try again. Copy never states the numbers below.
+
+**Endpoint.** `POST /map/road-safety` (`TrafficController::roadSafety()`,
+route `map_road_safety`), `ROLE_USER`, stateless CSRF token id `road-safety`
+in `X-CC-Token` (`window.CC_ROAD_SAFETY = {url, token}`), limiter
+`road_safety_submit` (per user, 200 tokens per hour, sliding window, one
+token per mark, charged once the answer is checked). The account is used for
+that limit only and is never written next to a mark. JSON (`markPayload()`),
+one answer, the roads and the times it covers:
+
+```json
+{"v": 3, "roads": [{"way": 4521877, "label": "r", "region": 12},
+                   {"way": 4521878, "label": "p", "region": 12}],
+ "bands": [1, 3], "dayTypes": ["workday"], "quarters": ["2026-Q4", "2026-Q3"],
+ "felt": "unsafe"}
+```
+
+Refused (422, `SafetyMark::accept()`): the Scout track keys of §4.1
+(`track_not_accepted`), on the answer or on a road; any unknown key, `v` other
+than 3, `roads` that is not a list of 1 to 50 objects, a way named twice, a way
+that is not a positive integer, `label` outside `p`, `l`, `r`; `bands`,
+`dayTypes` or `quarters` that is not a list of one or more values each named
+once, a band outside 0..4, a day type outside `workday`, `weekend`, a quarter
+other than the quarter of tomorrow in UTC or one of the four before it (the
+year frame plus a zone east of Greenwich); more than `MAX_MARKS` marks; `felt`
+outside `safe`, `unsafe`, and `region` other than absent, null or an integer
+from 1; all `invalid`. A body that is not JSON
+is 400. The answer is `{"ok": true}` and says nothing about the waiting room.
+
+**Storage, as the traffic lines** (§1 rules 2 and 3; migration
+`Version20261019010000`, both tables in `config/table_comments.yaml` and
+outside Doctrine's schema diff like the `traffic_` ones). A mark waits in
+`safety_pool` (`id bytea PK`, 16 random bytes; `block_key bytea`, indexed;
+`payload bytea`), sealed like the traffic waiting room (`TrafficCipher` made
+for `safety-enc`: AES-256-GCM, bound to its row id and block key, padded to
+256 bytes) under subkeys of their own derived from `TRAFFIC_SECRET`
+(`safety-enc`, `safety-block`, `TrafficKeys`). A **block** is one road, part
+of the day and day type, across quarters: `block_key` = HMAC(`safety-block`,
+way + band + day type). `SafetyIntake` takes an answer in one transaction:
+each road's mark into the pool (`SafetyPool::add()`), the roads in random
+order, so roads picked together wait in different blocks and reach the counts
+at different moments; then at most **one** block leaves
+(`SafetyPool::releaseOne()`), drawn at random among at most
+`MAX_CANDIDATES = 32` blocks with at least `MIN_MARKS = 5` waiting marks; its
+rows (at most `MAX_RELEASE = 1000`, drawn at random, so a bigger block leaves
+in parts) are locked in id order, added to the plain counts `safety_total`
+(`way`, `band`, `day_type`, `quarter` as the key; `label` and `region` of the
+first mark; `safe`, `unsafe` as BIGINT) by one upsert per row in key order
+(`SafetyStore::addToTotals()`), and deleted. A block whose rows include one
+that does not open is passed over with a warning that names no row, block or
+content. A mark carries no date and no ride, so there is no day-group rule;
+nothing dedupes marks: a rider who marks the same road twice counts twice,
+bounded by the limiter, as accepted for traffic in §8.
+
+**Disclosure** (`SafetyDisclosure`). A group is the counts rows of one way
+under the active grouping scheme of §4.5 (`TrafficDisclosure::groupOf()`), in
+the period of §4.4, so a road's felt safety and its measured traffic line up.
+A group is shown only with at least `MIN_MARKS = 5` marks, and only as a band:
+`safe` when at least two thirds felt safe, `unsafe` when at least two thirds
+felt unsafe, `mixed` between. Below it nothing is shown, not even that marks
+exist.
+
+**Curators first**, as for traffic. `TrafficView` builds felt safety in the
+same pass as the measured values (cache key `traffic.view.v8.`, the same
+six-hour cadence and sealed entry), and `GET /map/traffic` carries it as
+`felt: [{way, group, felt}]`. On the Measured traffic layer a road's popup
+ends with "Felt safe", "Felt mixed" or "Felt unsafe", and a road with felt
+safety but no measured group yet is drawn grey (`FELT_ONLY_COLOUR`), which the
+layer's key says. `/moderate/traffic` has a second progress block, "Felt
+safety per region", that counts per country and region how many roads with
+marks are building data and how many are usable (`TrafficProgress` on the
+marked roads, `data-felt-country`, `data-felt-region`), under the same "Last
+built" time. Riders see nothing of others' marks yet.
+
+**Privacy notice.** `privacy.collect_road_safety` (which road, the part of the
+day, the day type, the quarter and safe or unsafe are sent; the account limits
+how often and is not stored with the mark; marks wait until there are enough
+of the same road and time, then only curators see a band),
+`privacy.retention_road_safety`, a clause in the "No ride tracking" banner
+(a mark names the road marked), and the change line
+`privacy.change.v8_road_safety`, which ships in version 3 with the other
+changes since the published version 2 (privacy-notice.md section 7a: nothing
+past version 3 until version 3 is online). Account deletion finds nothing to
+delete, as in §4.7.
+
+## 11. For later: a road safety rating (not built)
+
+Owner 2026-10-19: "can we also get max speeds for roads. That would be a good
+item for our safety rating for a road in accordance to the detected traffic."
+Nothing of this is built. A rating per road piece and group would weigh the
+measured traffic band (§4.4), the car speed band, the speed limit
+(OpenStreetMap `maxspeed`, which the planner already reads from the engine,
+route-planner.md section 4.4a; the road-piece tiles would carry it as a new
+property), the label (path, lane, road) and the felt-safety band (§10). The
+weights and whether riders see it are owner decisions, taken once curators
+have compared the parts on real roads.

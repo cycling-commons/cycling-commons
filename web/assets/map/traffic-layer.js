@@ -2,21 +2,26 @@
 /* The curator's measured-traffic layer (docs/specs/traffic-measurements.md §4.6).
    Road pieces from the road-piece tiles, coloured by quiet, moderate or busy for
    the chosen time group; the server sends bands, never numbers. Only groups that passed the disclosure rules come from the
-   server; a piece without one stays undrawn, which says nothing about it. */
+   server; a piece without one stays undrawn, which says nothing about it.
+   Felt safety (§10) rides along per way and group: the popup says felt safe,
+   mixed or unsafe, and a road with felt safety and no measured traffic yet is
+   drawn grey. */
 import { map } from './map-init.js';
 import { D, tpl } from './i18n.js';
-import { familyConfigured, mountInView } from './tile-sources.js';
-import { colourFor, perWay } from '../lib/traffic-colours.js';
+import { familyConfigured, eachSourceInView } from './tile-sources.js';
+import { colourFor, perWay, feltPerWay, FELT_ONLY_COLOUR } from '../lib/traffic-colours.js';
 import { plannerTakesLineClick } from './plan-state.js';
+import { isPicking } from './picking.js';
 
 const el = id => document.getElementById(id);
 const t = (k, fallback) => (D && D[k]) || fallback;
 const MIN_ZOOM = 11;
 
 let visible = false;
-let data = null;          // {groups: [], shown: []}
+let data = null;          // {groups: [], shown: [], felt: []}
 let group = null;
 let byWay = new Map();
+let feltByWay = new Map();
 const layerIds = [];
 let popup = null;
 
@@ -60,7 +65,7 @@ function paint(sourceId, sourceLayer) {
 }
 
 function mount() {
-  mountInView(map, 'roadpieces', 'roadpieces', MIN_ZOOM, (key, sourceId) => {
+  eachSourceInView(map, 'roadpieces', 'roadpieces', MIN_ZOOM, (key, sourceId) => {
     paint(sourceId, 'roadpieces_' + key);
   });
 }
@@ -72,15 +77,25 @@ function applyStates() {
     byWay.forEach((entry, way) => {
       map.setFeatureState({ source: sourceId, sourceLayer, id: way }, { shown: true, colour: colourFor(entry.traffic) });
     });
+    feltByWay.forEach((felt, way) => {
+      if (!byWay.has(way)) map.setFeatureState({ source: sourceId, sourceLayer, id: way }, { shown: true, colour: FELT_ONLY_COLOUR });
+    });
   });
 }
 
+/* "Felt safe", "Felt mixed" or "Felt unsafe" for a felt band, '' for none. */
+function feltLine(felt) {
+  return felt ? t('trafficFelt' + felt.charAt(0).toUpperCase() + felt.slice(1), 'Felt ' + felt) : '';
+}
+
 function onClick(e) {
-  if (plannerTakesLineClick(e)) return;
+  // A rider marking a road (road-safety.js) has claimed the map's clicks.
+  if (plannerTakesLineClick(e) || isPicking()) return;
   const f = e.features && e.features[0];
   const entry = f && byWay.get(f.id);
-  if (!entry) return;
-  const lines = entry.directions.map(d => {
+  const felt = f && feltByWay.get(f.id);
+  if (!entry && !felt) return;
+  const lines = (entry ? entry.directions : []).map(d => {
     /* A cycle path: no car passed its riders. The cars beside it drove on the
        road next to it, so they show as nearby (noise, not safety). */
     const band = b => t('trafficLevel' + b.charAt(0).toUpperCase() + b.slice(1), b);
@@ -102,6 +117,7 @@ function onClick(e) {
   const head = document.createElement('b');
   head.textContent = groupLabel(group);
   box.appendChild(head);
+  if (felt) lines.push(feltLine(felt));
   lines.forEach(text => { const p = document.createElement('p'); p.textContent = text; box.appendChild(p); });
   popup = new maplibregl.Popup({ closeButton: true, maxWidth: '18rem' }).setLngLat(e.lngLat).setDOMContent(box).addTo(map);
 }
@@ -123,10 +139,12 @@ function fillGroups() {
 function chooseGroup(g) {
   group = g;
   byWay = perWay(data ? data.shown : [], group);
+  feltByWay = feltPerWay(data ? data.felt : [], group);
+  const any = byWay.size > 0 || feltByWay.size > 0;
   const note = el('trafficNote');
   if (note) {
-    note.hidden = byWay.size > 0;
-    note.textContent = byWay.size ? '' : t('trafficNone', 'No road has enough rides in this group yet.');
+    note.hidden = any;
+    note.textContent = any ? '' : t('trafficNone', 'No road has enough rides in this group yet.');
   }
   applyStates();
 }

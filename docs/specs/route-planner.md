@@ -1000,15 +1000,63 @@ scaled to the engine's length, not by counting vertices (owner 2026-10-15:
 at Coo the marker sat on Thier de Coo while the ride was 600 m further, on
 the unnamed road, because the village part of the line has many vertices).
 
-**To do: the recorded surfaces on the server** (owner 2026-10-15, "add
-option 1 to the todo"). The weekly pipeline writes which OpenStreetMap ways
-carry a recorded surface, way id and class, to a table, and
-`POST /map/plan/leg` looks up each edge's way id (`edge.way_id` from the
-engine's `/trace_attributes`); an edge whose way is not there is "not
-recorded". Exact for the whole ride and every rider, with or without the
-overlay, from the same data and classes as the map's lines. Measure the
-table's size per onboarded country before building it; the browser reading
-above then goes.
+**The recorded surfaces, from the server** (owner 2026-10-15, "add option 1
+to the todo"; built 2026-10-19 with smoothness and tracktype, owner: "Why
+more detailed surfaces in bikerouter?", "Yes add them to the spec and build
+it"). The weekly surface pipeline writes, per onboarded country, every way it
+reads that has a surface class, a smoothness or a tracktype recorded to
+`coverage_way_surface` (way id, country, surface class, smoothness,
+tracktype), and marks the country loaded in `coverage_way_surface_country`
+(coverage-provider.md section 4). The leg walk asks the engine for
+`edge.way_id` too, and `App\Elevation\WaySurfaces` looks the leg's ways up
+when the leg starts in a loaded country (the region the start lies in names
+the country). Then, per edge:
+
+| The table holds the way | The engine says the road is | The edge reads |
+|---|---|---|
+| with a surface class | anything | that class: paved, gravel, or rough for pave, dirt and rock |
+| without a surface class, or not at all | a track or an unclassified road: the roads whose surface nobody can guess, the map's "surface not recorded" lines (contract `surface.todo.highways`) | "surface not recorded" |
+| without a surface class, or not at all | anything else: a main road, a street, a cycleway, a path, a service road | the engine's own word, as before |
+
+An untagged main road or street is paved all but always (coverage-provider.md
+section 4 measured it: 0.1 % of tagged primary roads in Belgium are unpaved),
+so it keeps the engine's asphalt, as the map draws no to-do line there
+(found on the first real leg, 2026-10-19: a 4.1 km leg near Stavelot
+read 3.1 km "not recorded" when every untagged road counted, 2.2 km when only
+tracks and unclassified roads do). The pipeline puts a path in the to-do only
+with `bicycle=yes|designated`, which the engine does not say, so a path keeps
+the engine's word too. A track with a `tracktype` and no `surface` stays "not
+recorded": the grade is listed apart (below), never turned into a surface. The leg says
+`recorded: true`, and the browser's reading of the map's lines (above) leaves
+that leg alone; the reading stays for a leg outside every loaded country and
+for a leg kept from before the table. Measured before building it
+(2026-10-19): 74 bytes a way on dev, about 16.5 million ways over the
+onboarded extracts, so about 1.2 GB; Belgium 391,245 ways (29 MB), the
+Netherlands 706,259 (52 MB), Germany 5,200,789 (385 MB). The coverage places
+table is 1.9 GB on the same database.
+
+**What OpenStreetMap records along the ride** (owner 2026-10-19). Under the
+day's bars, `#planDetail` lists, in distance, each only where something is
+recorded: the **smoothness** in the five words the contribute form offers
+(excellent, good, intermediate, bad, very bad; `SMOOTH_WORD` in
+plan-model.js folds OpenStreetMap's eight), the **tracks** by `tracktype`,
+grade 1 "solid" to grade 5 "soft", and the **speed limit**, OpenStreetMap's
+`maxspeed` as the engine carries it (`edge.speed_limit`; "Can we also get
+max speeds for roads"), in km/h, or in mph rounded to 5 when the rider reads
+miles, slowest first, with "no limit recorded" last; the speed line shows
+only when at least one limit is recorded. A note under them says "From
+OpenStreetMap, where it is recorded". Each line lights its stretches on the
+map when pointed at or focused, as the surface lines do (owner 2026-10-19:
+"But what part of the road is that about? I can't hover it"): the leg also
+carries `detailRuns`, `[from, to, value]` metres along the leg per
+smoothness, tracktype and speed limit, a run of one value merged, and
+`detailSpans()` places them along the ride for the line's `data-part`
+(`sm:good`, `tt:grade3`, `sp:50`, `sp:unset`). The leg carries `quality:
+{smoothness, tracktype}` and `speeds` in metres (`LegSurfaces::read()`),
+summed over the ride by `roadDetail()`; the speed limits come from the engine
+in every country, the smoothness and tracktype only from the table. Nothing
+of it is a rating: the speed limit is also an input to the road safety rating
+(traffic-measurements.md).
 
 ### 4.5 The profile
 

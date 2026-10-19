@@ -126,8 +126,13 @@ final class TrafficDisclosure
         return $days >= 10 ? '10+' : '3-9';
     }
 
-    /** @param array<string, mixed> $row */
-    private static function groupOf(array $row, string $scheme): string
+    /**
+     * The group of the scheme a totals row falls in; felt safety groups its
+     * rows the same way (SafetyDisclosure), so the two line up per road.
+     *
+     * @param array<string, mixed> $row
+     */
+    public static function groupOf(array $row, string $scheme): string
     {
         if ('all' === $scheme) {
             return 'all';

@@ -2189,6 +2189,20 @@ map:
   scout_hint: 'Las marcas y tramos de tu archivo de salida se convierten en propuestas para el Cycling Commons.'
   propose_route_go: 'Sube tu ruta'
   propose_route_note: 'Comparte un circuito que merezca la pena.'
+  road_safety_heading: "¿Qué tan segura te pareció una vía?"
+  road_safety_note: "Elige en el mapa una vía que recorriste y di si te pareció segura o insegura, para una parte del día."
+  road_safety_go: "Marcar una vía"
+  road_safety_felt: "¿Cómo te pareció?"
+  road_safety_safe: "Segura"
+  road_safety_unsafe: "Insegura"
+  road_safety_when: "¿Cuándo?"
+  road_safety_band: "Parte del día"
+  road_safety_day: "Día"
+  road_safety_workday: "Laborable"
+  road_safety_weekend: "Fin de semana o festivo"
+  road_safety_quarter: "Trimestre"
+  road_safety_send: "Enviar"
+  road_safety_close: "Dejar de marcar vías"
   rc_checking: 'Comprobando…'
   rc_results: 'resultados'
   rc_clear: 'limpiar'
@@ -2425,6 +2439,7 @@ map:
   mtraffic_moderate: 'de 1 a 3 coches por km'
   mtraffic_busy: '3 o más coches por km'
   mtraffic_pattern: 'Punteado: carril bici segregado. Discontinuo: carril bici pintado. Continuo: calzada compartida.'
+  mtraffic_felt_only: "Gris: aún sin tráfico medido, solo cómo lo sintieron los ciclistas."
   mtraffic_compare: 'Comparar con lo que dijeron los ciclistas'
   d_traffic_group_all: 'Todas las horas'
   d_traffic_group_workday: 'Laborables'
@@ -2444,6 +2459,28 @@ map:
   d_traffic_dir_f: 'En un sentido'
   d_traffic_dir_b: 'En el otro sentido'
   d_traffic_none: 'Ninguna vía tiene aún suficientes salidas en este grupo.'
+  d_traffic_felt_safe: "Pareció segura"
+  d_traffic_felt_mixed: "Opiniones mixtas"
+  d_traffic_felt_unsafe: "Pareció insegura"
+  d_road_safety_zoom: "Acerca el mapa para elegir una vía."
+  d_road_safety_pick: "Elige una vía en el mapa para decir qué tan segura te pareció."
+  d_road_safety_many: "{n} vías"
+  d_road_safety_more: "Ctrl+clic en otra vía para añadirla, con las vías del mismo tipo entre ambas (hasta unos 15 km de distancia, como mucho 50 vías), o en una vía elegida para quitarla."
+  d_road_safety_too_many: "Eso es más de lo que cabe en una respuesta: marca menos momentos o elige menos vías."
+  d_road_safety_filling: "Añadiendo las vías intermedias…"
+  d_road_safety_max: "Una respuesta abarca como mucho {n} vías."
+  d_road_safety_ask: "¿Qué tan segura te pareció?"
+  d_road_safety_not_piece: "Esta vía no está en los datos de vías, así que no se puede marcar."
+  d_road_safety_no_tiles: "Los datos de vías aún no están disponibles, así que no se puede marcar ninguna vía."
+  d_road_safety_label_p: "Carril bici segregado"
+  d_road_safety_label_l: "Carril bici pintado"
+  d_road_safety_label_r: "Calzada compartida"
+  d_road_safety_quarter: "T{n} {y}"
+  d_road_safety_quarter_now: "T{n} {y}, este trimestre"
+  d_road_safety_sending: "Enviando…"
+  d_road_safety_sent: "Gracias. Tu marca espera hasta que suficientes ciclistas hayan marcado esta vía para el mismo momento; entonces los curadores ven cómo les pareció."
+  d_road_safety_limited: "Has marcado muchas vías en la última hora. Espera un rato y vuelve a enviar."
+  d_road_safety_failed: "No se ha podido enviar. Inténtalo de nuevo en un momento."
   d_scout_no_fix: '{n} etiquetas sin posición GPS: no se pueden situar'
   d_scout_stretch_to_end: 'Sin toque de FIN. Este tramo llega hasta el final de la salida. Indica dónde termina antes de enviarlo.'
   d_scout_set_end: 'Marcar el final en el mapa'
@@ -2944,6 +2981,10 @@ moderate:
     unplaced: '%n% vías con datos no tienen región: se enviaron antes de que los datos de vías nombraran regiones, o están fuera de toda región conocida.'
     built: 'Última actualización'
     refresh: 'Las cifras se recalculan cada 6 horas.'
+    felt_h: "Seguridad percibida por región"
+    felt_lead: "Cada vía que alguien marcó en el mapa como segura o insegura cuenta aquí desde la primera marca. En construcción: aún no hay suficientes marcas para el mismo momento, así que cómo se percibe queda oculto para todos, también para los curadores. Utilizable: el mapa de curadores dice si pareció segura, mixta o insegura."
+    felt_empty: "Ningún país tiene datos de vías todavía."
+    felt_unplaced: "%n% vías marcadas no tienen región: los datos de vías no nombraban ninguna, o están fuera de toda región conocida."
     compare_h: 'Vías utilizables: declarado junto a medido'
     kicker: 'Tráfico medido'
     heading: 'Declarado junto a medido'

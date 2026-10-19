@@ -1562,6 +1562,20 @@ map:
   scout_hint: 'Les repères et tronçons de votre fichier de sortie deviennent des propositions au Cycling Commons.'
   propose_route_go: 'Charger votre parcours'
   propose_route_note: 'Partagez une boucle qui vaut le détour.'
+  road_safety_heading: "Cette route vous a-t-elle semblé sûre ?"
+  road_safety_note: "Choisissez sur la carte une route que vous avez parcourue et dites si elle vous a semblé sûre ou non, pour un moment de la journée."
+  road_safety_go: "Marquer une route"
+  road_safety_felt: "Quel ressenti ?"
+  road_safety_safe: "Sûre"
+  road_safety_unsafe: "Pas sûre"
+  road_safety_when: "Quand ?"
+  road_safety_band: "Moment de la journée"
+  road_safety_day: "Jour"
+  road_safety_workday: "Jour ouvré"
+  road_safety_weekend: "Week-end ou jour férié"
+  road_safety_quarter: "Trimestre"
+  road_safety_send: "Envoyer"
+  road_safety_close: "Arrêter de marquer des routes"
   rc_checking: 'Vérification…'
   rc_results: 'résultats'
   rc_clear: 'effacer'
@@ -1798,6 +1812,7 @@ map:
   mtraffic_moderate: '1 à 3 voitures par km'
   mtraffic_busy: '3 voitures par km ou plus'
   mtraffic_pattern: 'Pointillé : piste cyclable. Tirets : bande cyclable. Plein : chaussée partagée.'
+  mtraffic_felt_only: "Gris : pas encore de trafic mesuré, seulement le ressenti des cyclistes."
   mtraffic_compare: 'Comparer avec ce que disent les cyclistes'
   d_traffic_group_all: 'Tous les horaires'
   d_traffic_group_workday: 'Jours ouvrés'
@@ -1817,6 +1832,28 @@ map:
   d_traffic_dir_f: 'Dans un sens'
   d_traffic_dir_b: 'Dans l''autre sens'
   d_traffic_none: 'Aucune route n''a encore assez de sorties dans ce groupe.'
+  d_traffic_felt_safe: "Ressentie sûre"
+  d_traffic_felt_mixed: "Ressenti partagé"
+  d_traffic_felt_unsafe: "Ressentie pas sûre"
+  d_road_safety_zoom: "Zoomez pour choisir une route."
+  d_road_safety_pick: "Choisissez une route sur la carte pour dire si elle vous a semblé sûre."
+  d_road_safety_many: "{n} routes"
+  d_road_safety_more: "Ctrl+clic sur une autre route pour l'ajouter, avec les routes du même type entre les deux (jusqu'à environ 15 km d'écart, 50 routes au plus), ou sur une route choisie pour la retirer."
+  d_road_safety_too_many: "C'est plus qu'une réponse ne peut contenir : cochez moins de moments ou choisissez moins de routes."
+  d_road_safety_filling: "Ajout des routes entre les deux…"
+  d_road_safety_max: "Une réponse couvre au plus {n} routes."
+  d_road_safety_ask: "Vous vous y êtes senti en sécurité ?"
+  d_road_safety_not_piece: "Cette route n'est pas dans les données routières : elle ne peut pas être marquée."
+  d_road_safety_no_tiles: "Les données routières ne sont pas encore disponibles, aucune route ne peut donc être marquée."
+  d_road_safety_label_p: "Piste cyclable"
+  d_road_safety_label_l: "Bande cyclable"
+  d_road_safety_label_r: "Chaussée partagée"
+  d_road_safety_quarter: "T{n} {y}"
+  d_road_safety_quarter_now: "T{n} {y}, ce trimestre"
+  d_road_safety_sending: "Envoi…"
+  d_road_safety_sent: "Merci. Votre marque attend qu'assez de cyclistes aient marqué cette route pour le même moment ; les curateurs voient alors le ressenti."
+  d_road_safety_limited: "Vous avez marqué beaucoup de routes dans la dernière heure. Attendez un peu et envoyez à nouveau."
+  d_road_safety_failed: "Cela n'a pas abouti. Réessayez dans un instant."
   d_scout_no_fix: '{n} balises sans position GPS : impossible de les placer'
   d_scout_stretch_to_end: 'Pas de tap FIN. Ce tronçon court jusqu’à la fin de la sortie. Indiquez où il se termine avant de l’envoyer.'
   d_scout_set_end: 'Placer la fin sur la carte'
@@ -2918,6 +2955,10 @@ moderate:
     unplaced: '%n% routes avec des données n’ont pas de région : envoyées avant que les données routières nomment les régions, ou situées hors de toute région connue.'
     built: 'Dernière mise à jour'
     refresh: 'Les chiffres sont recalculés toutes les 6 heures.'
+    felt_h: "Ressenti de sécurité par région"
+    felt_lead: "Chaque route qu'un cycliste a marquée comme sûre ou non sur la carte compte ici dès la première marque. En constitution : pas encore assez de marques pour le même moment, le ressenti reste donc caché à tous, curateurs compris. Utilisable : la carte des curateurs indique si elle a semblé sûre, partagée ou pas sûre."
+    felt_empty: "Aucun pays n'a encore de données routières."
+    felt_unplaced: "%n% routes marquées n'ont pas de région : les données routières n'en nommaient aucune, ou elles sont hors de toute région connue."
     compare_h: 'Routes utilisables : déclaré à côté de mesuré'
     kicker: 'Trafic mesuré'
     heading: 'Déclaré face au mesuré'
