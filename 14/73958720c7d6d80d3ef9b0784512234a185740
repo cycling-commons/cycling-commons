@@ -1,0 +1,29 @@
+web/src/Controller/MapController.php
+  s_266155a992380b::t_26066b673b5ec8 34
+web/src/Elevation/PointSnapper.php
+  s_266155a992380b::t_235af1eee80edd 21-22
+web/tests/Elevation/RouteSnapperTest.php
+  s_266155a992380b::t_235af1eee80edd 126
+web/src/Controller/PlanController.php
+  s_266155a992380b::t_235af1eee80edd 299
+web/src/Elevation/RouteSnapper.php
+  s_266155a992380b::t_235af1eee80edd 86,88,96
+web/src/Elevation/WaySurfaces.php
+  s_266155a992380b::t_26066b673b5ec8 37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1473958720c7d6d80d3ef9b0784512234a185740",
+  "prompts": {},
+  "sessions": {
+    "s_266155a992380b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d6d2a9c8-dd96-48df-be16-07f9aa0ce892",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
