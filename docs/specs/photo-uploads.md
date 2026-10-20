@@ -1884,9 +1884,11 @@ Two layers, because either alone is a single point of failure:
 **The assertion** (owner, 2026-09-20: tell me if anything other than what we
 have gets enabled). `web/docker/verify-imagemagick-policy.php` runs
 in the image build (`web/Dockerfile`, straight after the COPY) and again in
-the suite (`tests/Media/ImageMagickPolicyTest`, skipped where there is no
-ext-imagick and no policy file). It asks three questions and fails on any
-disagreement, naming it:
+the suite (`tests/Media/ImageMagickPolicyTest`, which runs only in the app's
+image: the Dockerfile copies the check to `/usr/local/bin/verify-imagemagick-policy`
+beside the policy, and a machine without that copy, such as a CI runner with its
+own ImageMagick 7 and its own `policy.xml`, has no policy of ours to check). It
+asks three questions and fails on any disagreement, naming it:
 
 | Question | How | Catches |
 |---|---|---|
