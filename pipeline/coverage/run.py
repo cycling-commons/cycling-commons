@@ -21,7 +21,6 @@ import pathlib
 import sys
 import tempfile
 import time
-import urllib.error
 import urllib.request
 from collections.abc import Iterable
 
@@ -130,7 +129,8 @@ def fetch_pbf(region: str, workdir: pathlib.Path) -> pathlib.Path:
             if dest.exists() and _md5(dest) == r.read().decode().split()[0]:
                 print(f"[coverage] {region}: PBF unchanged, skipping download")
                 return dest
-    except urllib.error.URLError:
+    # OSError, not URLError: a read timeout arrives as a bare TimeoutError (prod run 106).
+    except OSError:
         pass
     # Geofabrik 302-round-robins across mirrors and rebuilds -latest daily, so a
     # -latest.md5 fetched from one mirror can disagree with the -latest.pbf a
@@ -167,7 +167,7 @@ def fetch_pbf(region: str, workdir: pathlib.Path) -> pathlib.Path:
             try:
                 with urllib.request.urlopen(src, timeout=60) as r:
                     want = r.read().decode().split()[0]
-            except urllib.error.URLError:
+            except OSError:
                 want = None
             if want == got:
                 tmp.replace(dest)

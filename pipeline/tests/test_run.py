@@ -145,6 +145,47 @@ def test_fetch_pbf_recovers_when_md5_mirror_lags(monkeypatch, tmp_path):
     assert not list(tmp_path.glob("*.part*"))
 
 
+def _slow_md5_mirror(pbf: bytes, slow_reads: int):
+    """urlopen double whose first `slow_reads` .md5 fetches time out the way a slow
+    Geofabrik does: a bare TimeoutError from the response read, not a URLError."""
+    n = {"md5": 0}
+
+    def fake_urlopen(url, timeout=None):
+        if url.endswith(".md5"):
+            n["md5"] += 1
+            if n["md5"] <= slow_reads:
+                raise TimeoutError("The read operation timed out")
+            return io.BytesIO(f"{hashlib.md5(pbf).hexdigest()}  x-latest.osm.pbf\n".encode())
+        return _Resp(pbf, url)
+
+    return fake_urlopen
+
+
+def test_fetch_pbf_downloads_when_the_md5_check_times_out(monkeypatch, tmp_path):
+    """Prod run 106 (2026-10-20): switzerland and spain failed on the skip-check's
+    read timeout. A slow .md5 must cost a download, never the region."""
+    monkeypatch.delenv("COVERAGE_PBF_DIR", raising=False)
+    monkeypatch.delenv("COVERAGE_PBF_PATH", raising=False)
+    monkeypatch.setattr(run.time, "sleep", lambda *a, **k: None)
+    pbf = b"fresh switzerland extract bytes"
+    (tmp_path / "europe-switzerland-latest.osm.pbf").write_bytes(b"yesterday's bytes")
+    monkeypatch.setattr(run.urllib.request, "urlopen", _slow_md5_mirror(pbf, slow_reads=1))
+
+    assert run.fetch_pbf("europe/switzerland", tmp_path).read_bytes() == pbf
+
+
+def test_fetch_pbf_verify_retries_a_timed_out_md5_read(monkeypatch, tmp_path):
+    monkeypatch.delenv("COVERAGE_PBF_DIR", raising=False)
+    monkeypatch.delenv("COVERAGE_PBF_PATH", raising=False)
+    monkeypatch.setattr(run.time, "sleep", lambda *a, **k: None)
+    pbf = b"fresh spain extract bytes"
+    # skip-check (1) and the first verify (2) time out; the retry (3) answers.
+    monkeypatch.setattr(run.urllib.request, "urlopen", _slow_md5_mirror(pbf, slow_reads=2))
+
+    assert run.fetch_pbf("europe/spain", tmp_path).read_bytes() == pbf
+    assert not list(tmp_path.glob("*.part*"))
+
+
 def test_coverage_groups_layer_files_by_country(tmp_path):
     files = {("B", "BE"): tmp_path / "b_be", ("C", "BE"): tmp_path / "c_be", ("B", "ZZ"): tmp_path / "b_zz"}
     assert _coverage_countries(files) == {
