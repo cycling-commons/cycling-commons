@@ -285,7 +285,7 @@ which version each account has seen is kept.
   `privacy.change.*`, in all five locales). `CURRENT` is the newest number. The
   page shows "Version 2 · 7 October 2026" at the top, in the reader's date
   format, and under "Changes to this policy" every version with its changes.
-  Version 3 (15 October 2026, not significant) is everything since the
+  Version 3 (20 October 2026, not significant) is everything since the
   published version 2, shipped as one version (owner 2026-10-15: "combine
   all changes into version 3, online we are at version 2"). Its change keys,
   each a line under "Changes to this policy": `privacy.change.v3_kept_address`

@@ -31,7 +31,7 @@ final class PrivacyNoticeVersions extends LegalVersions
             // each is optional, new processing a rider chooses, or a clearer
             // statement of what already happens; nothing changes for data
             // already given.
-            ['number' => 3, 'date' => '2026-10-15', 'effective' => '2026-10-15', 'significant' => false, 'changes' => [
+            ['number' => 3, 'date' => '2026-10-20', 'effective' => '2026-10-20', 'significant' => false, 'changes' => [
                 'privacy.change.v3_kept_address', 'privacy.change.v4_roadmap', 'privacy.change.v5_rides', 'privacy.change.v6_forecast', 'privacy.change.v7_presets',
                 'privacy.change.v8_road_safety',
             ]],
