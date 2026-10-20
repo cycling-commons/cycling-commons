@@ -142,11 +142,8 @@ tables:
         One outstanding password-reset request: a hashed selector, its expiry, and the account it
         belongs to. Rows are consumed on use and swept when they expire.
 
-    # Created for us by a bundle or an extension.
+    # Created for us by a bundle. PostGIS's spatial_ref_sys is TableComments::EXEMPT.
     doctrine_migration_versions: >-
         Doctrine bookkeeping: which migrations this database has run. Never edit by hand.
     messenger_messages: >-
         Symfony Messenger queue: jobs waiting to run, being run, or parked as failed. Transient.
-    spatial_ref_sys: >-
-        PostGIS reference table of spatial reference systems (EPSG codes). Owned by the
-        extension, not by us.

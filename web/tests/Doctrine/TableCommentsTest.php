@@ -52,6 +52,25 @@ final class TableCommentsTest extends KernelTestCase
     }
 
     /**
+     * PostGIS owns spatial_ref_sys; on production the app role is not its owner, so
+     * a COMMENT there failed the whole run and left every later table without one.
+     */
+    public function testApplyLeavesTheExtensionsTableAlone(): void
+    {
+        self::bootKernel();
+        $comments = self::getContainer()->get(TableComments::class);
+        self::assertInstanceOf(TableComments::class, $comments);
+        $connection = self::getContainer()->get('doctrine.dbal.default_connection');
+        self::assertInstanceOf(Connection::class, $connection);
+        $connection->executeStatement("COMMENT ON TABLE spatial_ref_sys IS 'set by the extension'");
+
+        $comments->apply();
+
+        $stored = $connection->fetchOne("SELECT obj_description('spatial_ref_sys'::regclass, 'pg_class')");
+        self::assertSame('set by the extension', $stored);
+    }
+
+    /**
      * The first paragraph, and nothing after it.
      *
      * The long "why" that follows an opening sentence belongs in the source,

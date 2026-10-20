@@ -39,7 +39,8 @@ final class TableComments
     /**
      * Tables nobody owes a comment for.
      *
-     * Only PostGIS's own, which the extension creates and would rewrite.
+     * Only PostGIS's own, which the extension creates and would rewrite. Never
+     * written either: on production the app role does not own it.
      */
     private const array EXEMPT = ['spatial_ref_sys'];
 
@@ -99,6 +100,10 @@ final class TableComments
         $skipped = [];
 
         foreach ($this->map() as $table => $comment) {
+            if (\in_array($table, self::EXEMPT, true)) {
+                continue;
+            }
+
             if (!\in_array($table, $present, true)) {
                 $skipped[] = $table;
 
