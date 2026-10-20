@@ -1,0 +1,27 @@
+pipeline/coverage/run.py
+  s_a529b0e824da74::t_7e9f01fd2bc25d 170
+  s_a529b0e824da74::t_6d163eaf2d9ea5 132-133
+pipeline/tests/test_run.py
+  s_a529b0e824da74::t_9fe6d202ebd61e 148-188
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8585714179712e55c74b0dfea09a380fe89bae72",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_a529b0e824da74": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7ee98b4e-06b9-43c9-bee5-ba8475cb8ee0",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
