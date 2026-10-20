@@ -1,0 +1,38 @@
+web/src/Doctrine/TableComments.php
+  s_a529b0e824da74::t_d844704f6b6100 103-106
+  s_a529b0e824da74::t_f308d43da33d2e 42-43
+web/config/table_comments.yaml
+  s_a529b0e824da74::t_4c2e9dff71e0d5 145
+web/tests/Doctrine/TableCommentsTest.php
+  s_a529b0e824da74::t_f631219470987b 55-72
+  s_55c29b77176b44::t_349f8f8fd38f08 54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ef194fabc4a20767deb45d3ca9cb1d0d07d444bd",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_55c29b77176b44": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "633cab2d-e66c-4173-ab93-712347ca5365",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_a529b0e824da74": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7ee98b4e-06b9-43c9-bee5-ba8475cb8ee0",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
