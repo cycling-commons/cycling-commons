@@ -1,0 +1,38 @@
+web/src/Map/PresetInput.php
+  s_71866451e32ad6::t_fb5a7c57b5ddbf 55-57
+  s_71866451e32ad6::t_2d34d789946b0c 113-115
+  s_71866451e32ad6::t_6cda5a2a1588eb 28-29
+  s_71866451e32ad6::t_92d5b539f77908 58
+  s_71866451e32ad6::t_39f297f007763e 116-118
+web/tests/Controller/MapPresetControllerTest.php
+  s_71866451e32ad6::t_a8ef5ad7caf70b 309-324
+  s_71866451e32ad6::t_fc946eb1a935a2 325
+web/assets/map/presets-model.js
+  s_71866451e32ad6::t_8b9e8cbac8930a 10-11
+web/tests/js/presets-model.test.mjs
+  s_71866451e32ad6::t_838671451265d9 13,15-22
+web/src/Map/PresetCatalog.php
+  s_71866451e32ad6::t_6c2a87b0fa1e18 16
+  s_71866451e32ad6::t_efbc94413b5315 57-60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "159154c996747ca329e925f1b60e77adeb9d5851",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_71866451e32ad6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5e11a65d-c449-49be-9031-ecd1d2f7c461",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
