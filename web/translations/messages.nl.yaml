@@ -1201,7 +1201,6 @@ map:
   view_hint_curated: 'De beste klims, slaapplekken en uitzichten, gekozen door fietsers.'
   view_hint_confirmed: 'Alles uit Best-of, plus elke plek waar iemand is geweest en heeft gecontroleerd.'
   view_hint_all: 'Alle data, ook imports waar nog niemand naar keek.'
-  pref_filter_head: 'Jouw voorkeuren'
   pref_filter: 'Routes voor jouw fietsen'
   data_layers: 'Datalagen'
   dl_group_utility: 'Praktisch · volledige dekking'

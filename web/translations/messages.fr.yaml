@@ -1199,7 +1199,6 @@ map:
   view_hint_curated: 'Les meilleurs cols, hébergements et points de vue, choisis par les cyclistes.'
   view_hint_confirmed: 'Tout le Best-of, plus chaque lieu que quelqu''un est allé vérifier.'
   view_hint_all: 'L''ensemble des données, imports non vérifiés compris.'
-  pref_filter_head: 'Vos préférences'
   pref_filter: 'Itinéraires pour vos vélos'
   data_layers: 'Couches de données'
   dl_group_utility: 'Pratique · couverture complète'

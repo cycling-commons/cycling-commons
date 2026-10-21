@@ -1204,7 +1204,6 @@ map:
   view_hint_curated: 'Die besten Anstiege, Unterkünfte und Aussichten, von Radfahrenden gewählt.'
   view_hint_confirmed: 'Alles aus Best-of, dazu jeden Ort, den jemand vor Ort geprüft hat.'
   view_hint_all: 'Die vollständigen Daten, auch ungeprüfte Importe.'
-  pref_filter_head: 'Deine Vorlieben'
   pref_filter: 'Routen für deine Räder'
   data_layers: 'Datenebenen'
   dl_group_utility: 'Praktisch · volle Abdeckung'

@@ -106,3 +106,26 @@ test('a tile cyl value reads as the same label list', async () => {
   assert.deepEqual(tileLabels(undefined), []);
   assert.deepEqual(tileLabels(''), []);
 });
+
+test('routes for your bikes: a route for any chosen bike stays, an undeclared route always stays', async () => {
+  const { routeBikeMatch } = await load();
+  const road = new Set(['Road']);
+  assert.equal(routeBikeMatch(['Road', 'Gravel'], road), true);
+  assert.equal(routeBikeMatch(['MTB'], road), false, 'only a declared non-overlap hides a route');
+  assert.equal(routeBikeMatch([], road), true, 'unknown is not unsuitable');
+  assert.equal(routeBikeMatch(undefined, road), true);
+  assert.equal(routeBikeMatch(['MTB'], new Set()), true, 'no bike chip on, no filter');
+});
+
+test('the remembered bike chips: the saved bikes at first, any bike type after, the old on/off read', async () => {
+  const { readPrefBikes } = await load();
+  const mine = ['Road'];
+  const all = ['Road', 'Gravel', 'MTB', 'E-bike', 'Handbike', 'Recumbent', 'Trike', 'Tandem'];
+  assert.deepEqual(readPrefBikes(null, mine, all), mine, 'first visit: the saved bikes on');
+  assert.deepEqual(readPrefBikes(null, [], all), [], 'a visitor starts with no bike chip on');
+  assert.deepEqual(readPrefBikes('on', mine, all), mine);
+  assert.deepEqual(readPrefBikes('off', mine, all), []);
+  assert.deepEqual(readPrefBikes('["MTB","Gravel","Unicycle"]', mine, all), ['Gravel', 'MTB'], 'a bike not saved can be on; an unknown type is dropped');
+  assert.deepEqual(readPrefBikes('[]', mine, all), []);
+  assert.deepEqual(readPrefBikes('{oops', mine, all), mine, 'an unreadable value reads as the first visit');
+});

@@ -14,7 +14,7 @@ import { covShownCount, coverageTotal, syncCoverageLayers, covIconFilter,
          COVERAGE_CCS, COVERAGE_ON, COVERAGE_KEYS } from './coverage.js';
 import { openDrawer, planPlace } from './drawer.js';
 import { NO_VALIDATE } from './tile-sources.js';
-import { attrMatch, bikeFriendlyMatch, tileLabels, narrowingCount, climbChipsMatch, modeShows, placeKey, createShownAnyway } from './filters.js';
+import { attrMatch, bikeFriendlyMatch, tileLabels, routeBikeMatch, readPrefBikes, narrowingCount, climbChipsMatch, modeShows, placeKey, createShownAnyway } from './filters.js';
 import { fanPin, fanOffsetOf, scheduleFanOut } from './pin-fan.js';
 import { plannerTakesLineClick } from './plan-state.js';
 
@@ -378,8 +378,6 @@ export function syncFacetChips(){
   activeSurface=chipSet('sqf'); activeTraffic=chipSet('trf');
   activeEffort=chipSet('effortf'); activeAccess=chipSet('accessf'); bikeFriendlyOn=bikeFriendlyChip();
 }
-export const prefFilterEnabled = () => prefFilterOn;
-export function setPrefFilter(on){ prefFilterOn=!!on; }
 // The stays chips (accessibility, Bike-friendly) as one exported predicate
 // (osm-pools.js, listed-place.js): a stay passes when it passes both.
 export const staysAccessible = p => attrMatch(p.accessibility, activeAccess, ALL_ACCESS)
@@ -401,14 +399,25 @@ export function applyStaysAccessFilter(){
   });
 }
 
-// docs/specs/map-and-search.md §4.4 — bike-type pref filter; unknown ≠ unsuitable.
+// docs/specs/map-and-search.md §4.4: Routes for your bikes, one chip per bike
+// type (BikeType), the rider's saved bikes on at first, any chip can be changed
+// and is remembered in this browser; unknown ≠ unsuitable.
+export const ALL_BIKES = ['Road','Gravel','MTB','E-bike','Handbike','Recumbent','Trike','Tandem'];
 export const PREF_FILTER_KEY = 'cc-pref-filter:'+(PREFS.uid||'anon');
-export let prefFilterOn = PREFS.bikes.length>0 && (localStorage.getItem(PREF_FILTER_KEY)||'on')==='on';
-export function prefMatch(f){
-  if(!prefFilterOn || !PREFS.bikes.length) return true;
-  if(!f.bikeTypes || !f.bikeTypes.length) return true;          // undeclared → keep
-  return f.bikeTypes.some(t=>PREFS.bikes.includes(t));
+const storedPref = (()=>{ try{ return localStorage.getItem(PREF_FILTER_KEY); }catch(e){ return null; } })();
+let prefBikesOn = new Set(readPrefBikes(storedPref, PREFS.bikes, ALL_BIKES));
+export let prefFilterOn = prefBikesOn.size > 0;
+export const prefFilterEnabled = () => prefFilterOn;
+export const prefBikes = () => prefBikesOn;
+/** Set the bike chips that are on, kept to the map's bike types, and remember them. */
+export function setPrefBikes(list){
+  prefBikesOn = new Set((list || []).filter(b => ALL_BIKES.includes(b)));
+  prefFilterOn = prefBikesOn.size > 0;
+  try{ localStorage.setItem(PREF_FILTER_KEY, JSON.stringify([...prefBikesOn])); }catch(e){ /* private mode */ }
 }
+/** The rider's saved bikes on, or none (Show all). */
+export function setPrefFilter(on){ setPrefBikes(on ? PREFS.bikes : []); }
+export function prefMatch(f){ return routeBikeMatch(f.bikeTypes, prefBikesOn); }
 /* Chip state in the shape filters.js takes, rebuilt each pass. */
 export function chipState(){
   return {
@@ -416,7 +425,7 @@ export function chipState(){
     traffic: {active: activeTraffic, all: ALL_TRAF},
     effort: {active: activeEffort, all: ALL_EFFORT},
     access: {active: activeAccess, all: ALL_ACCESS},
-    prefFilterOn: prefFilterOn && PREFS.bikes.length > 0,
+    prefFilterOn,
     bikeFriendlyOn,
   };
 }

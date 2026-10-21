@@ -310,12 +310,28 @@
       <div class="grp" id="filters">
         <h3>{{ 'map.filters_head'|trans }}</h3>
 
+        {# Routes for your bikes (map-and-search.md §4.4), first of the filters:
+           one chip per bike type, the rider's saved bikes on at first and every
+           chip changeable. Never silent - the chips are the visible "your bikes
+           are filtering routes" affordance and their own opt-out. #}
+        <div id="prefGrp" hidden>
+          <h4 class="fh">{{ 'map.pref_filter'|trans }}</h4>
+          {# One chip per bike type; the rider's saved bikes start on (panels.js). #}
+          <div class="chips f-optin" id="prefBikes">
+            <span class="chip" data-v="Road" role="button" tabindex="0" aria-pressed="false">{{ 'map.bike_road'|trans }}</span><span class="chip" data-v="Gravel" role="button" tabindex="0" aria-pressed="false">{{ 'map.bike_gravel'|trans }}</span>
+            <span class="chip" data-v="MTB" role="button" tabindex="0" aria-pressed="false">{{ 'map.bike_mtb'|trans }}</span><span class="chip" data-v="E-bike" role="button" tabindex="0" aria-pressed="false">{{ 'map.bike_ebike'|trans }}</span>
+            <span class="chip" data-v="Handbike" role="button" tabindex="0" aria-pressed="false">{{ 'map.bike_handbike'|trans }}</span><span class="chip" data-v="Recumbent" role="button" tabindex="0" aria-pressed="false">{{ 'map.bike_recumbent'|trans }}</span>
+            <span class="chip" data-v="Trike" role="button" tabindex="0" aria-pressed="false">{{ 'map.bike_trike'|trans }}</span><span class="chip" data-v="Tandem" role="button" tabindex="0" aria-pressed="false">{{ 'map.bike_tandem'|trans }}</span>
+          </div>
+        </div>
+
         {# The Best-of facets. They were in the View mode band, which is where
            they belong logically and NOT where a rider looks: the map subtitle
            said "Best of · Summer · Road" and the only bike control anybody
-           could find was the profile chip below (owner-reported 2026-08-20).
-           They narrow what shows, so they are filters, and they sit first
-           because they narrow harder than any chip under them.
+           could find was the profile chip (owner-reported 2026-08-20).
+           They narrow what shows, so they are filters, and they sit under
+           Routes for your bikes because they narrow harder than any chip
+           below them.
 
            Hidden outside Best of by initViewMode()/initBestOf(), because that
            is the only mode they change anything in. The hint says where the
@@ -372,15 +388,6 @@
           <span class="chip on" data-v="Step-free access">{{ 'map.access_step_free'|trans }}</span><span class="chip on" data-v="Handbike-friendly">{{ 'map.access_handbike'|trans }}</span>
           <span class="chip on" data-v="Wheelchair-accessible">{{ 'map.access_wheelchair'|trans }}</span>
         </div>
-        </div>
-
-        {# Preference prefilter chip (map-and-search.md §4.3): revealed by panels.js
-           only when the logged-in rider has saved bike types. Never silent -
-           the chip is the visible "your prefs are filtering routes"
-           affordance and its own opt-out. #}
-        <div id="prefGrp" hidden>
-          <h4 class="fh">{{ 'map.pref_filter_head'|trans }}</h4>
-          <div class="chips f-optin"><span class="chip" id="prefFilter" role="button" tabindex="0" aria-pressed="false">{{ 'map.pref_filter'|trans }}</span></div>
         </div>
 
         {# HIDDEN UNTIL THERE ARE RIDES TO DRAW (docs/TODO.md, "Ride heatmap").

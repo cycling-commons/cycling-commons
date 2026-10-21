@@ -24,6 +24,27 @@ export function tileLabels(cyl){
   return String(cyl ?? '').split(';').filter(Boolean);
 }
 
+/* Routes for your bikes (map-and-search.md §4.4): a route for any chosen bike
+   stays, a route that declares no bike type always stays; no chip on, no filter. */
+export function routeBikeMatch(bikeTypes, activeBikes){
+  if(!activeBikes || !activeBikes.size) return true;
+  if(!Array.isArray(bikeTypes) || !bikeTypes.length) return true;   // undeclared → keep
+  return bikeTypes.some(t => activeBikes.has(t));
+}
+
+/* The bike chips remembered in this browser, kept to the bike types the map
+   has: a JSON list, or the old single chip's on/off. Nothing stored, or a value
+   that does not read, means the rider's saved bikes on. */
+export function readPrefBikes(stored, riderBikes, allBikes){
+  const mine = Array.isArray(riderBikes) ? riderBikes : [];
+  if(stored === 'off') return [];
+  if(stored == null || stored === 'on') return mine.slice();
+  try{
+    const list = JSON.parse(stored);
+    return Array.isArray(list) ? (allBikes || []).filter(b => list.includes(b)) : mine.slice();
+  }catch(e){ return mine.slice(); }
+}
+
 /** A chip group narrows the map exactly when something in it is deselected. */
 export function narrowed(activeSet, allSet){
   return !!(activeSet && allSet) && activeSet.size < allSet.size;

@@ -512,3 +512,13 @@ test('a hit frames itself before the scope draws over it', () => {
   const ride = read('assets/map/ride-check.js');
   assert.ok(ride.includes('keepCameraForNextScope()'), 'the ride check must claim the camera for its own framing');
 });
+
+test('Routes for your bikes is one chip per bike type, an opt-in group', () => {
+  const s = panelSrc('p-layers');
+  const grp = s.slice(s.indexOf('id="prefGrp"'), s.indexOf('</div>', s.indexOf('id="prefBikes"')));
+  assert.ok(/class="chips f-optin" id="prefBikes"/.test(grp), 'no opt-in #prefBikes row');
+  for (const b of ['Road', 'Gravel', 'MTB', 'E-bike', 'Handbike', 'Recumbent', 'Trike', 'Tandem']) {
+    assert.ok(grp.includes(`data-v="${b}"`), `no ${b} chip`);
+  }
+  assert.ok(!s.includes('id="prefFilter"'), 'the single preference chip is still there');
+});

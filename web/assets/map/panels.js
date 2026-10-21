@@ -11,7 +11,7 @@ import { CATALOG, catalogRows, catalogUtility, catalogVotable, catalogModeration
          active, layerByKey, mode, setMode,
          resolveInitialMode, MODE_LS_KEY } from './catalog.js';
 import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
-         applyStaysAccessFilter, syncFacetChips, prefFilterEnabled, setPrefFilter, PREF_FILTER_KEY } from './render.js';
+         applyStaysAccessFilter, syncFacetChips, prefFilterEnabled, setPrefFilter, prefBikes, setPrefBikes } from './render.js';
 import { mapToast, clearRevealPin } from './drawer.js';
 import { layerGlyph } from './icons.js';
 import { refilterClusters, updateConfMarkers } from './osm-pools.js';
@@ -273,11 +273,8 @@ export function initFilterPill(){
     document.querySelectorAll('#filters .f-optin .chip').forEach(c=>{
       c.classList.remove('on'); c.setAttribute('aria-pressed','false');
     });
-    // Preference state lives in render.js, not the class.
-    if(prefFilterEnabled()){
-      setPrefFilter(false);
-      try{ localStorage.setItem(PREF_FILTER_KEY, 'off'); }catch(e){ /* private mode */ }
-    }
+    // Preference state lives in render.js, not the class; setPrefFilter remembers it.
+    if(prefFilterEnabled()) setPrefFilter(false);
     syncFacetChips();
     applyStaysAccessFilter();
     // Best-of facets are f-optin too — the only reset the server must hear.
@@ -493,15 +490,23 @@ export function initChips(){
   refreshBestOf();
   // Generic chip toggle; climb/pref/area handlers below reassign onclick.
   document.querySelectorAll('.grp .chips .chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
-  // Preference prefilter: later onclick overrides the generic binder above.
-  (function initPrefChip(){
-    const chip=document.getElementById('prefFilter'), grp=document.getElementById('prefGrp');
-    if(!chip||!grp||!PREFS.bikes.length) return;      // anonymous / no prefs → group stays hidden
+  // Routes for your bikes: one chip per bike type, the saved bikes on at first, every chip
+  // changeable; later onclick overrides the generic binder above.
+  (function initPrefBikes(){
+    const box=document.getElementById('prefBikes'), grp=document.getElementById('prefGrp');
+    if(!box||!grp) return;
     grp.hidden=false;
-    const sync=()=>{ const on=prefFilterEnabled(); chip.classList.toggle('on', on); chip.setAttribute('aria-pressed', on?'true':'false'); };
-    const flip=()=>{ const on=!prefFilterEnabled(); setPrefFilter(on); try{ localStorage.setItem(PREF_FILTER_KEY, on?'on':'off'); }catch(e){} sync(); render(); updateCounts(); };
-    chip.onclick=flip;
-    chip.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); flip(); } };
+    const chips=[...box.querySelectorAll('.chip')];
+    const sync=()=>chips.forEach(c=>{ const on=prefBikes().has(c.dataset.v); c.classList.toggle('on', on); c.setAttribute('aria-pressed', on?'true':'false'); });
+    chips.forEach(c=>{
+      const flip=()=>{
+        const next=new Set(prefBikes());
+        if(next.has(c.dataset.v)) next.delete(c.dataset.v); else next.add(c.dataset.v);
+        setPrefBikes([...next]); sync(); render(); updateCounts();
+      };
+      c.onclick=flip;
+      c.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); flip(); } };
+    });
     sync();
   })();
   // "Set my area" cold-start (docs/specs/map-and-search.md §4.5). Round to 2dp

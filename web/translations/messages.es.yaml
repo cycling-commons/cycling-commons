@@ -1795,7 +1795,6 @@ map:
   view_hint_curated: 'Los mejores puertos, alojamientos y miradores, elegidos por ciclistas.'
   view_hint_confirmed: 'Todo lo de Lo mejor, más cada sitio que alguien ha ido a comprobar.'
   view_hint_all: 'Los datos completos, incluidas importaciones sin revisar.'
-  pref_filter_head: 'Tus preferencias'
   pref_filter: 'Rutas para tus bicis'
   data_layers: 'Capas de datos'
   # Encabezados de grupo del carril de capas — los mismos dos grupos y el mismo

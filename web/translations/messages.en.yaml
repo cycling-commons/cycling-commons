@@ -1789,7 +1789,6 @@ map:
   view_hint_curated: 'The best climbs, stays and views, chosen by riders.'
   view_hint_confirmed: 'Everything in Best of, plus every place somebody has been and checked.'
   view_hint_all: 'The full data, including imports nobody has looked at yet.'
-  pref_filter_head: 'Your preferences'
   pref_filter: 'Routes for your bikes'
   data_layers: 'Data layers'
   # Layer-rail group headings — same two groups, same vocabulary as the
