@@ -361,6 +361,7 @@
     <div class="mp-list" id="mpList"></div>
     <div class="mp-foot"><button type="button" class="btn ghost" id="mpNew">{{ 'settings.presets_new'|trans }}</button><span class="help" id="mpCount"></span></div>
     <div class="mp-editor" id="mpEditor" hidden>
+      <div class="field"><label>{{ 'settings.presets_use_for'|trans }}</label><div class="mp-pchips" id="mpUse"></div></div>
       <div class="field"><label for="mpName">{{ 'settings.presets_name'|trans }}</label><input type="text" id="mpName" maxlength="40"></div>
       <div class="field"><label>{{ 'map.view_mode'|trans }}</label><div class="mp-seg" id="mpMode"></div></div>
       <div class="field"><label>{{ 'map.data_layers'|trans }}</label><div class="mp-rows" id="mpLayers"></div></div>
@@ -370,7 +371,6 @@
       <div class="field"><label>{{ 'map.best_season'|trans }}</label><div class="mp-pchips" id="mpSeasons"></div></div>
       <div class="field"><label>{{ 'map.best_bike'|trans }}</label><div class="mp-pchips" id="mpBikes"></div></div>
       <div class="field"><label>{{ 'settings.presets_facets'|trans }}</label><div id="mpFacets"></div><p class="help">{{ 'settings.presets_facets_help'|trans }}</p></div>
-      <div class="field"><label>{{ 'settings.presets_use_for'|trans }}</label><div class="mp-pchips" id="mpUse"></div></div>
       <div class="field"><label>{{ 'map.stay_for_cyclists'|trans }}</label><div class="mp-pchips" id="mpBikeFriendly"></div></div>
       <div class="help" id="mpStatus" hidden></div>
       <div class="submit-row mp-actions"><button type="button" class="btn ghost" id="mpCancel">{{ 'settings.presets_cancel'|trans }}</button><button type="button" class="btn" id="mpSave">{{ 'settings.presets_save'|trans }}</button></div>

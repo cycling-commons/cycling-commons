@@ -134,10 +134,11 @@ profile.
   icon in its colour (`CC_PRESET_CATALOG`, from `CategoryTable` and
   `ItemType::svgPath()`), and Edit, Make default, Delete. "+ New preset" is
   disabled at the cap.
-- The editor: the name, the view mode, the twelve layers and the two
-  overlays as switches with their icons, the season and bike chips, the
-  facet chips, and "Use this preset for" (Default, Plan a ride, Check
-  my ride, Scout review), each card showing its tools as tags. Save and
+- The editor, top to bottom: "Use this preset for" (Default, Plan a ride,
+  Check my ride, Scout review), each card showing its tools as tags; the
+  name; the view mode; the eleven layers and the two overlays as switches
+  with their icons; the key's surface and route rows; the season and bike
+  chips; the facet chips; and the Stays for cyclists chip. Save and
   Cancel. An off switch is not faded: the switch says it.
 - The page works without the script in one sense only: it shows the list;
   editing needs it, as the public-profile toggle does.
