@@ -65,6 +65,9 @@ final class ReleaseNotes
             'date' => '2026-10-21',
             'sections' => [
                 'public' => [
+                    'changelog.v098_ireland',
+                    'changelog.v098_cycling_history',
+                    'changelog.v098_roadmap_done',
                     'changelog.v098_region_story',
                     'changelog.v098_translations',
                     'changelog.v098_region_page',
@@ -80,6 +83,9 @@ final class ReleaseNotes
                 ],
             ],
             'kinds' => [
+                'changelog.v098_ireland' => 'new',
+                'changelog.v098_cycling_history' => 'new',
+                'changelog.v098_roadmap_done' => 'new',
                 'changelog.v098_region_story' => 'new',
                 'changelog.v098_translations' => 'new',
                 'changelog.v098_region_page' => 'improved',
