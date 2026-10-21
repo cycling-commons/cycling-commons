@@ -21,6 +21,16 @@ final class SafeBrowsing
     /** Everything Google's `threatMatches` can answer with that we act on. */
     public const string SAFE = 'safe';
     public const string UNSAFE = 'unsafe';
+    /**
+     * How long a clean answer is used without asking again: the Lookup API
+     * gives no duration for one, and sites get compromised; 5 to 15
+     * minutes is usual.
+     */
+    public const int SAFE_TTL = 600;
+
+    /** The Safe Browsing terms: a URL may not be treated as unsafe on information older than 30 minutes. */
+    public const int UNSAFE_TTL_MAX = 1800;
+
     /** Asked and not answered - a timeout, an outage, or no key at all. */
     public const string UNKNOWN = 'unknown';
 
@@ -51,24 +61,39 @@ final class SafeBrowsing
      */
     public function check(array $urls): array
     {
+        return array_map(static fn (array $answer): string => $answer['verdict'], $this->lookup($urls));
+    }
+
+    /**
+     * Verdicts with how many seconds each may be used without asking again
+     * (the Safe Browsing terms): a match its `cacheDuration`, at most
+     * {@see self::UNSAFE_TTL_MAX}; a clean answer {@see self::SAFE_TTL}; an
+     * unknown one 0, so it is asked again next time.
+     *
+     * @param list<string> $urls
+     *
+     * @return array<string, array{verdict: string, ttl: int}>
+     */
+    public function lookup(array $urls): array
+    {
         $urls = array_values(array_unique(array_filter($urls, static fn (string $u): bool => '' !== trim($u))));
         if ([] === $urls) {
             return [];
         }
 
-        $verdicts = [];
+        $answers = [];
         $ask = [];
         foreach ($urls as $url) {
             if (self::isAllowlisted($url)) {
-                $verdicts[$url] = self::SAFE;
+                $answers[$url] = ['verdict' => self::SAFE, 'ttl' => self::SAFE_TTL];
                 continue;
             }
-            $verdicts[$url] = self::UNKNOWN;
+            $answers[$url] = ['verdict' => self::UNKNOWN, 'ttl' => 0];
             $ask[] = $url;
         }
 
         if (!$this->isEnabled() || [] === $ask) {
-            return $verdicts;
+            return $answers;
         }
 
         try {
@@ -88,27 +113,41 @@ final class SafeBrowsing
                 ],
                 'timeout' => 5,
             ]);
-            /** @var array{matches?: list<array{threat?: array{url?: string}}>} $data */
+            /** @var array{matches?: list<array{threat?: array{url?: string}, cacheDuration?: string}>} $data */
             $data = $response->toArray(false);
         } catch (\Throwable $e) {
             /* Failures stay UNKNOWN. Fail-open vs fail-closed is the caller's decision. */
             $this->logger->warning('Safe Browsing lookup failed', ['error' => $e->getMessage()]);
 
-            return $verdicts;
+            return $answers;
         }
 
         // Unmatched lookups are safe; only matches are named.
         foreach ($ask as $url) {
-            $verdicts[$url] = self::SAFE;
+            $answers[$url] = ['verdict' => self::SAFE, 'ttl' => self::SAFE_TTL];
         }
         foreach ($data['matches'] ?? [] as $match) {
             $url = $match['threat']['url'] ?? null;
-            if (\is_string($url) && \array_key_exists($url, $verdicts)) {
-                $verdicts[$url] = self::UNSAFE;
+            if (\is_string($url) && \array_key_exists($url, $answers)) {
+                $answers[$url] = ['verdict' => self::UNSAFE, 'ttl' => self::matchTtl($match['cacheDuration'] ?? null)];
             }
         }
 
-        return $verdicts;
+        return $answers;
+    }
+
+    /**
+     * Seconds a match may be used: its `cacheDuration` ("300.000s"), never
+     * more than {@see self::UNSAFE_TTL_MAX}; without one, the shortest the
+     * API gives, 300.
+     */
+    public static function matchTtl(mixed $cacheDuration): int
+    {
+        if (!\is_string($cacheDuration) || 1 !== preg_match('~^(\d+)(?:\.\d+)?s$~', $cacheDuration, $m)) {
+            return min(300, self::UNSAFE_TTL_MAX);
+        }
+
+        return max(0, min((int) $m[1], self::UNSAFE_TTL_MAX));
     }
 
     /**

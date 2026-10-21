@@ -31,9 +31,15 @@ final class LinkVerdictStore
     /**
      * Upsert by url. Store UNKNOWN too: that is not the same as never asked.
      *
+     * `$ttls` is how many seconds each verdict may be used without asking
+     * again ({@see SafeBrowsing::lookup()}); a url without one gets its
+     * verdict's longest: {@see SafeBrowsing::SAFE_TTL}, the terms' 30 minutes
+     * for unsafe, none for unknown.
+     *
      * @param array<string, string> $verdicts url => SafeBrowsing::SAFE|UNSAFE|UNKNOWN
+     * @param array<string, int>    $ttls     url => seconds
      */
-    public function record(array $verdicts): void
+    public function record(array $verdicts, array $ttls = []): void
     {
         if ([] === $verdicts) {
             return;
@@ -41,15 +47,50 @@ final class LinkVerdictStore
 
         $now = $this->clock->now();
         foreach ($verdicts as $url => $verdict) {
+            $ttl = $ttls[$url] ?? match ($verdict) {
+                SafeBrowsing::SAFE => SafeBrowsing::SAFE_TTL,
+                SafeBrowsing::UNSAFE => SafeBrowsing::UNSAFE_TTL_MAX,
+                default => 0,
+            };
             $this->db->executeStatement(
-                'INSERT INTO link_verdict (url_hash, url, verdict, checked_at)
-                 VALUES (:hash, :url, :verdict, :now)
+                'INSERT INTO link_verdict (url_hash, url, verdict, checked_at, fresh_until)
+                 VALUES (:hash, :url, :verdict, :now, :until)
                  ON CONFLICT (url_hash) DO UPDATE
-                   SET verdict = EXCLUDED.verdict, checked_at = EXCLUDED.checked_at, url = EXCLUDED.url',
-                ['hash' => self::hash($url), 'url' => $url, 'verdict' => $verdict, 'now' => $now],
-                ['now' => 'datetime_immutable'],
+                   SET verdict = EXCLUDED.verdict, checked_at = EXCLUDED.checked_at, url = EXCLUDED.url, fresh_until = EXCLUDED.fresh_until',
+                ['hash' => self::hash($url), 'url' => $url, 'verdict' => $verdict, 'now' => $now, 'until' => $now->modify(sprintf('+%d seconds', max(0, $ttl)))],
+                ['now' => 'datetime_immutable', 'until' => 'datetime_immutable'],
             );
         }
+    }
+
+    /**
+     * The verdicts that may still be used without asking Google again; a url
+     * whose verdict expired, or was never asked, is left out.
+     *
+     * @param list<string> $urls
+     *
+     * @return array<string, string> url => verdict
+     */
+    public function freshVerdicts(array $urls): array
+    {
+        $urls = array_values(array_unique($urls));
+        if ([] === $urls) {
+            return [];
+        }
+        $rows = $this->db->fetchAllAssociative(
+            'SELECT url, verdict FROM link_verdict WHERE url_hash IN (?) AND fresh_until > ?',
+            [array_map(self::hash(...), $urls), $this->clock->now()],
+            [\Doctrine\DBAL\ArrayParameterType::STRING, 'datetime_immutable'],
+        );
+        $out = [];
+        foreach ($rows as $row) {
+            $url = (string) $row['url'];
+            if (\in_array($url, $urls, true)) {
+                $out[$url] = (string) $row['verdict'];
+            }
+        }
+
+        return $out;
     }
 
     /**

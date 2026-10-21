@@ -843,6 +843,21 @@ sha256 of the url, because a btree key over unbounded TEXT has a size limit a
 long url could cross, and a rider's save must never be lost to an index
 detail.
 
+**Reused only as long as the terms allow (2026-10-20).** Every call site asks
+through `App\Catalog\Links\LinkSafety`: a stored verdict whose
+`fresh_until` (`Version20261020020000`) has not passed is used as it is,
+anything else goes to Google in one batched lookup and is stored with how
+long it may be used (`SafeBrowsing::lookup()`). The Safe Browsing terms set
+the limits: a match no longer than the `cacheDuration` Google returns with it
+and never more than 30 minutes (`UNSAFE_TTL_MAX`, 300 seconds when it carries
+none), because a URL may not be treated as unsafe on information older than
+that; a clean answer, which carries no duration, 10 minutes (`SAFE_TTL`, in
+the usual 5 to 15); `unknown` never, so an outage is asked again next time.
+Rows from before the column have no limit and count as expired. The key is
+the url alone, so one answer serves every place, translation and region text
+that links the same page, the desk included: a reload, a resend or a
+translation within the time asks Google nothing. Pinned by `LinkSafetyTest`.
+
 **Fail OPEN, flag, never reject.** A rider must not lose their contribution
 because a Google endpoint is down. A flagged submission still reaches the
 queue, carrying the verdict on the card, because a false positive that
@@ -851,8 +866,8 @@ no key) reads "could not be checked", never clean. The two call sites:
 
 | where | direction | what it does |
 |---|---|---|
-| **submit** (`CatalogContributionService::checkLinks`) | fail OPEN, never blocks | asks, records whatever comes back, and swallows every error: nothing about a background check may cost a rider their save |
-| **the queue card** (`SubmissionQueue::linkFlags`, `linkFlag` on the row) | flag, never reject | shows the worst verdict for the links THIS submission proposes, `unsafe` ("A link in this submission is on a known-unsafe list. Do not click it.") and `unknown` differently, on both the desk template and the map drawer |
+| **submit** (`CatalogContributionService::checkLinks`) | fail OPEN, never blocks | asks (a fresh stored answer, else Google), records whatever comes back, and swallows every error: nothing about a background check may cost a rider their save |
+| **the queue card** (`SubmissionQueue::linkFlags`, `linkFlag` on the row) | flag, never reject | shows the worst verdict for the links THIS submission proposes, `unsafe` ("A link in this submission is on a known-unsafe list. Do not click it.") and `unknown` differently, on both the desk template and the map drawer; an expired verdict is asked again first, so no card shows "unsafe" on an answer older than the terms allow |
 
 `SAFE_BROWSING_KEY` is on the deploy-prerequisites list (operations.md §3).
 

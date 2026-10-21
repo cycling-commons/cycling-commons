@@ -16,7 +16,7 @@ use App\Catalog\Import\OutboundLinks;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
-use App\Catalog\Links\LinkVerdictStore;
+use App\Catalog\Links\LinkSafety;
 use App\Catalog\Links\SafeBrowsing;
 use App\Catalog\LocationMode;
 use App\Catalog\SubmissionStatus;
@@ -59,8 +59,7 @@ final class CatalogContributionService implements ContributionStubInterface
         private readonly RateLimiterFactoryInterface $contributionSubmitLimiter,
         private readonly MediaClaimService $mediaClaims,
         private readonly ClimbProfiler $profiler,
-        private readonly SafeBrowsing $safeBrowsing,
-        private readonly LinkVerdictStore $linkVerdicts,
+        private readonly LinkSafety $linkSafety,
         private readonly OsmCandidates $osmCandidates,
         private readonly ModerationService $moderation,
         private readonly RoleHierarchyInterface $roleHierarchy,
@@ -1037,11 +1036,9 @@ final class CatalogContributionService implements ContributionStubInterface
             return;
         }
 
-        try {
-            $this->linkVerdicts->record($this->safeBrowsing->check($urls));
-        } catch (\Throwable) {
-            // Fail-open: a background check must not cost the rider the save.
-        }
+        // Asked and stored for the curator's review, reusing a fresh answer;
+        // fails open, so it never costs the rider the save (LinkSafety).
+        $this->linkSafety->verdicts($urls);
     }
 
     /**

@@ -9,7 +9,7 @@ namespace App\Moderation;
 use App\Catalog\Entity\Item;
 use App\Catalog\Import\OsmCandidates;
 use App\Catalog\ItemType;
-use App\Catalog\Links\LinkVerdictStore;
+use App\Catalog\Links\LinkSafety;
 use App\Catalog\Links\SafeBrowsing;
 use App\Catalog\SubmissionType;
 use App\Contribution\ChangeValue;
@@ -44,7 +44,7 @@ final class SubmissionQueue
         private readonly Connection $db,
         private readonly ClockInterface $clock,
         private readonly MediaStorage $mediaStorage,
-        private readonly LinkVerdictStore $linkVerdicts,
+        private readonly LinkSafety $linkSafety,
         private readonly OsmCandidates $osmCandidates,
         private readonly ReplacedPlaces $replacedPlaces,
     ) {
@@ -790,7 +790,9 @@ final class SubmissionQueue
             return [];
         }
 
-        $verdicts = $this->linkVerdicts->verdictsFor(array_values(array_unique(array_merge(...array_values($bySubmission)))));
+        // A verdict older than it may be used is asked again: the terms allow
+        // no "unsafe" on information older than 30 minutes (LinkSafety).
+        $verdicts = $this->linkSafety->verdicts(array_values(array_unique(array_merge(...array_values($bySubmission)))));
 
         $flags = [];
         foreach ($bySubmission as $id => $urls) {
