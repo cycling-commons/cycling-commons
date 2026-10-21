@@ -1,0 +1,87 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  Cycling history on a timeline (docs/specs/cycling-history.md).
+
+  The line is the roadmap's trail: a dashed path that sways a little, with
+  each year a round chip on it. On a wide screen the cards take turns left
+  and right of the trail; on a narrow one they all follow it on the right.
+
+  Every card is a History & culture place on the map with a cycling story,
+  read from the served rows (CyclingHistory), so the page and the map always
+  show the same places. A place with a year sits on the line at that year;
+  a place without one is listed under it. A card's links are the item's own
+  `links`, resolved to the reader's language by the drawer's rule, with the
+  drawer's rel: riders can edit them.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+<link rel="stylesheet" href="{{ asset('styles/page/pages/cycling_history.css') }}">
+{% endblock %}
+
+{% macro card(p) %}
+  <article class="ch-card{% if p.photo %} ch-card--photo{% endif %}">
+    {% if p.photo %}
+      <figure class="ch-photo">
+        <img src="{{ p.photo.src }}" alt="{{ p.name }}" loading="lazy" decoding="async">
+        <figcaption class="cred">
+          {%- if p.photo.creditUrl %}<a href="{{ p.photo.creditUrl }}" rel="noopener nofollow" target="_blank">{{ p.photo.credit }}</a>{% else %}{{ p.photo.credit }}{% endif -%}
+          {%- if p.photo.license %} · {% if p.photo.licenseUrl %}<a href="{{ p.photo.licenseUrl }}" rel="noopener nofollow" target="_blank">{{ p.photo.license }}</a>{% else %}{{ p.photo.license }}{% endif %}{% endif -%}
+          {%- if p.photo.source %} · <a href="{{ p.photo.source }}" rel="noopener nofollow" target="_blank">Wikimedia Commons</a>{% endif -%}
+        </figcaption>
+      </figure>
+    {% endif %}
+    <div class="ch-text">
+    <h3 class="ch-name">{{ p.name }}</h3>
+    <p class="ch-meta">{% if p.kind %}{{ p.kind|trans }} · {% endif %}{{ p.region }}, {{ p.country }}</p>
+    <p class="ch-story">{{ p.story }}</p>
+    <p class="ch-links">
+      <a class="ch-map" href="{{ path('map') }}?item={{ p.id }}">{{ 'history.on_map'|trans }} &rarr;</a>
+      {% for l in p.links %}
+        <a href="{{ l.href }}" target="_blank" rel="noopener noreferrer nofollow">{{ l.label == 'Wikipedia' ? 'map.d_lnk_wikipedia'|trans : l.label }} <span class="ch-dom">{{ l.domain }}</span> &#8599;</a>
+      {% endfor %}
+    </p>
+    </div>
+  </article>
+{% endmacro %}
+
+{% block body %}
+<div class="lhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{{ 'history.kicker'|trans }}</div>
+  <h1 class="disp">{{ 'history.title'|trans }}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ 'history.lead'|trans }}</p>
+</div></div>
+
+<section class="pad"><div class="wrap"><div class="ch-wrap">
+  {% if timeline.dated is empty and timeline.undated is empty %}
+    <p class="ch-empty">{{ 'history.empty'|trans }}</p>
+  {% endif %}
+
+  {% if timeline.dated is not empty %}
+  <ol class="ch-line">
+    {% for y in timeline.dated %}
+      <li class="ch-year">
+        <div class="ch-y"><span>{{ y.year }}</span></div>
+        <div class="ch-cards">
+          {% for p in y.places %}{{ _self.card(p) }}{% endfor %}
+        </div>
+      </li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+
+  {% if timeline.undated is not empty %}
+    <h2 class="ch-h2">{{ 'history.undated_h'|trans }}</h2>
+    <p class="ch-sub">{{ 'history.undated_p'|trans }}</p>
+    <div class="ch-undated">
+      {% for p in timeline.undated %}{{ _self.card(p) }}{% endfor %}
+    </div>
+  {% endif %}
+
+  <aside class="ch-add">
+    <h2 class="ch-h2">{{ 'history.add_h'|trans }}</h2>
+    <p>{{ 'history.add_p'|trans }}</p>
+    <a class="btn btn-p" href="{{ path('improve', {type: 'history-culture', mode: 'add'}) }}">{{ 'history.add_cta'|trans }}</a>
+  </aside>
+</div></div></section>
+{% endblock %}

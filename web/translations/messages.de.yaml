@@ -280,6 +280,8 @@ pages:
   card_coverage_p: 'Abdeckung und Aktualität nach Land — und wo du helfen kannst.'
   card_mapkey_h: 'Kartenlegende'
   card_mapkey_p: 'Jede Markierung auf der Karte und was sie bedeutet.'
+  card_history_h: 'Radsportgeschichte'
+  card_history_p: 'Wo Radsportgeschichte geschrieben wurde, auf einer Zeitleiste.'
   card_roadmapdone_h: 'Erledigt im Fahrplan'
   card_roadmapdone_p: 'Alles aus dem Fahrplan, was jetzt auf der Seite ist.'
   card_contributors_h: 'Beitragende'
@@ -2392,6 +2394,7 @@ contribute:
     invisible_characters: 'Dieser Text enthält unsichtbare oder Formatierungszeichen, die nicht erlaubt sind.'
     field_required: 'Dieses Feld ist erforderlich.'
     field_too_long: 'Dieser Wert ist zu lang.'
+    invalid_year: 'Schreib eine Jahreszahl in Ziffern, zum Beispiel 1903.'
     suspicious_characters: 'Dieser Text enthält nicht unterstützte Zeichen oder gemischte Schriftsysteme.'
     invalid_url: 'Gib eine vollständige Webadresse ein, die mit http:// oder https:// beginnt.'
     rate_limited: 'Du hast das Beitragslimit vorerst erreicht — bitte versuche es später erneut.'
@@ -3928,6 +3931,8 @@ meta:
   accessibility_description: 'Wie nutzbar der Cycling Commons ist, samt der Teile, die noch nicht gut genug sind, und wie man eine Barriere meldet.'
   map_key_title: 'Cycling Commons — Kartenlegende'
   map_key_description: 'Jede Markierung auf der Karte des Cycling Commons und was sie bedeutet: Nadeln, Scheiben, Ränder, Abzeichen, Linien und Cluster.'
+  cycling_history_title: 'Radsportgeschichte · Cycling Commons'
+  cycling_history_description: 'Wo Radsportgeschichte geschrieben wurde, auf einer Zeitleiste: erste Fahrten, große Rennen, Rekorde und die Fahrer dahinter, jeweils ein Ort auf der Karte.'
   roles_title: 'Cycling Commons: Beitragende und Kuratoren'
   roles_description: 'Was ein Beitragender und was ein Kurator auf der Cycling-Commons-Karte tut, und wie eine Änderung bestätigt wird.'
 legend:
@@ -4555,6 +4560,9 @@ admin:
       roadmap_say_live:
         label: "Fahrplan: Stimmen, Folgen und Vorschläge"
         help: "Auf 1 setzen, damit Fahrende für Punkte auf dem Fahrplan stimmen und ihnen folgen sowie Vorschläge schicken und darüber abstimmen können. Bei 0 zeigt der Fahrplan nur seine Liste, und das Vorschlagsformular ist zu."
+      cycling_history_live:
+        label: "Zeitleiste Radsportgeschichte ist live"
+        help: "Auf 1 setzen, sobald die Orte der Radsportgeschichte auf dieser Seite importiert sind. Bei 0 antwortet die Seite /cycling-history mit nicht gefunden, und Fußzeile, Verzeichnis aller Seiten, Sitemap und Was neu ist lassen sie weg."
       map_confirmed_default_threshold:
         label: 'Reife für Bestätigt: geprüfte Orte'
         help: 'Wie viele von jemandem geprüfte Orte eine Region braucht, bevor ein Kurator sie standardmäßig im Modus Bestätigt öffnen darf. Eine Verteilung über Arten ist nicht nötig, nur genug, damit der Modus nicht leer wirkt.'
@@ -4720,6 +4728,7 @@ item_type:
 'Closed': 'Geschlossen'
 'Cost': 'Kosten'
 'Cycling story / link': 'Radgeschichte / Link'
+'Year of the story': 'Jahr der Geschichte'
 'Cycling-friendliness (1–5)': 'Fahrradfreundlichkeit (1–5)'
 'Difficulty': 'Schwierigkeit'
 'Dominant surface': 'Vorherrschender Belag'
@@ -5905,3 +5914,14 @@ account_suspension:
 email:
   signoff_greeting: "Rückenwind und Sonnenschein,"
   signoff_team: "Team Cycling Commons"
+history:
+  kicker: 'Radsportgeschichte'
+  title: 'Wo Radsportgeschichte geschrieben wurde'
+  lead: 'Orte auf der Karte, an denen Radsportgeschichte geschrieben wurde, in der Reihenfolge, in der sie geschah. Du kannst zu jedem dieser Orte radeln.'
+  on_map: 'Auf der Karte zeigen'
+  undated_h: 'Weitere Orte für einen Besuch'
+  undated_p: 'Museen und Bahnen, deren Geschichte viele Jahre umfasst.'
+  empty: 'Noch sind keine Orte mit einer Radsportgeschichte auf der Karte.'
+  add_h: 'Du kennst einen Ort mit einer Radsportgeschichte?'
+  add_p: 'Füge ihn als Ort unter Geschichte & Kultur hinzu, mit seiner Geschichte, seinem Jahr und seinem Standort.'
+  add_cta: 'Ort hinzufügen'

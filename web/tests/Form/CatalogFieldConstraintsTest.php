@@ -61,4 +61,18 @@ final class CatalogFieldConstraintsTest extends TestCase
             self::assertNotInstanceOf(Url::class, $c);
         }
     }
+
+    /** The year of a cycling story (cycling-history.md §1): digits only, or the timeline cannot order it. */
+    public function testAYearFieldTakesOnlyThreeOrFourDigits(): void
+    {
+        $validator = \Symfony\Component\Validator\Validation::createValidator();
+        $constraints = self::constraintsOf(CatalogField::year('year', 'Year of the story'));
+
+        foreach (['1903', '875'] as $ok) {
+            self::assertCount(0, $validator->validate($ok, $constraints), $ok);
+        }
+        foreach (['about 1900', '19th century', '12345', '1903 '] as $bad) {
+            self::assertGreaterThan(0, \count($validator->validate($bad, $constraints)), $bad);
+        }
+    }
 }

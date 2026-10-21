@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# The cycling history timeline (docs/specs/cycling-history.md §5).
+parameters:
+    # Default of the setting that opens /cycling-history and its links in the
+    # footer, on /pages and in What's new (SettingsRegistry CYCLING_HISTORY_LIVE):
+    # off until the places are seeded on that environment.
+    cycling_history.live: 0

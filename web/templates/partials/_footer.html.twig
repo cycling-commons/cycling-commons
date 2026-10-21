@@ -18,6 +18,7 @@
       <a href="{{ path('map_key') }}">{{ 'pages.card_mapkey_h'|trans }}</a>
       <a href="{{ path('regions') }}">{{ 'footer.regions'|trans }}</a>
       <a href="{{ path('coverage') }}">{{ 'nav.coverage'|trans }}</a>
+      {% if cycling_history_live() %}<a href="{{ path('cycling_history') }}">{{ 'pages.card_history_h'|trans }}</a>{% endif %}
       <a href="{{ path('scout') }}">{{ 'pages.card_scout_h'|trans }}</a>
     </nav>
 

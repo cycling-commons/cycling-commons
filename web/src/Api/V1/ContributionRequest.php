@@ -186,14 +186,17 @@ final readonly class ContributionRequest
                 FieldKind::Select => \is_string($value) && \in_array($value, $field->choices, true),
                 FieldKind::MultiSelect => \is_array($value) && array_is_list($value) && \count($value) === \count(array_filter($value, is_string(...))) && [] === array_diff($value, $field->choices),
                 FieldKind::Url => \is_string($value) && 1 === preg_match('~^https?://\S+$~i', $value) && \strlen($value) <= 500,
-                default => \is_string($value) && mb_strlen(self::clean($value, FieldKind::Textarea === $field->kind)) <= $field->maxLength,
+                default => \is_string($value) && mb_strlen(self::clean($value, FieldKind::Textarea === $field->kind)) <= $field->maxLength
+                    && (null === $field->pattern || 1 === preg_match($field->pattern, self::clean($value, false))),
             };
             if (!$ok) {
                 return match ($field->kind) {
                     FieldKind::Select => \sprintf('%s must be one of: %s', $key, implode(' | ', $field->choices)),
                     FieldKind::MultiSelect => \sprintf('%s must be a list of: %s', $key, implode(' | ', $field->choices)),
                     FieldKind::Url => \sprintf('%s must be an http(s) address of at most 500 characters', $key),
-                    default => \sprintf('%s must be text of at most %d characters', $key, $field->maxLength),
+                    default => null !== $field->pattern
+                        ? \sprintf('%s must match %s', $key, $field->pattern)
+                        : \sprintf('%s must be text of at most %d characters', $key, $field->maxLength),
                 };
             }
             $out[$key] = \in_array($field->kind, [FieldKind::Text, FieldKind::Textarea], true) ? self::clean((string) $value, FieldKind::Textarea === $field->kind) : $value;

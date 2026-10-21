@@ -577,8 +577,11 @@ Citadels`, and `--letter=R` walks the routes alone.
 Commons file, is **taken off the route** and counted under `taken off a route`:
 the owner's rule is that every photo on a place is served from our own photo
 store (2026-09-14/15), and a route has no display-side stand-in to fall back on.
-A fetch that failed on our side (`failed`: Commons down, no bucket) is kept for
-the next run on both. A dropped file keeps its `commons_photo` row and verdict,
+A fetch that failed on our side (`failed`: Commons down, no bucket, scanner
+down) is kept for the next run on both, and the next run fetches it again
+(`CommonsPhotoRepository::retry()`, within `CommonsPhotoAdmission::MAX_ATTEMPTS`).
+Run the command where the virus scanner is reachable (the worker): from the web
+container every fetch fails with `scanner_unavailable`. A dropped file keeps its `commons_photo` row and verdict,
 but the route no longer names it, so `--recheck-licences` cannot bring it back
 to that route.
 

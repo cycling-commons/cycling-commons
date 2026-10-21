@@ -282,6 +282,8 @@ pages:
   card_coverage_p: 'Cobertura y frescura por país — y dónde ayudar.'
   card_mapkey_h: 'Leyenda del mapa'
   card_mapkey_p: 'Cada marca del mapa y su significado.'
+  card_history_h: 'Historia del ciclismo'
+  card_history_p: 'Donde se escribió la historia del ciclismo, en una línea de tiempo.'
   card_roadmapdone_h: 'Hecho en la hoja de ruta'
   card_roadmapdone_p: 'Todo lo de la hoja de ruta que ya está en el sitio.'
   card_contributors_h: 'Colaboradores'
@@ -1426,6 +1428,7 @@ contribute:
     invisible_characters: 'Este texto contiene caracteres invisibles o de formato que no están permitidos.'
     field_required: 'Este campo es obligatorio.'
     field_too_long: 'Este valor es demasiado largo.'
+    invalid_year: 'Escribe un año solo con cifras, por ejemplo 1903.'
     suspicious_characters: 'Este texto contiene caracteres no admitidos o de alfabetos mezclados.'
     invalid_url: 'Escribe una dirección web completa que empiece por http:// o https://'
     rate_limited: 'Has alcanzado el límite de aportaciones por ahora — inténtalo de nuevo dentro de un rato.'
@@ -3950,6 +3953,8 @@ meta:
   accessibility_description: 'Lo usable que es el Cycling Commons, incluidas las partes que aún no son lo bastante buenas, y cómo informar de una barrera.'
   map_key_title: 'Cycling Commons — Leyenda del mapa'
   map_key_description: 'Cada marca del mapa del Cycling Commons y su significado: chinchetas, discos, bordes, insignias, líneas y grupos.'
+  cycling_history_title: 'Historia del ciclismo · Cycling Commons'
+  cycling_history_description: 'Donde se escribió la historia del ciclismo, en una línea de tiempo: primeras salidas, grandes carreras, récords y los ciclistas que los lograron, cada uno un lugar del mapa.'
   roles_title: 'Cycling Commons: colaboradores y curadores'
   roles_description: 'Qué hace un colaborador y qué hace un curador en el mapa de Cycling Commons, y cómo una edición pasa a confirmada.'
 legend:
@@ -4581,6 +4586,9 @@ admin:
       roadmap_say_live:
         label: "Hoja de ruta: votos, seguimientos y propuestas"
         help: "Pon 1 para que los ciclistas voten y sigan los puntos de la hoja de ruta, y envíen y voten propuestas. Con 0 la hoja de ruta solo muestra su lista y el formulario de propuestas está cerrado."
+      cycling_history_live:
+        label: "La línea de tiempo de la historia del ciclismo está activa"
+        help: "Pon 1 cuando los lugares de la historia del ciclismo estén importados en este sitio. Con 0, la página /cycling-history responde no encontrada, y el pie de página, el directorio de todas las páginas, el mapa del sitio y Novedades la omiten."
       map_confirmed_default_threshold:
         label: 'Preparación de Confirmado: sitios comprobados'
         help: 'Cuántos sitios comprobados por alguien necesita una región antes de que un curador pueda abrirla en modo Confirmado por defecto. No hace falta repartirlos por tipos, solo que haya suficientes para que el modo no parezca vacío.'
@@ -4746,6 +4754,7 @@ item_type:
 'Closed': 'Cerrado'
 'Cost': 'Coste'
 'Cycling story / link': 'Historia ciclista / enlace'
+'Year of the story': 'Año de la historia'
 'Cycling-friendliness (1–5)': 'Trato al ciclista (1–5)'
 'Difficulty': 'Dificultad'
 'Dominant surface': 'Firme predominante'
@@ -5932,3 +5941,14 @@ account_suspension:
 email:
   signoff_greeting: "Viento a favor y sol,"
   signoff_team: "El equipo de Cycling Commons"
+history:
+  kicker: 'Historia del ciclismo'
+  title: 'Donde se escribió la historia del ciclismo'
+  lead: 'Lugares del mapa donde se escribió la historia del ciclismo, en el orden en que ocurrió. Puedes ir en bici a cada uno de ellos.'
+  on_map: 'Ver en el mapa'
+  undated_h: 'Más lugares para visitar'
+  undated_p: 'Museos y velódromos cuya historia abarca muchos años.'
+  empty: 'Todavía no hay lugares con una historia ciclista en el mapa.'
+  add_h: '¿Conoces un lugar con una historia ciclista?'
+  add_p: 'Añádelo como lugar de Historia y cultura, con su historia, su año y su ubicación.'
+  add_cta: 'Añadir un lugar'

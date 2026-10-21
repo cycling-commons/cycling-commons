@@ -31,7 +31,8 @@ features are [P · Scenic views](P-scenic-views.md).
 |---|---|---|
 | Opening hours | select(Unknown / 24/7 / See website) | `[edit]` |
 | Entry fee? | select(Free / Paid / Unknown) | `[edit]` |
-| Cycling story / link | input | `[edit]` |
+| Cycling story / link | textarea (`cyclingStory`), shown full width in the drawer | `[edit]` |
+| Year of the story | text (`year`), three or four digits; puts the place on the timeline ([../cycling-history.md](../cycling-history.md)) | `[edit]` |
 | Official site | url (`web`) | `[edit]` |
 | Other pages about this place | links (`links`) | `[edit]` |
 

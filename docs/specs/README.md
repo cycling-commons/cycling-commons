@@ -75,6 +75,9 @@ Revisit when there is a separate infrastructure repository to hold it.
   behind it. The supply side; `wiki/landscape.md` is the product side.
 - `scenic-views.md`: what counts as a scenic view (letter P) and how coverage
   points, catalog items, a rider's new place and a photo each meet the rules.
+- `cycling-history.md`: the cycling history places (Q places with a cycling
+  story), the hand-written world-wide list, the year field and the
+  `/cycling-history` timeline page.
 - `photo-uploads.md`: the product contract for rider photos: consent,
   moderation, takedown, disposal.
 - `media-storage-architecture.md`: how those photos are stored, scanned,

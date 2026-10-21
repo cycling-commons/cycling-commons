@@ -178,6 +178,10 @@ final class ContributionApiTest extends WebTestCase
         $multi = ['letter' => 'O', 'fields' => ['accessibility' => [['Step-free access']]]];
         $this->call($client, 'POST', '/v1/contributions', $key, array_replace(self::NEW_PLACE, $multi));
         self::assertResponseStatusCodeSame(400, 'a list inside a multi-pick is refused, not a crash');
+        // A cycling story's year is digits or nothing: the timeline orders by it (cycling-history.md §1).
+        $this->call($client, 'POST', '/v1/contributions', $key, array_replace(self::NEW_PLACE, ['letter' => 'Q', 'fields' => ['year' => 'about 1900']]));
+        self::assertResponseStatusCodeSame(400, 'a year that is no year is refused');
+        self::assertSame('invalid_field', json_decode((string) $client->getResponse()->getContent(), true)['error']);
         foreach ($cases as $error => $change) {
             $body = array_filter(array_replace(self::NEW_PLACE, $change), static fn (mixed $v): bool => null !== $v);
             $this->call($client, 'POST', '/v1/contributions', $key, $body);

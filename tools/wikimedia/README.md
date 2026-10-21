@@ -88,6 +88,24 @@ Selection is by sitelink count, which measures **fame, not quality and not
 whether a road goes there**. Review the file. A place whose photo has no stated
 author is dropped rather than shipped uncredited.
 
+## `cycling_history.py` - cycling history places, world wide
+
+```bash
+python3 tools/wikimedia/cycling_history.py
+python3 tools/wikimedia/cycling_history.py --only "Tom Simpson memorial"
+```
+
+The places live in `cycling_history.json`, one line each: a name, a kind, the
+story a rider reads, and the exact `osm` object or Wikidata `qid` that says
+where it is (`wiki`, an English Wikipedia title, only until the Q-id is known).
+Look the id up and check it before you add a line: the first search hit for a
+memorial is as often the village around it, so the script never searches by
+name. It writes `out/cycling-history.json`; `app:catalog:seed-cycling-history
+<file>` seeds it (catalog-data-model.md §5).
+
+Every story is a fact you can check. Write it plain, in English, without
+dashes as punctuation, and leave out what you are not sure of.
+
 ## `climb_foot.py` — where a climb starts, from its summit and its length
 
 ```bash

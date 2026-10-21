@@ -280,6 +280,8 @@ pages:
   card_coverage_p: 'Coverage and freshness by country — and where to help.'
   card_mapkey_h: 'Map key'
   card_mapkey_p: 'Every mark on the map and what it means.'
+  card_history_h: 'Cycling history'
+  card_history_p: 'Where cycling history happened, on a timeline.'
   card_roadmapdone_h: 'Done on the roadmap'
   card_roadmapdone_p: 'Everything from the roadmap that is now on the site.'
   card_contributors_h: 'Contributors'
@@ -1416,6 +1418,7 @@ contribute:
     invisible_characters: 'This text contains invisible or formatting characters that aren’t allowed.'
     field_required: 'This field is required.'
     field_too_long: 'This value is too long.'
+    invalid_year: 'Write a year with digits only, like 1903.'
     suspicious_characters: 'This text contains unsupported or mixed-script characters.'
     invalid_url: 'Enter a full web address starting with http:// or https://'
     rate_limited: 'You have reached the contribution limit for now — please try again in a little while.'
@@ -3942,6 +3945,8 @@ meta:
   accessibility_description: 'How usable the Cycling Commons is, including the parts that are not good enough yet, and how to report a barrier.'
   map_key_title: 'Cycling Commons — Map key'
   map_key_description: 'Every mark on the Cycling Commons map and what it means: pins, discs, borders, badges, lines and clusters.'
+  cycling_history_title: 'Cycling history · Cycling Commons'
+  cycling_history_description: 'Where cycling history happened, on a timeline: first rides, great races, records and the riders behind them, each a place on the map.'
   roles_title: 'Cycling Commons: contributors and curators'
   roles_description: 'What a contributor does and what a curator does on the Cycling Commons map, and how an edit becomes confirmed.'
 legend:
@@ -4572,6 +4577,9 @@ admin:
       roadmap_say_live:
         label: "Roadmap: votes, follows and proposals"
         help: "Set to 1 to let riders vote for and follow roadmap items, and send and vote on proposals. At 0 the roadmap shows its list only and the proposal form is closed."
+      cycling_history_live:
+        label: "Cycling history timeline is live"
+        help: "Set to 1 once the cycling history places are seeded on this site. At 0 the /cycling-history page answers not found, and the footer, the all pages directory, the sitemap and What's new leave it out."
       map_confirmed_default_threshold:
         label: 'Confirmed readiness: checked places'
         help: 'How many places somebody has checked a region needs before a curator may open it in Confirmed mode by default. It needs no spread over kinds of thing, only enough that the mode does not look empty.'
@@ -4737,6 +4745,7 @@ item_type:
 'Closed': 'Closed'
 'Cost': 'Cost'
 'Cycling story / link': 'Cycling story / link'
+'Year of the story': 'Year of the story'
 'Cycling-friendliness (1–5)': 'Cycling-friendliness (1–5)'
 'Difficulty': 'Difficulty'
 'Dominant surface': 'Dominant surface'
@@ -5922,3 +5931,14 @@ account_suspension:
 email:
   signoff_greeting: "Tailwinds and Sunshine,"
   signoff_team: "Team Cycling Commons"
+history:
+  kicker: 'Cycling history'
+  title: 'Where cycling history happened'
+  lead: 'Places on the map where cycling history happened, in the order it happened. You can ride to every one of them.'
+  on_map: 'Show on the map'
+  undated_h: 'More places to visit'
+  undated_p: 'Museums and tracks whose story runs over many years.'
+  empty: 'No places with a cycling story are on the map yet.'
+  add_h: 'Know a place with a cycling story?'
+  add_p: 'Add it as a History & culture place, with its story, its year and its location.'
+  add_cta: 'Add a place'

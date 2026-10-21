@@ -40,6 +40,10 @@ final class CatalogFieldConstraints
             $constraints[] = new Regex(pattern: '/\p{Cf}/u', match: false, message: 'contribute.error.invisible_characters');
         }
 
+        if (null !== $field->pattern) {
+            $constraints[] = new Regex(pattern: $field->pattern, message: $field->patternMessage);
+        }
+
         // docs/specs/catalog-data-model.md §7 — http(s) only; blocks javascript:/data: in a public href.
         if (FieldKind::Url === $field->kind) {
             $constraints[] = new Url(

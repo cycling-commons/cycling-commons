@@ -375,16 +375,41 @@ final class ReleaseNotes
     ];
 
     /**
+     * Notes about a feature that waits behind a system setting: What's new
+     * leaves them out until the feature is switched on, so it never names a
+     * page that answers not found (cycling-history.md §5).
+     */
+    public const array CYCLING_HISTORY_NOTES = ['changelog.v098_cycling_history'];
+
+    /**
      * Every release with its notes grouped, newest first. A release from
      * before sections is one group without a heading (`''`); a sectioned
      * one lists its groups in {@see self::SECTIONS} order and leaves out an
      * empty one.
      *
+     * @param list<string> $hidden notes to leave out, such as {@see self::CYCLING_HISTORY_NOTES} while that switch is off
+     *
      * @return list<array{version: string, date: string, sections: array<string, list<string>>, kinds: array<string, string>}>
      */
-    public static function releases(): array
+    public static function releases(array $hidden = []): array
     {
-        return array_map(self::grouped(...), self::RELEASES);
+        $releases = array_map(self::grouped(...), self::RELEASES);
+        if ([] === $hidden) {
+            return $releases;
+        }
+        foreach ($releases as &$release) {
+            foreach ($release['sections'] as $name => $notes) {
+                $notes = array_values(array_diff($notes, $hidden));
+                if ([] === $notes) {
+                    unset($release['sections'][$name]);
+                } else {
+                    $release['sections'][$name] = $notes;
+                }
+            }
+        }
+        unset($release);
+
+        return $releases;
     }
 
     /**

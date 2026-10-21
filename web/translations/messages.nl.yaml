@@ -280,6 +280,8 @@ pages:
   card_coverage_p: 'Dekking en versheid per land — en waar je kunt helpen.'
   card_mapkey_h: 'Kaartlegenda'
   card_mapkey_p: 'Elke markering op de kaart en wat die betekent.'
+  card_history_h: 'Wielergeschiedenis'
+  card_history_p: 'Waar wielergeschiedenis werd geschreven, op een tijdlijn.'
   card_roadmapdone_h: 'Klaar op de routekaart'
   card_roadmapdone_p: 'Alles van de routekaart dat nu op de site staat.'
   card_contributors_h: 'Bijdragers'
@@ -2389,6 +2391,7 @@ contribute:
     invisible_characters: 'Deze tekst bevat onzichtbare of opmaaktekens die niet zijn toegestaan.'
     field_required: 'Dit veld is verplicht.'
     field_too_long: 'Deze waarde is te lang.'
+    invalid_year: 'Schrijf een jaartal in cijfers, bijvoorbeeld 1903.'
     suspicious_characters: 'Deze tekst bevat niet-ondersteunde tekens of gemengde schriften.'
     invalid_url: 'Voer een volledig webadres in dat begint met http:// of https://'
     rate_limited: 'Je hebt de bijdragelimiet voorlopig bereikt — probeer het straks opnieuw.'
@@ -3927,6 +3930,8 @@ meta:
   accessibility_description: 'Hoe bruikbaar de Cycling Commons is, inclusief de delen die nog niet goed genoeg zijn, en hoe je een drempel meldt.'
   map_key_title: 'Cycling Commons — Kaartlegenda'
   map_key_description: 'Elke markering op de kaart van de Cycling Commons en wat die betekent: spelden, schijfjes, randen, badges, lijnen en clusters.'
+  cycling_history_title: 'Wielergeschiedenis · Cycling Commons'
+  cycling_history_description: 'Waar wielergeschiedenis werd geschreven, op een tijdlijn: eerste ritten, grote koersen, records en de renners erachter, elk een plek op de kaart.'
   roles_title: 'Cycling Commons: bijdragers en regiobeheerders'
   roles_description: 'Wat een bijdrager doet en wat een regiobeheerder doet op de Cycling Commons-kaart, en hoe een bewerking bevestigd raakt.'
 legend:
@@ -4554,6 +4559,9 @@ admin:
       roadmap_say_live:
         label: "Routekaart: stemmen, volgen en voorstellen"
         help: "Zet op 1 om rijders te laten stemmen op en volgen van punten op de routekaart, en voorstellen te laten sturen en erop te stemmen. Bij 0 toont de routekaart alleen de lijst en is het voorstelformulier dicht."
+      cycling_history_live:
+        label: "Tijdlijn wielergeschiedenis staat live"
+        help: "Zet op 1 zodra de plekken van de wielergeschiedenis op deze site zijn geïmporteerd. Op 0 geeft de pagina /cycling-history niet gevonden, en laten de voettekst, het overzicht van alle pagina's, de sitemap en Wat is er nieuw haar weg."
       map_confirmed_default_threshold:
         label: 'Klaar voor Bevestigd: gecontroleerde plekken'
         help: 'Hoeveel plekken die iemand heeft gecontroleerd een regio nodig heeft voordat een regiobeheerder hem standaard in Bevestigd-modus mag openen. Er is geen spreiding over soorten nodig, alleen genoeg om de modus niet leeg te laten lijken.'
@@ -4719,6 +4727,7 @@ item_type:
 'Closed': 'Gesloten'
 'Cost': 'Kosten'
 'Cycling story / link': 'Fietsverhaal / link'
+'Year of the story': 'Jaar van het verhaal'
 'Cycling-friendliness (1–5)': 'Fietsvriendelijkheid (1–5)'
 'Difficulty': 'Moeilijkheidsgraad'
 'Dominant surface': 'Overheersend wegdek'
@@ -5904,3 +5913,14 @@ account_suspension:
 email:
   signoff_greeting: "Rugwind en zonneschijn,"
   signoff_team: "Team Cycling Commons"
+history:
+  kicker: 'Wielergeschiedenis'
+  title: 'Waar wielergeschiedenis werd geschreven'
+  lead: 'Plekken op de kaart waar wielergeschiedenis werd geschreven, in de volgorde waarin het gebeurde. Je kunt naar elk van die plekken fietsen.'
+  on_map: 'Toon op de kaart'
+  undated_h: 'Meer plekken om te bezoeken'
+  undated_p: 'Musea en wielerbanen waarvan het verhaal vele jaren beslaat.'
+  empty: 'Er staan nog geen plekken met een fietsverhaal op de kaart.'
+  add_h: 'Ken je een plek met een fietsverhaal?'
+  add_p: 'Voeg hem toe als plek bij Geschiedenis & cultuur, met zijn verhaal, zijn jaar en zijn locatie.'
+  add_cta: 'Plek toevoegen'

@@ -305,6 +305,13 @@ manual:<stable-slug>`, same upsert as the importer) and collision-safe through
 the shared duplicate guard below. Corollary: **everything on the map is a real
 DB row**, with no decorative constants in templates or `map.js`.
 
+**Cycling history places** (`SeedCyclingHistoryCommand`,
+`app:catalog:seed-cycling-history <file>`) follow the same rule: a hand-written
+world-wide list of Q places with a cycling story, seeded as `source='manual'`,
+`source_ref = manual:history-<slug>`, each taking its OSM object as `osm_ref`
+(§5b). The list, the year field and the timeline page are owned by
+[cycling-history.md](cycling-history.md).
+
 ### 5a. One place, one row
 
 **Why a guard is needed at all.** Read-time dedupe matches **by ref**
@@ -356,7 +363,8 @@ row loses to an OSM row.
 **Two halves, and the split is deliberate.**
 
 - `App\Catalog\Import\DuplicateGuard` runs inside every import path
-  (`app:catalog:import`, `seed-manual`, `seed-climbs`, `seed-wikidata`; the
+  (`app:catalog:import`, `seed-manual`, `seed-climbs`, `seed-wikidata`,
+  `seed-cycling-history`; the
   one way OUT is `app:items:purge`: an item with its photos,
   submissions, checks and history, dry run by default, for test rows that
   reached the catalogue, never a moderation act; an item with a submission or
@@ -652,7 +660,7 @@ UPDATE item SET region_id = m.region_id FROM (
 The **same smallest-area-wins rule is shared by every membership writer**:
 `RegionDerivations`, `RegionResolver` (route intake), the seed commands'
 own `recomputeMembership()` (`seed-manual` for the `manual` hero pins,
-catalog-data-model.md §5, `seed-climbs`, `seed-wikidata`), and
+catalog-data-model.md §5, `seed-climbs`, `seed-wikidata`, `seed-cycling-history`), and
 `pipeline/coverage/load.py` (the `coverage_poi` stamp), so a manual pin can never land in a different region than an
 identically-located imported item (map-and-search.md §4.5). `ST_PointOnSurface` is guaranteed
 on-geometry for points *and* lines, so a border-crossing segment gets exactly

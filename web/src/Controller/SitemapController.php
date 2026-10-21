@@ -8,6 +8,7 @@ namespace App\Controller;
 
 use App\Blog\BlogLocales;
 use App\Blog\BlogRepository;
+use App\Catalog\CyclingHistorySwitch;
 use App\Catalog\RegionRegistryProvider;
 use App\Routing\ActiveLocales;
 use App\Service\BuildVersion;
@@ -82,6 +83,7 @@ final class SitemapController extends AbstractController
         // this ("what does the red dashed line mean"), and it is the one page
         // that explains the map without loading it.
         ['map_key', 'monthly'],
+        ['cycling_history', 'weekly'],
         ['roadmap_done', 'weekly'],
         ['privacy', 'yearly'],
         ['terms', 'yearly'],
@@ -93,6 +95,7 @@ final class SitemapController extends AbstractController
         private readonly ActiveLocales $activeLocales,
         private readonly BlogRepository $blog,
         private readonly BuildVersion $build,
+        private readonly CyclingHistorySwitch $cyclingHistory,
     ) {
     }
 
@@ -283,6 +286,9 @@ final class SitemapController extends AbstractController
         $urls = [];
 
         foreach (self::PAGES as [$name, $freq]) {
+            if ('cycling_history' === $name && !$this->cyclingHistory->isLive()) {
+                continue;   // not found until it is switched on (CyclingHistorySwitch)
+            }
             $urls[] = $this->entry($name, [], $freq, 'home' === $name ? '1.0' : '0.7', $locales);
         }
 

@@ -271,8 +271,11 @@ final class LocaliseCommonsPhotosCommand extends Command
                     }
 
                     if (!$this->photos->claim($file)) {
-                        // Declined for another place earlier: put it back for this one.
-                        $this->photos->reopen($file);
+                        // Declined for another place earlier, or failed on our
+                        // side on an earlier run (Commons down, scanner down):
+                        // put it back, the second within the admission's
+                        // attempt limit, so "kept for the next run" holds.
+                        $this->photos->reopen($file) || $this->photos->retry($file, CommonsPhotoAdmission::MAX_ATTEMPTS);
                     }
                     $this->fetch->__invoke(FetchCommonsPhoto::forPlace($file, $continent, $place));
                     self::pause($pause);

@@ -1,0 +1,3745 @@
+{
+ "places": [
+  {
+   "ref": "manual:history-anna-meares-velodrome",
+   "name": "Anna Meares Velodrome",
+   "kind": "heritage",
+   "lat": -27.514847,
+   "lng": 153.14667,
+   "cc": "AU",
+   "story": "Anna Meares won Olympic gold on the track in 2004 and 2012. The velodrome built for the 2018 Commonwealth Games carries her name.",
+   "qid": "Q29015257",
+   "found": "Anna Meares Velodrome, Ring Road, Chandler, Logan City, Brisbane, Queensland, 4155, Australia",
+   "year": "2004",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Anna_Meares_Velodrome"
+      }
+     ]
+    },
+    {
+     "label": "Anna Meares",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Anna_Meares"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Anna_Meares"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Anna_Meares"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Anna_Meares"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Anna_Meares"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Anna Meares Velodrome, Brisbane, Queensland 02.jpg",
+    "credit": "Chris Olszewski",
+    "user": "Kgbo",
+    "license": "CC BY-SA 4.0"
+   }
+  },
+  {
+   "ref": "manual:history-dunc-gray-velodrome",
+   "name": "Dunc Gray Velodrome",
+   "kind": "heritage",
+   "lat": -33.9075,
+   "lng": 150.998611,
+   "cc": "AU",
+   "story": "The track of the 2000 Sydney Olympics. It carries the name of Dunc Gray, who won Australia's first Olympic cycling gold in 1932.",
+   "qid": "Q1265332",
+   "osmRef": "way/23649332",
+   "year": "2000",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Dunc_Gray_Velodrome"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/V%C3%A9lodrome_Dunc_Gray"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Dunc_Gray_Velodrome"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Vel%C3%B3dromo_Dunc_Gray"
+      }
+     ]
+    },
+    {
+     "label": "Dunc Gray",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Dunc_Gray"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Dunc_Gray"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Dunc_Gray"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Edgar_Gray"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Edgar_Gray"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "1Dunc Gray Velodrome.jpg",
+    "credit": "Adam.J.W.C.",
+    "user": "Adam.J.W.C.",
+    "license": "CC BY 3.0"
+   }
+  },
+  {
+   "ref": "manual:history-briek-schotte-memorial",
+   "name": "Briek Schotte memorial",
+   "kind": "memorial",
+   "lat": 51.012916,
+   "lng": 3.402827,
+   "cc": "BE",
+   "story": "Briek Schotte was born in Kanegem in 1919. He won the Tour of Flanders in 1942 and 1948 and the world title in 1948 and 1950. Flemish cycling calls him the last of the Flandriens.",
+   "osmRef": "node/3052692304",
+   "found": "Briek Schotte, Kanegem-Dorp, Kanegem, Tielt, West-Vlaanderen, Vlaanderen, 8700, België / Belgique / Belgien",
+   "year": "1948",
+   "links": [
+    {
+     "label": "Briek Schotte",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Briek_Schotte"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Alb%C3%A9ric_Schotte"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Briek_Schotte"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Alb%C3%A9ric_Schotte"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Alb%C3%A9ric_Schotte"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-centrum-ronde-van-vlaanderen",
+   "name": "Centrum Ronde van Vlaanderen",
+   "kind": "museum",
+   "lat": 50.841993,
+   "lng": 3.602887,
+   "cc": "BE",
+   "story": "The museum of the Tour of Flanders, in the town where the race now finishes. It tells the story of the race since 1913 and of the cobbled climbs around it.",
+   "qid": "Q1812082",
+   "osmRef": "way/379419114",
+   "found": "Centrum Ronde Van Vlaanderen, Meerspoortsteeg, Pamele, Oudenaarde, Oost-Vlaanderen, Vlaanderen, 9700, België / Belgique / Belgien",
+   "year": "1913",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Centrum_Ronde_van_Vlaanderen"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Centro_del_Tour_de_Flandes"
+      }
+     ]
+    },
+    {
+     "label": "Tour of Flanders",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Tour_of_Flanders"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-eddy-merckx-metro-station",
+   "name": "Eddy Merckx metro station",
+   "kind": "heritage",
+   "lat": 50.816702,
+   "lng": 4.280742,
+   "cc": "BE",
+   "story": "This metro station carries the name of Eddy Merckx, five times winner of the Tour de France. Under glass in the station stands the bicycle on which he set the hour record in Mexico City in 1972.",
+   "qid": "Q679095",
+   "osmRef": "node/144095140",
+   "found": "Eddy Merckx, Boulevard Josse Leemans - Josse Leemanslaan, Vogelzang, Anderlecht, Brussel-Hoofdstad - Bruxelles-Capitale, Région de Bruxelles-Capitale - Brussels Hoofdstedelijk Gewest, 1070, België / Belgique / Belgien",
+   "year": "1972",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Eddy_Merckx_metro_station"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Eddy_Merckx_%28m%C3%A9tro_de_Bruxelles%29"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Eddy_Merckx_%28metrostation%29"
+      }
+     ]
+    },
+    {
+     "label": "Eddy Merckx",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Eddy_Merckx"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Eddy_Merckx"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Eddy_Merckx"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Eddy_Merckx"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Eddy_Merckx"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "EddyMerckxHourRecordBike.jpg",
+    "credit": "David Edgar",
+    "user": "David Edgar",
+    "license": "CC BY-SA 3.0"
+   }
+  },
+  {
+   "ref": "manual:history-eddy-merckx-sculpture-kiezegem",
+   "name": "Eddy Merckx sculpture, Kiezegem",
+   "kind": "monument",
+   "lat": 50.900876,
+   "lng": 4.903257,
+   "cc": "BE",
+   "story": "Eddy Merckx was born in Meensel-Kiezegem on 17 June 1945. He won the Tour de France and the Giro d'Italia five times each, and more races than any other professional rider.",
+   "osmRef": "node/4225662989",
+   "found": "Eddy Merckx, Tieltsestraat, Kiezegem, Meensel-Kiezegem, Tielt-Winge, Leuven, Vlaams-Brabant, Vlaanderen, 3391, België / Belgique / Belgien",
+   "year": "1945",
+   "links": [
+    {
+     "label": "Eddy Merckx",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Eddy_Merckx"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Eddy_Merckx"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Eddy_Merckx"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Eddy_Merckx"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Eddy_Merckx"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-koers-museum-of-cycle-racing",
+   "name": "KOERS. Museum of Cycle Racing",
+   "kind": "museum",
+   "lat": 50.944184,
+   "lng": 3.127259,
+   "cc": "BE",
+   "story": "The Belgian museum of road cycling, in the town where many Flemish riders grew up. It shows bicycles, jerseys and the history of the sport.",
+   "qid": "Q1966865",
+   "osmRef": "way/129572039",
+   "found": "KOERS, 15, Polenplein, Roeselare, West-Vlaanderen, Vlaanderen, 8800, België / Belgique / Belgien",
+   "web": "https://koersmuseum.be/",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/KOERS_Museum"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/KOERS"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/KOERS_%28museum%29"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Koers._Museum_van_de_Wielersport"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "KOERS gevel 2019.jpg",
+    "credit": "Eddy Callewaert",
+    "user": null,
+    "license": "CC BY-SA 4.0"
+   }
+  },
+  {
+   "ref": "manual:history-kuipke",
+   "name": "Kuipke",
+   "kind": "heritage",
+   "lat": 51.03875,
+   "lng": 3.720769,
+   "cc": "BE",
+   "story": "The tight indoor track of Ghent. The Six Days of Ghent are raced here every November.",
+   "qid": "Q1791318",
+   "osmRef": "way/227926231",
+   "found": "Kuipke, Eugène Felixdreef, Strop, Muinkparkwijk, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Kuipke"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/V%C3%A9lodrome_Kuipke"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Kuipke"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Kuipke"
+      }
+     ]
+    },
+    {
+     "label": "Six Days of Ghent",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Six_Days_of_Ghent"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Six_Jours_de_Gand"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Zesdaagse_van_Vlaanderen-Gent"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Sechstagerennen_von_Gent"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Seis_d%C3%ADas_de_Gante"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Kuipke 19-12-2008 14-38-47.JPG",
+    "credit": "Paul Hermans",
+    "user": "Paul Hermans",
+    "license": "CC BY-SA 3.0"
+   }
+  },
+  {
+   "ref": "manual:history-stan-ockers-monument",
+   "name": "Stan Ockers monument",
+   "kind": "memorial",
+   "lat": 50.550223,
+   "lng": 5.663586,
+   "cc": "BE",
+   "story": "Stan Ockers won Liège-Bastogne-Liège and the world title in 1955. He died after a crash on the Antwerp track in 1956. His monument stands on the Côte des Forges, a climb of Liège-Bastogne-Liège.",
+   "osmRef": "node/4569679372",
+   "found": "Monument Stan Ockers, Thier des Forges, Gomzé-Andoumont, Sprimont, Liège, Wallonie, 4140, België / Belgique / Belgien",
+   "year": "1955",
+   "links": [
+    {
+     "label": "Stan Ockers",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Stan_Ockers"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Stan_Ockers"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Stan_Ockers"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Stan_Ockers"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Stan_Ockers"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-mount-royal",
+   "name": "Mount Royal",
+   "kind": "heritage",
+   "lat": 45.506389,
+   "lng": -73.588889,
+   "cc": "CA",
+   "story": "The 1974 road world championships were raced over this mountain. Eddy Merckx won his third world title here.",
+   "qid": "Q1757764",
+   "year": "1974",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Mount_Royal"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Mont_Royal"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Mont_Royal_%28Canada%29"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Mont_Royal_%28Montreal%29"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Monte_Royal"
+      }
+     ]
+    },
+    {
+     "label": "1974 UCI Road World Championships",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/1974_UCI_Road_World_Championships"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Championnats_du_monde_de_cyclisme_sur_route_1974"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Wereldkampioenschappen_wielrennen_1974"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Stra%C3%9Fenradsport-Weltmeisterschaften_1974"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Campeonato_Mundial_de_Ciclismo_en_Ruta_de_1974"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Mtroyal.jpg",
+    "credit": "The original uploader was Montrealais at English Wikipedia.",
+    "user": "Montrealais",
+    "license": "CC BY-SA 3.0"
+   }
+  },
+  {
+   "ref": "manual:history-uci-world-cycling-centre",
+   "name": "UCI World Cycling Centre",
+   "kind": "architecture",
+   "lat": 46.317957,
+   "lng": 6.933403,
+   "cc": "CH",
+   "story": "The Union Cycliste Internationale, founded in Paris in 1900, has had its seat and its training centre with a velodrome here in Aigle since 2002.",
+   "qid": "Q125331271",
+   "osmRef": "way/965008278",
+   "found": "Centre Mondial du Cyclisme, 12, Allée Ferdi Kübler, Aigle, District d'Aigle, Vaud, 1860, Schweiz/Suisse/Svizzera/Svizra",
+   "year": "2002",
+   "web": "https://www.cmc-aigle.ch/",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/World_Cycling_Centre"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Centre_mondial_du_cyclisme"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/UCI_Centre_mondial_du_cyclisme"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Centre_Mondial_du_Cyclisme"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/World_Cycling_Centre"
+      }
+     ]
+    },
+    {
+     "label": "Union Cycliste Internationale",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Union_Cycliste_Internationale"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Union_cycliste_internationale"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Union_Cycliste_Internationale"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Union_Cycliste_Internationale"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Uni%C3%B3n_Ciclista_Internacional"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Entrée du CMC UCI.jpg",
+    "credit": "Samgrems",
+    "user": null,
+    "license": "CC BY-SA 4.0"
+   }
+  },
+  {
+   "ref": "manual:history-velodrome-suisse",
+   "name": "Velodrome Suisse",
+   "kind": "heritage",
+   "lat": 47.185585,
+   "lng": 7.40511,
+   "cc": "CH",
+   "story": "Filippo Ganna set the hour record here on 8 October 2022 with 56.792 km. Earlier the same year, on 23 May, Ellen van Dijk set the women's record on the same track with 49.254 km.",
+   "qid": "Q2512571",
+   "osmRef": "way/32049149",
+   "found": "Velodrome Suisse, Sportstrasse, Grenchen, Bezirk Lebern, Amtei Solothurn-Lebern, Solothurn, 2540, Schweiz/Suisse/Svizzera/Svizra",
+   "year": "2022",
+   "web": "https://www.tissotvelodrome.ch/",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Velodrome_Suisse"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/V%C3%A9lodrome_Suisse"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Tissot_Velodrome"
+      }
+     ]
+    },
+    {
+     "label": "Hour record",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Hour_record"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Record_de_l%27heure_cycliste"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Werelduurrecord_%28wielrennen%29"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Stundenweltrekord"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/R%C3%A9cord_de_la_hora"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Aussenansicht3-2000x1125.jpg",
+    "credit": "Ulf Schiller",
+    "user": null,
+    "license": "CC BY-SA 4.0"
+   }
+  },
+  {
+   "ref": "manual:history-lucho-herrera-monument",
+   "name": "Lucho Herrera monument",
+   "kind": "memorial",
+   "lat": 4.348815,
+   "lng": -74.390901,
+   "cc": "CO",
+   "story": "Luis 'Lucho' Herrera of Fusagasugá won the Vuelta a España in 1987, the first Grand Tour won by a Colombian. He was best climber in the Tour de France, the Giro d'Italia and the Vuelta.",
+   "osmRef": "way/1353962085",
+   "found": "Monumento Lucho Herrera, Variante de Fusagasugá, Fusagasugá, Sumapaz, Cundinamarca, RAP (Especial) Central, 252211, Colombia",
+   "year": "1987",
+   "links": [
+    {
+     "label": "Luis Herrera",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Luis_Herrera_%28cyclist%29"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Luis_Herrera"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Luis_Herrera_%28wielrenner%29"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Luis_Herrera_%28Radsportler%29"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Lucho_Herrera"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-karl-drais-monument-karlsruhe",
+   "name": "Karl Drais monument, Karlsruhe",
+   "kind": "memorial",
+   "lat": 48.998783,
+   "lng": 8.396497,
+   "cc": "DE",
+   "story": "Karl Drais, inventor of the running machine of 1817 that became the bicycle, was born in Karlsruhe in 1785. His home town raised this monument to him.",
+   "osmRef": "node/69119708",
+   "found": "Freiherr-Carl-von-Drais-Denkmal, Beiertheimer Allee, Südweststadt Östlicher Teil, Südweststadt, Karlsruhe, Baden-Württemberg, 76137, Deutschland",
+   "year": "1785",
+   "links": [
+    {
+     "label": "Karl Drais",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Karl_Drais"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Karl_Drais"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Karl_Drais"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Karl_von_Drais"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Karl_Drais"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-karl-drais-monument-rheinau",
+   "name": "Karl Drais monument, Rheinau",
+   "kind": "monument",
+   "lat": 49.439112,
+   "lng": 8.523556,
+   "cc": "DE",
+   "story": "On 12 June 1817 Karl Drais rode his running machine from Mannheim to the Schwetzingen relay house, in today's Rheinau, and back: the first recorded ride on a two-wheeler. This monument in Rheinau remembers it.",
+   "osmRef": "node/2025406440",
+   "found": "Karl-Drais-Denkmal, Wachenburgstraße, Casterfeld, Rheinau, Mannheim, Baden-Württemberg, 68219, Deutschland",
+   "year": "1817",
+   "links": [
+    {
+     "label": "Karl Drais",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Karl_Drais"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Karl_Drais"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Karl_Drais"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Karl_von_Drais"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Karl_Drais"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-technoseum",
+   "name": "Technoseum",
+   "kind": "museum",
+   "lat": 49.476437,
+   "lng": 8.497593,
+   "cc": "DE",
+   "story": "Mannheim's state museum of technology and work. Mannheim is the city of the first ride on a two-wheeler: Karl Drais set off from here on his running machine on 12 June 1817.",
+   "qid": "Q882079",
+   "osmRef": "way/35148702",
+   "found": "Technoseum, 1, Museumsstraße, Oststadt, Schwetzingerstadt/Oststadt, Mannheim, Baden-Württemberg, 68165, Deutschland",
+   "year": "1817",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Technoseum"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Technoseum"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Technoseum"
+      }
+     ]
+    },
+    {
+     "label": "Karl Drais",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Karl_Drais"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Karl_Drais"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Karl_Drais"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Karl_von_Drais"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Karl_Drais"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Technoseum Mannheim Eingangsseite 2026-05-18.jpg",
+    "credit": "Hubert Berberich (HubiB)",
+    "user": "HubiB",
+    "license": "CC BY 4.0"
+   }
+  },
+  {
+   "ref": "manual:history-cykelslangen",
+   "name": "Cykelslangen",
+   "kind": "architecture",
+   "lat": 55.662622,
+   "lng": 12.563508,
+   "cc": "DK",
+   "story": "The Bicycle Snake, a winding orange bridge only for cyclists, opened in 2014 above the harbour quay. It became a picture of Copenhagen as a cycling city.",
+   "qid": "Q60537471",
+   "osmRef": "way/650044399",
+   "found": "Cykelslangen, Havneholmen, Kødbyen, København, Københavns Kommune, Region Hovedstaden, 1561, Danmark",
+   "year": "2014",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Cykelslangen"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Fahrradschlange"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Cykelslangen 2026 6.jpg",
+    "credit": "kallerna",
+    "user": "Kallerna",
+    "license": "CC BY-SA 4.0"
+   }
+  },
+  {
+   "ref": "manual:history-plaza-miguel-indurain",
+   "name": "Plaza Miguel Induráin",
+   "kind": "heritage",
+   "lat": 42.832879,
+   "lng": -1.608284,
+   "cc": "ES",
+   "story": "Miguel Induráin was born in Villava in 1964. He won the Tour de France five years in a row, from 1991 to 1995, and the Giro d'Italia in 1992 and 1993. His town named this square after him.",
+   "osmRef": "way/813199044",
+   "found": "Plaza Miguel Indurain, Villava / Atarrabia, Iruñerria, Navarra, Navarra / Nafarroa, 31610, España",
+   "year": "1991",
+   "links": [
+    {
+     "label": "Miguel Induráin",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Miguel_Indur%C3%A1in"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Miguel_Indurain"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Miguel_Indurain"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Miguel_Indurain"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Miguel_Indur%C3%A1in"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-champs-elysees",
+   "name": "Champs-Élysées",
+   "kind": "heritage",
+   "lat": 48.86967,
+   "lng": 2.30786,
+   "cc": "FR",
+   "story": "The Tour de France has finished on this avenue since 1975. In 2022 the first stage of the new Tour de France Femmes finished here too.",
+   "qid": "Q550",
+   "year": "1975",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Champs-%C3%89lys%C3%A9es"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Avenue_des_Champs-%C3%89lys%C3%A9es"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Avenue_des_Champs-%C3%89lys%C3%A9es"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Avenue_des_Champs_%C3%89lys%C3%A9es"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Avenida_de_los_Campos_El%C3%ADseos"
+      }
+     ]
+    },
+    {
+     "label": "Tour de France Femmes",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Tour_de_France_Femmes"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Tour_de_France_Femmes"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Ronde_van_Frankrijk_voor_vrouwen"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Tour_de_France_Femmes"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Tour_de_Francia_Femenino"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Avenue des Champs-Élysées, Paris 3 October 2010.jpg",
+    "credit": "SoWhat",
+    "user": null,
+    "license": "CC BY-SA 2.0"
+   }
+  },
+  {
+   "ref": "manual:history-coppi-and-bobet-memorial",
+   "name": "Coppi and Bobet memorial",
+   "kind": "memorial",
+   "lat": 44.811319,
+   "lng": 6.736867,
+   "cc": "FR",
+   "story": "In the rocks of the Casse Déserte a plaque remembers Fausto Coppi and Louison Bobet, who both won the Tour de France with attacks on the Izoard. Bobet rode away here in 1953 on his way to his first win.",
+   "osmRef": "node/3932949120",
+   "found": "Monument Louison Bobet/Fausto Coppi, Route du Col d'Izoard, La Draye, Arvieux, Briançon, Hautes-Alpes, Provence-Alpes-Côte d'Azur, France métropolitaine, 05350, France",
+   "year": "1953",
+   "links": [
+    {
+     "label": "Fausto Coppi",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Fausto_Coppi"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Fausto_Coppi"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Fausto_Coppi"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Fausto_Coppi"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Fausto_Coppi"
+      }
+     ]
+    },
+    {
+     "label": "Louison Bobet",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Louison_Bobet"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Louison_Bobet"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Louison_Bobet"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Louison_Bobet"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Louison_Bobet"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-eugene-christophe-memorial",
+   "name": "Eugène Christophe memorial",
+   "kind": "heritage",
+   "lat": 42.984382,
+   "lng": 0.226985,
+   "cc": "FR",
+   "story": "In the 1913 Tour de France Eugène Christophe broke his fork on the Tourmalet. Rules said he had to repair it himself, so he walked down to the forge in this village and welded it. This memorial marks the place.",
+   "osmRef": "node/3003352631",
+   "found": "Eugène Christophe, Place Eugène Christophe, Sainte-Marie de Campan, Campan, Bagnères-de-Bigorre, Hautes-Pyrénées, Occitanie, France métropolitaine, 65710, France",
+   "year": "1913",
+   "links": [
+    {
+     "label": "Eugène Christophe",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Eug%C3%A8ne_Christophe"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Eug%C3%A8ne_Christophe"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Eug%C3%A8ne_Christophe"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Eug%C3%A8ne_Christophe"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Eug%C3%A8ne_Christophe"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-fabio-casartelli-memorial",
+   "name": "Fabio Casartelli memorial",
+   "kind": "memorial",
+   "lat": 42.949989,
+   "lng": 0.818797,
+   "cc": "FR",
+   "story": "The Italian Olympic champion Fabio Casartelli died after a crash on this descent of the Col de Portet d'Aspet on 18 July 1995, during the Tour de France.",
+   "osmRef": "way/293854741",
+   "found": "Memorial Fabio Casartelli, Route du Col de Portet, Couledoux, Boutx, Saint-Gaudens, Haute-Garonne, Occitanie, France métropolitaine, 31440, France",
+   "year": "1995",
+   "links": [
+    {
+     "label": "Fabio Casartelli",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Fabio_Casartelli"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Fabio_Casartelli"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Fabio_Casartelli"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Fabio_Casartelli"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Fabio_Casartelli"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-le-geant-du-tourmalet",
+   "name": "Le Géant du Tourmalet",
+   "kind": "monument",
+   "lat": 42.908222,
+   "lng": 0.144932,
+   "cc": "FR",
+   "story": "The Tour de France first crossed the Tourmalet in 1910, and Octave Lapize was first over the top. The statue of a rider at the summit, the Géant du Tourmalet, remembers that day.",
+   "qid": "Q17275677",
+   "osmRef": "node/1836590156",
+   "found": "Le Géant, D 918, Barèges, Argelès-Gazost, Hautes-Pyrénées, Occitanie, France métropolitaine, 65120, France",
+   "year": "1910",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/The_Giant_of_Tourmalet"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Le_G%C3%A9ant_%28M%C3%A9tais%29"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/G%C3%A9ant_du_Tourmalet"
+      }
+     ]
+    },
+    {
+     "label": "Octave Lapize",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Octave_Lapize"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Octave_Lapize"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Octave_Lapize"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Octave_Lapize"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Octave_Lapize"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-le-reveil-matin",
+   "name": "Le Réveil Matin",
+   "kind": "heritage",
+   "lat": 48.718291,
+   "lng": 2.444046,
+   "cc": "FR",
+   "story": "The first Tour de France started here, in front of the Réveil Matin inn, on 1 July 1903. Sixty riders set off towards Lyon; Maurice Garin won the race.",
+   "osmRef": "node/2560000420",
+   "found": "Le Réveil Matin, Montgeron, Évry, Essonne, Île-de-France, France métropolitaine, 91230, France",
+   "year": "1903",
+   "links": [
+    {
+     "label": "1903 Tour de France",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/1903_Tour_de_France"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Tour_de_France_1903"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Ronde_van_Frankrijk_1903"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Tour_de_France_1903"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Tour_de_Francia_1903"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-louison-bobet-museum",
+   "name": "Louison Bobet museum",
+   "kind": "museum",
+   "lat": 48.186302,
+   "lng": -2.191876,
+   "cc": "FR",
+   "story": "Louison Bobet was born in Saint-Méen-le-Grand in 1925. In 1955 he became the first rider to win the Tour de France three years in a row. His home town keeps a museum about him.",
+   "osmRef": "node/8875265686",
+   "found": "Tous à vélo, avec Louison Bobet, 5, Rue de Gaël, La Durantais, Saint-Méen-le-Grand, Rennes, Ille-et-Vilaine, Bretagne, France métropolitaine, 35290, France",
+   "year": "1955",
+   "links": [
+    {
+     "label": "Louison Bobet",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Louison_Bobet"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Louison_Bobet"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Louison_Bobet"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Louison_Bobet"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Louison_Bobet"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-memorial-of-the-vel-d-hiv-roundup",
+   "name": "Memorial of the Vel' d'Hiv Roundup",
+   "kind": "memorial",
+   "lat": 48.853579,
+   "lng": 2.287181,
+   "cc": "FR",
+   "story": "The Vélodrome d'Hiver, Paris's indoor cycling track, stood near here. In July 1942 the police held more than 8,000 Jews in it, many of them children, before their deportation. This memorial remembers them.",
+   "osmRef": "node/5588054489",
+   "found": "Monument de la rafle du Vel' d'Hiv, Square de la Place-des-Martyrs-Juifs-du-Vélodrome-d'Hiver, Quartier de Grenelle, Paris 15e Arrondissement, Paris, Île-de-France, France métropolitaine, 75015, France",
+   "year": "1942",
+   "links": [
+    {
+     "label": "Vel' d'Hiv roundup",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Vel%27_d%27Hiv_roundup"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Rafle_du_V%C3%A9lodrome_d%27Hiver"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Razzia_van_de_V%C3%A9lodrome_d%27Hiver"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Rafle_du_V%C3%A9lodrome_d%E2%80%99Hiver"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Redada_del_Vel%C3%B3dromo_de_Invierno"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-monument-to-henri-desgrange",
+   "name": "Monument to Henri Desgrange",
+   "kind": "monument",
+   "lat": 45.061751,
+   "lng": 6.40557,
+   "cc": "FR",
+   "story": "Henri Desgrange founded the Tour de France in 1903. He wrote that next to the Galibier the other big climbs were 'pale and vulgar beer'. His monument stands near the tunnel on the south side.",
+   "qid": "Q54669640",
+   "osmRef": "node/1027874680",
+   "found": "Monument Henri-Desgrange, Route du Galibier, Le Monêtier-les-Bains, Briançon, Hautes-Alpes, Provence-Alpes-Côte d'Azur, France métropolitaine, 05220, France",
+   "year": "1903",
+   "links": [
+    {
+     "label": "Henri Desgrange",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Henri_Desgrange"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Henri_Desgrange"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Henri_Desgrange"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Henri_Desgrange"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Henri_Desgrange"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Col du Galibier -563.jpg",
+    "credit": "MOSSOT",
+    "user": "MOSSOT",
+    "license": "CC BY 3.0"
+   }
+  },
+  {
+   "ref": "manual:history-monument-to-the-michaux",
+   "name": "Monument to the Michaux",
+   "kind": "monument",
+   "lat": 48.774701,
+   "lng": 5.159792,
+   "cc": "FR",
+   "story": "Pierre Michaux was born in Bar-le-Duc. In Paris in the 1860s he and his son Ernest put pedals on the front wheel and built the velocipede in series. The town raised this monument to them in 1894.",
+   "osmRef": "node/2406118036",
+   "found": "Monument des Michaux, Rue du Bourg, Bar-le-Duc, Meuse, Grand Est, France métropolitaine, 55000, France",
+   "year": "1867",
+   "links": [
+    {
+     "label": "Pierre Michaux",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Pierre_Michaux"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Pierre_Michaux"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Pierre_Michaux"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Pierre_Michaux"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-musee-de-l-aventure-peugeot",
+   "name": "Musée de l'Aventure Peugeot",
+   "kind": "museum",
+   "lat": 47.516352,
+   "lng": 6.830743,
+   "cc": "FR",
+   "story": "Peugeot made bicycles from 1882, long before its first car. The family firm's museum in Sochaux shows its bicycles as well as its cars.",
+   "qid": "Q839312",
+   "osmRef": "way/153989334",
+   "found": "Musée de l'Aventure Peugeot, Rue d'Épinal, Sochaux, Montbéliard, Doubs, Bourgogne-Franche-Comté, France métropolitaine, 25600, France",
+   "year": "1882",
+   "web": "https://laventure-association.com/laventure-peugeot/le-musee-de-laventure-peugeot/",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Mus%C3%A9e_de_l%27Aventure_Peugeot"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Mus%C3%A9e_de_l%27Aventure_Peugeot"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Peugeot-Museum"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Musee Peugeot.jpg",
+    "credit": "seblinux78",
+    "user": null,
+    "license": "CC BY-SA 2.0"
+   }
+  },
+  {
+   "ref": "manual:history-notre-dame-des-cyclistes",
+   "name": "Notre-Dame des Cyclistes",
+   "kind": "worship",
+   "lat": 43.955306,
+   "lng": -0.162009,
+   "cc": "FR",
+   "story": "A chapel for cyclists, opened in 1959. Riders and teams give it their jerseys, and it keeps them with the bicycles of famous riders.",
+   "qid": "Q1089135",
+   "osmRef": "way/293549968",
+   "found": "Église Notre-Dame des Cyclistes, 3003, Chemin de Géou, Labastide-d'Armagnac, Mont-de-Marsan, Landes, Nouvelle-Aquitaine, France métropolitaine, 40240, France",
+   "year": "1959",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Notre_Dame_des_Cyclistes"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Chapelle_Notre-Dame-des-Cyclistes"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Notre_Dames_des_Cyclistes"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Notre-Dame_des_Cyclistes"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Notre-Dame_des_Cyclistes"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-parc-de-saint-cloud",
+   "name": "Parc de Saint-Cloud",
+   "kind": "heritage",
+   "lat": 48.8333,
+   "lng": 2.2,
+   "cc": "FR",
+   "story": "On 31 May 1868 a bicycle race over 1,200 metres was held in this park. The Englishman James Moore won it, in one of the first bicycle races on record.",
+   "qid": "Q2030715",
+   "year": "1868",
+   "web": "https://www.domaine-saint-cloud.fr",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Parc_de_Saint-Cloud"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Domaine_national_de_Saint-Cloud"
+      }
+     ]
+    },
+    {
+     "label": "James Moore",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/James_Moore_%28cyclist%29"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/James_Moore_%28cyclisme%29"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/James_Moore_%28Radsportler%29"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/James_Moore_%28ciclista%29"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-parc-des-princes",
+   "name": "Parc des Princes",
+   "kind": "architecture",
+   "lat": 48.841363,
+   "lng": 2.253069,
+   "cc": "FR",
+   "story": "This ground opened in 1897 as a velodrome. The Tour de France finished on its track every year from 1903 to 1967.",
+   "qid": "Q193431",
+   "osmRef": "way/53559935",
+   "found": "Parc des Princes, 24, Rue du Commandant Guilbaud, Quartier d'Auteuil, Paris 16e Arrondissement, Paris, Île-de-France, France métropolitaine, 75016, France",
+   "year": "1903",
+   "web": "https://www.psg.fr/club/parc-des-princes",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Parc_des_Princes"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Parc_des_Princes"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Parc_des_Princes"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Parc_des_Princes"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Parque_de_los_Pr%C3%ADncipes"
+      }
+     ]
+    },
+    {
+     "label": "Tour de France",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Tour_de_France"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Tour_de_France"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Ronde_van_Frankrijk"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Tour_de_France"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Tour_de_Francia"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Paris Parc des Princes 1.jpg",
+    "credit": "Валерий Дед",
+    "user": null,
+    "license": "CC BY 3.0"
+   }
+  },
+  {
+   "ref": "manual:history-tom-simpson-memorial",
+   "name": "Tom Simpson memorial",
+   "kind": "memorial",
+   "lat": 44.169711,
+   "lng": 5.28618,
+   "cc": "FR",
+   "story": "On 13 July 1967 the British rider Tom Simpson collapsed and died here, about a kilometre below the top of Mont Ventoux, during the Tour de France. Riders often leave a bidon or a cap at his memorial.",
+   "osmRef": "node/1334315594",
+   "found": "Mémorial de Tom Simpson, Route du Mont-Ventoux, Bédoin, Carpentras, Vaucluse, Provence-Alpes-Côte d'Azur, France métropolitaine, 84410, France",
+   "year": "1967",
+   "links": [
+    {
+     "label": "Tom Simpson",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Tom_Simpson"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Tom_Simpson"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Tom_Simpson"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Tom_Simpson_%28Radsportler%29"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Tom_Simpson"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-trouee-d-arenberg",
+   "name": "Trouée d'Arenberg",
+   "kind": "heritage",
+   "lat": 50.392371,
+   "lng": 3.419832,
+   "cc": "FR",
+   "story": "This cobbled road through the Arenberg forest entered Paris-Roubaix in 1968. Jean Stablinski, who had worked in the coal mine under it, proposed it to the organisers.",
+   "osmRef": "way/1285527394",
+   "found": "Trouée d'Arenberg, Wallers, Valenciennes, Nord, Hauts-de-France, France métropolitaine, 59135, France",
+   "year": "1968",
+   "links": [
+    {
+     "label": "Jean Stablinski",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Jean_Stablinski"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Jean_Stablinski"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Jean_Stablinski"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Jean_Stablinski"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Jean_Stablinski"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-velodrome-andre-petrieux",
+   "name": "Vélodrome André-Pétrieux",
+   "kind": "heritage",
+   "lat": 50.678111,
+   "lng": 3.205546,
+   "cc": "FR",
+   "story": "Paris-Roubaix has finished on this open-air track in most years since 1943. In the old shower block each cubicle carries a plaque with the name of a winner.",
+   "osmRef": "way/996518170",
+   "found": "Vélodrome André Pétrieux, Rue Alexandre Fleming, Les Trois Ponts, Justice, Centre-Ville, Roubaix, Lille, Nord, Hauts-de-France, France métropolitaine, 59100, France",
+   "year": "1943",
+   "links": [
+    {
+     "label": "Paris–Roubaix",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Paris%E2%80%93Roubaix"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Paris-Roubaix"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Parijs-Roubaix"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Paris%E2%80%93Roubaix"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Par%C3%ADs-Roubaix"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-velodrome-jacques-anquetil",
+   "name": "Vélodrome Jacques-Anquetil",
+   "kind": "heritage",
+   "lat": 48.82596,
+   "lng": 2.41173,
+   "cc": "FR",
+   "story": "La Cipale velodrome in the Bois de Vincennes was the finish of the Tour de France from 1968 to 1974, before the race moved to the Champs-Elysees in 1975.",
+   "qid": "Q420494",
+   "year": "1968",
+   "web": "https://www.paris.fr/lieux/stade-velodrome-jacques-anquetil-6368",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/V%C3%A9lodrome_de_Vincennes"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/V%C3%A9lodrome_Jacques-Anquetil"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/V%C3%A9lodrome_Jacques-Anquetil"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/V%C3%A9lodrome_Jacques-Anquetil"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Vel%C3%B3dromo_de_Vincennes"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Velodrome de Vincennes.jpg",
+    "credit": "Unknown authorUnknown author",
+    "user": null,
+    "license": "Public domain"
+   }
+  },
+  {
+   "ref": "manual:history-velodrome-de-bordeaux",
+   "name": "Vélodrome de Bordeaux",
+   "kind": "heritage",
+   "lat": 44.898777,
+   "lng": -0.566299,
+   "cc": "FR",
+   "story": "Chris Boardman set the hour record on this track in July 1993, a week after Graeme Obree. Miguel Induráin set it here in September 1994.",
+   "qid": "Q2326216",
+   "year": "1994",
+   "web": "https://axelvega.com/etablissements/stadium-bordeaux-velodrome/",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/V%C3%A9lodrome_de_Bordeaux"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/V%C3%A9lodrome_de_Bordeaux"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Stadium_V%C3%A9lodrome_de_Bordeaux_Lac"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Vel%C3%B3dromo_de_Burdeos"
+      }
+     ]
+    },
+    {
+     "label": "Chris Boardman",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Chris_Boardman"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Chris_Boardman"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Chris_Boardman"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Chris_Boardman"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Chris_Boardman"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Vélodrome Bordeaux Lac.jpg",
+    "credit": "Tito Lilo",
+    "user": null,
+    "license": "CC BY-SA 4.0"
+   }
+  },
+  {
+   "ref": "manual:history-wim-van-est-memorial",
+   "name": "Wim van Est memorial",
+   "kind": "memorial",
+   "lat": 42.974467,
+   "lng": -0.31824,
+   "cc": "FR",
+   "story": "In 1951 Wim van Est became the first Dutchman to wear the yellow jersey. The next day he fell about 70 metres into the ravine here on the Aubisque descent and survived. A plaque marks the bend.",
+   "osmRef": "node/11085430545",
+   "found": "Wim van Est, D 918, Béost, Oloron-Sainte-Marie, Pyrénées-Atlantiques, Nouvelle-Aquitaine, France métropolitaine, 64440, France",
+   "year": "1951",
+   "links": [
+    {
+     "label": "Wim van Est",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Wim_van_Est"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Wim_van_Est"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Wim_van_Est"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Wim_van_Est"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Wim_Van_Est"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-beryl-burton-gardens",
+   "name": "Beryl Burton Gardens",
+   "kind": "memorial",
+   "lat": 53.744844,
+   "lng": -1.601157,
+   "cc": "GB",
+   "story": "Beryl Burton of Morley won seven world titles and was British best all-rounder 25 years in a row. In 1967 her 12-hour ride was longer than the men's record. This street in her home town carries her name.",
+   "osmRef": "way/33478499",
+   "found": "Beryl Burton Gardens, City, Daisy Hill, Morley, Churwell, Leeds, West Yorkshire, England, LS27 9FN, United Kingdom",
+   "year": "1967",
+   "links": [
+    {
+     "label": "Beryl Burton",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Beryl_Burton"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Beryl_Burton"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Beryl_Burton"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Beryl_Burton"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Beryl_Burton"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-courthill-smithy",
+   "name": "Courthill Smithy",
+   "kind": "heritage",
+   "lat": 55.222401,
+   "lng": -3.800169,
+   "cc": "GB",
+   "story": "The blacksmith Kirkpatrick Macmillan worked at this smithy. Local history credits him with a rear-wheel bicycle driven by treadles and rods around 1839, years before pedals came.",
+   "osmRef": "way/312955606",
+   "found": "Courthill Smithy, C125n, Keir Mill, Penpont, Dumfries and Galloway, Alba / Scotland, DG3 4DD, United Kingdom",
+   "year": "1839",
+   "links": [
+    {
+     "label": "Kirkpatrick Macmillan",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Kirkpatrick_Macmillan"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Kirkpatrick_Macmillan"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Kirkpatrick_Macmillan"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Kirkpatrick_Macmillan"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Kirkpatrick_Macmillan"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-coventry-transport-museum",
+   "name": "Coventry Transport Museum",
+   "kind": "museum",
+   "lat": 52.411129,
+   "lng": -1.509435,
+   "cc": "GB",
+   "story": "Coventry was the cradle of the British cycle industry. James Starley built wheels and tricycles here, and his nephew John Kemp Starley made the Rover safety bicycle in 1885, the shape every bicycle still has.",
+   "qid": "Q5179119",
+   "osmRef": "way/266185587",
+   "found": "Coventry Transport Museum, Millennium Place, Hillfields, Coventry, West Midlands, England, CV1 1JD, United Kingdom",
+   "year": "1885",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Coventry_Transport_Museum"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Coventry_Transport_Museum"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Coventry_Transport_Museum"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Coventry_Transport_Museum"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Museo_del_Transporte_de_Coventry"
+      }
+     ]
+    },
+    {
+     "label": "John Kemp Starley",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/John_Kemp_Starley"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/John_Kemp_Starley"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/John_Kemp_Starley"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/John_Kemp_Starley"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/John_Kemp_Starley"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Coventry Transport Museum (1).jpg",
+    "credit": "Jim Linwood from London",
+    "user": null,
+    "license": "CC BY 2.0"
+   }
+  },
+  {
+   "ref": "manual:history-eileen-sheridan-sculpture",
+   "name": "Eileen Sheridan sculpture",
+   "kind": "monument",
+   "lat": 52.295953,
+   "lng": -1.43887,
+   "cc": "GB",
+   "story": "Eileen Sheridan of Coventry rode from Land's End to John o' Groats in 1954 in less than two and a half days, a record. This artwork on the old railway path shows her beside the runner Dave Moorcroft.",
+   "osmRef": "node/13668340051",
+   "found": "Eileen Sheridan & Dave Moorcroft, Rugby and Leamington Line, Hunningham, Warwick, Warwickshire, England, CV33 9EN, United Kingdom",
+   "year": "1954",
+   "links": [
+    {
+     "label": "Eileen Sheridan",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Eileen_Sheridan"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-herne-hill-velodrome",
+   "name": "Herne Hill Velodrome",
+   "kind": "heritage",
+   "lat": 51.450712,
+   "lng": -0.091766,
+   "cc": "GB",
+   "story": "Opened in 1891, one of the oldest cycle tracks in the world still in use. It held the track events of the 1948 Olympic Games.",
+   "qid": "Q2126703",
+   "osmRef": "way/187289855",
+   "found": "Herne Hill Velodrome, 104, Burbage Road, Dulwich Village, London Borough of Southwark, Greater London, England, SE24 9HE, United Kingdom",
+   "year": "1891",
+   "web": "https://www.hernehillvelodrome.com/",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Herne_Hill_Velodrome"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/V%C3%A9lodrome_de_Herne_Hill"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Radrennbahn_Herne_Hill"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Herne Hill Velodrome, 15 July 2012.jpg",
+    "credit": "Julio from London, United Kingdom",
+    "user": null,
+    "license": "CC BY-SA 2.0"
+   }
+  },
+  {
+   "ref": "manual:history-lee-valley-velopark",
+   "name": "Lee Valley VeloPark",
+   "kind": "architecture",
+   "lat": 51.550377,
+   "lng": -0.015239,
+   "cc": "GB",
+   "story": "Built for the 2012 Olympic Games. Bradley Wiggins set the hour record on this track on 7 June 2015 with 54.526 km.",
+   "qid": "Q816241",
+   "osmRef": "way/645435271",
+   "found": "Lee Valley VeloPark, Abercrombie Road, Chobham Manor, Stratford, London Borough of Newham, Greater London, England, E20 3AB, United Kingdom",
+   "year": "2015",
+   "web": "https://live-qeop.pantheonsite.io/explore-park/venues/lee-valley-velopark",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Lee_Valley_VeloPark"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/V%C3%A9lodrome_de_Londres"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/London_Velopark"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Lee_Valley_VeloPark"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Vel%C3%B3dromo_de_Londres"
+      }
+     ]
+    },
+    {
+     "label": "Bradley Wiggins",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Bradley_Wiggins"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Bradley_Wiggins"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Bradley_Wiggins"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Bradley_Wiggins"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Bradley_Wiggins"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "London Velopark, 16 April 2012.jpg",
+    "credit": "EG Focus",
+    "user": null,
+    "license": "CC BY 2.0"
+   }
+  },
+  {
+   "ref": "manual:history-national-cycling-centre",
+   "name": "National Cycling Centre",
+   "kind": "architecture",
+   "lat": 53.485278,
+   "lng": -2.190833,
+   "cc": "GB",
+   "story": "Opened in 1994 as the first indoor Olympic velodrome in Britain. The British track team that won so many medals from 2008 trained here.",
+   "qid": "Q15261114",
+   "osmRef": "way/187127614",
+   "year": "1994",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/National_Cycling_Centre"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-raleigh-street",
+   "name": "Raleigh Street",
+   "kind": "heritage",
+   "lat": 52.959838,
+   "lng": -1.161201,
+   "cc": "GB",
+   "story": "The Raleigh Bicycle Company takes its name from this street, where its first small workshop made bicycles in the 1880s.",
+   "osmRef": "way/23304532",
+   "found": "Raleigh Street, The Park, City of Nottingham, East Midlands, England, NG7 4DL, United Kingdom",
+   "year": "1887",
+   "links": [
+    {
+     "label": "Raleigh Bicycle Company",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Raleigh_Bicycle_Company"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Raleigh_%28entreprise%29"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Raleigh_%28concern%29"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Raleigh_Cycle_Company"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Raleigh_Bicycle_Company"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-senate-house-cambridge",
+   "name": "Senate House, Cambridge",
+   "kind": "architecture",
+   "lat": 52.2056,
+   "lng": 0.117389,
+   "cc": "GB",
+   "story": "On 21 May 1897, while the university voted on degrees for women, students hung a figure of a woman on a bicycle from a window opposite. The bicycle had become a sign of women's freedom.",
+   "qid": "Q3478506",
+   "osmRef": "way/5094870",
+   "year": "1897",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Senate_House%2C_Cambridge"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Senate_House_%28universit%C3%A9_de_Cambridge%29"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Senate_House"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-the-mall-london",
+   "name": "The Mall, London",
+   "kind": "heritage",
+   "lat": 51.504167,
+   "lng": -0.135278,
+   "cc": "GB",
+   "story": "On 29 July 2012 Marianne Vos won the Olympic road race at the finish on The Mall, in pouring rain. She has won world titles on the road, on the track and in cyclocross.",
+   "year": "2012",
+   "qid": "Q842930",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/The_Mall%2C_London"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/The_Mall"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/The_Mall_%28Londen%29"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/The_Mall"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/The_Mall_%28Londres%29"
+      }
+     ]
+    },
+    {
+     "label": "Marianne Vos",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Marianne_Vos"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Marianne_Vos"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Marianne_Vos"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Marianne_Vos"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Marianne_Vos"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "The Mall London.jpg",
+    "credit": "aurélien.",
+    "user": null,
+    "license": "CC BY-SA 2.0"
+   }
+  },
+  {
+   "ref": "manual:history-sean-kelly-square",
+   "name": "Sean Kelly Square",
+   "kind": "heritage",
+   "lat": 52.346829,
+   "lng": -7.414994,
+   "cc": "IE",
+   "story": "Sean Kelly of Carrick-on-Suir won Paris-Nice seven years in a row, from 1982 to 1988, and the Vuelta a España in 1988. His town named this square after him.",
+   "osmRef": "way/694975542",
+   "found": "Sean Kelly Square, Carrick-on-Suir Urban, The Municipal District of Carrick-on-Suir, County Tipperary, Munster, E32 V273, Éire / Ireland",
+   "year": "1982",
+   "links": [
+    {
+     "label": "Sean Kelly",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Sean_Kelly_%28cyclist%29"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Sean_Kelly"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Sean_Kelly_%28wielrenner%29"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Sean_Kelly_%28Radsportler%29"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Sean_Kelly"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-shay-elliott-memorial",
+   "name": "Shay Elliott memorial",
+   "kind": "memorial",
+   "lat": 53.327656,
+   "lng": -6.302945,
+   "cc": "IE",
+   "story": "Shay Elliott of Dublin won stages in the Giro d'Italia, the Tour de France and the Vuelta, and in 1963 he became the first Irish rider to wear the yellow jersey. This memorial remembers him.",
+   "osmRef": "node/11002809078",
+   "found": "Shay Elliott, Old County Road, Crumlin, Crumlin D ED, Dublin, County Dublin, Leinster, Éire / Ireland",
+   "year": "1963",
+   "links": [
+    {
+     "label": "Shay Elliott",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Shay_Elliott"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Seamus_Elliott"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Seamus_Elliott"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Seamus_Elliott"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Seamus_Elliott"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-casa-coppi",
+   "name": "Casa Coppi",
+   "kind": "museum",
+   "lat": 44.798006,
+   "lng": 8.930659,
+   "cc": "IT",
+   "story": "Fausto Coppi was born in this house in 1919. He won the Giro d'Italia five times and the Tour de France twice. He and his brother Serse are buried in the village.",
+   "qid": "Q55370304",
+   "osmRef": "way/1156701678",
+   "found": "Casa museo Fausto Coppi, 2, Via Fausto Coppi, Mossabella, Castellania Coppi, Alessandria, Piemonte, Italia",
+   "year": "1919",
+   "links": [
+    {
+     "label": "Fausto Coppi",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Fausto_Coppi"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Fausto_Coppi"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Fausto_Coppi"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Fausto_Coppi"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Fausto_Coppi"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-gino-bartali-cycling-museum",
+   "name": "Gino Bartali cycling museum",
+   "kind": "museum",
+   "lat": 43.740449,
+   "lng": 11.293205,
+   "cc": "IT",
+   "story": "Gino Bartali was born in Ponte a Ema in 1914 and won the Tour de France in 1938 and 1948. During the war he carried false papers for Jews in the frame of his bicycle. Yad Vashem named him Righteous Among the Nations in 2013.",
+   "osmRef": "node/5540787679",
+   "found": "Museo del Ciclismo Gino Bartali, 175, Via Chiantigiana, Callai, Quartiere 3, Ponte a Ema, Firenze, Toscana, 50126, Italia",
+   "year": "1914",
+   "links": [
+    {
+     "label": "Gino Bartali",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Gino_Bartali"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Gino_Bartali"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Gino_Bartali"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Gino_Bartali"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Gino_Bartali"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-madonna-del-ghisallo",
+   "name": "Madonna del Ghisallo",
+   "kind": "worship",
+   "lat": 45.924222,
+   "lng": 9.267762,
+   "cc": "IT",
+   "story": "In 1949 Pope Pius XII named the Madonna del Ghisallo patroness of cyclists. The chapel at the top of the climb keeps bicycles and jerseys of champions.",
+   "qid": "Q2738068",
+   "osmRef": "way/71834575",
+   "found": "Santuario della Madonna del Ghisallo, Strada provinciale 41 Vallassina, Magreglio, Como, Lombardia, 22030, Italia",
+   "year": "1949",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Madonna_del_Ghisallo"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Madonna_del_Ghisallo"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Madonna_del_Ghisallo"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Madonna_del_Ghisallo"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Madonna_del_Ghisallo"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Magreglio Santuario di Madonna di Ghisallo Esterno Facciata 3.jpg",
+    "credit": "Zairon",
+    "user": "Zairon",
+    "license": "CC BY-SA 4.0"
+   }
+  },
+  {
+   "ref": "manual:history-marco-pantani-monument",
+   "name": "Marco Pantani monument",
+   "kind": "monument",
+   "lat": 46.255973,
+   "lng": 10.285699,
+   "cc": "IT",
+   "story": "Marco Pantani made his name on the Mortirolo in the 1994 Giro d'Italia, when he rode away from the best riders in the world. This monument remembers him.",
+   "osmRef": "node/828486815",
+   "found": "Monumento a Marco Pantani, Strada del Mortirolo, Mazzo di Valtellina, Comunità montana della Valtellina di Tirano, Sondrio, Lombardia, 23030, Italia",
+   "year": "1994",
+   "links": [
+    {
+     "label": "Marco Pantani",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Marco_Pantani"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Marco_Pantani"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Marco_Pantani"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Marco_Pantani"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Marco_Pantani"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-museo-dei-campionissimi",
+   "name": "Museo dei Campionissimi",
+   "kind": "museum",
+   "lat": 44.7637,
+   "lng": 8.778771,
+   "cc": "IT",
+   "story": "Costante Girardengo, the first rider called campionissimo, was born in Novi Ligure in 1893, and Fausto Coppi lived here. The museum of the champions tells their story.",
+   "qid": "Q3867898",
+   "osmRef": "node/5070232967",
+   "found": "Museo dei campionissimi, 2, Viale dei Campionissimi, Quartiere G3, Novi Ligure, Alessandria, Piemonte, 15067, Italia",
+   "year": "1893",
+   "links": [
+    {
+     "label": "Costante Girardengo",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Costante_Girardengo"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Costante_Girardengo"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Costante_Girardengo"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Costante_Girardengo"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Costante_Girardengo"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Museo dei campionissimi Novi Ligure.JPG",
+    "credit": "Fioravante Patrone",
+    "user": "Fioravante Patrone",
+    "license": "CC BY-SA 3.0"
+   }
+  },
+  {
+   "ref": "manual:history-ottavio-bottecchia-monument",
+   "name": "Ottavio Bottecchia monument",
+   "kind": "memorial",
+   "lat": 46.250603,
+   "lng": 13.036874,
+   "cc": "IT",
+   "story": "Ottavio Bottecchia was the first Italian to win the Tour de France, in 1924, and he won it again in 1925. In June 1927 he was found badly hurt by this road at Peonis and died days later. How it happened was never cleared up.",
+   "osmRef": "node/1582782569",
+   "found": "Monumento a Bottecchia, Via Ottavio Bottecchia, Peonis, Trasaghis, Udine, Friuli-Venezia Giulia, 33010, Italia",
+   "year": "1924",
+   "links": [
+    {
+     "label": "Ottavio Bottecchia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Ottavio_Bottecchia"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Ottavio_Bottecchia"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Ottavio_Bottecchia"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Ottavio_Bottecchia"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Ottavio_Bottecchia"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-piazzale-loreto",
+   "name": "Piazzale Loreto",
+   "kind": "heritage",
+   "lat": 45.486231,
+   "lng": 9.216767,
+   "cc": "IT",
+   "story": "The first Giro d'Italia started from this square in the early morning of 13 May 1909. Luigi Ganna won it.",
+   "qid": "Q525297",
+   "year": "1909",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Piazzale_Loreto"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Piazzale_Loreto"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Piazzale_Loreto"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Plaza_de_Loreto"
+      }
+     ]
+    },
+    {
+     "label": "1909 Giro d'Italia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/1909_Giro_d%27Italia"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Tour_d%27Italie_1909"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Ronde_van_Itali%C3%AB_1909"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Giro_d%E2%80%99Italia_1909"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Giro_de_Italia_1909"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Milano - piazzale Loreto.jpg",
+    "credit": "Arbalete",
+    "user": "Arbalete",
+    "license": "CC BY-SA 3.0"
+   }
+  },
+  {
+   "ref": "manual:history-spazio-pantani",
+   "name": "Spazio Pantani",
+   "kind": "museum",
+   "lat": 44.200311,
+   "lng": 12.39158,
+   "cc": "IT",
+   "story": "Marco Pantani grew up in Cesenatico and trained in the hills behind it. In 1998 he won the Giro d'Italia and the Tour de France. This museum keeps his bicycles and jerseys.",
+   "qid": "Q112275245",
+   "osmRef": "way/184893709",
+   "found": "Spazio Pantani, Viale Gino Cecchini, Cella, Cesenatico, Unione Rubicone e mare, Forlì-Cesena, Emilia-Romagna, 47042, Italia",
+   "year": "1998",
+   "links": [
+    {
+     "label": "Marco Pantani",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Marco_Pantani"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Marco_Pantani"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Marco_Pantani"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Marco_Pantani"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Marco_Pantani"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-velodromo-vigorelli",
+   "name": "Velodromo Vigorelli",
+   "kind": "heritage",
+   "lat": 45.481462,
+   "lng": 9.158076,
+   "cc": "IT",
+   "story": "On this wooden track Fausto Coppi set the hour record in 1942 and Jacques Anquetil in 1956. In 1958 Elsy Jacobs of Luxembourg set the first women's hour record here.",
+   "qid": "Q2512603",
+   "osmRef": "way/22939665",
+   "found": "Velodromo Maspes-Vigorelli, Via Giovanni da Procida, Portello, Municipio 8 di Milano, Milano, Lombardia, 20155, Italia",
+   "year": "1942",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Velodromo_Vigorelli"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/V%C3%A9lodrome_Maspes-Vigorelli"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Velodromo_Maspes-Vigorelli"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Velodromo_Maspes-Vigorelli"
+      }
+     ]
+    },
+    {
+     "label": "Hour record",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Hour_record"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Record_de_l%27heure_cycliste"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Werelduurrecord_%28wielrennen%29"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Stundenweltrekord"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/R%C3%A9cord_de_la_hora"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Velodromo Vigorelli 2018 veduta dall'alto.jpg",
+    "credit": "Minnitre",
+    "user": null,
+    "license": "CC BY-SA 4.0"
+   }
+  },
+  {
+   "ref": "manual:history-via-alfonsina-strada",
+   "name": "Via Alfonsina Strada",
+   "kind": "heritage",
+   "lat": 45.439599,
+   "lng": 9.119715,
+   "cc": "IT",
+   "story": "In 1924 Alfonsina Strada rode the Giro d'Italia, the only woman ever to ride it with the men. She later ran a bicycle shop in Milan. The city named this street after her.",
+   "osmRef": "way/265023748",
+   "found": "Via Alfonsina Strada, Quartiere Travaglia, Giambellino, Municipio 6, Milano, Lombardia, 20147, Italia",
+   "year": "1924",
+   "links": [
+    {
+     "label": "Alfonsina Strada",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Alfonsina_Strada"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Alfonsina_Strada"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Alfonsina_Strada"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Alfonsina_Strada"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Alfonsina_Strada"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-kitakyushu-media-dome",
+   "name": "Kitakyushu Media Dome",
+   "kind": "architecture",
+   "lat": 33.871972,
+   "lng": 130.887667,
+   "cc": "JP",
+   "story": "Keirin racing began in Kokura in November 1948. This dome is Kokura's keirin track today. Keirin became an Olympic event in 2000.",
+   "qid": "Q11400915",
+   "osmRef": "way/326929810",
+   "year": "1948",
+   "links": [
+    {
+     "label": "Keirin",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Keirin"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Keirin"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Keirin"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Keirin"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Keirin"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-shimano-bicycle-museum",
+   "name": "Shimano Bicycle Museum",
+   "kind": "museum",
+   "lat": 34.578971,
+   "lng": 135.484576,
+   "cc": "JP",
+   "story": "Sakai, a town of knife and gun makers, became the centre of the Japanese bicycle trade, and Shimano was founded here in 1921. Its museum shows the bicycle from the draisine to today.",
+   "osmRef": "way/233729034",
+   "found": "シマノ自転車博物館, 大阪和泉泉南線, 南庄町二丁, 堺区, 堺市, 大阪府, 590-0078, 日本",
+   "year": "1921",
+   "links": [
+    {
+     "label": "Shimano",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Shimano"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Shimano"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Shimano"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Shimano"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Shimano"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-rue-elsy-jacobs-garnich",
+   "name": "Rue Elsy Jacobs, Garnich",
+   "kind": "heritage",
+   "lat": 49.616378,
+   "lng": 5.956975,
+   "cc": "LU",
+   "story": "Elsy Jacobs of Luxembourg won the first women's road world championship, in 1958, and the same year set the first women's hour record. Garnich named this street after her.",
+   "osmRef": "way/1024926514",
+   "found": "Rue Elsy Jacobs, Garnich, Canton Capellen, 8350, Lëtzebuerg",
+   "year": "1958",
+   "links": [
+    {
+     "label": "Elsy Jacobs",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Elsy_Jacobs"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Elsy_Jacobs"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Elsy_Jacobs"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Elsy_Jacobs"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Elsy_Jacobs"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-velodromo-olimpico-agustin-melgar",
+   "name": "Velódromo Olímpico Agustín Melgar",
+   "kind": "heritage",
+   "lat": 19.409779,
+   "lng": -99.103385,
+   "cc": "MX",
+   "story": "Built for the 1968 Olympics, at 2,240 metres altitude. Eddy Merckx set the hour record here on 25 October 1972, Francesco Moser beat it in 1984, and Leontien van Moorsel set the women's record here in 2003.",
+   "qid": "Q399314",
+   "osmRef": "way/1173762984",
+   "found": "Velódromo Olímpico Agustín Melgar, Radamés Treviño, Jardín Balbuena, Ciudad de México, Venustiano Carranza, Ciudad de México, 15900, México",
+   "year": "1972",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Agust%C3%ADn_Melgar_Olympic_Velodrome"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Vel%C3%B3dromo_Ol%C3%ADmpico_Agust%C3%ADn_Melgar"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Vel%C3%B3dromo_Ol%C3%ADmpico_Agust%C3%ADn_Melgar"
+      }
+     ]
+    },
+    {
+     "label": "Hour record",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Hour_record"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Record_de_l%27heure_cycliste"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Werelduurrecord_%28wielrennen%29"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Stundenweltrekord"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/R%C3%A9cord_de_la_hora"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Vista aérea del Velódromo Olímpico Agustín Melgar y sus alrededores 01.jpg",
+    "credit": "ProtoplasmaKid",
+    "user": "ProtoplasmaKid",
+    "license": "CC BY-SA 4.0"
+   }
+  },
+  {
+   "ref": "manual:history-hoge-veluwe-national-park",
+   "name": "Hoge Veluwe National Park",
+   "kind": "heritage",
+   "lat": 52.0833,
+   "lng": 5.79855,
+   "cc": "NL",
+   "story": "Since 1974 the park lends its free white bicycles to every visitor. Today about 1,800 of them stand ready at the entrances.",
+   "qid": "Q1623374",
+   "year": "1974",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/De_Hoge_Veluwe_National_Park"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Parc_national_De_Hoge_Veluwe"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Nationaal_Park_De_Hoge_Veluwe"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Nationalpark_De_Hoge_Veluwe"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Parque_nacional_De_Hoge_Veluwe"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "De Hoge Veluwe landscape.jpg",
+    "credit": "Deb Collins",
+    "user": null,
+    "license": "CC BY 2.0"
+   }
+  },
+  {
+   "ref": "manual:history-hovenring",
+   "name": "Hovenring",
+   "kind": "architecture",
+   "lat": 51.433386,
+   "lng": 5.419322,
+   "cc": "NL",
+   "story": "A ring for cyclists that hangs from a 70 metre pylon above a busy road junction. It opened in 2012 and lets riders cross without meeting cars.",
+   "qid": "Q796551",
+   "year": "2012",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Hovenring"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Hovenring"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Hovenring"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Hovenring-night-shot.jpg",
+    "credit": "John Tarantino",
+    "user": null,
+    "license": "CC BY-SA 3.0"
+   }
+  },
+  {
+   "ref": "manual:history-velorama",
+   "name": "Velorama",
+   "kind": "museum",
+   "lat": 51.848605,
+   "lng": 5.870011,
+   "cc": "NL",
+   "story": "The Dutch national bicycle museum, on the Waal quay in Nijmegen. It shows the bicycle from the draisine of 1817 to today.",
+   "qid": "Q484899",
+   "osmRef": "node/2214697642",
+   "found": "Nationaal Fietsmuseum Velorama, 107, Waalkade, Benedenstad, Nijmegen-Centrum, Nijmegen, Gelderland, Nederland, 6511 XR, Nederland",
+   "web": "https://velorama.nl",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Velorama"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Velorama"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Nationaal_Fietsmuseum_Velorama"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Velorama"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Liegeraeder 1920er Velorama.jpg",
+    "credit": "Eva K. / Eva K.",
+    "user": "EvaK",
+    "license": "CC BY-SA 2.5"
+   }
+  },
+  {
+   "ref": "manual:history-vikingskipet",
+   "name": "Vikingskipet",
+   "kind": "architecture",
+   "lat": 60.793,
+   "lng": 11.1009,
+   "cc": "NO",
+   "story": "For the 1993 world championships this skating hall got a cycle track. On it the Scot Graeme Obree set the hour record on 17 July 1993, on a bicycle he built himself.",
+   "qid": "Q1782828",
+   "osmRef": "way/28287844",
+   "year": "1993",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Vikingskipet"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Vikingskipet"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Vikingskipet"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Vikingskipet"
+      }
+     ]
+    },
+    {
+     "label": "Graeme Obree",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Graeme_Obree"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Graeme_Obree"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Graeme_Obree"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Graeme_Obree"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Graeme_Obree"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Vikingskipet-Hamar.jpg",
+    "credit": "Torstein Frogner",
+    "user": null,
+    "license": "CC BY-SA 3.0"
+   }
+  },
+  {
+   "ref": "manual:history-africa-rising-cycling-center",
+   "name": "Africa Rising Cycling Center",
+   "kind": "heritage",
+   "lat": -1.469774,
+   "lng": 29.619267,
+   "cc": "RW",
+   "story": "The base of Team Rwanda, set up with the American rider Jock Boyer, first American in the Tour de France. Riders from here raced the Tour du Rwanda and the world championships.",
+   "found": "Africa Rising Cycling Center (ARCC), NR18, Cyuve, Musanze District, Northern Province, Rwanda",
+   "links": [
+    {
+     "label": "Jacques Boyer",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Jacques_Boyer"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Jonathan_Boyer"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Jonathan_Boyer"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Jonathan_Boyer"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-bicycle-museum-of-america",
+   "name": "Bicycle Museum of America",
+   "kind": "museum",
+   "lat": 40.43677,
+   "lng": -84.380913,
+   "cc": "US",
+   "story": "A museum in New Bremen, Ohio, with American bicycles from the boneshaker and the high-wheeler to the bikes of today.",
+   "qid": "Q4903758",
+   "osmRef": "node/11666856765",
+   "found": "Bicycle Museum of America, 7, West Monroe Street, Crown Equipment, New Bremen, German Township, Auglaize County, Ohio, 45869, United States",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Bicycle_Museum_of_America"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-fort-missoula",
+   "name": "Fort Missoula",
+   "kind": "fort",
+   "lat": 46.842778,
+   "lng": -114.058056,
+   "cc": "US",
+   "story": "In 1897 the 25th Infantry Bicycle Corps, Black soldiers of the US Army, rode from this fort to St. Louis, about 1,900 miles, to test the bicycle for the army.",
+   "qid": "Q5471688",
+   "year": "1897",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Fort_Missoula"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Fort_Missoula"
+      }
+     ]
+    },
+    {
+     "label": "25th Infantry Regiment",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/25th_Infantry_Regiment_%28United_States%29"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Barracks at Fort Missoula.jpg",
+    "credit": "Al Huntsman",
+    "user": null,
+    "license": "Public domain"
+   }
+  },
+  {
+   "ref": "manual:history-frances-willard-house",
+   "name": "Frances Willard House",
+   "kind": "museum",
+   "lat": 42.048937,
+   "lng": -87.67878,
+   "cc": "US",
+   "story": "Frances Willard, who fought for women's votes, learned to ride a bicycle at 53. In 1895 she wrote a book about it, A Wheel Within a Wheel. This was her home.",
+   "qid": "Q5479012",
+   "osmRef": "way/213679120",
+   "found": "Frances Willard House, 1728, Chicago Avenue, Downtown, Evanston, Evanston Township, Cook County, Illinois, 60201, United States",
+   "year": "1895",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Frances_Willard_House_%28Evanston%2C_Illinois%29"
+      }
+     ]
+    },
+    {
+     "label": "Frances Willard",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Frances_Willard"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Frances_Willard"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Frances_Willard"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Frances_Willard"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Frances_Willard"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Willard, Frances House 1.JPG",
+    "credit": "Thshriver",
+    "user": null,
+    "license": "CC BY-SA 3.0"
+   }
+  },
+  {
+   "ref": "manual:history-kittie-knox-bike-path",
+   "name": "Kittie Knox Bike Path",
+   "kind": "heritage",
+   "lat": 42.364992,
+   "lng": -71.086586,
+   "cc": "US",
+   "story": "Kittie Knox was a Black racing cyclist from Boston in the 1890s. When the League of American Wheelmen barred Black members in 1894, she rode to its 1895 meet with her membership card anyway. This path carries her name.",
+   "osmRef": "way/668954220",
+   "found": "Kittie Knox Bike Path, East Cambridge, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+   "year": "1895",
+   "links": [
+    {
+     "label": "Kittie Knox",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Kittie_Knox"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Kittie_Knox"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Kittie_Knox"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Kittie_Knox"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-madison-square",
+   "name": "Madison Square",
+   "kind": "heritage",
+   "lat": 40.742222,
+   "lng": -73.988056,
+   "cc": "US",
+   "story": "The first Madison Square Garden stood on the northeast corner of this square. Its six-day races of the 1890s gave the track race for teams of two its name: the madison.",
+   "qid": "Q110000",
+   "osmRef": "way/22899286",
+   "web": "https://www.madisonsquarepark.org/",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Madison_Square_and_Madison_Square_Park"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Madison_Square"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Madison_Square"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Madison_Square"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Madison_Square"
+      }
+     ]
+    },
+    {
+     "label": "Madison",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Madison_%28cycling%29"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Course_%C3%A0_l%27am%C3%A9ricaine"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Koppelkoers"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Zweier-Mannschaftsfahren"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Madison Square Park from Above at Night New York City.jpg",
+    "credit": "alq666",
+    "user": null,
+    "license": "CC BY 2.0"
+   }
+  },
+  {
+   "ref": "manual:history-major-taylor-velodrome",
+   "name": "Major Taylor Velodrome",
+   "kind": "heritage",
+   "lat": 39.8214,
+   "lng": -86.1994,
+   "cc": "US",
+   "story": "Major Taylor was born in Indianapolis in 1878 and became the world sprint champion in 1899. This track in his city carries his name.",
+   "qid": "Q6738305",
+   "osmRef": "way/492868415",
+   "year": "1878",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Major_Taylor_Velodrome"
+      }
+     ]
+    },
+    {
+     "label": "Major Taylor",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Major_Taylor"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Major_Taylor"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Major_Taylor"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Major_Taylor"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Marshall_Major_Taylor"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-major-taylor-statue",
+   "name": "Major Taylor statue",
+   "kind": "monument",
+   "lat": 42.260031,
+   "lng": -71.800765,
+   "cc": "US",
+   "story": "Marshall 'Major' Taylor of Worcester won the world sprint title in 1899, the first African-American cycling world champion, while he met racism on and off the track. The city raised this statue in 2008.",
+   "osmRef": "node/2532693048",
+   "found": "Major Taylor Memorial Statue, Library Lane, Central Business District, Canal District, Worcester, Worcester County, Massachusetts, 01608, United States",
+   "year": "1899",
+   "links": [
+    {
+     "label": "Major Taylor",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Major_Taylor"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Major_Taylor"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Major_Taylor"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Major_Taylor"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Marshall_Major_Taylor"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ref": "manual:history-massachusetts-state-house",
+   "name": "Massachusetts State House",
+   "kind": "architecture",
+   "lat": 42.358602,
+   "lng": -71.063875,
+   "cc": "US",
+   "story": "On 25 June 1894 Annie Londonderry, a young mother from Boston, set off from here to ride around the world on a bicycle. She was back in the United States about 15 months later.",
+   "qid": "Q1150259",
+   "osmRef": "way/29718019",
+   "found": "Massachusetts State House, 24, Beacon Street, Beacon Hill, Boston, Suffolk County, Massachusetts, 02108, United States",
+   "year": "1894",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Massachusetts_State_House"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Capitole_de_l%27%C3%89tat_du_Massachusetts"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Massachusetts_State_House"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Massachusetts_State_House"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Casa_del_Estado_de_Massachusetts"
+      }
+     ]
+    },
+    {
+     "label": "Annie Londonderry",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Annie_Londonderry"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Annie_Londonderry"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Annie_Londonderry"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Annie_Londonderry"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Annie_Londonderry"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Massachusetts State House, Boston, Massachusetts.jpg",
+    "credit": "Christian David",
+    "user": "Espandero",
+    "license": "CC BY-SA 4.0"
+   }
+  },
+  {
+   "ref": "manual:history-ocean-parkway",
+   "name": "Ocean Parkway",
+   "kind": "heritage",
+   "lat": 40.6169,
+   "lng": -73.9691,
+   "cc": "US",
+   "story": "In 1894 a path along this parkway opened for cyclists only. It is called the first designated bicycle path in the United States.",
+   "qid": "Q2487858",
+   "year": "1894",
+   "web": "https://www.nycgovparks.org/parks/ocean-parkway-malls/history",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Ocean_Parkway_%28Brooklyn%29"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Ocean_Parkway_%28Brooklyn%29"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Ocean Parkway jeh.JPG",
+    "credit": "Jim.henderson",
+    "user": "Jim.henderson",
+    "license": "Public domain"
+   }
+  },
+  {
+   "ref": "manual:history-susan-b-anthony-house",
+   "name": "Susan B. Anthony House",
+   "kind": "museum",
+   "lat": 43.153242,
+   "lng": -77.628005,
+   "cc": "US",
+   "story": "Susan B. Anthony, who fought for women's votes, lived in this house. In 1896 she said that the bicycle had done more to free women than anything else in the world.",
+   "qid": "Q7647528",
+   "osmRef": "node/1242662202",
+   "found": "Susan B. Anthony House, 17, Madison Street, Susan B. Anthony, City of Rochester, Monroe County, New York, 14608, United States",
+   "year": "1896",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Susan_B._Anthony_House"
+      }
+     ]
+    },
+    {
+     "label": "Susan B. Anthony",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Susan_B._Anthony"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Susan_B._Anthony"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Susan_B._Anthony_%28suffragette%29"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Susan_B._Anthony"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Susan_B._Anthony"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Susan B Anthony House.jpg",
+    "credit": "J. Carl Burke, Jr.",
+    "user": null,
+    "license": "Public domain"
+   }
+  },
+  {
+   "ref": "manual:history-wright-cycle-company",
+   "name": "Wright Cycle Company",
+   "kind": "heritage",
+   "lat": 39.75559,
+   "lng": -84.211805,
+   "cc": "US",
+   "story": "Wilbur and Orville Wright repaired, built and sold bicycles in this shop from 1895. The bicycle trade paid for their flying experiments.",
+   "qid": "Q8038202",
+   "osmRef": "way/708334021",
+   "found": "The Wright Cycle Company Building, Sanford Court, West Third Street Historic District, West Side, Dayton, Montgomery County, Ohio, 45407, United States",
+   "year": "1895",
+   "links": [
+    {
+     "label": "Wikipedia",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Wright_Cycle_Company"
+      }
+     ]
+    },
+    {
+     "label": "Wright brothers",
+     "urls": [
+      {
+       "locale": "en",
+       "url": "https://en.wikipedia.org/wiki/Wright_brothers"
+      },
+      {
+       "locale": "fr",
+       "url": "https://fr.wikipedia.org/wiki/Orville_et_Wilbur_Wright"
+      },
+      {
+       "locale": "nl",
+       "url": "https://nl.wikipedia.org/wiki/Gebroeders_Wright"
+      },
+      {
+       "locale": "de",
+       "url": "https://de.wikipedia.org/wiki/Br%C3%BCder_Wright"
+      },
+      {
+       "locale": "es",
+       "url": "https://es.wikipedia.org/wiki/Hermanos_Wright"
+      }
+     ]
+    }
+   ],
+   "photo": {
+    "file": "Wright Cycle Company Offices.jpg",
+    "credit": "Nyttend",
+    "user": "Nyttend",
+    "license": "Public domain"
+   }
+  }
+ ],
+ "missing": []
+}

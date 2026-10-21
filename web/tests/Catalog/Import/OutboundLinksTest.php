@@ -65,4 +65,24 @@ final class OutboundLinksTest extends TestCase
         $this->expectExceptionMessage($message);
         OutboundLinks::assertValid($links);
     }
+
+    /** The page twin of links.js itemLinks(): reader's language, else language-less, else English, else the first. */
+    public function testForLocalePicksTheReadersLanguageThenFallsBack(): void
+    {
+        $links = [
+            ['label' => 'Wikipedia', 'urls' => [
+                ['locale' => 'en', 'url' => 'https://en.wikipedia.org/wiki/Tom_Simpson'],
+                ['locale' => 'nl', 'url' => 'https://nl.wikipedia.org/wiki/Tom_Simpson'],
+            ]],
+            ['urls' => [['locale' => 'de', 'url' => 'https://www.example.org/de']]],
+            ['label' => 'Unsafe', 'urls' => [['url' => 'http://example.org']]],
+        ];
+
+        self::assertSame([
+            ['label' => 'Wikipedia', 'href' => 'https://nl.wikipedia.org/wiki/Tom_Simpson', 'domain' => 'nl.wikipedia.org'],
+            ['label' => 'example.org', 'href' => 'https://www.example.org/de', 'domain' => 'example.org'],
+        ], OutboundLinks::forLocale($links, 'nl'));
+        self::assertSame('https://en.wikipedia.org/wiki/Tom_Simpson', OutboundLinks::forLocale($links, 'fr')[0]['href'], 'English when the reader\'s language is missing');
+        self::assertSame([], OutboundLinks::forLocale('not links', 'en'));
+    }
 }

@@ -9,6 +9,8 @@ use App\Catalog\BestOfPreview;
 use App\Catalog\BikeType;
 use App\Catalog\ContributorWallProvider;
 use App\Catalog\CoverageStatsProvider;
+use App\Catalog\CyclingHistory;
+use App\Catalog\CyclingHistorySwitch;
 use App\Catalog\DifficultyVocabulary;
 use App\Catalog\ItemType;
 use App\Catalog\OperationalRegions;
@@ -73,7 +75,7 @@ final class PageController extends AbstractController
      * @see docs/specs/roadmap-and-changelog.md §6b
      */
     #[Route(LocalizedPath::CHANGELOG, name: 'changelog')]
-    public function changelog(Request $request, OnboardedCountries $onboarded): Response
+    public function changelog(Request $request, OnboardedCountries $onboarded, CyclingHistorySwitch $cyclingHistory): Response
     {
         $locale = $request->getLocale();
         $upcoming = array_map(
@@ -85,7 +87,7 @@ final class PageController extends AbstractController
             'page_title' => 'meta.changelog_title',
             'page_description' => 'meta.changelog_description',
             'nav_active' => '',
-            'releases' => ReleaseNotes::releases(),
+            'releases' => ReleaseNotes::releases($cyclingHistory->isLive() ? [] : ReleaseNotes::CYCLING_HISTORY_NOTES),
             'upcoming_countries' => $upcoming,
         ]);
     }
@@ -116,10 +118,10 @@ final class PageController extends AbstractController
      * address and no app, which is the whole reason it exists.
      */
     #[Route('/changelog.atom', name: 'changelog_atom')]
-    public function changelogAtom(Request $request): Response
+    public function changelogAtom(Request $request, CyclingHistorySwitch $cyclingHistory): Response
     {
         $response = $this->render('pages/changelog.atom.twig', [
-            'releases' => ReleaseNotes::releases(),
+            'releases' => ReleaseNotes::releases($cyclingHistory->isLive() ? [] : ReleaseNotes::CYCLING_HISTORY_NOTES),
             'site' => $request->getSchemeAndHttpHost(),
         ]);
         $response->headers->set('Content-Type', 'application/atom+xml; charset=UTF-8');
@@ -267,6 +269,29 @@ final class PageController extends AbstractController
             'page_title' => 'meta.map_key_title',
             'page_description' => 'meta.map_key_description',
             'nav_active' => '',
+        ]);
+    }
+
+    /**
+     * Where cycling history happened, on a timeline: the History & culture
+     * places on the map that tell a cycling story, in the order the stories
+     * happened, and under them the places without a year. Not found until
+     * the `cycling_history.live` setting opens it (CyclingHistorySwitch).
+     *
+     * @see docs/specs/cycling-history.md
+     */
+    #[Route(LocalizedPath::CYCLING_HISTORY, name: 'cycling_history')]
+    public function cyclingHistory(Request $request, CyclingHistory $history, CyclingHistorySwitch $switch): Response
+    {
+        if (!$switch->isLive()) {
+            throw $this->createNotFoundException();
+        }
+
+        return $this->render('pages/cycling_history.html.twig', [
+            'page_title' => 'meta.cycling_history_title',
+            'page_description' => 'meta.cycling_history_description',
+            'nav_active' => '',
+            'timeline' => $history->timeline($request->getLocale()),
         ]);
     }
 

@@ -46,6 +46,7 @@ final class LocaliseCommonsPhotosCommandTest extends KernelTestCase
     private CommonsPhotoRepository $photos;
     private int $itemId;
 
+    #[\Override]
     protected function setUp(): void
     {
         self::bootKernel();
@@ -61,6 +62,7 @@ final class LocaliseCommonsPhotosCommandTest extends KernelTestCase
         $this->itemId = $this->seedHotlinkedItem();
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         $this->db->executeStatement('DELETE FROM item WHERE id = :id', ['id' => $this->itemId]);
@@ -215,6 +217,26 @@ final class LocaliseCommonsPhotosCommandTest extends KernelTestCase
 
         $this->localise('CC BY-SA 3.0', [], $downloads);
         self::assertSame(1, $downloads, 'a file already in our storage must not be fetched twice');
+        self::assertStringNotContainsString('wikimedia.org', (string) $this->storedPhoto()['sm']);
+    }
+
+    /**
+     * A fetch that failed on our side is tried again on the next run.
+     *
+     * The report says "kept for the next run" for a scanner or a Commons that
+     * was down. On 2026-10-21 that was not so: the next run only reopened a
+     * declined file, the failed row stayed failed, and the handler returned
+     * at once, so every later run printed the old reason and fetched nothing.
+     */
+    public function testAFileThatFailedOnOurSideIsFetchedOnTheNextRun(): void
+    {
+        $this->photos->claim(self::FILE);
+        $this->photos->markFailed(self::FILE, 'scanner_unavailable');
+
+        $downloads = 0;
+        $tester = $this->localise('CC BY-SA 3.0', [], $downloads);
+
+        self::assertSame(1, $downloads, $tester->getDisplay());
         self::assertStringNotContainsString('wikimedia.org', (string) $this->storedPhoto()['sm']);
     }
 

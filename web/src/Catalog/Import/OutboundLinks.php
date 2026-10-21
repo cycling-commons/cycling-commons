@@ -89,4 +89,63 @@ final class OutboundLinks
             }
         }
     }
+
+    /**
+     * One row per destination for a reader of `$locale`: the url in their
+     * language, else the language-less one, else English, else the first. The
+     * same rule as the map drawer's `itemLinks()` (web/assets/map/links.js),
+     * so a page and the drawer send a reader to the same article.
+     *
+     * @return list<array{label: string, href: string, domain: string}>
+     */
+    public static function forLocale(mixed $links, string $locale): array
+    {
+        if (!\is_array($links)) {
+            return [];
+        }
+        $out = [];
+        foreach (\array_slice(array_values($links), 0, self::MAX_ENTRIES) as $entry) {
+            if (!\is_array($entry) || !\is_array($entry['urls'] ?? null)) {
+                continue;
+            }
+            $urls = array_values(array_filter(
+                $entry['urls'],
+                static fn (mixed $u): bool => \is_array($u) && \is_string($u['url'] ?? null) && 1 === preg_match('~^https://~i', $u['url']),
+            ));
+            if ([] === $urls) {
+                continue;
+            }
+            /** @var list<array{url: string, locale?: mixed}> $urls */
+            $pick = self::firstWith($urls, static fn (array $u): bool => ($u['locale'] ?? null) === $locale)
+                ?? self::firstWith($urls, static fn (array $u): bool => !isset($u['locale']) || '' === $u['locale'])
+                ?? self::firstWith($urls, static fn (array $u): bool => 'en' === ($u['locale'] ?? null))
+                ?? $urls[0];
+            $host = parse_url($pick['url'], \PHP_URL_HOST);
+            if (!\is_string($host) || '' === $host) {
+                continue;
+            }
+            $domain = preg_replace('/^www\./', '', $host) ?? $host;
+            $label = \is_string($entry['label'] ?? null) ? trim($entry['label']) : '';
+            $out[] = ['label' => '' !== $label ? $label : $domain, 'href' => $pick['url'], 'domain' => $domain];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param list<array{url: string, locale?: mixed}>           $urls
+     * @param callable(array{url: string, locale?: mixed}): bool $test
+     *
+     * @return array{url: string, locale?: mixed}|null
+     */
+    private static function firstWith(array $urls, callable $test): ?array
+    {
+        foreach ($urls as $u) {
+            if ($test($u)) {
+                return $u;
+            }
+        }
+
+        return null;
+    }
 }

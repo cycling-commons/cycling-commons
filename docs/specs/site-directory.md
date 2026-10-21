@@ -141,7 +141,8 @@ top", the footer "multiple others, not all", and the directory everything).
   print. The sixth group, Your account, stays behind the account chip and is
   not in the footer, where a signed-out reader would only meet a login wall.
   The columns hold:
-  - *The atlas*: Map, Map key, Regions, Coverage, Scout.
+  - *The atlas*: Map, Map key, Regions, Coverage, Cycling history (only while
+    `cycling_history.live` is 1, cycling-history.md §5), Scout.
   - *Take part*: Contribute, Propose a route, Vote, Get involved,
     Contributors and curators (`roles`), Contributors, Wiki and Governance
     (both on the wiki).

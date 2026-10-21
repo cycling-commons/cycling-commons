@@ -28,6 +28,7 @@
     {id: 'regions',  href: path('regions'),  x: 130, y: 200, t: {x: 140, y: 160, lp: 'left'}, capital: false, h: 'pages.card_region_h'|trans,  p: 'pages.card_region_p'|trans},
     {id: 'scout',    href: path('scout'),    x: 320, y: 195, t: {x: 250, y: 165, lp: 'right'}, capital: false, h: 'pages.card_scout_h'|trans,   p: 'pages.card_scout_p'|trans},
     {id: 'coverage', href: path('coverage'), x: 400, y: 235, t: {x: 225, y: 225, lp: 'right'}, capital: false, h: 'nav.coverage'|trans, p: 'pages.card_coverage_p'|trans},
+    {id: 'history',  href: path('cycling_history'), x: 215, y: 150, t: {x: 290, y: 95, lp: 'left'}, capital: false, h: 'pages.card_history_h'|trans, p: 'pages.card_history_p'|trans},
   ]},
   {id: 'part', name: 'pages.group_part'|trans, box: {x: 500, y: 20, w: 480, h: 250}, t: {x: 22, y: 280, w: 308, h: 280}, pages: [
     {id: 'contribute',   href: path('contribute'),    x: 590, y: 100, t: {x: 185, y: 335, lp: 'right'}, capital: true, lp: 'above',  h: 'pages.card_contribute_h'|trans,   p: 'pages.card_contribute_p'|trans},
@@ -73,10 +74,16 @@
   {a: 'contribute', b: 'improve', kind: 'trail'}, {a: 'contribute', b: 'addclimb', kind: 'trail'}, {a: 'contribute', b: 'route', kind: 'trail'},
   {a: 'route', b: 'vote', kind: 'trail'}, {a: 'improve', b: 'join', kind: 'trail'}, {a: 'join', b: 'wiki', kind: 'trail'}, {a: 'join', b: 'contributors', kind: 'trail'}, {a: 'map', b: 'scout', kind: 'trail'},
   {a: 'account', b: 'profile', kind: 'track'}, {a: 'profile', b: 'messages', kind: 'track'}, {a: 'profile', b: 'settings', kind: 'track'}, {a: 'contributors', b: 'profile', kind: 'track'},
-  {a: 'map', b: 'mapkey', kind: 'path'}, {a: 'map', b: 'regions', kind: 'path'}, {a: 'map', b: 'coverage', kind: 'path'},
+  {a: 'map', b: 'mapkey', kind: 'path'}, {a: 'map', b: 'regions', kind: 'path'}, {a: 'map', b: 'coverage', kind: 'path'}, {a: 'map', b: 'history', kind: 'path'},
   {a: 'developers', b: 'licenses', kind: 'path'}, {a: 'developers', b: 'api', kind: 'path'}, {a: 'changelog', b: 'blog', kind: 'path'}, {a: 'licenses', b: 'credits', kind: 'path'}, {a: 'changelog', b: 'roadmap', kind: 'path'}, {a: 'roadmap', b: 'roadmapdone', kind: 'path'}, {a: 'changelog', b: 'known', kind: 'path', bend: 0, wobble: 0.3, via: [{x: 485, y: 470}, {x: 485, y: 560}]},
   {a: 'known', b: 'bug', kind: 'path'}, {a: 'bug', b: 'report', kind: 'path'}, {a: 'report', b: 'a11y', kind: 'path'}, {a: 'contact', b: 'report', kind: 'path', via: [{x: 540, y: 622}], t: {via: [{x: 316, y: 1280}, {x: 300, y: 1195}]}}, {a: 'about', b: 'privacy', kind: 'path'}, {a: 'privacy', b: 'terms', kind: 'path'},
 ] %}
+{# The cycling history timeline waits behind its switch (cycling-history.md §5):
+   while it is off, no dot, no card and no road lead to a page that answers not found. #}
+{% if not cycling_history_live() %}
+  {% set groups = groups|map(g => g|merge({pages: g.pages|filter(p => p.id != 'history')})) %}
+  {% set roads = roads|filter(r => r.a != 'history' and r.b != 'history') %}
+{% endif %}
 {#
   Two drawings of the map from the same groups, pages and roads. The wide
   one uses each entry's own coordinates (`box`, `x`, `y`, `lp`, `via`); the

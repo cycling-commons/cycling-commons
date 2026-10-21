@@ -235,7 +235,9 @@ final class CatalogFormRegistry
                 addFields: [
                     CatalogField::select('openingHours', 'Opening hours', self::OPENING_HOURS, default: 'Unknown'),
                     CatalogField::select('entryFee', 'Entry fee?', ['Free', 'Paid', 'Unknown']),
-                    CatalogField::text('cyclingStory', 'Cycling story / link', placeholder: 'A heritage note worth riding past for'),
+                    CatalogField::textarea('cyclingStory', 'Cycling story / link', 'A heritage note worth riding past for'),
+                    // The year of that story: it puts the place on the cycling history timeline (cycling-history.md).
+                    CatalogField::year('year', 'Year of the story'),
                     CatalogField::url('web', 'Official site', placeholder: 'https://… (the place’s own site)'),
                     CatalogField::links('links', 'Other pages about this place'),
                 ],

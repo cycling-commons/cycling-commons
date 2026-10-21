@@ -15,6 +15,9 @@ namespace App\Catalog;
  */
 final readonly class CatalogField
 {
+    /** What {@see year()} accepts: three or four digits. */
+    public const string YEAR_PATTERN = '/^\d{3,4}$/';
+
     /**
      * @param list<string>          $choices      non-empty for {@see FieldKind::Select}, empty otherwise
      * @param array<string, string> $choiceLabels
@@ -35,6 +38,10 @@ final readonly class CatalogField
         public array $choiceLabels = [],
         /** Offered in alphabetical order of the rider's language; the stored order stays the vocabulary's. */
         public bool $sortChoices = false,
+        /** A text value must match this regex; null takes any text. */
+        public ?string $pattern = null,
+        /** Translation key shown when the value does not match {@see $pattern}. */
+        public string $patternMessage = '',
     ) {
     }
 
@@ -64,6 +71,17 @@ final readonly class CatalogField
     public static function textarea(string $name, string $label, string $placeholder = '', bool $display = true): self
     {
         return new self($name, $label, FieldKind::Textarea, placeholder: $placeholder, maxLength: 2000, display: $display);
+    }
+
+    /**
+     * A year, 1817 or 1903: when the story a place tells happened. The
+     * cycling history timeline orders its places by it.
+     *
+     * @see docs/specs/cycling-history.md
+     */
+    public static function year(string $name, string $label): self
+    {
+        return new self($name, $label, FieldKind::Text, placeholder: '1903', maxLength: 4, pattern: self::YEAR_PATTERN, patternMessage: 'contribute.error.invalid_year');
     }
 
     /**

@@ -186,6 +186,15 @@ final class LocalizedPath
     ];
 
     /** @var array<string, string> */
+    public const array CYCLING_HISTORY = [
+        'en' => '/cycling-history',
+        'fr' => '/histoire-du-cyclisme',
+        'nl' => '/wielergeschiedenis',
+        'de' => '/radsportgeschichte',
+        'es' => '/historia-del-ciclismo',
+    ];
+
+    /** @var array<string, string> */
     public const array CREDITS = [
         'en' => '/credits',
         'fr' => '/remerciements',

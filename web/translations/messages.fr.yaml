@@ -278,6 +278,8 @@ pages:
   card_coverage_p: 'Couverture et fraîcheur par pays — et où aider.'
   card_mapkey_h: 'Légende de la carte'
   card_mapkey_p: 'Chaque marque sur la carte et sa signification.'
+  card_history_h: 'Histoire du cyclisme'
+  card_history_p: 'Là où l''histoire du cyclisme s''est écrite, sur une frise.'
   card_roadmapdone_h: 'Réalisé sur la feuille de route'
   card_roadmapdone_p: 'Tout ce que la feuille de route annonçait et qui est maintenant sur le site.'
   card_contributors_h: 'Contributeurs'
@@ -2387,6 +2389,7 @@ contribute:
     invisible_characters: 'Ce texte contient des caractères invisibles ou de formatage qui ne sont pas autorisés.'
     field_required: 'Ce champ est obligatoire.'
     field_too_long: 'Cette valeur est trop longue.'
+    invalid_year: 'Écrivez une année en chiffres, par exemple 1903.'
     suspicious_characters: 'Ce texte contient des caractères non pris en charge ou d''écritures mélangées.'
     invalid_url: 'Saisissez une adresse web complète commençant par http:// ou https://'
     rate_limited: 'Vous avez atteint la limite de contributions pour le moment — réessayez un peu plus tard.'
@@ -3923,6 +3926,8 @@ meta:
   accessibility_description: 'L''utilisabilité du Cycling Commons, y compris ce qui n''est pas encore assez bon, et comment signaler un obstacle.'
   map_key_title: 'Cycling Commons — Légende de la carte'
   map_key_description: 'Chaque marque sur la carte du Cycling Commons et sa signification : épingles, disques, bordures, badges, lignes et grappes.'
+  cycling_history_title: 'Histoire du cyclisme · Cycling Commons'
+  cycling_history_description: 'Là où l''histoire du cyclisme s''est écrite, sur une frise : premières sorties, grandes courses, records et les coureurs qui les ont faits, chacun un lieu sur la carte.'
   roles_title: 'Cycling Commons : contributeurs et curateurs'
   roles_description: 'Ce que fait un contributeur et ce que fait un curateur sur la carte Cycling Commons, et comment une modification devient confirmée.'
 legend:
@@ -4550,6 +4555,9 @@ admin:
       roadmap_say_live:
         label: "Feuille de route : votes, suivis et propositions"
         help: "Mettez 1 pour que les cyclistes votent pour les éléments de la feuille de route et les suivent, et envoient des propositions et votent pour elles. À 0, la feuille de route ne montre que sa liste et le formulaire de proposition est fermé."
+      cycling_history_live:
+        label: "La frise de l'histoire du cyclisme est en ligne"
+        help: "Mettez 1 une fois les lieux de l'histoire du cyclisme importés sur ce site. À 0, la page /cycling-history répond introuvable, et le pied de page, le répertoire de toutes les pages, le plan du site et Nouveautés ne la montrent pas."
       map_confirmed_default_threshold:
         label: 'Éligibilité à Confirmé : lieux vérifiés'
         help: 'Nombre de lieux vérifiés par quelqu’un qu’une région doit atteindre avant qu’un curateur puisse l’ouvrir en mode Confirmé par défaut. Aucune répartition par type n’est exigée, seulement assez pour que le mode ne paraisse pas vide.'
@@ -4715,6 +4723,7 @@ item_type:
 'Closed': 'Fermé'
 'Cost': 'Coût'
 'Cycling story / link': 'Récit cycliste / lien'
+'Year of the story': 'Année de l''histoire'
 'Cycling-friendliness (1–5)': 'Convivialité cycliste (1–5)'
 'Difficulty': 'Difficulté'
 'Dominant surface': 'Revêtement dominant'
@@ -5900,3 +5909,14 @@ account_suspension:
 email:
   signoff_greeting: "Vent dans le dos et soleil,"
   signoff_team: "L'équipe Cycling Commons"
+history:
+  kicker: 'Histoire du cyclisme'
+  title: 'Là où l''histoire du cyclisme s''est écrite'
+  lead: 'Les lieux de la carte où l''histoire du cyclisme s''est écrite, dans l''ordre où elle s''est passée. Vous pouvez vous rendre à vélo à chacun d''eux.'
+  on_map: 'Voir sur la carte'
+  undated_h: 'Autres lieux à visiter'
+  undated_p: 'Des musées et des pistes dont l''histoire couvre de nombreuses années.'
+  empty: 'Aucun lieu avec une histoire cycliste n''est encore sur la carte.'
+  add_h: 'Vous connaissez un lieu avec une histoire cycliste ?'
+  add_p: 'Ajoutez-le comme lieu Histoire & culture, avec son histoire, son année et son emplacement.'
+  add_cta: 'Ajouter un lieu'
