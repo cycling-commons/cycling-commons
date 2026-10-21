@@ -37,6 +37,10 @@
     --chrome-green:#7fcf9a; --chrome-green-hi:#A6E3BC;  /* done/fresh confirmations */
     --chrome-orange-soft:#FF8A52;     /* curated tag on the drawer */
     --chrome-link:#7FC9E0;            /* city link on the drawer */
+    --chip-on-bg:#FF5A1F;             /* a chip that is on (= --trail) */
+    --chip-on-line:#FF5A1F;
+    --scope-on-bg:#2C5440;            /* the region picked in Region (= --chrome-lift) */
+    --scope-on-line:#8FB6A8;          /* (= --chrome-head) */
   }
   /* The light twin. Same brand, inverted ground: paper carries the chrome, ink
      carries the text, trail orange stays the accent. Every pale-on-dark accent
@@ -58,6 +62,13 @@
     --chrome-rose:#A63A28;  --chrome-rose-hi:#8C2F1F;
     --chrome-green:#1E7A46; --chrome-green-hi:#166B3B;
     --chrome-orange-soft:#C2410C;
+    /* Full trail orange on cream glares behind small text: a peach fill with a
+       deep-orange edge. Ink on the fill 10.0:1, the edge on paper 4.2:1. */
+    --chip-on-bg:#F6B898;
+    --chip-on-line:#C2410C;
+    /* The picked region wears the same peach as a chip that is on. */
+    --scope-on-bg:#F6B898;
+    --scope-on-line:#C2410C;
     --chrome-link:#176A88;
   }
   *{margin:0;padding:0;box-sizing:border-box}
@@ -431,7 +442,7 @@
   /* A chip or chip row the script hides (a bike the rider does not save, no active preset). */
   .chip[hidden],.chips[hidden]{display:none}
   .chip:hover{border-color:var(--chrome-fg-solid)}
-  .chip.on{background:var(--trail);border-color:var(--trail);color:var(--ink)}
+  .chip.on{background:var(--chip-on-bg);border-color:var(--chip-on-line);color:var(--ink)}
 
   /* Layer-group heading inside #layers (utilities / rider picks / moderation).
      Quieter than .grp h3 above it — this is a divider within one panel, not a
@@ -494,7 +505,7 @@
   #scopeChips{display:contents}
   .scope-toggle button{flex:1 1 auto;min-width:calc(33.3% - .35rem);background:transparent;color:var(--chrome-fg-solid);font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;padding:.5rem .3rem;border:1px solid rgb(var(--chrome-fg) / .25);border-radius:6px;cursor:pointer;transition:all .18s}
   .scope-toggle button:hover{border-color:rgb(var(--chrome-fg) / .5)}
-  .scope-toggle button.on{background:var(--chrome-lift);border-color:var(--chrome-head);color:var(--chrome-fg-solid)}
+  .scope-toggle button.on{background:var(--scope-on-bg);border-color:var(--scope-on-line);color:var(--chrome-fg-solid)}
   /* Compass grid (owner request, map-and-search.md §4.5
      "Compass grid layout"): only rendered when the active scope is a single
      region (map.js renderScopeChips) — the selected region sits centre, each
@@ -521,9 +532,9 @@
   .cc-compass-more{display:flex;flex-wrap:wrap;gap:.35rem}
   .cc-compass-more button{flex:1 1 auto;min-width:calc(50% - .35rem)}
   /* view mode is a primary control → its active state must read unmistakably "on":
-     orange fill like .chip.on (not the subtle spruce the other toggles use) */
-  #mode{border-color:var(--trail)}
-  #mode button.on{background:var(--trail);color:var(--ink);font-weight:700}
+     the .chip.on fill and edge (not the subtle spruce the other toggles use), plus bold */
+  #mode{border-color:var(--chip-on-line)}
+  #mode button.on{background:var(--chip-on-bg);color:var(--ink);font-weight:700}
   .hint{font-size:.78rem;color:rgb(var(--chrome-fg) / .68);margin-top:.6rem;line-height:1.5}
 
   /* The data-version readout under the places count: deliberately faint —
