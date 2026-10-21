@@ -1,0 +1,25 @@
+docs/specs/website-liveness.md
+  s_4a9259c4225e4b::t_e3a07a21188469 26-27,31-35
+web/config/services.yaml
+  s_4a9259c4225e4b::t_8e98c5ba046ffc 130-139
+web/src/Links/WebsiteVerdict.php
+  s_4a9259c4225e4b::t_5a7daed6be4188 54-68,89-91
+web/tests/Links/WebsiteVerdictTest.php
+  s_4a9259c4225e4b::t_90bdbf57435e86 44-51,59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f3fc44eef072d273594d472dd14a1e3af00b136b",
+  "prompts": {},
+  "sessions": {
+    "s_4a9259c4225e4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aa072c1e-46c1-4bc8-a73b-4327426f865a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
