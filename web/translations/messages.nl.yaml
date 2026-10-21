@@ -1200,7 +1200,7 @@ map:
   season_all: 'Alle'
   view_hint_curated: 'De beste klims, slaapplekken en uitzichten, gekozen door fietsers.'
   view_hint_confirmed: 'Alles uit Best-of, plus elke plek waar iemand is geweest en heeft gecontroleerd.'
-  view_hint_all: 'Alle data, ook imports waar nog niemand naar keek.'
+  view_hint_all: 'Alles uit Bevestigd, plus plekken uit open kaarten en officiële lijsten die nog wachten op een bezoek van een fietser.'
   pref_filter: 'Routes voor jouw fietsen'
   data_layers: 'Datalagen'
   dl_group_utility: 'Praktisch · volledige dekking'

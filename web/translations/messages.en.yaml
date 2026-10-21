@@ -1788,7 +1788,7 @@ map:
   season_all: 'All'
   view_hint_curated: 'The best climbs, stays and views, chosen by riders.'
   view_hint_confirmed: 'Everything in Best of, plus every place somebody has been and checked.'
-  view_hint_all: 'The full data, including imports nobody has looked at yet.'
+  view_hint_all: 'Everything in Confirmed, plus places from open maps and official lists that still wait for a rider''s visit.'
   pref_filter: 'Routes for your bikes'
   data_layers: 'Data layers'
   # Layer-rail group headings — same two groups, same vocabulary as the

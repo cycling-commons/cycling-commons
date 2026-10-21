@@ -1203,7 +1203,7 @@ map:
   season_all: 'Alle'
   view_hint_curated: 'Die besten Anstiege, Unterkünfte und Aussichten, von Radfahrenden gewählt.'
   view_hint_confirmed: 'Alles aus Best-of, dazu jeden Ort, den jemand vor Ort geprüft hat.'
-  view_hint_all: 'Die vollständigen Daten, auch ungeprüfte Importe.'
+  view_hint_all: 'Alles aus Bestätigt, dazu Orte aus offenen Karten und amtlichen Listen, die noch auf den Besuch von Radfahrenden warten.'
   pref_filter: 'Routen für deine Räder'
   data_layers: 'Datenebenen'
   dl_group_utility: 'Praktisch · volle Abdeckung'

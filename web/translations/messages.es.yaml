@@ -1794,7 +1794,7 @@ map:
   season_all: 'Todas'
   view_hint_curated: 'Los mejores puertos, alojamientos y miradores, elegidos por ciclistas.'
   view_hint_confirmed: 'Todo lo de Lo mejor, más cada sitio que alguien ha ido a comprobar.'
-  view_hint_all: 'Los datos completos, incluidas importaciones sin revisar.'
+  view_hint_all: 'Todo lo de Confirmado, más los sitios de mapas abiertos y listas oficiales que aún esperan la visita de un ciclista.'
   pref_filter: 'Rutas para tus bicis'
   data_layers: 'Capas de datos'
   # Encabezados de grupo del carril de capas — los mismos dos grupos y el mismo
