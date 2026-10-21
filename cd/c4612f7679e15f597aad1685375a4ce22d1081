@@ -1,0 +1,30 @@
+web/assets/styles/map.css
+  s_040e7dfac18e31::t_db63a36e3ed1de 431-432
+docs/specs/map-presets.md
+  s_040e7dfac18e31::t_986c116e7b00ed 83-94,96,107,109-110
+web/assets/map/presets.js
+  s_040e7dfac18e31::t_a16d94cfd2f449 2-7,11,59,62-68,94-95
+web/tests/js/map-presets-wiring.test.cjs
+  s_040e7dfac18e31::t_e8766c8a334953 75-83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cdc4612f7679e15f597aad1685375a4ce22d1081",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_040e7dfac18e31": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "14984811-ef34-4cff-9ec4-54c041744da9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
