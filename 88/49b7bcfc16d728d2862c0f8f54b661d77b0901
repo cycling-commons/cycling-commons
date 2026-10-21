@@ -1,0 +1,25 @@
+docs/specs/map-and-search.md
+  s_4a9259c4225e4b::t_5b1fdd7738897c 873-880
+web/migrations/Version20261020030000.php
+  s_4a9259c4225e4b::t_5df474da5f21d4 1-40
+web/src/Catalog/RegionDerivations.php
+  s_4a9259c4225e4b::t_8e5e152de84d82 29,34-51
+web/src/Catalog/RegionSilhouette.php
+  s_4a9259c4225e4b::t_01b1c370eceeee 12-14,36,39,71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8849b7bcfc16d728d2862c0f8f54b661d77b0901",
+  "prompts": {},
+  "sessions": {
+    "s_4a9259c4225e4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aa072c1e-46c1-4bc8-a73b-4327426f865a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
