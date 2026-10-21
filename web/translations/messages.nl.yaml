@@ -650,6 +650,8 @@ region:
   story_write: "Schrijf over de geschiedenis, natuur en cultuur van deze regio"
   story_other_lang: "Deze tekst is in het %lang%. Niemand heeft hem nog vertaald."
   story_translate: "Vertaal hem"
+  translated_from: "Vertaald uit de oorspronkelijke tekst in het %lang%."
+  original_changed: "Het origineel is sindsdien veranderd."
   cta_map: 'Open deze regio op de kaart'
   cta_apply: 'Word vrijwillig regiobeheerder'
   # Still used by contribute/index.html.twig's Vote card ("go" link text) —
@@ -2722,6 +2724,9 @@ place_text:
   lead_region: "Iedereen die is aangemeld kan een wijziging voorstellen van de geografietekst van deze regio: waar hij ligt, het landschap, de grootte en de buren. Een regiobeheerder van deze regio keurt hem goed voordat hij verschijnt."
   kicker_story: "Geschiedenis, natuur en cultuur"
   lead_story: "Iedereen die is aangemeld kan de tekst over de geschiedenis, natuur en cultuur van deze regio schrijven, wijzigen of vertalen. Een regiobeheerder van deze regio keurt hem goed voordat hij verschijnt."
+  field_based_on: "Deze tekst is een vertaling van"
+  based_on_none: "Geen vertaling: in deze taal geschreven"
+  field_based_on_hint: "Heb je de tekst van een andere taal vertaald, zeg dan welke. Als dat origineel verandert, laten we het je weten, zodat je de jouwe kunt bijwerken."
   purpose_region: "Dit is de geografietekst: waar de regio ligt, het landschap, de grootte en de buren. Geschiedenis, natuur en cultuur hebben een eigen tekst."
   purpose_story: "Dit is de tekst over geschiedenis, natuur en cultuur. Waar de regio ligt en hoe het land eruitziet, hoort in de geografietekst."
   purpose_go_story: "Schrijf over de geschiedenis, natuur en cultuur"
@@ -2808,9 +2813,11 @@ place_text:
     source_required: 'Zeg waar je tekst vandaan komt: bewerkt uit het Wikipedia-artikel, of je eigen tekst.'
     generic_anchor: "Een link zegt alleen \"bron\", \"link\" of \"hier\". Link liever de woorden die zeggen waar de pagina over gaat."
     links_unconfirmed: "Sommige links zijn niet \"Gecontroleerd: OK\": %urls%. Open ze zelf en vink het vakje onder de links aan, of pas ze aan."
+    based_on: "Kies een taal met een tekst om uit te vertalen, of \"Geen vertaling\"."
 
 moderate:
   lang_title: "Geschreven in het %lang%"
+  lang_from_title: "Geschreven in het %lang%, vertaald uit het %from%"
   rider_removed: 'een fietser met verwijderd account'
   town:
     title: 'Tekst van de stadskaart'
@@ -3349,6 +3356,7 @@ messages:
   view_your_ideas: "Bekijk je ideeën"
   kind_submission_rejected: 'Bijdrage niet aanvaard'
   kind_submission_needs_info: 'Een regiobeheerder heeft meer informatie nodig'
+  kind_text_original_changed: "Een origineel dat je vertaalde is veranderd"
   kind_route_approved: 'Routevoorstel goedgekeurd. Bedankt!'
   kind_route_rejected: 'Routevoorstel niet aanvaard'
   kind_route_retired: 'Route teruggetrokken'
@@ -3386,6 +3394,7 @@ messages:
     areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
     submission_rejected: 'Jouw bijdrage ''<em>%title%</em>'' is niet aanvaard.'
     submission_needs_info: 'Een regiobeheerder heeft meer informatie nodig over ''<em>%title%</em>'' voordat er beslist wordt. Je kunt hieronder antwoorden.'
+    text_original_changed: "De %from%-tekst van '<em>%title%</em>' die je naar het %to% vertaalde, is veranderd. Je vertaling heeft misschien dezelfde wijziging nodig: <a href=\"%url%\">werk je vertaling bij</a>."
     route_approved: 'Jouw route ''<em>%name%</em>'' is goedgekeurd en staat nu als voorgestelde route op de kaart. Bedankt!'
     route_rejected: 'Jouw route ''<em>%name%</em>'' is niet aanvaard.'
     route_retired: 'Jouw route ''<em>%name%</em>'' is van de kaart teruggetrokken.'

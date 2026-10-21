@@ -104,6 +104,23 @@
           </select>
         </div>
 
+        {# Which text this one translates, if any (§3.1e): the languages that
+           hold a text a person wrote here. The writer of a translation is
+           told when that original changes. Not on a correction: the writer
+           said it. The current language is left out by place-text.js. #}
+        {% if originals is not empty and not correcting %}
+          <div class="cfield">
+            <label for="pt-based-on">{{ 'place_text.field_based_on'|trans }}</label>
+            <select id="pt-based-on" name="based_on" aria-describedby="pt-based-on-hint">
+              <option value="">{{ 'place_text.based_on_none'|trans }}</option>
+              {% for code, label in originals %}
+                <option value="{{ code }}"{{ code == based_on ? ' selected' }}{{ code == lang ? ' hidden disabled' }}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            <p class="chint" id="pt-based-on-hint">{{ 'place_text.field_based_on_hint'|trans }}</p>
+          </div>
+        {% endif %}
+
         {% set current = texts[lang] ?? '' %}
         {% if story and not correcting %}
           {% set from = translate_from|default(null) %}

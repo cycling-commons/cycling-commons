@@ -78,6 +78,7 @@ final readonly class PlaceTextProposals
         private ModerationScopeProvider $scopes,
         private Languages $languages,
         private StoryLinkCheck $links,
+        private TextLineage $lineage,
     ) {
     }
 
@@ -221,13 +222,15 @@ final readonly class PlaceTextProposals
      * @throws PlaceTextRefused             on text the form must send back
      * @throws TooManyRequestsHttpException past the contribution rate limit
      */
-    public function proposeTown(User $by, string $osmRef, string $lang, string $text, string $note, ?string $name, ?bool $derived): array
+    public function proposeTown(User $by, string $osmRef, string $lang, string $text, string $note, ?string $name, ?bool $derived, ?string $basedOn = null): array
     {
         if (1 !== preg_match('~^(node|way|relation)/\d{1,16}$~', $osmRef)) {
             throw new PlaceTextRefused('place_text.error.unknown');
         }
         $this->assertServed($lang);
         [$lang, $text, $note] = $this->checked($lang, $text, $note);
+        // What it translates, checked before it costs a send (§3.1e).
+        $based = $this->lineage->basedOn(PlaceText::TOWN, $osmRef, $lang, (string) $basedOn);
         $derived = self::sourceAnswered($this->towns->hasArticle($osmRef, $lang), $derived);
 
         $where = $this->places->locate($osmRef);
@@ -252,7 +255,7 @@ final readonly class PlaceTextProposals
             'text' => $text,
             'derived' => $derived,
             'details' => ['note' => $note],
-        ], [PlaceText::changeKey($lang) => self::pair($was, $text)], $this->townTitle($osmRef, $name), $point, $where['countryCode'], $where['regionId']);
+        ] + self::basedOnPayload($based), [PlaceText::changeKey($lang) => self::pair($was, $text)], $this->townTitle($osmRef, $name), $point, $where['countryCode'], $where['regionId']);
     }
 
     /**
@@ -266,10 +269,12 @@ final readonly class PlaceTextProposals
      * @throws PlaceTextRefused             on text the form must send back
      * @throws TooManyRequestsHttpException past the contribution rate limit
      */
-    public function proposeRegion(User $by, array $region, string $lang, string $text, string $note, ?bool $derived): array
+    public function proposeRegion(User $by, array $region, string $lang, string $text, string $note, ?bool $derived, ?string $basedOn = null): array
     {
         $this->assertServed($lang);
         [$lang, $text, $note] = $this->checked($lang, $text, $note);
+        // What it translates, checked before it costs a send (§3.1e).
+        $based = $this->lineage->basedOn(PlaceText::REGION, (string) $region['id'], $lang, (string) $basedOn);
         $derived = self::sourceAnswered(RegionLead::hasSource($region['wiki'], $lang), $derived);
         $current = $this->currentRegionText($region, $lang);
         if ($current['text'] === $text && $current['derived'] === $derived) {
@@ -290,7 +295,7 @@ final readonly class PlaceTextProposals
             'text' => $text,
             'derived' => $derived,
             'details' => ['note' => $note],
-        ], [PlaceText::changeKey($lang) => self::pair($current['text'], $text)], mb_substr($region['name'], 0, 200), $point, $region['countryCode'], $region['id']);
+        ] + self::basedOnPayload($based), [PlaceText::changeKey($lang) => self::pair($current['text'], $text)], mb_substr($region['name'], 0, 200), $point, $region['countryCode'], $region['id']);
     }
 
     /**
@@ -310,10 +315,12 @@ final readonly class PlaceTextProposals
      * @throws PlaceTextRefused             on text the form must send back
      * @throws TooManyRequestsHttpException past the contribution rate limit
      */
-    public function proposeStory(User $by, array $region, string $lang, string $text, string $note, bool $linksConfirmed = false): array
+    public function proposeStory(User $by, array $region, string $lang, string $text, string $note, bool $linksConfirmed = false, ?string $basedOn = null): array
     {
         $this->assertServed($lang);
         [$lang, $text, $note] = $this->checked($lang, $text, $note, PlaceText::STORY);
+        // What it translates, checked before it costs a send (§3.1e).
+        $based = $this->lineage->basedOn(PlaceText::STORY, (string) $region['id'], $lang, (string) $basedOn);
         $current = $this->currentStory($region, $lang);
         if ($current === $text) {
             throw new PlaceTextRefused('place_text.error.unchanged');
@@ -334,7 +341,8 @@ final readonly class PlaceTextProposals
             'text' => $text,
             'derived' => false,
             'details' => ['note' => $note],
-        ] + ([] === $problems ? [] : ['_links' => ['writer' => StoryLinkCheck::confirmation($by, $problems)]]), [PlaceText::changeKey($lang, PlaceText::STORY) => self::pair($current, $text)], mb_substr($region['name'], 0, 200), $point, $region['countryCode'], $region['id']);
+        ] + ([] === $problems ? [] : ['_links' => ['writer' => StoryLinkCheck::confirmation($by, $problems)]])
+          + self::basedOnPayload($based), [PlaceText::changeKey($lang, PlaceText::STORY) => self::pair($current, $text)], mb_substr($region['name'], 0, 200), $point, $region['countryCode'], $region['id']);
     }
 
     /**
@@ -533,6 +541,18 @@ final readonly class PlaceTextProposals
         );
 
         return false === $id ? null : $this->em->find(Submission::class, (int) $id);
+    }
+
+    /**
+     * What a text translates, on its payload (`_basedOn`, §3.1e), or nothing.
+     *
+     * @param array{lang: string, at: ?string, sub: ?int}|null $basedOn
+     *
+     * @return array<string, mixed>
+     */
+    private static function basedOnPayload(?array $basedOn): array
+    {
+        return null === $basedOn ? [] : ['_basedOn' => $basedOn];
     }
 
     /**

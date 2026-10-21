@@ -29,7 +29,10 @@ final class RegionLead
      * @param array<string, mixed>|null $wiki    decoded `region.context`
      * @param array<string, mixed>|null $curated decoded `region.context_curated`
      *
-     * @return array{text: string, url: ?string, title: ?string, curated: bool, adapted: bool, by: ?int, approvedBy: ?int}|null
+     * A local lead also says what it translates and whether that original
+     * changed since (`basedOn`, `outdated`, §3.1e); a harvested one translates nothing.
+     *
+     * @return array{text: string, url: ?string, title: ?string, curated: bool, adapted: bool, by: ?int, approvedBy: ?int, basedOn?: ?string, outdated?: bool}|null
      */
     public static function resolve(?array $wiki, ?array $curated, string $locale): ?array
     {
@@ -37,7 +40,7 @@ final class RegionLead
             $own = self::curatedEntry($curated, $try);
             if (null !== $own) {
                 // Written-from-scratch text gets no citation, even by accident.
-                return $own + ($own['adapted'] ? self::citationFor($wiki, $try) : ['url' => null, 'title' => null]);
+                return $own + ($own['adapted'] ? self::citationFor($wiki, $try) : ['url' => null, 'title' => null]) + RegionStory::lineage($curated, $try);
             }
             $harvest = self::wikiEntry($wiki, $try);
             if (null !== $harvest) {

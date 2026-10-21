@@ -57,7 +57,7 @@
         {% set tag_type = item.type == 'text' ? 'edit' : item.type %}
         <span class="q-tag q-tag--{{ tag_type }}">{{ ('moderate.type.' ~ tag_type)|trans }}</span>
         {# The language it is written in (§3.1d): shown on every card, English included. #}
-                <span class="q-tag q-tag--quiet q-tag--lang" title="{{ 'moderate.lang_title'|trans({'%lang%': (item.lang|default('en'))|upper}) }}">{{ (item.lang|default('en'))|upper }}</span>
+                <span class="q-tag q-tag--quiet q-tag--lang" title="{{ item.basedOn|default(null) ? 'moderate.lang_from_title'|trans({'%lang%': (item.lang|default('en'))|upper, '%from%': item.basedOn|upper}) : 'moderate.lang_title'|trans({'%lang%': (item.lang|default('en'))|upper}) }}">{{ (item.lang|default('en'))|upper }}{% if item.basedOn|default(null) %} &larr; {{ item.basedOn|upper }}{% endif %}</span>
         {# The rider answered a needs-info question. It used to arrive as a
            message in the curator's PERSONAL inbox; moderation work belongs on
            the desk, so the signal has to be here where it can be scanned

@@ -1103,6 +1103,51 @@ beside the type ("NL", title "Written in NL"), English included. A town or
 region text's change line no longer starts with its `story:nl:` key: the tag
 says the language.
 
+### 3.1e A translation knows its original (2026-10-20)
+
+A town card's text, a region's geography text and its history text each
+live once per language. A text may be a translation of another language's
+text, and then it says so, keeps which version of the original it was made
+from, and its translator is told when that original changes (owner
+2026-10-20). The original can be any language. `App\Contribution\TextLineage`.
+
+- **The form asks.** "This text is a translation of" (`based_on`) offers
+  "Not a translation: written in this language" and every served language
+  that holds a local text, one a person wrote here (a town row with
+  `edited_at`, a region entry); a fetched Wikipedia paragraph is no
+  original. The text's own language is never offered (`place-text.js`
+  hides it). On the history form, the language shown to translate from is
+  chosen already. Not on a curator's correction form: the writer said it. A
+  language with no local text, or the text's own, is refused
+  (`place_text.error.based_on`, "Pick a language that has a text to
+  translate from, or "Not a translation".", 422, nothing filed), checked
+  before the send costs a rate-limit credit.
+- **What is kept.** The proposal carries `payload._basedOn = {lang, at,
+  sub}`: the original's language, the moment it was written and the
+  submission that wrote it (two changes in one second differ by it). On
+  approval it goes with the text: a region entry's `basedOn`, a town row's
+  `based_on_lang`, `based_on_at` and `based_on_submission`
+  (`Version20261020050000`). A text written without it, or by the curators'
+  own pens on the Regions desk and the town page, keeps none.
+- **Outdated.** A translation is out of date when its original's `at` or
+  submission is no longer the one it was made from, or the original is
+  gone (`TextLineage::outdated()`, `RegionStory::lineage()`).
+- **Readers.** Under a region text that translates another: "Translated
+  from the {language} original." and, when out of date, "The original has
+  changed since." (`.rg-translated`, the language named in the reader's
+  language). The town card does not show it yet.
+- **Translators are told.** When a text is approved in a language, every
+  local text that translates that language has its writer sent
+  `text_original_changed` ("An original you translated changed", in
+  Contributions): "The {from} text of '{title}' that you translated into
+  {to} has changed. Your translation may need the same change: update your
+  translation", the link to their own form in their language. Not the
+  writer of the change, not an account that is gone.
+- **The desk.** The language tag reads "NL ← EN" on a translation's card,
+  titled "Written in NL, translated from EN".
+
+Pinned by `TextLineageTest`.
+
 ### 3.2 The `changes` contract
 
 - Computed **at submit against the item's then-current values**; only fields

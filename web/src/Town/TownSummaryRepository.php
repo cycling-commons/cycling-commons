@@ -128,9 +128,23 @@ final readonly class TownSummaryRepository
                 SET answered = TRUE, extract = EXCLUDED.extract, title = COALESCE(town_summary.title, EXCLUDED.title),
                     derived = :d AND town_summary.page_url IS NOT NULL,
                     edited_by = EXCLUDED.edited_by, approved_by = EXCLUDED.approved_by, submission_id = EXCLUDED.submission_id,
-                    edited_at = NOW(), checked_at = NOW()',
+                    edited_at = NOW(), checked_at = NOW(), based_on_lang = NULL, based_on_at = NULL, based_on_submission = NULL',
             ['r' => $osmRef, 'l' => $lang, 't' => $title, 'e' => $extract, 'd' => $derived, 'u' => $userId, 'a' => $approvedBy, 's' => $submissionId],
             ['d' => ParameterType::BOOLEAN],
+        );
+    }
+
+    /**
+     * What the row's local text translates (moderation-and-contribution.md
+     * §3.1e), set after the text is written; null clears it.
+     *
+     * @param array{lang: string, at: ?string, sub: ?int}|null $basedOn
+     */
+    public function setBasedOn(string $osmRef, string $lang, ?array $basedOn): void
+    {
+        $this->db->executeStatement(
+            'UPDATE town_summary SET based_on_lang = :bl, based_on_at = :ba, based_on_submission = :bs WHERE osm_ref = :r AND lang = :l',
+            ['bl' => $basedOn['lang'] ?? null, 'ba' => $basedOn['at'] ?? null, 'bs' => $basedOn['sub'] ?? null, 'r' => $osmRef, 'l' => $lang],
         );
     }
 

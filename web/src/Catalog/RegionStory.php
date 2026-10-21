@@ -152,7 +152,10 @@ final class RegionStory
      *
      * @param array<string, mixed>|null $story decoded `region.story`
      *
-     * @return array{lang: string, paragraphs: list<list<array{text: string, href: ?string}>>, by: ?int, approvedBy: ?int}|null
+     * `basedOn` is the language it translates, if any, and `outdated` says
+     * that original changed after the translation (§3.1e).
+     *
+     * @return array{lang: string, paragraphs: list<list<array{text: string, href: ?string}>>, by: ?int, approvedBy: ?int, basedOn: ?string, outdated: bool}|null
      */
     public static function resolve(?array $story, string $locale): ?array
     {
@@ -164,11 +167,36 @@ final class RegionStory
                     'paragraphs' => self::paragraphs($entry['text']),
                     'by' => $entry['by'],
                     'approvedBy' => $entry['approvedBy'],
-                ];
+                ] + self::lineage($story, $try);
             }
         }
 
         return null;
+    }
+
+    /**
+     * What a locale's entry translates and whether its original changed since:
+     * the original's `at` is no longer the one the translation was made from,
+     * or the original is gone. Shared with RegionLead.
+     *
+     * @param array<string, mixed>|null $entries
+     *
+     * @return array{basedOn: ?string, outdated: bool}
+     */
+    public static function lineage(?array $entries, string $locale): array
+    {
+        $based = $entries[$locale]['basedOn'] ?? null;
+        if (!\is_array($based) || !\is_string($based['lang'] ?? null)) {
+            return ['basedOn' => null, 'outdated' => false];
+        }
+        $original = $entries[$based['lang']] ?? null;
+
+        return [
+            'basedOn' => $based['lang'],
+            'outdated' => !\is_array($original)
+                || ($original['at'] ?? null) !== ($based['at'] ?? null)
+                || ($original['submissionId'] ?? null) !== ($based['sub'] ?? null),
+        ];
     }
 
     /**

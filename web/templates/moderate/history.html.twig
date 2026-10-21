@@ -122,7 +122,7 @@
                 {% set tag_type = h.type == 'text' ? 'edit' : h.type %}
                 {% if tag_type %}<span class="q-tag q-tag--{{ tag_type }}">{{ ('moderate.type.' ~ tag_type)|trans }}</span>{% endif %}
                 {# The language it is written in (§3.1d): shown on every card, English included. #}
-                <span class="q-tag q-tag--quiet q-tag--lang" title="{{ 'moderate.lang_title'|trans({'%lang%': (h.lang|default('en'))|upper}) }}">{{ (h.lang|default('en'))|upper }}</span>
+                <span class="q-tag q-tag--quiet q-tag--lang" title="{{ h.basedOn|default(null) ? 'moderate.lang_from_title'|trans({'%lang%': (h.lang|default('en'))|upper, '%from%': h.basedOn|upper}) : 'moderate.lang_title'|trans({'%lang%': (h.lang|default('en'))|upper}) }}">{{ (h.lang|default('en'))|upper }}{% if h.basedOn|default(null) %} &larr; {{ h.basedOn|upper }}{% endif %}</span>
                 <h3 class="q-title">{{ h.title }}
                   {# The item's own kind. A custom title hides what a row is about;
                      an unnamed one already reads as its type, so repeating it there

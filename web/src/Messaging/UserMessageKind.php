@@ -18,6 +18,8 @@ enum UserMessageKind: string
     case SubmissionApproved = 'submission_approved';
     case SubmissionRejected = 'submission_rejected';
     case SubmissionNeedsInfo = 'submission_needs_info';
+    /** The original a rider's translation was made from changed: update yours (moderation-and-contribution.md §3.1e). */
+    case TextOriginalChanged = 'text_original_changed';
     case RouteApproved = 'route_approved';
     case RouteRejected = 'route_rejected';
     case RouteRetired = 'route_retired';

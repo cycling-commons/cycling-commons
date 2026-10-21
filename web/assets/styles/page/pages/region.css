@@ -101,3 +101,6 @@ a.rsteward-name:hover{background:rgba(239,230,212,.16);border-color:rgba(239,230
    own type, with a quiet underline that says it is a link. */
 .rhero .co a.co-link{color:inherit;text-decoration:underline;text-decoration-color:rgba(239,230,212,.35);text-underline-offset:3px}
 .rhero .co a.co-link:hover{text-decoration-color:currentColor;color:var(--paper)}
+/* What a text translates, and whether its original changed since
+   (moderation-and-contribution.md §3.1e): the write link's quiet type. */
+.rg-translated{font-size:.9rem;line-height:1.55;color:#4f5344;margin:.5rem 0 0}

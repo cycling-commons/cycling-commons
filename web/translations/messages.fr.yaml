@@ -648,6 +648,8 @@ region:
   story_write: "Écrire sur l’histoire, la nature et la culture de cette région"
   story_other_lang: "Ce texte est en %lang%. Personne ne l’a encore traduit."
   story_translate: "Le traduire"
+  translated_from: "Traduit de l’original en %lang%."
+  original_changed: "L’original a changé depuis."
   cta_map: 'Ouvrir cette région sur la carte'
   cta_apply: 'Devenir curateur bénévole'
   # Still used by contribute/index.html.twig's Vote card ("go" link text) —
@@ -2718,6 +2720,9 @@ place_text:
   lead_region: "Toute personne connectée peut proposer une modification du texte de géographie de cette région : où elle se trouve, ses paysages, sa taille et ses voisines. Un curateur de cette région l’approuve avant qu’il n’apparaisse."
   kicker_story: "Histoire, nature et culture"
   lead_story: "Toute personne connectée peut écrire, modifier ou traduire le texte sur l’histoire, la nature et la culture de cette région. Un curateur de cette région l’approuve avant qu’il n’apparaisse."
+  field_based_on: "Ce texte est une traduction de"
+  based_on_none: "Pas une traduction : écrit dans cette langue"
+  field_based_on_hint: "Si vous avez traduit le texte d’une autre langue, dites laquelle. Quand cet original change, nous vous prévenons pour que vous mettiez le vôtre à jour."
   purpose_region: "Ceci est le texte de géographie : où se trouve la région, ses paysages, sa taille et ses voisines. L’histoire, la nature et la culture ont leur propre texte."
   purpose_story: "Ceci est le texte sur l’histoire, la nature et la culture. Où se trouve la région et à quoi ressemblent ses terres relèvent du texte de géographie."
   purpose_go_story: "Écrire sur son histoire, sa nature et sa culture"
@@ -2804,9 +2809,11 @@ place_text:
     source_required: 'Indiquez d’où vient votre texte : adapté de l’article Wikipédia, ou écrit par vous.'
     generic_anchor: "Un lien dit seulement « source », « lien » ou « ici ». Liez plutôt les mots qui disent de quoi parle la page."
     links_unconfirmed: "Certains liens ne sont pas marqués « Vérifié : OK » : %urls%. Ouvrez-les vous-même et cochez la case sous les liens, ou modifiez-les."
+    based_on: "Choisissez une langue qui a un texte à traduire, ou « Pas une traduction »."
 
 moderate:
   lang_title: "Écrit en %lang%"
+  lang_from_title: "Écrit en %lang%, traduit de %from%"
   rider_removed: 'un cycliste au compte supprimé'
   town:
     title: 'Texte de la fiche ville'
@@ -3345,6 +3352,7 @@ messages:
   view_your_ideas: "Voir vos idées"
   kind_submission_rejected: 'Contribution non retenue'
   kind_submission_needs_info: 'Un curateur a besoin de précisions'
+  kind_text_original_changed: "Un original que vous avez traduit a changé"
   kind_route_approved: 'Proposition d''itinéraire approuvée. Merci !'
   kind_route_rejected: 'Proposition d''itinéraire non retenue'
   kind_route_retired: 'Itinéraire retiré'
@@ -3382,6 +3390,7 @@ messages:
     areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
     submission_rejected: 'Votre contribution ''<em>%title%</em>'' n''a pas été retenue.'
     submission_needs_info: 'Un curateur a besoin de précisions sur ''<em>%title%</em>'' avant de statuer. Vous pouvez répondre ci-dessous.'
+    text_original_changed: "Le texte %from% de « <em>%title%</em> » que vous avez traduit en %to% a changé. Votre traduction a peut-être besoin du même changement : <a href=\"%url%\">mettre votre traduction à jour</a>."
     route_approved: 'Votre itinéraire ''<em>%name%</em>'' a été approuvé et apparaît désormais sur la carte comme itinéraire proposé. Merci !'
     route_rejected: 'Votre itinéraire ''<em>%name%</em>'' n''a pas été retenu.'
     route_retired: 'Votre itinéraire ''<em>%name%</em>'' a été retiré de la carte.'

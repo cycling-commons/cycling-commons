@@ -879,6 +879,11 @@ languages.
   harvest still takes the article's opening summary; a curator replaces it
   where it strays from geography.
 
+  **A translation says so.** Under either text, when it translates another
+  language's text: "Translated from the {language} original.", and "The
+  original has changed since." when it has
+  ([moderation-and-contribution.md](moderation-and-contribution.md) §3.1e).
+
   **The country leads to its regions.** The country name in the hero's
   kicker links to `/regions#country-XX`, which opens that country's regions
   on the list (`regions-map.js` reads the hash).

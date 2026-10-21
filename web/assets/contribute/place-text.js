@@ -96,8 +96,21 @@
     count.classList.toggle('is-over', max > 0 && n > max);
   }
 
+  /* "This text is a translation of" never offers the text's own language. */
+  var basedOn = document.getElementById('pt-based-on');
+  function syncBasedOn(lang) {
+    if (!basedOn) { return; }
+    Array.prototype.forEach.call(basedOn.options, function (o) {
+      var own = o.value !== '' && o.value === lang;
+      o.hidden = own;
+      o.disabled = own;
+      if (own && o.selected) { basedOn.value = ''; }
+    });
+  }
+
   select.addEventListener('change', function () {
     var lang = select.value;
+    syncBasedOn(lang);
     if (story) {
       var next = startOf(lang);
       if (box.value === start.text) {
@@ -107,6 +120,8 @@
       }
       start = next;
       showTranslate(next.from);
+      /* A box to fill from another language's text is a translation of it. */
+      if (basedOn && next.from && basedOn.value === '') { basedOn.value = next.from; }
       recount();
       return;
     }

@@ -15,6 +15,7 @@ use App\Contribution\PlaceText;
 use App\Contribution\PlaceTextProposals;
 use App\Contribution\PlaceTextRefused;
 use App\Contribution\StoryLinkCheck;
+use App\Contribution\TextLineage;
 use App\Entity\User;
 use App\EventSubscriber\StatelessLoginRedirectSubscriber;
 use App\Moderation\AlreadyDecidedException;
@@ -68,6 +69,7 @@ final class PlaceTextController extends AbstractController
 
     public function __construct(
         private readonly Languages $languages,
+        private readonly TextLineage $lineage,
     ) {
     }
 
@@ -95,12 +97,12 @@ final class PlaceTextController extends AbstractController
             'back' => $from ?? $this->generateUrl('map'),
             'texts' => $texts,
             'articles' => $articles,
-        ];
+        ] + $this->originals(PlaceText::TOWN, $ref, $request, null);
 
         if ('POST' === $request->getMethod()) {
             $derived = self::sourceAnswer($request);
 
-            return $this->submit($request, $context, $lang, fn (User $user, string $text, string $note): array => $proposals->proposeTown($user, $ref, $lang, $text, $note, '' === $name ? null : $name, $derived));
+            return $this->submit($request, $context, $lang, fn (User $user, string $text, string $note): array => $proposals->proposeTown($user, $ref, $lang, $text, $note, '' === $name ? null : $name, $derived, $request->request->getString('based_on')));
         }
 
         return $this->form($context, $lang, '', null);
@@ -133,12 +135,12 @@ final class PlaceTextController extends AbstractController
             'other' => $this->generateUrl('region_story', ['slug' => $slug]),
             'texts' => $texts,
             'articles' => $articles,
-        ];
+        ] + $this->originals(PlaceText::REGION, (string) $region['id'], $request, null);
 
         if ('POST' === $request->getMethod()) {
             $derived = self::sourceAnswer($request);
 
-            return $this->submit($request, $context, $lang, fn (User $user, string $text, string $note): array => $proposals->proposeRegion($user, $region, $lang, $text, $note, $derived));
+            return $this->submit($request, $context, $lang, fn (User $user, string $text, string $note): array => $proposals->proposeRegion($user, $region, $lang, $text, $note, $derived, $request->request->getString('based_on')));
         }
 
         return $this->form($context, $lang, '', null);
@@ -187,9 +189,10 @@ final class PlaceTextController extends AbstractController
             }
         }
         $context['translate_from'] = $from;
+        $context += $this->originals(PlaceText::STORY, (string) $region['id'], $request, $from);
 
         if ('POST' === $request->getMethod()) {
-            return $this->submit($request, $context, $lang, fn (User $user, string $text, string $note): array => $proposals->proposeStory($user, $region, $lang, $text, $note, $request->request->getBoolean('links_confirmed')));
+            return $this->submit($request, $context, $lang, fn (User $user, string $text, string $note): array => $proposals->proposeStory($user, $region, $lang, $text, $note, $request->request->getBoolean('links_confirmed'), $request->request->getString('based_on')));
         }
 
         return $this->form($context, $lang, $texts[$lang] ?? '', null);
@@ -404,6 +407,8 @@ final class PlaceTextController extends AbstractController
         return $this->render('contribute/place_text.html.twig', $context + [
             'correcting' => null,
             'other' => null,
+            'originals' => [],
+            'based_on' => '',
             'credit' => null,
             'source' => null,
             'sent' => null,
@@ -421,6 +426,23 @@ final class PlaceTextController extends AbstractController
             'link_check_csrf_id' => self::LINK_CHECK_CSRF_ID,
             'csrf_id' => self::CSRF_ID,
         ], new Response(status: $status));
+    }
+
+    /**
+     * The texts a new one may say it translates (§3.1e): the languages this
+     * deployment serves that hold a local text, by name, and which is
+     * chosen: what was sent, else `$default` (the text the history form
+     * shows to translate from), else none.
+     *
+     * @return array{originals: array<string, string>, based_on: string}
+     */
+    private function originals(string $target, string $ref, Request $request, ?string $default): array
+    {
+        $locals = $this->lineage->locals($target, $ref);
+        $originals = array_intersect_key($this->languages->options(), $locals);
+        $chosen = 'POST' === $request->getMethod() ? $request->request->getString('based_on') : ($default ?? '');
+
+        return ['originals' => $originals, 'based_on' => isset($originals[$chosen]) ? $chosen : ''];
     }
 
     /**

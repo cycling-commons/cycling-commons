@@ -182,12 +182,13 @@ final class RegionDirectoryProvider
         );
         if (null !== $context) {
             $context += $this->leadAuthor($context['by'], $context['approvedBy']);
+            $context['basedOnName'] = self::languageName($context['basedOn'] ?? null, $locale);
         }
         /* "History, nature and culture": the reader's language, else English, else any (RegionStory). */
         $story = RegionStory::resolve(self::decodeJson(\is_array($ctx) ? $ctx['story'] : null), $locale);
         if (null !== $story) {
             $story += $this->leadAuthor($story['by'], $story['approvedBy'])
-                + ['langName' => self::languageName($story['lang'], $locale)];
+                + ['langName' => self::languageName($story['lang'], $locale), 'basedOnName' => self::languageName($story['basedOn'], $locale)];
         }
 
         return $this->shape($row) + [

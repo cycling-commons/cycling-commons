@@ -11,6 +11,7 @@ use App\Catalog\RegionLead;
 use App\Catalog\RegionStory;
 use App\Contribution\PlaceText;
 use App\Contribution\StoryLinkCheck;
+use App\Contribution\TextLineage;
 use App\Town\TownSummaryRepository;
 use Doctrine\DBAL\Connection;
 
@@ -36,7 +37,7 @@ use Doctrine\DBAL\Connection;
  */
 final readonly class PlaceTextWriter
 {
-    public function __construct(private Connection $db, private TownSummaryRepository $towns, private StoryLinkCheck $links)
+    public function __construct(private Connection $db, private TownSummaryRepository $towns, private StoryLinkCheck $links, private TextLineage $lineage)
     {
     }
 
@@ -50,7 +51,15 @@ final readonly class PlaceTextWriter
         if (null === $proposal) {
             throw new \InvalidArgumentException(sprintf('Submission %d names no text target', (int) $submission->getId()));
         }
+        $payload = $submission->getPayload();
+        $basedOn = \is_array($payload['_basedOn'] ?? null) ? TextLineage::basedOnOf(['basedOn' => $payload['_basedOn']]) : null;
         $this->write($submission, $proposal, $approvedBy);
+        // What it translates, if anything, then the translators of this
+        // language told the original changed (§3.1e).
+        $this->stampBasedOn($proposal, $basedOn);
+        $town = PlaceText::TOWN === $proposal['target'];
+        $slug = $town ? null : (\is_string($payload['slug'] ?? null) ? $payload['slug'] : $this->db->fetchOne('SELECT slug FROM region WHERE id = :id', ['id' => (int) $proposal['ref']]));
+        $this->lineage->tellTranslators($submission, $proposal, \is_string($slug) ? $slug : null, $town ? $submission->getTitle() : null);
     }
 
     /**
@@ -82,6 +91,35 @@ final readonly class PlaceTextWriter
         }
 
         $this->setRegionLead((int) $proposal['ref'], $proposal['lang'], $proposal['text'], $proposal['derived'], $submission->getUserId(), $approvedBy, $submission->getId());
+    }
+
+    /**
+     * What a just-written text translates (§3.1e): the town row's columns or
+     * the region entry's `basedOn`. A text that translates nothing keeps none.
+     *
+     * @param array{target: string, ref: string, lang: string, text: string, derived: bool} $proposal
+     * @param array{lang: string, at: ?string, sub: ?int}|null                              $basedOn
+     */
+    private function stampBasedOn(array $proposal, ?array $basedOn): void
+    {
+        if (PlaceText::TOWN === $proposal['target']) {
+            $this->towns->setBasedOn($proposal['ref'], $proposal['lang'], $basedOn);
+
+            return;
+        }
+        if (null === $basedOn) {
+            return;
+        }
+        $column = PlaceText::STORY === $proposal['target'] ? 'story' : 'context_curated';
+        $entries = PlaceText::decode($this->db->fetchOne(sprintf('SELECT %s FROM region WHERE id = :id FOR UPDATE', $column), ['id' => (int) $proposal['ref']])) ?? [];
+        if (!\is_array($entries[$proposal['lang']] ?? null)) {
+            return;
+        }
+        $entries[$proposal['lang']]['basedOn'] = $basedOn;
+        $this->db->executeStatement(
+            sprintf('UPDATE region SET %s = :e WHERE id = :id', $column),
+            ['e' => json_encode($entries, \JSON_THROW_ON_ERROR), 'id' => (int) $proposal['ref']],
+        );
     }
 
     /**

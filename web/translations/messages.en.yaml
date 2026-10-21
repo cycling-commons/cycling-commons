@@ -650,6 +650,8 @@ region:
   story_write: "Write about the history, nature and culture of this region"
   story_other_lang: "This text is in %lang%. Nobody has translated it yet."
   story_translate: "Translate it"
+  translated_from: "Translated from the %lang% original."
+  original_changed: "The original has changed since."
   cta_map: 'Open this region on the map'
   cta_apply: 'Volunteer as curator'
   # Still used by contribute/index.html.twig's Vote card ("go" link text) —
@@ -2737,6 +2739,9 @@ place_text:
   lead_region: "Anyone signed in can suggest an edit to this region's geography text: where it lies, its landscape, size and neighbours. A curator of this region approves it before it shows."
   kicker_story: "History, nature and culture"
   lead_story: "Anyone signed in can write, edit or translate this region's history, nature and culture text. A curator of this region approves it before it shows."
+  field_based_on: "This text is a translation of"
+  based_on_none: "Not a translation: written in this language"
+  field_based_on_hint: "If you translated the text of another language, say which. When that original changes, we tell you, so you can update yours."
   purpose_region: "This is the geography text: where the region lies, its landscape, size and neighbours. History, nature and culture have their own text."
   purpose_story: "This is the history, nature and culture text. Where the region lies and what its land looks like belong in the geography text."
   purpose_go_story: "Write about its history, nature and culture"
@@ -2823,9 +2828,11 @@ place_text:
     source_required: 'Say where your text comes from: adapted from the Wikipedia article, or your own text.'
     generic_anchor: "A link says only \"source\", \"link\" or \"here\". Link the words that say what the page is about instead."
     links_unconfirmed: "Some links are not marked \"Checked: OK\": %urls%. Open them yourself and tick the box under the links, or change them."
+    based_on: "Pick a language that has a text to translate from, or \"Not a translation\"."
 
 moderate:
   lang_title: "Written in %lang%"
+  lang_from_title: "Written in %lang%, translated from %from%"
   rider_removed: 'a removed rider'
   town:
     title: 'Town card text'
@@ -3364,6 +3371,7 @@ messages:
   view_your_ideas: "View your ideas"
   kind_submission_rejected: 'Contribution not accepted'
   kind_submission_needs_info: 'A curator needs more information'
+  kind_text_original_changed: "An original you translated changed"
   kind_route_approved: 'Route proposal approved. Thank you!'
   kind_route_rejected: 'Route proposal not accepted'
   kind_route_retired: 'Route retired'
@@ -3401,6 +3409,7 @@ messages:
     areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
     submission_rejected: 'Your contribution ''<em>%title%</em>'' was not accepted.'
     submission_needs_info: 'A curator needs more information about ''<em>%title%</em>'' before deciding. You can reply below.'
+    text_original_changed: "The %from% text of '<em>%title%</em>' that you translated into %to% has changed. Your translation may need the same change: <a href=\"%url%\">update your translation</a>."
     route_approved: 'Your route ''<em>%name%</em>'' was approved and now shows on the map as a proposed route. Thank you!'
     route_rejected: 'Your route ''<em>%name%</em>'' was not accepted.'
     route_retired: 'Your route ''<em>%name%</em>'' was retired from the map.'
