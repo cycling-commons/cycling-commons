@@ -7,7 +7,8 @@
 
 export const MAX_PRESETS = 6;
 export const MODES = ['curated', 'confirmed', 'all'];
-export const LAYER_KEYS = ['surface', 'climbs', 'water', 'toilets', 'services', 'stays', 'hazards', 'transit', 'shelter', 'scenic', 'history', 'experience'];
+/* Road surface has no layer row: the Surfaces overlay switches it (catalog.js), so a preset names it under OVERLAYS only. */
+export const LAYER_KEYS = ['climbs', 'water', 'toilets', 'services', 'stays', 'hazards', 'transit', 'shelter', 'scenic', 'history', 'experience'];
 export const OVERLAYS = ['surface', 'routes'];
 export const SEASONS = ['spring', 'summer', 'autumn', 'winter'];
 export const FACET_GROUPS = ['sqf', 'trf', 'effortf', 'accessf'];

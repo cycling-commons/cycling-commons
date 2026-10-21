@@ -10,9 +10,16 @@ import { MAX_PRESETS, LAYER_KEYS, normalize, same, clicksFor, summaryChips } fro
 
 const full = () => ({ mode: 'curated', layers: ['climbs', 'water'], overlays: ['surface'], seasons: ['summer'], bikes: ['Gravel'], facets: { effortf: ['Steady'] } });
 
-test('the cap is six and the twelve layer keys are the catalogue\'s', () => {
+test('the cap is six and the eleven layer keys are the catalogue\'s, Road surface aside', () => {
   assert.equal(MAX_PRESETS, 6);
-  assert.deepEqual(LAYER_KEYS, ['surface', 'climbs', 'water', 'toilets', 'services', 'stays', 'hazards', 'transit', 'shelter', 'scenic', 'history', 'experience']);
+  assert.deepEqual(LAYER_KEYS, ['climbs', 'water', 'toilets', 'services', 'stays', 'hazards', 'transit', 'shelter', 'scenic', 'history', 'experience']);
+});
+
+test('Road surface is an overlay only: a preset naming it as a layer loses it there', () => {
+  const n = normalize({ mode: 'all', layers: ['surface', 'climbs'], overlays: ['surface'] });
+  assert.deepEqual(n.layers, ['climbs']);
+  assert.deepEqual(n.overlays, ['surface']);
+  assert.deepEqual(clicksFor({ layers: [] }, { layers: ['surface'] }, {}).filter(c => c.kind === 'layer'), []);
 });
 
 test('normalize sorts the lists, drops unknown keys and fills what is missing', () => {

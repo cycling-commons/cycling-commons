@@ -25,6 +25,8 @@ final readonly class PresetInput
     /** The tools a preset can be used for (map-presets.md section 1): the map at open, Plan a ride, Check my ride, Scout review. */
     public const array CONTEXTS = ['map', 'plan', 'ride', 'scout'];
     public const array OVERLAYS = ['surface', 'routes'];
+    /** The catalogue key the Surfaces overlay switches; never a layer row. */
+    private const string SURFACE_LAYER = 'surface';
     public const array SEASONS = ['spring', 'summer', 'autumn', 'winter'];
     /** The key's surface classes and route types (owner 2026-10-15: "add surface and routes to the presets"); absent means every one on. */
     public const array SURFACES = ['paved', 'gravel', 'pave', 'dirt', 'rock', 'unverified'];
@@ -50,13 +52,16 @@ final readonly class PresetInput
     }
 
     /**
-     * The twelve catalogue keys the Layers panel lists.
+     * The eleven catalogue keys the Layers panel lists. Road surface is a
+     * catalogue key too, but the map gives it no row: the Surfaces overlay
+     * switches it (catalog.js, `overlay: true`), so a preset names it under
+     * `overlays` only.
      *
      * @return list<string>
      */
     public static function layerKeys(): array
     {
-        return array_map(static fn (array $c): string => $c['key'], CategoryTable::CATEGORIES);
+        return array_values(array_diff(array_map(static fn (array $c): string => $c['key'], CategoryTable::CATEGORIES), [self::SURFACE_LAYER]));
     }
 
     /** The body, or null when any field is not what the map sends. */
@@ -105,7 +110,12 @@ final readonly class PresetInput
         if (!\is_string($mode) || !\in_array($mode, self::MODES, true)) {
             return null;
         }
-        $layers = self::subset($raw['layers'] ?? [], self::layerKeys());
+        // A preset saved while Road surface still had a layer row names it; the overlay carries it now.
+        $rawLayers = $raw['layers'] ?? [];
+        if (\is_array($rawLayers) && array_is_list($rawLayers)) {
+            $rawLayers = array_values(array_filter($rawLayers, static fn (mixed $k): bool => self::SURFACE_LAYER !== $k));
+        }
+        $layers = self::subset($rawLayers, self::layerKeys());
         $overlays = self::subset($raw['overlays'] ?? [], self::OVERLAYS);
         $seasons = self::subset($raw['seasons'] ?? [], self::SEASONS);
         $bikes = self::subset($raw['bikes'] ?? [], array_map(static fn (BikeType $b): string => $b->value, BikeType::cases()));

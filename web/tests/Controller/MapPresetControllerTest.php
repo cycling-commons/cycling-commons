@@ -306,4 +306,21 @@ final class MapPresetControllerTest extends WebTestCase
         self::assertSame(['paved', 'gravel'], $settings['surfaces']);
         self::assertSame(['regional', 'knoop'], $settings['routes']);
     }
+
+    /**
+     * Road surface has no layer row on the map, only the Surfaces overlay
+     * (owner 2026-10-21): a preset that still names it as a layer saves
+     * without it there, and the overlay keeps it.
+     */
+    public function testRoadSurfaceIsAnOverlayNotALayer(): void
+    {
+        $client = static::createClient();
+        $client->loginUser(self::user('preset-surface-layer@test.test'));
+        self::post($client, '/map/presets/save', self::body(['settings' => self::settings(['layers' => ['surface', 'climbs']])]));
+        self::assertResponseStatusCodeSame(201);
+        $client->request('GET', '/map/presets');
+        $settings = self::json($client)['presets'][0]['settings'];
+        self::assertSame(['climbs'], $settings['layers']);
+        self::assertSame(['surface', 'routes'], $settings['overlays']);
+    }
 }

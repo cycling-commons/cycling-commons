@@ -39,8 +39,10 @@ The settings, as stored and as sent (`MapPreset::settings`, JSON):
 
 - `mode` is one of `curated`, `confirmed`, `all` (map-and-search.md section
   4.2). `layers` lists the catalogue keys that are **on**
-  (`CategoryTable` keys, the twelve the Layers panel lists; the curators'
-  pending layer is never part of a preset). `overlays` lists the overlay
+  (`CategoryTable` keys, the eleven the Layers panel lists; the curators'
+  pending layer is never part of a preset, and nor is `surface`: Road
+  surface has no layer row, the `surface` overlay switches it, owner
+  2026-10-21; a preset saved with it as a layer loses it there). `overlays` lists the overlay
   rows that are on, `surface` and `routes`. `seasons` and `bikes` are the
   Best of chips that are on (`BikeType` values; season words lower-case).
   `facets` maps a chip group id (`sqf`, `trf`, `effortf`, `accessf`) to the

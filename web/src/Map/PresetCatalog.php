@@ -13,7 +13,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * What the settings page's preset editor draws (docs/specs/map-presets.md
- * section 4): the twelve layers with their label in the rider's language,
+ * section 4): the eleven layers with their label in the rider's language,
  * their colour and their drawn icon, the two overlays, the modes, the
  * seasons, the bikes and the facet chips, each with its label. One source,
  * so the editor and the map name every switch the same way.
@@ -54,6 +54,10 @@ final class PresetCatalog
         $icons = ItemType::iconSet();
         $layers = [];
         foreach (CategoryTable::CATEGORIES as $c) {
+            // Road surface is the Surfaces overlay below, not a layer row.
+            if (!\in_array($c['key'], PresetInput::layerKeys(), true)) {
+                continue;
+            }
             $layers[] = ['key' => $c['key'], 'label' => $this->t->trans(self::LAYER_LABELS[$c['key']]), 'color' => $c['color'], 'svg' => $icons[$c['letter']]['svg']];
         }
         $facets = [];
