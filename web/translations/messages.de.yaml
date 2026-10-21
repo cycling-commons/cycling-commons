@@ -1936,6 +1936,7 @@ map:
   d_you_asked: 'Du hast gefragt'
   d_rider_replied: 'Antwort der fahrenden Person'
   d_prior_rejected: 'Zuvor abgelehnt'
+  d_approval_revoked: "Freigabe zurückgezogen"
   d_report_page: 'Diese Seite melden'
   d_share: 'Teilen'
   d_share_hint: 'Link kopieren, der diesen Ort öffnet'
@@ -2834,6 +2835,19 @@ moderate:
     refused: 'Nicht gespeichert: der Text ist leer, zu lang, oder die Sprache sprechen wir nicht.'
     outside_area: 'Dieser Ort liegt außerhalb deiner Gebiete, also geht dein Text an einen Kurator seiner Region. Schick ihn hier ab.'
     where_unknown: 'Wir wissen noch nicht, in welcher Region dieser Ort liegt. Öffne ihn auf der Karte und nutze „Diesen Text bearbeiten“ auf seiner Karte.'
+  revoke:
+    button: "Freigabe zurückziehen"
+    when: "Nutzen Sie dies, wenn eine Freigabe ein Fehler war. Um ein Detail zu ändern, bearbeiten Sie besser den Ort."
+    what: "Was die Freigabe geändert hat, wird rückgängig gemacht, und der Beitrag kommt zurück in die Warteschlange, wo ein Kurator neu entscheidet. Die fahrende Person erhält Ihren Grund."
+    reason: "Grund, an die fahrende Person gesendet"
+    submit: "Freigabe zurückziehen"
+    done: "Freigabe zurückgezogen. %ref% ist wieder in der Warteschlange."
+    card: "Freigabe zurückgezogen"
+    error:
+      reason_required: "Schreiben Sie zuerst den Grund. Die fahrende Person erhält ihn."
+      not_approved: "Dieser Beitrag ist nicht freigegeben, es gibt also keine Freigabe zum Zurückziehen."
+      held: "Dieser Beitrag steht unter rechtlicher Sperre. Er kann nicht geändert werden."
+      changed_since: "Nicht zurückgezogen: Diese Werte wurden nach der Freigabe geändert: %fields%. Ändern Sie sie von Hand oder ziehen Sie zuerst die spätere Änderung zurück."
   escalate:
     when: 'Nutze dies, wenn der Inhalt selbst gegen das Gesetz verstößt — nicht für Spam, nicht für eine schlechte Bearbeitung, nicht für Unhöflichkeit. Dafür gibt es Papierkorb und Nachricht an den Fahrer.'
     confirm_check: 'Ich habe das Obige gelesen und dies ist mutmaßlich illegales Material'
@@ -3357,6 +3371,7 @@ messages:
   view_your_ideas: "Deine Ideen ansehen"
   kind_submission_rejected: 'Beitrag nicht angenommen'
   kind_submission_needs_info: 'Ein Kurator benötigt weitere Informationen'
+  kind_submission_revoked: "Freigabe zurückgezogen"
   kind_text_original_changed: "Ein Original, das Sie übersetzt haben, hat sich geändert"
   kind_route_approved: 'Routenvorschlag angenommen. Danke!'
   kind_route_rejected: 'Routenvorschlag nicht angenommen'
@@ -3395,6 +3410,7 @@ messages:
     areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
     submission_rejected: 'Dein Beitrag ''<em>%title%</em>'' wurde nicht angenommen.'
     submission_needs_info: 'Ein Kurator benötigt weitere Informationen zu ''<em>%title%</em>'', bevor entschieden werden kann. Du kannst unten antworten.'
+    submission_revoked: "Ein Kurator hat die Freigabe von „<em>%title%</em>“ zurückgezogen. Die Änderung ist vorerst rückgängig gemacht, und ein Kurator sieht sie sich erneut an. Der Grund steht unten."
     text_original_changed: "Der %from%-Text von „<em>%title%</em>“, den Sie ins %to% übersetzt haben, hat sich geändert. Ihre Übersetzung braucht vielleicht dieselbe Änderung: <a href=\"%url%\">Übersetzung anpassen</a>."
     route_approved: 'Deine Route ''<em>%name%</em>'' wurde angenommen und erscheint jetzt als vorgeschlagene Route auf der Karte. Danke!'
     route_rejected: 'Deine Route ''<em>%name%</em>'' wurde nicht angenommen.'

@@ -29,6 +29,9 @@
     <h1>{{ 'moderate.history.heading'|trans }}</h1>
   </div>
 
+  {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
+  {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
+
   <nav class="lfilter" aria-label="{{ 'moderate.desk_aria'|trans }}">
     <a class="lchip" href="{{ path('moderate_submissions') }}">{{ 'moderate.desk_queue'|trans }}</a>
     <a class="lchip on mod-desk-hist" href="{{ path('moderate_history') }}">{{ 'moderate.desk_history'|trans }}</a>
@@ -148,6 +151,24 @@
                 <span class="q-links"><a class="q-link" href="{{ path('map') }}?item={{ h.itemId }}" target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
               {% endif %}
               <span class="q-pill q-pill--{{ verdict_pill[h.status] ?? 'ret' }}">{{ ('moderate.status.' ~ h.status)|trans }}</span>
+              {# Take the approval back (moderation-and-contribution.md §5.6):
+                 the change is undone and the card waits in the queue again.
+                 A reason is required: the rider is told it. #}
+              {% if h.status == 'approved' %}
+                <details class="q-act q-act--revoke">
+                  <summary class="q-revoke-btn">{{ 'moderate.revoke.button'|trans }}</summary>
+                  <div class="q-act-panel">
+                    <form method="post" action="{{ path('moderate_revoke', {id: h.id}) }}">
+                      <input type="hidden" name="_token" value="{{ csrf_token('moderate-revoke') }}">
+                      <p class="q-act-when">{{ 'moderate.revoke.when'|trans }}</p>
+                      <p>{{ 'moderate.revoke.what'|trans }}</p>
+                      <label for="revoke-reason-{{ h.id }}">{{ 'moderate.revoke.reason'|trans }}</label>
+                      <textarea id="revoke-reason-{{ h.id }}" name="reason" maxlength="2000" rows="3" required></textarea>
+                      <button type="submit" class="btn-act btn-primary">{{ 'moderate.revoke.submit'|trans }}</button>
+                    </form>
+                  </div>
+                </details>
+              {% endif %}
             </div>
           </div>
           {# WHAT was decided. A verdict with no subject ("Approved · Côte de la

@@ -135,6 +135,37 @@ final readonly class TownSummaryRepository
     }
 
     /**
+     * The text side of a row as it stands, for putting it back when the
+     * approval that replaces it is revoked (moderation-and-contribution.md
+     * §5.6); null when there is no row yet.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function textSnapshot(string $osmRef, string $lang): ?array
+    {
+        $row = $this->db->fetchAssociative(
+            'SELECT answered, extract, derived, edited_by, approved_by, submission_id, edited_at, based_on_lang, based_on_at, based_on_submission FROM town_summary WHERE osm_ref = :r AND lang = :l',
+            ['r' => $osmRef, 'l' => $lang],
+        );
+        if (false === $row) {
+            return null;
+        }
+
+        return [
+            'answered' => (bool) $row['answered'],
+            'extract' => null === $row['extract'] ? null : (string) $row['extract'],
+            'derived' => (bool) $row['derived'],
+            'edited_by' => null === $row['edited_by'] ? null : (int) $row['edited_by'],
+            'approved_by' => null === $row['approved_by'] ? null : (int) $row['approved_by'],
+            'submission_id' => null === $row['submission_id'] ? null : (int) $row['submission_id'],
+            'edited_at' => null === $row['edited_at'] ? null : (string) $row['edited_at'],
+            'based_on_lang' => null === $row['based_on_lang'] ? null : (string) $row['based_on_lang'],
+            'based_on_at' => null === $row['based_on_at'] ? null : (string) $row['based_on_at'],
+            'based_on_submission' => null === $row['based_on_submission'] ? null : (int) $row['based_on_submission'],
+        ];
+    }
+
+    /**
      * What the row's local text translates (moderation-and-contribution.md
      * §3.1e), set after the text is written; null clears it.
      *
@@ -145,6 +176,42 @@ final readonly class TownSummaryRepository
         $this->db->executeStatement(
             'UPDATE town_summary SET based_on_lang = :bl, based_on_at = :ba, based_on_submission = :bs WHERE osm_ref = :r AND lang = :l',
             ['bl' => $basedOn['lang'] ?? null, 'ba' => $basedOn['at'] ?? null, 'bs' => $basedOn['sub'] ?? null, 'r' => $osmRef, 'l' => $lang],
+        );
+    }
+
+    /** The submission whose text the row holds now, or null (fetched, the town page's, or no row). */
+    public function textSubmission(string $osmRef, string $lang): ?int
+    {
+        $id = $this->db->fetchOne('SELECT submission_id FROM town_summary WHERE osm_ref = :r AND lang = :l', ['r' => $osmRef, 'l' => $lang]);
+
+        return null === $id || false === $id ? null : (int) $id;
+    }
+
+    /**
+     * The row's text side put back as a snapshot recorded it; no snapshot (the
+     * row did not exist) deletes the row, so the next reader fetches it anew.
+     *
+     * @param array<string, mixed>|null $snapshot from {@see self::textSnapshot()}
+     */
+    public function restoreText(string $osmRef, string $lang, ?array $snapshot): void
+    {
+        if (null === $snapshot) {
+            $this->db->executeStatement('DELETE FROM town_summary WHERE osm_ref = :r AND lang = :l', ['r' => $osmRef, 'l' => $lang]);
+
+            return;
+        }
+        $this->db->executeStatement(
+            'UPDATE town_summary SET answered = :a, extract = :e, derived = :d, edited_by = :u, approved_by = :ap, submission_id = :s, edited_at = :at,
+                    based_on_lang = :bl, based_on_at = :ba, based_on_submission = :bs
+              WHERE osm_ref = :r AND lang = :l',
+            [
+                'a' => (bool) ($snapshot['answered'] ?? false), 'e' => $snapshot['extract'] ?? null, 'd' => (bool) ($snapshot['derived'] ?? false),
+                'u' => $snapshot['edited_by'] ?? null, 'ap' => $snapshot['approved_by'] ?? null, 's' => $snapshot['submission_id'] ?? null,
+                'at' => $snapshot['edited_at'] ?? null, 'bl' => $snapshot['based_on_lang'] ?? null, 'ba' => $snapshot['based_on_at'] ?? null,
+                'bs' => $snapshot['based_on_submission'] ?? null,
+                'r' => $osmRef, 'l' => $lang,
+            ],
+            ['a' => ParameterType::BOOLEAN, 'd' => ParameterType::BOOLEAN],
         );
     }
 

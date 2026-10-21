@@ -31,6 +31,7 @@ enum MessageCategory: string
                 UserMessageKind::SubmissionApproved,
                 UserMessageKind::SubmissionRejected,
                 UserMessageKind::SubmissionNeedsInfo,
+                UserMessageKind::SubmissionRevoked,
                 UserMessageKind::TextOriginalChanged,
                 UserMessageKind::RouteApproved,
                 UserMessageKind::RouteRejected,

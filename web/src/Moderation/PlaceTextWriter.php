@@ -51,7 +51,11 @@ final readonly class PlaceTextWriter
         if (null === $proposal) {
             throw new \InvalidArgumentException(sprintf('Submission %d names no text target', (int) $submission->getId()));
         }
+        // What readers had before, kept with the approval, so a revoke puts
+        // back exactly that, writer and credit included (§5.6).
         $payload = $submission->getPayload();
+        $payload['_before'] = ['entry' => $this->currentEntry($proposal)];
+        $submission->setPayload($payload);
         $basedOn = \is_array($payload['_basedOn'] ?? null) ? TextLineage::basedOnOf(['basedOn' => $payload['_basedOn']]) : null;
         $this->write($submission, $proposal, $approvedBy);
         // What it translates, if anything, then the translators of this
@@ -198,6 +202,122 @@ final readonly class PlaceTextWriter
             'UPDATE region SET context_curated = :ctx, updated_at = NOW() WHERE id = :id',
             ['ctx' => json_encode($curated, \JSON_THROW_ON_ERROR), 'id' => $regionId],
         );
+    }
+
+    /**
+     * Undo an approved Text submission (moderation-and-contribution.md §5.6):
+     * the entry it wrote goes back to what readers had before. Only while
+     * the entry is still this submission's: a text written over since is
+     * not overwritten, and the revoke is refused.
+     *
+     * An approval from before the entry was kept (`_before`) puts back the
+     * words readers saw when the rider sent theirs (`changes.was`), as a
+     * text of nobody's; with none, the entry goes and the page falls back
+     * to its Wikipedia text, if any.
+     *
+     * @throws RevokeRefused when the text was written over since
+     */
+    public function revert(Submission $submission): void
+    {
+        $payload = $submission->getPayload();
+        $proposal = PlaceText::fromPayload($payload);
+        if (null === $proposal) {
+            return;
+        }
+        $id = (int) $submission->getId();
+        $lang = $proposal['lang'];
+        $before = \is_array($payload['_before'] ?? null) && \array_key_exists('entry', $payload['_before']) ? $payload['_before'] : null;
+        $was = $submission->getChanges()[PlaceText::changeKey($lang, $proposal['target'])]['was'] ?? null;
+        $was = \is_string($was) && '' !== $was ? $was : null;
+        $refused = new RevokeRefused('moderate.revoke.error.changed_since', [$submission->getTitle().': '.PlaceText::changeKey($lang, $proposal['target'])]);
+
+        if (PlaceText::TOWN === $proposal['target']) {
+            if ($this->towns->textSubmission($proposal['ref'], $lang) !== $id) {
+                throw $refused;
+            }
+            $snapshot = null !== $before ? $before['entry'] : null;
+            if (null === $before) {
+                // Older approval: the words readers saw, as fetched text of nobody's.
+                $snapshot = null === $was ? null : ['answered' => true, 'extract' => $was, 'derived' => false, 'edited_by' => null, 'approved_by' => null, 'submission_id' => null, 'edited_at' => null];
+            }
+            $this->towns->restoreText($proposal['ref'], $lang, \is_array($snapshot) ? $snapshot : null);
+
+            return;
+        }
+
+        $column = PlaceText::STORY === $proposal['target'] ? 'story' : 'context_curated';
+        $row = $this->db->fetchAssociative(sprintf('SELECT context, %s AS entries FROM region WHERE id = :id FOR UPDATE', $column), ['id' => (int) $proposal['ref']]);
+        if (false === $row) {
+            throw $refused;
+        }
+        $entries = PlaceText::decode($row['entries']) ?? [];
+        $current = $entries[$lang] ?? null;
+        if (!\is_array($current) || ($current['submissionId'] ?? null) !== $id) {
+            throw $refused;
+        }
+        if (null !== $before) {
+            $entry = $before['entry'];
+        } elseif (null === $was || (PlaceText::REGION === $proposal['target'] && $was === trim((string) ((PlaceText::decode($row['context']) ?? [])[$lang]['extract'] ?? '')))) {
+            // Nothing local before: the page falls back as it did.
+            $entry = null;
+        } else {
+            $entry = ['text' => $was, 'userId' => null, 'approvedBy' => null, 'submissionId' => null, 'at' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM)]
+                + (PlaceText::REGION === $proposal['target'] ? ['derived' => false] : []);
+        }
+        if (\is_array($entry)) {
+            $entries[$lang] = $entry;
+        } else {
+            unset($entries[$lang]);
+        }
+        $this->db->executeStatement(
+            sprintf('UPDATE region SET %s = :e, updated_at = NOW() WHERE id = :id', $column),
+            ['e' => [] === $entries ? null : json_encode($entries, \JSON_THROW_ON_ERROR), 'id' => (int) $proposal['ref']],
+        );
+    }
+
+    /**
+     * Whether a revoke may put this Text submission's entry back: the entry
+     * still holds its text. {@see self::revert()} checks again under a lock.
+     *
+     * @throws RevokeRefused when the text was written over since
+     */
+    public function assertRevertable(Submission $submission): void
+    {
+        $proposal = PlaceText::fromPayload($submission->getPayload());
+        if (null === $proposal) {
+            return;
+        }
+        $id = (int) $submission->getId();
+        if (PlaceText::TOWN === $proposal['target']) {
+            $holds = $this->towns->textSubmission($proposal['ref'], $proposal['lang']) === $id;
+        } else {
+            $column = PlaceText::STORY === $proposal['target'] ? 'story' : 'context_curated';
+            $entries = PlaceText::decode($this->db->fetchOne(sprintf('SELECT %s FROM region WHERE id = :id', $column), ['id' => (int) $proposal['ref']]));
+            $holds = ($entries[$proposal['lang']]['submissionId'] ?? null) === $id;
+        }
+        if (!$holds) {
+            throw new RevokeRefused('moderate.revoke.error.changed_since', [$submission->getTitle().': '.PlaceText::changeKey($proposal['lang'], $proposal['target'])]);
+        }
+    }
+
+    /**
+     * What the entry a proposal names holds now: the town row's text side,
+     * or the region's locale entry, null when there is none.
+     *
+     * @param array{target: string, ref: string, lang: string, text: string, derived: bool} $proposal
+     *
+     * @return array<string, mixed>|null
+     */
+    private function currentEntry(array $proposal): ?array
+    {
+        if (PlaceText::TOWN === $proposal['target']) {
+            return $this->towns->textSnapshot($proposal['ref'], $proposal['lang']);
+        }
+        $column = PlaceText::STORY === $proposal['target'] ? 'story' : 'context_curated';
+        $entries = PlaceText::decode($this->db->fetchOne(sprintf('SELECT %s FROM region WHERE id = :id', $column), ['id' => (int) $proposal['ref']]));
+        $entry = $entries[$proposal['lang']] ?? null;
+
+        return \is_array($entry) ? $entry : null;
     }
 
     /** One locale's history text, the others untouched. */

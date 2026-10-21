@@ -1933,6 +1933,7 @@ map:
   d_you_asked: 'Jij vroeg'
   d_rider_replied: 'De fietser antwoordde'
   d_prior_rejected: 'Eerder afgewezen'
+  d_approval_revoked: "Goedkeuring ingetrokken"
   d_report_page: 'Deze pagina melden'
   d_share: 'Delen'
   d_share_hint: 'Kopieer een link die deze plek opent'
@@ -2833,6 +2834,19 @@ moderate:
     refused: 'Niet opgeslagen: de tekst is leeg, te lang, of de taal spreken we niet.'
     outside_area: 'Deze plaats ligt buiten jouw gebieden, dus je tekst gaat naar een regiobeheerder van die regio. Stuur hem hier in.'
     where_unknown: 'We weten nog niet in welke regio deze plaats ligt. Open hem op de kaart en gebruik "Deze tekst bewerken" op zijn kaartje.'
+  revoke:
+    button: "Goedkeuring intrekken"
+    when: "Gebruik dit als een goedkeuring een vergissing was. Om een detail te veranderen, bewerk je liever de plek."
+    what: "Wat de goedkeuring veranderde wordt teruggedraaid en de inzending gaat terug in de wachtrij, waar een regiobeheerder opnieuw beslist. De fietser krijgt je reden."
+    reason: "Reden, naar de fietser gestuurd"
+    submit: "Goedkeuring intrekken"
+    done: "Goedkeuring ingetrokken. %ref% staat weer in de wachtrij."
+    card: "Goedkeuring ingetrokken"
+    error:
+      reason_required: "Schrijf eerst de reden. De fietser krijgt hem te lezen."
+      not_approved: "Deze inzending is niet goedgekeurd, dus er is geen goedkeuring om in te trekken."
+      held: "Deze inzending staat onder juridische bewaring. Hij kan niet veranderd worden."
+      changed_since: "Niet ingetrokken: deze waarden zijn na de goedkeuring veranderd: %fields%. Pas ze met de hand aan, of trek eerst de latere wijziging in."
   escalate:
     when: 'Gebruik dit als de inhoud zelf in strijd is met de wet — niet voor spam, niet voor een slechte bewerking, niet voor onbeleefdheid. Dat zijn Prullenbak en Bericht aan de fietser.'
     confirm_check: 'Ik heb het bovenstaande gelezen en dit is vermoedelijk illegaal materiaal'
@@ -3356,6 +3370,7 @@ messages:
   view_your_ideas: "Bekijk je ideeën"
   kind_submission_rejected: 'Bijdrage niet aanvaard'
   kind_submission_needs_info: 'Een regiobeheerder heeft meer informatie nodig'
+  kind_submission_revoked: "Goedkeuring ingetrokken"
   kind_text_original_changed: "Een origineel dat je vertaalde is veranderd"
   kind_route_approved: 'Routevoorstel goedgekeurd. Bedankt!'
   kind_route_rejected: 'Routevoorstel niet aanvaard'
@@ -3394,6 +3409,7 @@ messages:
     areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
     submission_rejected: 'Jouw bijdrage ''<em>%title%</em>'' is niet aanvaard.'
     submission_needs_info: 'Een regiobeheerder heeft meer informatie nodig over ''<em>%title%</em>'' voordat er beslist wordt. Je kunt hieronder antwoorden.'
+    submission_revoked: "Een regiobeheerder heeft de goedkeuring van '<em>%title%</em>' ingetrokken. De wijziging is voorlopig teruggedraaid en een regiobeheerder bekijkt hem opnieuw. De reden staat hieronder."
     text_original_changed: "De %from%-tekst van '<em>%title%</em>' die je naar het %to% vertaalde, is veranderd. Je vertaling heeft misschien dezelfde wijziging nodig: <a href=\"%url%\">werk je vertaling bij</a>."
     route_approved: 'Jouw route ''<em>%name%</em>'' is goedgekeurd en staat nu als voorgestelde route op de kaart. Bedankt!'
     route_rejected: 'Jouw route ''<em>%name%</em>'' is niet aanvaard.'

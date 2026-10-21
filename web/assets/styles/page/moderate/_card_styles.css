@@ -220,5 +220,12 @@
   .q-osm-chip .q-osm .btn-act:hover{background:rgba(160,71,42,.08);border-color:#A0472A}
   .q-osm{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem}
   .q-osm form{display:inline}
+  /* Revoke approval on a settled row (moderation-and-contribution.md §5.6):
+     a rare act, so a quiet grey outline in the label type beside the verdict,
+     not an orange button on every row. Only the panel's own submit is
+     orange, once a curator has opened it. */
+  .q-revoke-btn{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;
+    color:#595c4d;background:transparent;border:1px solid rgba(20,22,14,.22);border-radius:4px;padding:.22rem .55rem;line-height:1.3}
+  .q-revoke-btn:hover,.q-act[open] > .q-revoke-btn{color:var(--ink);border-color:rgba(20,22,14,.45);background:rgba(20,22,14,.05)}
   /* The language a contribution is written in, beside its type: quiet mono caps. */
   .q-tag--lang{font-family:var(--mono);letter-spacing:.08em}

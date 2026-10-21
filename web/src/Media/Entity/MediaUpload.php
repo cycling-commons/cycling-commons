@@ -512,6 +512,20 @@ class MediaUpload
         $this->decidedAt = new \DateTimeImmutable();
     }
 
+    /**
+     * Back to waiting for a decision, when the approval of its submission is
+     * revoked (moderation-and-contribution.md §5.6). Only a decided photo;
+     * its item stays named, as the next approval names it again.
+     */
+    public function reopen(): void
+    {
+        if (MediaStatus::Approved !== $this->status && MediaStatus::Rejected !== $this->status) {
+            throw new \LogicException(\sprintf('Upload %s is not decided, so there is nothing to reopen.', $this->id->toRfc4122()));
+        }
+        $this->status = MediaStatus::Pending;
+        $this->decidedAt = null;
+    }
+
     public function markObjectsDeleted(): void
     {
         $this->objectsDeletedAt = new \DateTimeImmutable();

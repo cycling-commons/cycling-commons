@@ -2558,6 +2558,7 @@ map:
   d_you_asked: 'Preguntaste'
   d_rider_replied: 'El ciclista respondió'
   d_prior_rejected: 'Rechazado anteriormente'
+  d_approval_revoked: "Aprobación retirada"
   d_report_page: 'Denunciar esta página'
   d_share: 'Compartir'
   d_share_hint: 'Copiar un enlace que abre este lugar'
@@ -2855,6 +2856,19 @@ moderate:
     refused: 'No guardado: el texto está vacío, es demasiado largo o el idioma no es uno que hablemos.'
     outside_area: 'Esta localidad está fuera de tus zonas, así que tu texto va a un curador de su región. Envíalo aquí.'
     where_unknown: 'Aún no sabemos en qué región está esta localidad. Ábrela en el mapa y usa «Editar este texto» en su ficha.'
+  revoke:
+    button: "Retirar la aprobación"
+    when: "Úsalo cuando una aprobación fue un error. Para cambiar un detalle, edita mejor el lugar."
+    what: "Lo que cambió la aprobación se deshace y la contribución vuelve a la cola, donde un curador decide de nuevo. El ciclista recibe tu motivo."
+    reason: "Motivo, enviado al ciclista"
+    submit: "Retirar la aprobación"
+    done: "Aprobación retirada. %ref% vuelve a estar en la cola."
+    card: "Aprobación retirada"
+    error:
+      reason_required: "Escribe primero el motivo. El ciclista lo recibe."
+      not_approved: "Esta contribución no está aprobada, así que no hay aprobación que retirar."
+      held: "Esta contribución está bajo retención legal. No se puede cambiar."
+      changed_since: "No retirada: estos valores cambiaron después de la aprobación: %fields%. Cámbialos a mano o retira antes el cambio posterior."
   escalate:
     when: 'Usa esto cuando el contenido en sí sea ilegal — no para spam, no para una edición mala, no para alguien que se ha portado mal. Para eso están Papelera y Escribir al ciclista.'
     confirm_check: 'He leído lo de arriba y esto es material presuntamente ilegal'
@@ -3379,6 +3393,7 @@ messages:
   view_your_ideas: "Ver tus ideas"
   kind_submission_rejected: 'Aportación no aceptada'
   kind_submission_needs_info: 'Un curador necesita más información'
+  kind_submission_revoked: "Aprobación retirada"
   kind_text_original_changed: "Un original que tradujiste ha cambiado"
   kind_route_approved: 'Propuesta de ruta aprobada. ¡Gracias!'
   kind_route_rejected: 'Propuesta de ruta no aceptada'
@@ -3417,6 +3432,7 @@ messages:
     areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
     submission_rejected: 'Tu aportación ''<em>%title%</em>'' no se ha aceptado.'
     submission_needs_info: 'Un curador necesita más información sobre ''<em>%title%</em>'' antes de decidir. Puedes responder abajo.'
+    submission_revoked: "Un curador ha retirado la aprobación de «<em>%title%</em>». El cambio queda deshecho por ahora y un curador lo vuelve a revisar. El motivo está abajo."
     text_original_changed: "El texto en %from% de «<em>%title%</em>» que tradujiste al %to% ha cambiado. Tu traducción quizá necesite el mismo cambio: <a href=\"%url%\">actualiza tu traducción</a>."
     route_approved: 'Tu ruta ''<em>%name%</em>'' se ha aprobado y ya aparece en el mapa como ruta propuesta. ¡Gracias!'
     route_rejected: 'Tu ruta ''<em>%name%</em>'' no se ha aceptado.'

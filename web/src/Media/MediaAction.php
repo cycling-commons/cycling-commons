@@ -25,6 +25,8 @@ final class MediaAction
     public const string Claimed = 'claimed';
     public const string Approved = 'approved';
     public const string Rejected = 'rejected';
+    /** A curator revoked the approval of its submission: it waits for a decision again. @see docs/specs/moderation-and-contribution.md §5.6 */
+    public const string Reopened = 'reopened';
     public const string CreditAnonymized = 'credit_anonymized';
     public const string ObjectsDeleted = 'objects_deleted';
     /** Uploader asked for it to come down. @see docs/specs/photo-uploads.md §6b */

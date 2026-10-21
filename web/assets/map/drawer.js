@@ -688,6 +688,10 @@ function buildRecord(layer, f){
       ? `<div class="cc-mod-prior"><span class="cc-mod-asked-h">${D.priorRejected||'Previously rejected'}</span>${
           s.priorRejection.when && window.ccDate ? ' · ' + escPend(window.ccDate(s.priorRejection.when)) : ''}${
           s.priorRejection.note ? ' · ' + escPend(s.priorRejection.note) : ''}</div>` : '';
+    /* An approval a curator took back: the change was undone, the card waits again (§5.6). */
+    const revoked = s.revoked
+      ? `<div class="cc-mod-prior"><span class="cc-mod-asked-h">${D.approvalRevoked||'Approval withdrawn'}</span> · ${escPend(s.revoked.when)}${
+          s.revoked.reason ? ' · ' + escPend(s.revoked.reason) : ''}</div>` : '';
     /* docs/specs/catalog-data-model.md §7 — flag unsafe/unknown links, never silent-reject. */
     const linkFlag = ('unsafe' === s.linkFlag || 'unknown' === s.linkFlag)
       ? `<div class="cc-mod-linkflag cc-mod-linkflag-${s.linkFlag}">${
@@ -738,7 +742,7 @@ function buildRecord(layer, f){
     /* Curator-only decide chrome; a rider sees a preview of their own pending pin. */
     moderate = window.CC_IS_CURATOR
       ? `<div class="cc-mod" data-id="${escPend(s.id)}">
-      ${badge}${prior}${linkFlag}${body}${diff}${pinMoveHidesHtml(s.photosHiddenByMove, D)}${shapeSwitch}${context}${asked}${replied}${modPhotos}${osmQ}
+      ${badge}${revoked}${prior}${linkFlag}${body}${diff}${pinMoveHidesHtml(s.photosHiddenByMove, D)}${shapeSwitch}${context}${asked}${replied}${modPhotos}${osmQ}
       <textarea class="cc-mod-note" placeholder="${D.modNotePh||'Optional note — a reason, or context…'}"></textarea>
       ${alsoConfirm}
       <div class="cc-mod-acts">

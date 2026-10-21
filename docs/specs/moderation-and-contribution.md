@@ -1022,7 +1022,8 @@ culture (NL)", a town card's "Text (NL)".
     this text on its form (✎): confirm there that you opened the links that
     are not marked OK."), as for an undecided Wikipedia credit. A link that
     became a problem after the tick is not covered. A curator's own text
-    applied at once counts their send's tick as the approval's.
+    applied at once counts their send's tick as the approval's. Revoking the
+    approval drops `_links.approved`.
   - The desk card and drawer still show Safe Browsing's "unsafe" or "could
     not check" flag on the links.
 - **The same check, live in the form.** As links appear in the box, pasted
@@ -1128,7 +1129,8 @@ from, and its translator is told when that original changes (owner
   approval it goes with the text: a region entry's `basedOn`, a town row's
   `based_on_lang`, `based_on_at` and `based_on_submission`
   (`Version20261020050000`). A text written without it, or by the curators'
-  own pens on the Regions desk and the town page, keeps none.
+  own pens on the Regions desk and the town page, keeps none. A revoke puts
+  the earlier entry back with its own `basedOn`.
 - **Outdated.** A translation is out of date when its original's `at` or
   submission is no longer the one it was made from, or the original is
   gone (`TextLineage::outdated()`, `RegionStory::lineage()`).
@@ -2538,6 +2540,63 @@ and the back button then means what they expect. An unknown `?cat=` shows
 everything rather than erroring — it is a bookmark to a renamed shelf, not an
 attack. A filter that hid everything says so, and does not read as an empty
 inbox.
+
+### 5.6 Revoking an approval (2026-10-20)
+
+A curator takes back an approval that was a mistake. What the approval
+changed is undone and the submission waits in the queue again, where a
+curator decides it as any other: approve, reject or ask. The rider is told
+why. `App\Moderation\ApprovalRevoker::revoke()`.
+
+- **Who.** A curator whose areas cover the submission, the same people who
+  may approve it (`OutOfScopeException` otherwise). Only an approved
+  submission, not one in Trash or under legal hold
+  (`moderate.revoke.error.not_approved`, `moderate.revoke.error.held`).
+- **Where.** The History desk: each approved row carries "Revoke approval",
+  a panel with a required reason (at most 2,000 characters), posted to
+  `moderate_revoke` (`POST /moderate/revoke/{id}`, CSRF `moderate-revoke`),
+  back to the History desk with "Approval revoked. SUB-n is back in the
+  queue." or the refusal. Without a reason: `moderate.revoke.error.reason_required`.
+- **What is undone.** What the approval recorded:
+  - every `change_history` row carrying its submission id since its last
+    revoke goes back to its `old_value`: a place's fields and name, its pin
+    (and its OSM candidates are recomputed there), its OSM link, a photo
+    description, its gallery (`photos`), a new place's `state` (back to
+    `submitted`, off the map) and the places it retired (back to their
+    state). A climb's point follows its line again.
+  - its photos, approved or left out, wait for a decision again
+    (`MediaUpload::reopen()`, `MediaAction::Reopened`); their bytes stay
+    public while they wait, as before any decision. A photo whose objects
+    are gone stays as it is.
+  - a new water place's own potability answer from the form is removed.
+  - a town card text, a region lead or a region history text goes back to
+    the entry it replaced, writer and credit included: the approval keeps
+    that entry on the submission (`payload._before`). An approval from
+    before this was kept puts back the words readers saw when the rider
+    sent theirs (`changes.was`) as a text of nobody's, or removes the entry
+    when there were none.
+  - a text's Wikipedia credit decision (`_credit`) is dropped; the writer's
+    own answer stands until the next approval decides it again.
+- **Nothing newer is overwritten.** The revoke is refused, naming the
+  values (`moderate.revoke.error.changed_since`, "Not revoked: these values
+  were changed after the approval: ..."), when anything the approval wrote
+  changed since: a later history row on the same place and field, a value
+  that no longer reads as the approval left it, a place that is gone, or a
+  text written over. A later approval that was itself revoked is no change.
+  The curator changes the values by hand, or revokes the later change first.
+- **The record.** The undo is written as `change_history` rows of its own,
+  `old_value` and `new_value` swapped, credited to the curator, under the
+  same submission. The submission keeps `payload._revoked[]`: `{by, at,
+  reason, approvedBy, approvedAt, historyUpTo}`; `historyUpTo` closes the
+  revoked approval, so its rows and undo rows are told apart from the next
+  approval's. Status `pending`, the decision fields cleared. The queue card
+  and the map drawer show "Approval withdrawn · {when} · {reason}". The
+  admin log gets `submission_revoked`, `SUB-n · type=...`, content-free.
+- **The rider** gets `submission_revoked` ("Approval withdrawn", in
+  Contributions) with the reason, unless they revoked their own. Deleting
+  an account nulls its id in `_revoked[]` and in a kept `_before` entry.
+
+Pinned by `ApprovalRevokeTest`.
 
 ## 6. Trash, the curators' bin (2026-10-01)
 

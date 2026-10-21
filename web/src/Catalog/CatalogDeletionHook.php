@@ -86,6 +86,29 @@ final class CatalogDeletionHook implements UserDeletionHookInterface
             );
         }
 
+        // A revoked approval's record names who revoked and who had approved
+        // (moderation-and-contribution.md §5.6): those names go, the record stays.
+        foreach (['by', 'approvedBy'] as $key) {
+            $this->db->executeStatement(
+                \sprintf(
+                    "UPDATE submission SET payload = jsonb_set(payload, '{_revoked}', (
+                            SELECT jsonb_agg(CASE WHEN t.e->>'%1\$s' = :u THEN jsonb_set(t.e, '{%1\$s}', 'null'::jsonb) ELSE t.e END ORDER BY t.o)
+                              FROM jsonb_array_elements(payload->'_revoked') WITH ORDINALITY AS t(e, o)))
+                      WHERE jsonb_typeof(payload->'_revoked') = 'array'
+                        AND EXISTS (SELECT 1 FROM jsonb_array_elements(payload->'_revoked') r WHERE r->>'%1\$s' = :u)",
+                    $key,
+                ),
+                ['u' => $text],
+            );
+        }
+        // The text an approved proposal replaced, kept for a revoke, names its writer and approver.
+        foreach (['userId', 'approvedBy', 'edited_by', 'approved_by'] as $key) {
+            $this->db->executeStatement(
+                \sprintf("UPDATE submission SET payload = jsonb_set(payload, '{_before,entry,%1\$s}', 'null'::jsonb) WHERE payload->'_before'->'entry'->>'%1\$s' = :u", $key),
+                ['u' => $text],
+            );
+        }
+
         // A region's lead and its history text keep their words; the writer and approver go.
         foreach (['context_curated', 'story'] as $column) {
             foreach (['userId', 'approvedBy'] as $key) {

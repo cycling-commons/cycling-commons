@@ -23,12 +23,14 @@ use App\Media\MediaTakedownService;
 use App\Media\PhotoLocationConfirmation;
 use App\Media\UrgentWithholdBreaker;
 use App\Moderation\AlreadyDecidedException;
+use App\Moderation\ApprovalRevoker;
 use App\Moderation\MissingQuestionException;
 use App\Moderation\MissingReasonException;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
 use App\Moderation\OsmUnansweredException;
 use App\Moderation\OutOfScopeException;
+use App\Moderation\RevokeRefused;
 use App\Moderation\StatementGround;
 use App\Moderation\SubmissionQueue;
 use App\Moderation\TextCreditUndecidedException;
@@ -446,6 +448,34 @@ final class ModerateController extends AbstractController
             'type' => $request->query->getString('type'),
             'letter' => $request->query->getString('letter'),
         ], static fn (string $v): bool => '' !== $v));
+    }
+
+    /**
+     * Take back an approval: what it changed is undone and the submission
+     * waits in the queue again; the rider is told why. Refused, with the
+     * values named, when anything it wrote was changed since.
+     *
+     * @see docs/specs/moderation-and-contribution.md §5.6
+     */
+    #[Route('/moderate/revoke/{id}', name: 'moderate_revoke', requirements: ['id' => '\d{1,18}'], methods: ['POST'])]
+    public function revoke(int $id, Request $request, ApprovalRevoker $revoker): Response
+    {
+        if (!$this->isCsrfTokenValid('moderate-revoke', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+        /** @var User $curator */
+        $curator = $this->getUser();
+
+        try {
+            $revoker->revoke($id, $curator, $request->request->getString('reason'));
+            $this->addFlash('success', $this->translator->trans('moderate.revoke.done', ['%ref%' => 'SUB-'.$id]));
+        } catch (OutOfScopeException) {
+            throw $this->createAccessDeniedException('Out of moderation scope.');
+        } catch (RevokeRefused $e) {
+            $this->addFlash('danger', $this->translator->trans($e->getMessage(), ['%fields%' => implode(', ', $e->fields)]));
+        }
+
+        return $this->redirectToRoute('moderate_history');
     }
 
     /**

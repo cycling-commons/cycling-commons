@@ -1931,6 +1931,7 @@ map:
   d_you_asked: 'Vous avez demandé'
   d_rider_replied: 'Le cycliste a répondu'
   d_prior_rejected: 'Précédemment rejeté'
+  d_approval_revoked: "Approbation retirée"
   d_report_page: 'Signaler cette page'
   d_share: 'Partager'
   d_share_hint: 'Copier un lien qui ouvre ce lieu'
@@ -2829,6 +2830,19 @@ moderate:
     refused: 'Non enregistré : texte vide, trop long, ou langue que nous ne parlons pas.'
     outside_area: 'Cette ville est hors de vos zones : votre texte va à un curateur de sa région. Envoyez-le ici.'
     where_unknown: 'Nous ne savons pas encore dans quelle région se trouve cette ville. Ouvrez-la sur la carte et utilisez « Modifier ce texte » sur sa fiche.'
+  revoke:
+    button: "Retirer l’approbation"
+    when: "À utiliser quand une approbation était une erreur. Pour changer un détail, modifiez plutôt le lieu."
+    what: "Ce que l’approbation a changé est annulé et la proposition retourne dans la file, où un curateur décide à nouveau. Le cycliste reçoit votre raison."
+    reason: "Raison, envoyée au cycliste"
+    submit: "Retirer l’approbation"
+    done: "Approbation retirée. %ref% est de retour dans la file."
+    card: "Approbation retirée"
+    error:
+      reason_required: "Écrivez d’abord la raison. Le cycliste la reçoit."
+      not_approved: "Cette proposition n’est pas approuvée : il n’y a pas d’approbation à retirer."
+      held: "Cette proposition est sous conservation légale. Elle ne peut pas être modifiée."
+      changed_since: "Non retirée : ces valeurs ont changé après l’approbation : %fields%. Corrigez-les à la main, ou retirez d’abord la modification plus récente."
   escalate:
     when: 'À utiliser quand le contenu lui-même enfreint la loi — pas pour du spam, pas pour une mauvaise modification, pas pour de l’impolitesse. Ce sont Corbeille et Message au cycliste.'
     confirm_check: 'J’ai lu ce qui précède et il s’agit de contenu présumé illégal'
@@ -3352,6 +3366,7 @@ messages:
   view_your_ideas: "Voir vos idées"
   kind_submission_rejected: 'Contribution non retenue'
   kind_submission_needs_info: 'Un curateur a besoin de précisions'
+  kind_submission_revoked: "Approbation retirée"
   kind_text_original_changed: "Un original que vous avez traduit a changé"
   kind_route_approved: 'Proposition d''itinéraire approuvée. Merci !'
   kind_route_rejected: 'Proposition d''itinéraire non retenue'
@@ -3390,6 +3405,7 @@ messages:
     areas_changed: 'An admin changed the areas you moderate. You now look after %areas%.'
     submission_rejected: 'Votre contribution ''<em>%title%</em>'' n''a pas été retenue.'
     submission_needs_info: 'Un curateur a besoin de précisions sur ''<em>%title%</em>'' avant de statuer. Vous pouvez répondre ci-dessous.'
+    submission_revoked: "Un curateur a retiré l’approbation de « <em>%title%</em> ». La modification est annulée pour l’instant et un curateur l’examine à nouveau. La raison est ci-dessous."
     text_original_changed: "Le texte %from% de « <em>%title%</em> » que vous avez traduit en %to% a changé. Votre traduction a peut-être besoin du même changement : <a href=\"%url%\">mettre votre traduction à jour</a>."
     route_approved: 'Votre itinéraire ''<em>%name%</em>'' a été approuvé et apparaît désormais sur la carte comme itinéraire proposé. Merci !'
     route_rejected: 'Votre itinéraire ''<em>%name%</em>'' n''a pas été retenu.'

@@ -594,7 +594,7 @@ final class MapController extends AbstractController
             'decisionErr' => 'd_decision_err', 'decisionRecorded' => 'd_decision_recorded',
             'decisionAsked' => 'd_decision_asked', 'needsInfoNote' => 'd_needs_info_note',
             'waitingOnRider' => 'd_waiting_on_rider', 'youAsked' => 'd_you_asked', 'riderReplied' => 'd_rider_replied',
-            'priorRejected' => 'd_prior_rejected',
+            'priorRejected' => 'd_prior_rejected', 'approvalRevoked' => 'd_approval_revoked',
             'share' => 'd_share', 'shareHint' => 'd_share_hint', 'shareCopied' => 'd_share_copied',
             'reportPage' => 'd_report_page',
             'photoAlt' => 'd_photo_alt', 'photoDesc' => 'd_photo_desc', 'photoDistance' => 'd_photo_distance',

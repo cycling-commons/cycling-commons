@@ -290,6 +290,14 @@
      existed the row showed only the new report, leaving the curator to
      overturn a verdict they did not know was there (found 2026-08-12 while
      fixing the revive). The note is the previous curator's own words. #}
+  {# An approval a curator took back (moderation-and-contribution.md §5.6):
+     the change was undone and the card waits again, with the reason. #}
+  {% if item.revoked|default(null) %}
+    <p class="q-prior-reject q-revoked">
+      <strong>{{ 'moderate.revoke.card'|trans }}</strong> &middot; {{ item.revoked.when }}
+      {%- if item.revoked.reason %} &middot; {{ item.revoked.reason }}{% endif -%}
+    </p>
+  {% endif %}
   {% if item.priorRejection %}
     <p class="q-prior-reject">
       <strong>{{ 'moderate.prior_rejection'|trans }}</strong>
