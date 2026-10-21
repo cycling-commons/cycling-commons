@@ -127,6 +127,16 @@ services:
         arguments:
             $apiKey: '%env(SAFE_BROWSING_KEY)%'
 
+    # The website check fetches addresses riders give us (website-liveness.md
+    # §2), so it may never reach our own network: no private, loopback or
+    # link-local address, wherever a name resolves or a redirect leads.
+    app.website_http:
+        class: Symfony\Component\HttpClient\NoPrivateNetworkHttpClient
+        arguments: ['@http_client']
+    App\Links\WebsiteChecker:
+        arguments:
+            $http: '@app.website_http'
+
     # The dev-only DeepL drafting tool (translations.md §7.1). Empty key = OFF;
     # DeepLAvailability::isOn() also requires kernel.environment to be "dev",
     # which cannot be set here or by any env var, so this cannot light up on

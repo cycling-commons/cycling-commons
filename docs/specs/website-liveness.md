@@ -23,12 +23,16 @@ rule; `App\Links\WebsiteChecker` fetches and applies it.
 |---|---|---|
 | `live` | the final answer is 2xx or 3xx and the page carries no parking signature | 30 days |
 | `parked` | the page carries a parking signature, whatever the status: a domain for sale, a hosting provider's "connect your domain" page, a registrar's placeholder | 14 days |
-| `dead` | the name does not resolve, the connection is refused or fails TLS, or the final answer is 4xx or 5xx without a parking signature | 14 days |
-| `unknown` | a timeout, or a transport failure that may be ours (the fetch is from our server) | 3 days |
+| `dead` | the name does not resolve, the connection is refused or fails TLS, or the final answer is 4xx or 5xx without a parking signature (401, 403 and 429 excepted) | 14 days |
+| `unknown` | a timeout, a transport failure that may be ours (the fetch is from our server), or a 401, 403 or 429: a server is there and turns a script away, as UNESCO's World Heritage pages do | 3 days |
 
 - **The fetch.** One GET of the address as stored, following at most 5
   redirects, 8 seconds in all, reading at most 64 KB of the body, with the
-  User-Agent `CyclingCommons website check (+https://cyclingcommons.org/about)`.
+  User-Agent `CyclingCommons website check (+https://cyclingcommons.org/about)`,
+  through `NoPrivateNetworkHttpClient` (`app.website_http`): an address
+  that resolves or redirects into a private, loopback or link-local range
+  is never fetched, and that refusal ("is blocked") is `dead`. The check
+  fetches addresses riders give, so it must not reach our own network.
   No HEAD first: enough hosts refuse HEAD to make it a second request for
   nothing.
 - **The signatures** (`WebsiteVerdict::PARKED`), matched case-insensitively

@@ -51,8 +51,21 @@ final class WebsiteVerdict
     /** Days until a verdict is taken again (docs/specs/website-liveness.md section 1). */
     private const array RECHECK_DAYS = [self::LIVE => 30, self::PARKED => 14, self::DEAD => 14, self::UNKNOWN => 3];
 
-    /** Transport failures that say the site is not there, as opposed to ones that may be ours. */
-    private const array DEAD_TRANSPORT = ['could not resolve', 'name or service not known', 'connection refused', 'ssl', 'tls', 'certificate', 'no route to host'];
+    /**
+     * Answers that say a server is there and turns our fetch away: login
+     * required, bots refused, too many requests. Big archives and heritage
+     * sites answer a script this way (UNESCO's World Heritage pages do), so
+     * they say nothing about whether a reader finds the page.
+     */
+    private const array REFUSED_STATUS = [401, 403, 429];
+
+    /**
+     * Transport failures that say the site is not there, as opposed to ones
+     * that may be ours. `is blocked` is NoPrivateNetworkHttpClient refusing
+     * an address in a private, loopback or link-local range: never a website
+     * a rider may point to.
+     */
+    private const array DEAD_TRANSPORT = ['could not resolve', 'name or service not known', 'connection refused', 'ssl', 'tls', 'certificate', 'no route to host', 'is blocked'];
 
     private function __construct(
         public readonly string $verdict,
@@ -72,6 +85,9 @@ final class WebsiteVerdict
         }
         if ($status >= 200 && $status < 400) {
             return new self(self::LIVE, $status, '');
+        }
+        if (\in_array($status, self::REFUSED_STATUS, true)) {
+            return new self(self::UNKNOWN, $status, 'http '.$status);
         }
 
         return new self(self::DEAD, $status, 'http '.$status);

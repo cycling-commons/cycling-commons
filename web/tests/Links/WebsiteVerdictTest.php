@@ -41,6 +41,14 @@ final class WebsiteVerdictTest extends TestCase
         self::assertSame(WebsiteVerdict::DEAD, WebsiteVerdict::of(503, '')->verdict);
     }
 
+    public function testAServerThatTurnsAScriptAwayIsUnknownNotDead(): void
+    {
+        foreach ([401, 403, 429] as $status) {
+            self::assertSame(WebsiteVerdict::UNKNOWN, WebsiteVerdict::of($status, '<html>Forbidden</html>')->verdict, 'http '.$status);
+        }
+        self::assertSame(WebsiteVerdict::PARKED, WebsiteVerdict::of(403, '<title>Buy this domain</title>')->verdict, 'a parking signature still parks');
+    }
+
     public function testTransportFailuresSplitIntoDeadAndUnknown(): void
     {
         self::assertSame(WebsiteVerdict::DEAD, WebsiteVerdict::failed('Could not resolve host: example.test')->verdict);
@@ -48,6 +56,7 @@ final class WebsiteVerdictTest extends TestCase
         self::assertSame(WebsiteVerdict::DEAD, WebsiteVerdict::failed('SSL certificate problem: certificate has expired')->verdict);
         self::assertSame(WebsiteVerdict::UNKNOWN, WebsiteVerdict::failed('Operation timed out after 8000 milliseconds')->verdict);
         self::assertSame(WebsiteVerdict::UNKNOWN, WebsiteVerdict::failed('something else entirely')->verdict);
+        self::assertSame(WebsiteVerdict::DEAD, WebsiteVerdict::failed('Host "127.0.0.1" is blocked for "http://127.0.0.1/".')->verdict, 'our own network is never a website');
     }
 
     public function testEachVerdictHasItsPeriod(): void
