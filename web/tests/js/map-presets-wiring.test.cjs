@@ -72,3 +72,12 @@ test('a place drawer closing the panel does not end the tool', () => {
     'the drawer close is marked only for its own click, and the mark is always cleared');
   assert.match(presets, /const byDrawer = !!\(e\.detail && e\.detail\.byDrawer\);/);
 });
+
+test('the map shows the active preset only: no Save as preset, a hint to Settings when none is on', () => {
+  const panel = twig.slice(twig.indexOf('id="presets"'), twig.indexOf('id="presetsTool"'));
+  assert.ok(!panel.includes('presetSaveAsBox') && !panel.includes('id="presetName"'), 'the map still has a Save as preset box');
+  assert.ok(panel.includes('id="presetsNone"') && panel.includes("path('settings', {tab: 'presets'})"), 'no hint to Settings when no preset is on');
+  assert.ok(!/presetSaveAs|saveAs\(/.test(presets), 'presets.js still offers Save as preset');
+  assert.match(presets, /presets\.find\(x => x\.id === active\)/, 'the chip is not the active preset alone');
+  assert.match(presets, /none\.hidden = !!p/, 'the Settings hint does not show when no preset is on');
+});

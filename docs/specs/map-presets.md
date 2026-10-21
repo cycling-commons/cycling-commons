@@ -80,31 +80,34 @@ and the purge test asserts that another rider's presets stay.
 The first group of the Layers panel (`#p-layers`, above View mode), owned
 by `web/assets/map/presets.js`:
 
-- **One chip per preset**, in the order saved, the active one orange. Tap a
-  chip and every switch below is set to it: the layer rows, the overlay
-  rows, the mode, the Best of chips and the facet chips, each through the
-  control's own handler (the row's click, `applyMode()`, the chip's click),
-  so the map reacts exactly as to a rider's taps. The mode is applied
-  without persisting it to the profile (`applyMode(m, {persist: false})`):
-  a preset is a view, not a change of the rider's default mode.
+- **The active preset only**, as one orange chip. Presets are made, edited
+  and picked in Settings (section 4); the map has no chip per preset and no
+  Save as preset. Applying a preset sets every switch below to it: the layer
+  rows, the overlay rows, the mode, the Best of chips, the facet chips and
+  the Stays for cyclists chip, each through the control's own handler (the
+  row's click, `applyMode()`, the chip's click), so the map reacts exactly
+  as to a rider's taps. The mode is applied without persisting it to the
+  profile (`applyMode(m, {persist: false})`): a preset is a view, not a
+  change of the rider's default mode. A tap on the chip applies it again,
+  as Reset does.
+- **No preset on**: a hint, "No preset is on. Make one, or pick your
+  default, in Settings.", linking to the Map presets tab (`#presetsNone`).
 - **Edited**: after any change in the panel while a preset is active, the
-  chip shows a dot and a bar under the chips says "Changed since you picked
+  chip shows a dot and a bar under it says "Changed since you picked
   {name}" with **Save changes** (writes the current switches into that
   preset) and **Reset** (applies it again). `presets.js` compares the
   current switches (`readState()`, from the panel's controls) with the
   preset's settings (`same()` in `presets-model.js`).
-- **+ Save as preset**: a name field under the chips; saves the current
-  switches as a new preset and makes it active. Hidden at the cap.
 - **A pencil beside the heading** (tooltip "Edit your presets in Settings")
   links to the Map presets tab of Settings (`/account/settings?tab=presets`,
   section 4).
 - **At open**: the preset used for the page applies once, after the panel
   is built (`initPresets()` runs after `initChips()` in `map.js`): Opens the
   Default on `/map`, Scout review on `/scout/review` (`CC_PRESETS.page`). Its chip
-  is active. Without one, the panel opens as before.
+  shows. Without one, the panel opens as before, with the No preset hint.
 - **A tool's preset**: on `cc:panel`, opening Plan a ride or Ride tools
-  applies the preset used for that tool (`TOOL_OF_PANEL`), and a line under
-  the chips says "Plan a ride uses Gravel weekend. Leaving it puts your
+  applies the preset used for that tool (`TOOL_OF_PANEL`), its chip shows in
+  place of the map's, and a line under it says "Plan a ride uses Gravel weekend. Leaving it puts your
   switches back." Opening Layers from there keeps it, and so does a place
   drawer closing the panel (`cc:panel` carries `byDrawer`, set by
   `closeRailPanel()`); any other panel or closing puts back the switches the

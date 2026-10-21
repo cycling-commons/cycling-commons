@@ -202,17 +202,17 @@
       {# View mode is the primary filter (curated best-of vs the full backlog), so it sits right
          under Region. Its active button is styled bright (#mode in the CSS) so the current mode
          is obvious at a glance. #}
-      {# Map presets (docs/specs/map-presets.md section 3): one chip per preset,
-         the default applied at open, Save as preset for the current switches.
-         A visitor sees one sign-in line. presets.js fills it. #}
+      {# Map presets (docs/specs/map-presets.md section 3): the active preset
+         only, applied at open; presets are made and picked in Settings (owner
+         2026-10-21: no Save as preset on the map). A visitor sees one sign-in
+         line. presets.js fills it. #}
       <div class="grp" id="presets">
         <h3>{{ 'map.presets_h'|trans }} <a class="dl-all ico" id="presetsEdit" href="{{ path('settings', {tab: 'presets'}) }}" title="{{ 'map.presets_edit'|trans }}" aria-label="{{ 'map.presets_edit'|trans }}"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></a></h3>
         <div class="hint" id="presetsSignIn" hidden><a href="{{ path('login') }}">{{ 'map.presets_sign_in'|trans }}</a></div>
         <div class="chips" id="presetChips" hidden></div>
         <div class="preset-edited" id="presetEdited" hidden><span>{{ 'map.presets_changed'|trans }} <b id="presetEditedName"></b>.</span><button type="button" class="pri" id="presetSaveChanges">{{ 'map.presets_save_changes'|trans }}</button><button type="button" id="presetReset">{{ 'map.presets_reset'|trans }}</button></div>
-        <div class="preset-saveas" id="presetSaveAsBox" hidden><input type="text" id="presetName" maxlength="40" placeholder="{{ 'map.presets_name_ph'|trans }}"><button type="button" id="presetSaveBtn">{{ 'map.presets_save'|trans }}</button></div>
         <div class="hint" id="presetStatus" hidden></div>
-        <div class="hint" id="presetsTap" hidden>{{ 'map.presets_tap'|trans }}</div>
+        <div class="hint" id="presetsNone" hidden><a href="{{ path('settings', {tab: 'presets'}) }}">{{ 'map.presets_none'|trans }}</a></div>
         <div class="hint" id="presetsTool" hidden></div>
       </div>
 
