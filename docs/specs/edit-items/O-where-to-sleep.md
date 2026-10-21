@@ -15,6 +15,7 @@ Bike-friendly stays riders actually used — gîtes and B&Bs with secure storage
 ## Read view (drawer "current details")
 - Type
 - Secure bike storage
+- Cyclist label
 - Area
 
 ## Edit form
@@ -27,6 +28,7 @@ Bike-friendly stays riders actually used — gîtes and B&Bs with secure storage
 | Website | url (`web`) | `[edit]` |
 | Secure bike storage | select(Yes — locked room / Yes — garage/shed / On request / No) | `[edit]` |
 | Drying / washing for kit | select(Unknown / Yes / No) | `[edit]` |
+| Cyclist label | multiselect(Bett+Bike / Accueil Vélo / Bike-friendly); nothing ticked means not stated. The drawer shows the OSM labels (`bettundbike`, `bett_and_bike:ref`, `award:accueilvelo`, `bike_friend`) in the same row until a stored value replaces them ([coverage-provider.md §2.1](../coverage-provider.md)) | `[OSM]` |
 | Booking link | url | `[edit]` |
 | Note for riders | textarea | `[edit]` |
 

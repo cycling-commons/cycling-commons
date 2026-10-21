@@ -187,7 +187,7 @@ to 35 MB, a 51.7% cut, and the whole row from 517 to 412 bytes on average. At th
 `_SOURCE_DDL` in `pipeline/coverage/load.py`), that difference is not a rounding error: it is
 hundreds of megabytes of tag payload, for keys nothing anywhere ever renders.
 
-The 43 kept keys split into seven groups, and they are easy to double-count:
+The 47 kept keys split into seven groups, and they are easy to double-count:
 
 - **11 selector keys**: `amenity`, `drinking_water`, `historic`, `man_made`, `natural`, `railway`,
   `route`, `shelter_type`, `shop`, `tourism`, `waterway`, the same keys the 48 selector rules above
@@ -200,12 +200,14 @@ The 43 kept keys split into seven groups, and they are easy to double-count:
   dock that inherited a `no`, but those keys are counted in their own groups below.
 - **1 key no selector reads**: `natural`. It stays in the stored set because re-adding a dropped key
   later needs a full re-harvest of the planet.
-- **22 more keys** the item drawer displays: `opening_hours`, `website`, `contact:website`, `url`,
+- **26 more keys** the item drawer displays: `opening_hours`, `website`, `contact:website`, `url`,
   `phone`, `contact:phone`, `addr:city`, `addr:street`, `addr:housenumber`, `operator`,
   `description`, `wheelchair`, `fee`, `capacity`, for scenic views `ele`, `direction` and
   `height` (a viewpoint's altitude, the way it faces, how far a waterfall drops), and for getting
   there `bicycle` and `bicycle:fee` (whether a bike may come aboard, and whether it costs extra)
-  and a ferry route's `duration`, `seasonal` and `toll` (crossing time, season, fare). A
+  and a ferry route's `duration`, `seasonal` and `toll` (crossing time, season, fare), and for
+  places to sleep `bettundbike`, `bett_and_bike:ref`, `award:accueilvelo` and `bike_friend` (the
+  cyclist labels Bett+Bike, Accueil Vélo and bike-friendly). A
   `website`, `contact:website` or `url` whose host answers with a parking page or does not answer
   at all is kept in the store and left out of the drawer, on the verdict a worker sweep keeps per
   host (`web/src/Links/WebsiteSweep.php`).
@@ -226,32 +228,32 @@ The 43 kept keys split into seven groups, and they are easy to double-count:
   say "from the ferry Enkhuizen - Stavoren" instead of pretending a mapper tagged the dock. A dock
   with its own `bicycle` tag keeps its own answer. An OSM tag under that prefix is dropped.
 
-10 + 2 + 1 + 22 + 4 + 1 + 3 = 43. The PHP side of this, `CoverageRepository::TAG_WHITELIST` in
+10 + 2 + 1 + 26 + 4 + 1 + 3 = 47. The PHP side of this, `CoverageRepository::TAG_WHITELIST` in
 `web/src/Coverage/CoverageRepository.php`, the exact set of keys the POI drawer is allowed to render,
-lists **32** entries: the 22 display keys, four of the selector keys (`drinking_water`, `amenity` and
+lists **36** entries: the 26 display keys, four of the selector keys (`drinking_water`, `amenity` and
 `shop`, because the pin's colour and the panel's wording have to agree on whether water is potable
 and whether a place is a shop, and `route`, which tells a ferry route from a station), the three
 media keys and the three inherited keys. Two numbers, both correct, counting
-overlapping things: 43 stored keys in total, 32 of which the drawer's whitelist names
+overlapping things: 47 stored keys in total, 36 of which the drawer's whitelist names
 (`web/tests/Catalog/CoverageContractTest.php` asserts `TAG_WHITELIST ⊆ storedTagKeys`, so the drawer
 can never ask for a key the pipeline already threw away).
 
-Three numbers, one table. A key can be in more than one set, which is exactly why 11 + 22 + 4 + 3 + 1
-and 32 are both correct and describe different things.
+Three numbers, one table. A key can be in more than one set, which is exactly why 11 + 26 + 4 + 3 + 1
+and 36 are both correct and describe different things.
 
 | set | what it is for | how many |
 |---|---|---|
 | **selector** | decides whether an object is kept at all, and is re-read at tile-build time to derive the type label | 11 |
-| **drawer** | `TAG_WHITELIST`: the keys the item panel is allowed to render | 32 |
+| **drawer** | `TAG_WHITELIST`: the keys the item panel is allowed to render | 36 |
 | **tile-derived** | read into a short tile property rather than shown as text: `amenity`, `check_date`, `drinking_water`, `shop`, `wheelchair` | 5 |
-| **stored** | the union, and the only thing the harvest actually keeps | 43 |
+| **stored** | the union, and the only thing the harvest actually keeps | 47 |
 
 Three keys sit in all three sets (`amenity`, `drinking_water`, `shop`), because the pin's colour,
 the panel's wording and the selector all have to agree about the same fact. One key, `wikipedia`, is
 in none of them: it is stored and read by nothing yet, kept because re-adding a dropped key later
 means re-harvesting the planet.
 
-`name` is conspicuously not in that list of 43. It is not dropped; it is promoted to its own
+`name` is conspicuously not in that list of 47. It is not dropped; it is promoted to its own
 dedicated `name` column (next section), so keeping it inside `tags` as well would just be storing the
 same value twice.
 
@@ -317,7 +319,7 @@ marker location for a POI, not a shape to draw, so every row, node or way alike,
 one kind of geometry the table actually asks for.
 
 <figure class="gis-fig">
-<svg viewBox="0 0 640 1010" role="img" aria-labelledby="f11-t f11-d" xmlns="http://www.w3.org/2000/svg"><title id="f11-t">Which of a node&#8217;s tags survive into the stored row</title><desc id="f11-d">On the left, the real OpenStreetMap node 6863042080, the Pouhon La Sauveniere in Spa, drawn as a filled dot with the nine tags it carries listed beneath it. The first five, amenity=drinking_water, drinking_water=yes, name=Pouhon La Sauveniere, natural=spring and wikidata=Q27959454, are in full ink and bracketed as kept: each is named in the contract&#8217;s storedTagKeys list of 43 keys. The last four, access=yes, intermittent=no, note=survey drinkable and water_characteristic=ferruginous, are struck through and greyed, and bracketed as dropped, not in the 43. The note tag is worth seeing go: it reads survey colon drinkable, which is one mapper's prose rather than a claim any program reads. Below the list an arrow, labelled parse.py keeps only the contract&#8217;s keys, leads down into the stored coverage_poi row: ref node/6863042080, letter B, name Pouhon La Sauveniere, geom POINT 5.8983 50.4851, and a tags column carrying only amenity, drinking_water, natural and wikidata. The struck-through tags reach neither the arrow nor the row. A note underneath records that name gets a column of its own and is never a stored tag.</desc><defs><marker id="gis-arrow-f11" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="gis-fill-accent" d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs><text x="20" y="40">One real node, every tag OSM has</text><circle class="gis-ink gis-fill-accent" cx="34" cy="76" r="12"/><text class="gis-label-mono" x="58" y="85">node/6863042080</text><text class="gis-label-mono" x="58" y="140">amenity=drinking_water</text><text class="gis-label-mono" x="58" y="180">drinking_water=yes</text><text class="gis-label-mono" x="58" y="220">name=Pouhon La Sauvenière</text><text class="gis-label-mono" x="58" y="260">natural=spring</text><text class="gis-label-mono" x="58" y="300">wikidata=Q27959454</text><text class="gis-label-mono gis-fill-glacier" x="58" y="344">access=yes</text><text class="gis-label-mono gis-fill-glacier" x="58" y="384">intermittent=no</text><text class="gis-label-mono gis-fill-glacier" x="58" y="424">note=survey: drinkable</text><text class="gis-label-mono gis-fill-glacier" x="58" y="464">water_characteristic=ferruginous</text><line class="gis-muted" x1="54" y1="336" x2="186" y2="336"/><line class="gis-muted" x1="54" y1="376" x2="252" y2="376"/><line class="gis-muted" x1="54" y1="416" x2="344" y2="416"/><line class="gis-muted" x1="54" y1="456" x2="476" y2="456"/><path class="gis-accent" d="M 500 116 L 488 116 L 488 312 L 500 312"/><text class="gis-label-sm" x="512" y="206">kept:</text><text class="gis-label-sm" x="512" y="234">storedTagKeys</text><text class="gis-label-sm" x="512" y="262">43 keys</text><path class="gis-muted" d="M 500 320 L 488 320 L 488 476 L 500 476"/><text class="gis-label-sm" x="512" y="402">dropped:</text><text class="gis-label-sm" x="512" y="430">not in the 43</text><line class="gis-accent" x1="60" y1="490" x2="60" y2="456" marker-end="url(#gis-arrow-f11)"/><text class="gis-label-sm" x="88" y="430">parse.py keeps only the contract&#8217;s keys</text><rect class="gis-box" rx="8" x="20" y="470" width="600" height="452"/><text class="gis-label-sm" x="40" y="506">the stored coverage_poi row</text><line class="gis-muted" x1="20" y1="524" x2="620" y2="524"/><text class="gis-label-sm" x="40" y="560">ref</text><text class="gis-label-mono" x="180" y="560">node/6863042080</text><line class="gis-muted" x1="20" y1="578" x2="620" y2="578"/><text class="gis-label-sm" x="40" y="614">letter</text><text class="gis-label-mono" x="180" y="614">B</text><line class="gis-muted" x1="20" y1="632" x2="620" y2="632"/><text class="gis-label-sm" x="40" y="668">name</text><text class="gis-label-mono" x="180" y="668">Pouhon La Sauvenière</text><line class="gis-muted" x1="20" y1="686" x2="620" y2="686"/><text class="gis-label-sm" x="40" y="722">geom</text><text class="gis-label-mono" x="180" y="722">POINT(5.8983 50.4851)</text><line class="gis-muted" x1="20" y1="740" x2="620" y2="740"/><text class="gis-label-sm" x="40" y="776">tags</text><text class="gis-label-mono" x="180" y="776">{"amenity": "drinking_water",</text><text class="gis-label-mono" x="180" y="806">"drinking_water": "yes",</text><text class="gis-label-mono" x="180" y="836">"natural": "spring",</text><text class="gis-label-mono" x="180" y="866">"wikidata": "Q27959454"}</text><text class="gis-label-sm" x="20" y="990">name gets a column of its own, never a stored tag</text></svg>
+<svg viewBox="0 0 640 1010" role="img" aria-labelledby="f11-t f11-d" xmlns="http://www.w3.org/2000/svg"><title id="f11-t">Which of a node&#8217;s tags survive into the stored row</title><desc id="f11-d">On the left, the real OpenStreetMap node 6863042080, the Pouhon La Sauveniere in Spa, drawn as a filled dot with the nine tags it carries listed beneath it. The first five, amenity=drinking_water, drinking_water=yes, name=Pouhon La Sauveniere, natural=spring and wikidata=Q27959454, are in full ink and bracketed as kept: each is named in the contract&#8217;s storedTagKeys list of 47 keys. The last four, access=yes, intermittent=no, note=survey drinkable and water_characteristic=ferruginous, are struck through and greyed, and bracketed as dropped, not in the 47. The note tag is worth seeing go: it reads survey colon drinkable, which is one mapper's prose rather than a claim any program reads. Below the list an arrow, labelled parse.py keeps only the contract&#8217;s keys, leads down into the stored coverage_poi row: ref node/6863042080, letter B, name Pouhon La Sauveniere, geom POINT 5.8983 50.4851, and a tags column carrying only amenity, drinking_water, natural and wikidata. The struck-through tags reach neither the arrow nor the row. A note underneath records that name gets a column of its own and is never a stored tag.</desc><defs><marker id="gis-arrow-f11" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="gis-fill-accent" d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs><text x="20" y="40">One real node, every tag OSM has</text><circle class="gis-ink gis-fill-accent" cx="34" cy="76" r="12"/><text class="gis-label-mono" x="58" y="85">node/6863042080</text><text class="gis-label-mono" x="58" y="140">amenity=drinking_water</text><text class="gis-label-mono" x="58" y="180">drinking_water=yes</text><text class="gis-label-mono" x="58" y="220">name=Pouhon La Sauvenière</text><text class="gis-label-mono" x="58" y="260">natural=spring</text><text class="gis-label-mono" x="58" y="300">wikidata=Q27959454</text><text class="gis-label-mono gis-fill-glacier" x="58" y="344">access=yes</text><text class="gis-label-mono gis-fill-glacier" x="58" y="384">intermittent=no</text><text class="gis-label-mono gis-fill-glacier" x="58" y="424">note=survey: drinkable</text><text class="gis-label-mono gis-fill-glacier" x="58" y="464">water_characteristic=ferruginous</text><line class="gis-muted" x1="54" y1="336" x2="186" y2="336"/><line class="gis-muted" x1="54" y1="376" x2="252" y2="376"/><line class="gis-muted" x1="54" y1="416" x2="344" y2="416"/><line class="gis-muted" x1="54" y1="456" x2="476" y2="456"/><path class="gis-accent" d="M 500 116 L 488 116 L 488 312 L 500 312"/><text class="gis-label-sm" x="512" y="206">kept:</text><text class="gis-label-sm" x="512" y="234">storedTagKeys</text><text class="gis-label-sm" x="512" y="262">47 keys</text><path class="gis-muted" d="M 500 320 L 488 320 L 488 476 L 500 476"/><text class="gis-label-sm" x="512" y="402">dropped:</text><text class="gis-label-sm" x="512" y="430">not in the 47</text><line class="gis-accent" x1="60" y1="490" x2="60" y2="456" marker-end="url(#gis-arrow-f11)"/><text class="gis-label-sm" x="88" y="430">parse.py keeps only the contract&#8217;s keys</text><rect class="gis-box" rx="8" x="20" y="470" width="600" height="452"/><text class="gis-label-sm" x="40" y="506">the stored coverage_poi row</text><line class="gis-muted" x1="20" y1="524" x2="620" y2="524"/><text class="gis-label-sm" x="40" y="560">ref</text><text class="gis-label-mono" x="180" y="560">node/6863042080</text><line class="gis-muted" x1="20" y1="578" x2="620" y2="578"/><text class="gis-label-sm" x="40" y="614">letter</text><text class="gis-label-mono" x="180" y="614">B</text><line class="gis-muted" x1="20" y1="632" x2="620" y2="632"/><text class="gis-label-sm" x="40" y="668">name</text><text class="gis-label-mono" x="180" y="668">Pouhon La Sauvenière</text><line class="gis-muted" x1="20" y1="686" x2="620" y2="686"/><text class="gis-label-sm" x="40" y="722">geom</text><text class="gis-label-mono" x="180" y="722">POINT(5.8983 50.4851)</text><line class="gis-muted" x1="20" y1="740" x2="620" y2="740"/><text class="gis-label-sm" x="40" y="776">tags</text><text class="gis-label-mono" x="180" y="776">{"amenity": "drinking_water",</text><text class="gis-label-mono" x="180" y="806">"drinking_water": "yes",</text><text class="gis-label-mono" x="180" y="836">"natural": "spring",</text><text class="gis-label-mono" x="180" y="866">"wikidata": "Q27959454"}</text><text class="gis-label-sm" x="20" y="990">name gets a column of its own, never a stored tag</text></svg>
 <figcaption>What crosses from a node's full tag list into the stored row is a choice made once, at
 parse time, not everything OpenStreetMap happens to have attached to this object, only the keys the
 contract names. The struck-through tags were never on their way to being kept; dropping them is the
@@ -429,7 +431,7 @@ part of a small file a map can actually fetch.
 
     Eleven tags in, five stored. `inscription`, `person:date_of_birth`, `email`, `addr:postcode` and
     `building` are gone, none of them appears in
-    `pipeline/contract/coverage-contract.json`'s `storedTagKeys`, the 43-key list `parse.py`'s
+    `pipeline/contract/coverage-contract.json`'s `storedTagKeys`, the 47-key list `parse.py`'s
     `_stored_keys` filter checks every key against at load time. `name` is gone from `tags` too, but
     for a different reason: it is promoted to its own column, so keeping it in the blob as well would
     store it twice.

@@ -191,16 +191,16 @@ The serve-set is five groups:
 |---|---|---|---|
 | **Selectors** | 11 | `amenity`, `drinking_water`, `historic`, `man_made`, `natural`, `railway`, `route`, `shelter_type`, `shop`, `tourism`, `waterway` | Classification (letter, `serviceKind`, `placeKind`); `tiles.py::_label_case` re-reads them at tile-build time |
 | **Rules** | 2 | `memorial`, `usage` | `load.py` `excludeTagValues`: Q leaves out small memorials, F leaves out heritage railways (§7). `bicycle` and `cc:bicycle_from_route` are counted in their own groups: F also leaves out a `no` in either |
-| **Display** | 22 | `opening_hours`, `website`, `contact:website`, `url`, `phone`, `contact:phone`, `addr:city`, `addr:street`, `addr:housenumber`, `operator`, `description`, `wheelchair`, `fee`, `capacity`, `ele`, `direction`, `height`, `bicycle`, `bicycle:fee`, `duration`, `seasonal`, `toll` | `CoverageRepository::TAG_WHITELIST`: exactly what the drawer renders (§5). `wheelchair`/`drinking_water` also feed tile props (§4) |
+| **Display** | 26 | `opening_hours`, `website`, `contact:website`, `url`, `phone`, `contact:phone`, `addr:city`, `addr:street`, `addr:housenumber`, `operator`, `description`, `wheelchair`, `fee`, `capacity`, `ele`, `direction`, `height`, `bicycle`, `bicycle:fee`, `bettundbike`, `bett_and_bike:ref`, `award:accueilvelo`, `bike_friend`, `duration`, `seasonal`, `toll` | `CoverageRepository::TAG_WHITELIST`: exactly what the drawer renders (§5). `wheelchair`/`drinking_water` also feed tile props (§4) |
 | **Media/reference** | 4 | `wikidata`, `wikipedia`, `image`, `wikimedia_commons` | `image`, `wikimedia_commons` and `wikidata` are in `TAG_WHITELIST`: the drawer links the Commons photo and the Wikidata item, and the media pipeline caches a copy `PhotoValidator` accepts (`FetchCommonsPhotoHandler`, photo-uploads.md §5h). `wikipedia` is stored, not served. Cost: 19 B/row, about 89 MB planet-wide |
 | **Inherited** | 3 | `cc:bicycle_from_route`, `cc:bicycle:fee_from_route`, `cc:ferry_route` | Written by `parse.py`, never read from OSM: what a ferry dock takes from the ferry routes that end at it (§3). In `TAG_WHITELIST`; the drawer says where the answer came from (§5) |
 
-`TAG_WHITELIST` has **32** entries: the 22 display keys, four selectors the
+`TAG_WHITELIST` has **36** entries: the 26 display keys, four selectors the
 drawer also reads (`amenity`, `shop`, `drinking_water`, and `route`, which tells
 a ferry route from a station), three media keys (`image`, `wikimedia_commons`,
 `wikidata`) and the three inherited keys. Those are counted in their own rows,
 so these groups and `check_date` (§4, the `cd` tile prop) sum to
-11 + 2 + 22 + 4 + 3 + 1 = **43** distinct keys.
+11 + 2 + 26 + 4 + 3 + 1 = **47** distinct keys.
 
 `ele`, `direction` and `height` serve the scenic-view letter (P): a place
 carries its altitude, a viewpoint the compass bearing it faces, a waterfall
@@ -216,6 +216,24 @@ come aboard a ferry or train, and whether it costs extra. The drawer reads them
 for F only and words them in its Bikes on board row (§5). OSM carries them on
 ferries far more than on stations: in the Netherlands extract 368 of 580 ferry
 routes and 28 of 884 ferry terminals carry `bicycle`, and no station does.
+
+`bettundbike`, `bett_and_bike:ref`, `award:accueilvelo` and `bike_friend` are
+the cyclist-welcome labels OSM records on a place to sleep (O). The drawer
+reads them for O only (`cyclistLabels` in `assets/map/osm-tags.js`) and shows
+them in its Cyclist label row, as the choices of the stay form's
+`cyclistLabel` field, so a stored value replaces the OSM fact as one row:
+
+- **Bett+Bike** (ADFC, Germany and Austria): `bettundbike=yes`, or a
+  `bett_and_bike:ref` such as `NRW-1540` without `bettundbike=no`.
+- **Accueil Vélo** (France Vélo Tourisme): `award:accueilvelo` as `yes`, an
+  award year (`2024`), or a range whose end is this year or later
+  (`2026-2029`). A range that has ended (`2014-2024`) gives no label.
+- **Bike-friendly**: `bike_friend=yes`, only when no named label is there.
+
+A `no` or a value the rule cannot read gives no row. Worldwide on 2026-10-21,
+taginfo counted 497 objects with `bettundbike`, 191 with `bett_and_bike:ref`,
+312 with `award:accueilvelo` and 302 with `bike_friend` (most of those in
+Denmark).
 
 `duration`, `seasonal` and `toll` are a ferry route's crossing time, season and
 fare, which the drawer shows beside its `opening_hours`, `fee` and website

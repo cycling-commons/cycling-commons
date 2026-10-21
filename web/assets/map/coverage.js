@@ -12,7 +12,7 @@ import { openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt, plan
 import { offerToRide } from './util.js';
 import { isPicking } from './picking.js';
 import { osmLayers } from './osm-pools.js';
-import { viewDirection, OSM_REF, bikeAccess, ferryFacts, tileTypeLabel, coverageSourceLayers } from './osm-tags.js';
+import { viewDirection, OSM_REF, bikeAccess, ferryFacts, tileTypeLabel, coverageSourceLayers, cyclistLabels } from './osm-tags.js';
 import { familyConfigured, mountInView, sourceIdFor, ccOfSourceLayer, NO_VALIDATE } from './tile-sources.js';
 
 // Coverage tiles (docs/specs/coverage-provider.md §6). [rail key, lowercase letter]
@@ -320,6 +320,11 @@ export function covProps(key, tp, d){
       if(tags.ele!=null) p.ele=tags.ele;
       if(tags.height!=null) p.drop=tags.height;
       if(tags.direction!=null) p.viewDir=viewDirection(tags.direction);
+    }
+    if(key==='stays'){
+      // Cyclist label: Bett+Bike, Accueil Vélo or bike_friend (coverage-provider.md §5).
+      const labels=cyclistLabels(tags, new Date().getFullYear());
+      if(labels.length) p.osmCyclist=labels;
     }
     if(key==='transit'){
       // Bikes on board: the dock's own tag, or the answer it inherited from the

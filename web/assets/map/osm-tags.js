@@ -157,3 +157,22 @@ export const FERRY_FACT_LABEL = {
   paid: 'ferryPaid',
   free: 'ferryFree',
 };
+
+/* Letter O's Cyclist label row (docs/specs/coverage-provider.md §5): the
+   cyclist-welcome schemes OSM records on a place to sleep, as the choice
+   values of the stay form's Cyclist label field, so an OSM fact and a stored
+   value share one row. Bett+Bike is `bettundbike=yes` or a Bett+Bike
+   reference; Accueil Vélo is `award:accueilvelo` as yes, an award year, or a
+   range whose end is `year` or later; `bike_friend=yes` only when no named
+   scheme is there. A no or a value we cannot read gives nothing. */
+export function cyclistLabels(tags, year){
+  const t = tags || {};
+  const word = k => String(t[k] ?? '').trim().toLowerCase();
+  const out = [];
+  if(word('bettundbike') === 'yes' || (word('bettundbike') !== 'no' && word('bett_and_bike:ref'))) out.push('Bett+Bike');
+  const av = word('award:accueilvelo');
+  const range = av.match(/^(\d{4})\s*-\s*(\d{4})$/);
+  if(av === 'yes' || /^\d{4}$/.test(av) || (range && Number(range[2]) >= year)) out.push('Accueil Vélo');
+  if(!out.length && word('bike_friend') === 'yes') out.push('Bike-friendly');
+  return out;
+}

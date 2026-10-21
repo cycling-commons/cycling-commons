@@ -9,7 +9,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { osmMetres, viewDirection, osmRefUrl, OSM_REF, bikesOnBoard, BIKES_ON_BOARD_LABEL, bikeAccess, bikeSourceText,
-  osmDuration, durationText, ferryFacts, FERRY_FACT_LABEL } from '../../assets/map/osm-tags.js';
+  osmDuration, durationText, ferryFacts, FERRY_FACT_LABEL, cyclistLabels } from '../../assets/map/osm-tags.js';
 
 test('metres are read from the shapes OSM actually writes', () => {
   assert.equal(osmMetres('484'), 484);        // Costo Liso, node 12969271187
@@ -195,4 +195,32 @@ test('only a ferry route has ferry facts, and one with none gives null', () => {
 
 test('every fact token names a drawer string', () => {
   for(const k of ['seasonal', 'allYear', 'paid', 'free']) assert.ok(FERRY_FACT_LABEL[k], k);
+});
+
+test('a stay with a cyclist label names the scheme', () => {
+  assert.deepEqual(cyclistLabels({bettundbike:'yes'}, 2026), ['Bett+Bike']);
+  assert.deepEqual(cyclistLabels({'bett_and_bike:ref':'NRW-1540'}, 2026), ['Bett+Bike']);
+  assert.deepEqual(cyclistLabels({'award:accueilvelo':'yes'}, 2026), ['Accueil Vélo']);
+  assert.deepEqual(cyclistLabels({bike_friend:'yes'}, 2026), ['Bike-friendly']);
+});
+
+test('an Accueil Vélo year is the award year; a range that has ended is no label', () => {
+  assert.deepEqual(cyclistLabels({'award:accueilvelo':'2024'}, 2026), ['Accueil Vélo']);
+  assert.deepEqual(cyclistLabels({'award:accueilvelo':'2026-2029'}, 2026), ['Accueil Vélo']);
+  assert.deepEqual(cyclistLabels({'award:accueilvelo':'2023-2026'}, 2026), ['Accueil Vélo']);
+  assert.deepEqual(cyclistLabels({'award:accueilvelo':'2014-2024'}, 2026), []);
+});
+
+test('a no, an unreadable value or no tag gives no label', () => {
+  assert.deepEqual(cyclistLabels({bettundbike:'no', 'bett_and_bike:ref':'NRW-1540'}, 2026), []);
+  assert.deepEqual(cyclistLabels({'award:accueilvelo':'no'}, 2026), []);
+  assert.deepEqual(cyclistLabels({'award:accueilvelo':'maybe'}, 2026), []);
+  assert.deepEqual(cyclistLabels({bike_friend:'no'}, 2026), []);
+  assert.deepEqual(cyclistLabels({}, 2026), []);
+  assert.deepEqual(cyclistLabels(null, 2026), []);
+});
+
+test('a named scheme makes the generic bike_friend redundant', () => {
+  assert.deepEqual(cyclistLabels({bettundbike:'yes', bike_friend:'yes'}, 2026), ['Bett+Bike']);
+  assert.deepEqual(cyclistLabels({bettundbike:'yes', 'award:accueilvelo':'yes'}, 2026), ['Bett+Bike', 'Accueil Vélo']);
 });

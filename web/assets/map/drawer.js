@@ -282,6 +282,13 @@ export function osmDrawer(layer, p, ll, src){
     one:D.fromFerry||'from the ferry {name}', route:D.viaFerryRoute||'via its ferry route', routes:D.viaFerryRoutes||'via its ferry routes'});
   if(bikesWords) rec.push({label:D.bikesOnBoard||'Bikes on board', value:bikesVia ? bikesWords+' · '+bikesVia : bikesWords});
   if(p.ferry) rec.push(...ferryRows(p.ferry, p.web));
+  // Cyclist label OSM holds on a stay (coverage-provider.md §5), under the
+  // form field's own label and chips, so a stored value replaces it as one row.
+  const cyclistField = ((window.CC_FIELD_SCHEMA || {})[(layer || {}).letter] || []).find(f => f.key === 'cyclistLabel');
+  if(p.osmCyclist && cyclistField){
+    const cv = cyclistField.choices || {};
+    rec.push({label:cyclistField.label, html:true, value:p.osmCyclist.map(t=>`<span class="cc-chip">${escPend(cv[t] != null ? cv[t] : t)}</span>`).join('')});
+  }
   // The row says WHAT this is (an official register entry) and the method
   // says WHOSE. The wording carried the publisher's name until 2026-09-04,
   // which stopped being true the moment a second authority existed.

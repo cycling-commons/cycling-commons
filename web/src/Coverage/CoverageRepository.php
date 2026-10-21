@@ -73,6 +73,10 @@ final class CoverageRepository
         // ferry or train, and whether it costs extra. The drawer turns them
         // into its Bikes on board row (web/assets/map/osm-tags.js).
         'bicycle', 'bicycle:fee',
+        // Cyclist labels on a place to sleep (letter O): Bett+Bike (ADFC),
+        // Accueil Vélo (France Vélo Tourisme) and the generic bike_friend. The
+        // drawer turns them into its Cyclist label row (web/assets/map/osm-tags.js).
+        'bettundbike', 'bett_and_bike:ref', 'award:accueilvelo', 'bike_friend',
         // A ferry dock carries the refs of the ferry routes that end at it and,
         // with no `bicycle` tag of its own, their bike answer, under keys the
         // harvest writes and OSM never does, so the drawer can say where the
