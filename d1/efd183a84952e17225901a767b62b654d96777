@@ -1,0 +1,26 @@
+web/src/Content/ReleaseNotes.php
+  s_a49cab34432046::t_1e519e7a3f25bc 68,86
+  s_a49cab34432046::t_c4d7c80b526845 70,88
+  s_a49cab34432046::t_e9decdb6bbf899 69,87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d1efd183a84952e17225901a767b62b654d96777",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_a49cab34432046": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "24d48133-4635-4c12-8c38-897a8924ca2d",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
