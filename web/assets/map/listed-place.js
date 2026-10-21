@@ -33,7 +33,7 @@ import { uM, uKm } from './units.js';
  * caller that puts the rider's mode back later (the ride check) can remember it.
  */
 export function openListedPlace(layer, f, go){
-  // Stays are drawn by their pool, whose one chip is accessibility (osm-pools.js).
+  // Stays are drawn by their pool, whose chips are accessibility and cyclist label (osm-pools.js).
   const chipHidden = layer.key==='stays' ? !staysAccessible(f) : !chipsPass(layer, f);
   if(chipHidden) showPlaceAnyway(layer.letter, f.id);
   const from = mode();

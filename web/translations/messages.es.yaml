@@ -1838,6 +1838,7 @@ map:
   access_step_free: 'Sin escalones'
   access_handbike: 'Handbike'
   access_wheelchair: 'Silla de ruedas'
+  stay_for_cyclists: 'Alojamiento para ciclistas'
   region_line: 'Valonia, Bélgica'
   sub_everything: 'Todo · catálogo completo'
   sub_confirmed: 'Confirmado · lugares que alguien ha comprobado'

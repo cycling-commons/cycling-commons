@@ -40,7 +40,7 @@ final readonly class PresetInput
     ];
 
     /**
-     * @param array{mode: string, layers: list<string>, overlays: list<string>, seasons: list<string>, bikes: list<string>, facets: array<string, list<string>>, surfaces?: list<string>, routes?: list<string>} $settings
+     * @param array{mode: string, layers: list<string>, overlays: list<string>, seasons: list<string>, bikes: list<string>, facets: array<string, list<string>>, bikeFriendly: bool, surfaces?: list<string>, routes?: list<string>} $settings
      */
     public function __construct(
         public ?int $id,
@@ -96,14 +96,14 @@ final readonly class PresetInput
     /**
      * The settings, normalised: lists sorted, every key present; null on any shape the map does not send.
      *
-     * @return array{mode: string, layers: list<string>, overlays: list<string>, seasons: list<string>, bikes: list<string>, facets: array<string, list<string>>, surfaces?: list<string>, routes?: list<string>}|null
+     * @return array{mode: string, layers: list<string>, overlays: list<string>, seasons: list<string>, bikes: list<string>, facets: array<string, list<string>>, bikeFriendly: bool, surfaces?: list<string>, routes?: list<string>}|null
      */
     public static function settings(mixed $raw): ?array
     {
         if (!\is_array($raw) || array_is_list($raw)) {
             return null;
         }
-        if ([] !== array_diff(array_keys($raw), ['mode', 'layers', 'overlays', 'seasons', 'bikes', 'facets', 'surfaces', 'routes'])) {
+        if ([] !== array_diff(array_keys($raw), ['mode', 'layers', 'overlays', 'seasons', 'bikes', 'facets', 'bikeFriendly', 'surfaces', 'routes'])) {
             return null;
         }
         $mode = $raw['mode'] ?? 'all';
@@ -141,8 +141,13 @@ final readonly class PresetInput
             $facets[$group] = $kept;
         }
         ksort($facets);
+        // The stays Bike-friendly chip: on or off, off when unsaid.
+        $bikeFriendly = $raw['bikeFriendly'] ?? false;
+        if (!\is_bool($bikeFriendly)) {
+            return null;
+        }
 
-        $out = ['mode' => $mode, 'layers' => $layers, 'overlays' => $overlays, 'seasons' => $seasons, 'bikes' => $bikes, 'facets' => $facets];
+        $out = ['mode' => $mode, 'layers' => $layers, 'overlays' => $overlays, 'seasons' => $seasons, 'bikes' => $bikes, 'facets' => $facets, 'bikeFriendly' => $bikeFriendly];
         foreach (['surfaces' => self::SURFACES, 'routes' => self::ROUTES] as $key => $allowed) {
             if (\array_key_exists($key, $raw)) {
                 $list = self::subset($raw[$key], $allowed);

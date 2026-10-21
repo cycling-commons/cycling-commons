@@ -83,6 +83,8 @@ final class PresetCatalog
             'seasons' => array_map(fn (string $s): array => ['value' => $s, 'label' => $this->t->trans('map.season_'.$s)], PresetInput::SEASONS),
             'bikes' => array_map(fn (BikeType $b): array => ['value' => $b->value, 'label' => $this->t->trans($b->labelKey())], BikeType::cases()),
             'facets' => $facets,
+            // The stays Bike-friendly chip, worded as the map's filter words it.
+            'bikeFriendly' => ['label' => $this->t->trans('map.stay_for_cyclists'), 'chip' => $this->t->trans('Bike-friendly')],
         ];
     }
 }

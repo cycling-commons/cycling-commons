@@ -109,6 +109,46 @@ def test_export_geojsonl_shapes(db, tmp_path):
             assert not extra, f"{ref}: undeclared tile prop(s) {extra} (contract drift)"
 
 
+def test_export_carries_the_cyclist_label_by_the_drawer_rule(db, tmp_path):
+    """O's `cyl` prop is what web/assets/map/osm-tags.js cyclistLabels() says,
+    ';'-joined, so the stays filter and the drawer agree (coverage-provider.md §4)."""
+    import datetime
+    year = datetime.date.today().year
+    ensure_schema(db)
+    sid = _src_id(db)
+    rows = {
+        "node/910000001": {"bettundbike": "yes"},
+        "node/910000002": {"bett_and_bike:ref": "NRW-1540"},
+        "node/910000003": {"bettundbike": "no", "bett_and_bike:ref": "NRW-1540"},
+        "node/910000004": {"award:accueilvelo": "2024"},
+        "node/910000005": {"award:accueilvelo": f"{year}-{year + 3}"},
+        "node/910000006": {"award:accueilvelo": f"{year - 10}-{year - 2}"},
+        "node/910000007": {"award:accueilvelo": "maybe"},
+        "node/910000008": {"bike_friend": "yes"},
+        "node/910000009": {"bettundbike": "yes", "award:accueilvelo": "yes", "bike_friend": "yes"},
+        "node/910000010": {},
+    }
+    for i, (ref, extra) in enumerate(rows.items()):
+        db.execute(
+            "INSERT INTO coverage_poi (ref, letter, kind, name, geom, tags, src_region_id)"
+            " VALUES (%s, 'O', 'hotel', NULL, ST_SetSRID(ST_MakePoint(%s, 50.9), 4326), %s, %s)",
+            (ref, 5.0 + i * 0.01, Json({"tourism": "hotel", **extra}), sid))
+    stays = _features(tiles.export_geojsonl(db, tmp_path)[("O", "ZZ")])
+    cyl = {ref: stays[ref]["properties"].get("cyl") for ref in rows}
+    assert cyl == {
+        "node/910000001": "Bett+Bike",
+        "node/910000002": "Bett+Bike",
+        "node/910000003": None,
+        "node/910000004": "Accueil Vélo",
+        "node/910000005": "Accueil Vélo",
+        "node/910000006": None,
+        "node/910000007": None,
+        "node/910000008": "Bike-friendly",
+        "node/910000009": "Bett+Bike;Accueil Vélo",
+        "node/910000010": None,
+    }
+
+
 def test_export_folds_dense_same_kind_points_onto_one_member(db, tmp_path):
     """Five or more points of one letter and kind within about 60 m of each
     other (coverage-provider.md §3 step 5, owner 2026-10-15: a chalet park

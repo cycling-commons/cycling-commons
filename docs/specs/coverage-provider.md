@@ -770,13 +770,14 @@ across the credits.
 | `potable` | B | water kind glyph: `yes` / `no` / absent (nobody said), derived from OSM `drinking_water` and `amenity` tags (data-provider-hierarchy.md §6.3a) |
 | `food` | B | `true` for the shop and eatery half of letter B, absent for the water half; picks the food kind glyph |
 | `acc` | O | stays accessibility filter |
+| `cyl` | O (when labelled) | stays Bike-friendly filter (any value passes): the labels `cyclistLabels()` reads from `bettundbike`, `bett_and_bike:ref`, `award:accueilvelo` and `bike_friend` (§2.1), `;`-joined in a fixed order (`Bett+Bike;Accueil Vélo`); the year in an Accueil Vélo range is judged at tile-build time |
 | `cd` | all (when dated) | OSM `check_date`, only when it is a full `YYYY-MM-DD`, truncated to the day. A witness inside the freshness window drops the `?` badge on the coverage disc (data-provider-hierarchy.md §6.7.7, rung 8); the map compares it as a string to `window.CC_WITNESS_CUTOFF` |
 | `grp` | all (the one member that stands for a folded group) | the group's size (§3 step 5): five or more points of one kind close together, two or more for water, ride the tiles as this one feature; absent on every other feature |
 
 `ref`/`n`/`t`/`ridtok`/`cctok`/`grp` are the **universal** props (every layer, declared
 as `universalTileProps` in `coverage-contract.json`, consumed by
 `tiles.py::_universal_props` and pinned by both language contract suites);
-`kind`/`potable`/`food`/`acc`/`cd` are per-letter extras (`tileProps`). **No cluster props
+`kind`/`potable`/`food`/`acc`/`cyl`/`cd` are per-letter extras (`tileProps`). **No cluster props
 exist:** tippecanoe never injects `point_count`/`clustered`/`sqrt_point_count`/
 `point_count_abbreviated` because nothing clusters. There is a single icon
 layer per `(letter, country)`, `{key}-{cc}-cov`, beside its heatmap layer
@@ -944,7 +945,7 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   call before every country's layers exist yet: the `ridtok`/`cctok` scope
   filter (this section, above) applies to whichever per-country layers are
   mounted so far, and to the rest as `mountInView` adds them. Each call also
-  runs `applyStaysAccessFilter()` once, so the stays access facet reaches every
+  runs `applyStaysAccessFilter()` once, so the stays access and cyclist label facets reach every
   mounted country's stays layer, including one mounted after the facet was
   set. Every coverage layer is added under the selected-POI overlay
   (`cov-sel-icon`, created by `addCoverage()` before the first mount), so a

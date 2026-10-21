@@ -32,6 +32,7 @@ export function readState(){
     seasons: onChips('#boSeason'),
     bikes: onChips('#boBike'),
     facets,
+    bikeFriendly: !!document.querySelector('#labelf .chip.on'),
     // The key's rows (owner 2026-10-15).
     surfaces: [...document.querySelectorAll('.skey-row[data-surf-cls]')].filter(b => b.getAttribute('aria-pressed') !== 'false').map(b => b.dataset.surfCls),
     routes: [...document.querySelectorAll('.skey-row[data-route-grp]')].filter(b => b.getAttribute('aria-pressed') !== 'false').map(b => b.dataset.routeGrp),
@@ -49,6 +50,7 @@ function apply(settings){
     else if(c.kind === 'bike'){ const el = document.querySelector(`#boBike .chip[data-v="${c.value}"]`); if(el) el.click(); }
     else if(c.kind === 'surface'){ const el = document.querySelector(`.skey-row[data-surf-cls="${c.value}"]`); if(el) el.click(); }
     else if(c.kind === 'route'){ const el = document.querySelector(`.skey-row[data-route-grp="${c.value}"]`); if(el) el.click(); }
+    else if(c.kind === 'bikeFriendly'){ const el = document.querySelector('#labelf .chip'); if(el) el.click(); }
     else if(c.kind === 'facet'){ const el = document.querySelector(`#${c.group} .chip[data-v="${c.value.replace(/"/g, '\\"')}"]`); if(el) el.click(); }
   }
 }

@@ -31,6 +31,7 @@ const state = (over = {}) => ({
   effort: {active: new Set(ALL_EFFORT), all: ALL_EFFORT},
   access: {active: new Set(ALL_ACCESS), all: ALL_ACCESS},
   prefFilterOn: false,
+  bikeFriendlyOn: false,
   ...over,
 });
 
@@ -77,4 +78,31 @@ test('narrowing two facets hides the union, not the intersection', async () => {
   });
   const hidden = FX.climbs.filter(c => !climbChipsMatch(c, st)).map(c => c.name);
   assert.deepEqual(hidden.sort(), ['Baraque Michel', 'Mur de Huy', 'Rosier']);
+});
+
+test('Bike-friendly off keeps every stay', async () => {
+  const { bikeFriendlyMatch } = await load();
+  assert.equal(bikeFriendlyMatch([], false), true);
+  assert.equal(bikeFriendlyMatch(undefined, false), true);
+});
+
+test('Bike-friendly on keeps only the stays with a cyclist label', async () => {
+  const { bikeFriendlyMatch } = await load();
+  assert.equal(bikeFriendlyMatch(['Bett+Bike'], true), true);
+  assert.equal(bikeFriendlyMatch(['Bett+Bike', 'Accueil Vélo'], true), true);
+  assert.equal(bikeFriendlyMatch([], true), false);
+  assert.equal(bikeFriendlyMatch(undefined, true), false);
+});
+
+test('Bike-friendly narrows while it is ON, like the preference chip', async () => {
+  const { narrowingCount } = await load();
+  assert.equal(narrowingCount(state({bikeFriendlyOn: true})), 1);
+  assert.equal(narrowingCount(state({bikeFriendlyOn: true, prefFilterOn: true})), 2);
+});
+
+test('a tile cyl value reads as the same label list', async () => {
+  const { tileLabels } = await load();
+  assert.deepEqual(tileLabels('Bett+Bike;Accueil Vélo'), ['Bett+Bike', 'Accueil Vélo']);
+  assert.deepEqual(tileLabels(undefined), []);
+  assert.deepEqual(tileLabels(''), []);
 });

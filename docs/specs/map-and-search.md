@@ -1021,7 +1021,7 @@ change it finds its place again, once a frame and only when it is out of place. 
 
 ### 4.3 Filter chips
 
-Four chip groups, each backed by a real attribute. There is no Freshness
+Four chip groups and one opt-in chip, each backed by a real attribute. There is no Freshness
 filter: no server path produces a freshness value, and a chip that filters
 nothing is a promise the map cannot keep.
 
@@ -1031,6 +1031,7 @@ nothing is a promise the map cannot keep.
 | Climb traffic `#trf` | `Climbs.tr` | |
 | Climb effort `#effortf` | `Climbs.effort` | narrowing semantics keep a climb with no value honest |
 | Stay accessibility `#accessf` | `WhereToSleep.accessibility` | **multi-select** (see below) |
+| Stay Bike-friendly `#labelf` | `WhereToSleep.cyclistLabel`, tile prop `cyl` | **one opt-in chip** (see below) |
 
 - **`accessibility` is a multi-select** (`FieldKind::MultiSelect`, list<string>).
   A stay is routinely step-free *and* handbike-friendly, and a single select
@@ -1043,7 +1044,19 @@ nothing is a promise the map cannot keep.
   string (it is derived from OSM `wheelchair=yes` in
   `pipeline/coverage/tiles.py`), and the MapLibre `in` expression over it is
   unaffected.
-- **All four share `attrMatch()`'s narrowing semantics.** With every chip
+- **Bike-friendly is one opt-in chip (`.f-optin`), not a group.** A rider
+  cannot tell Bett+Bike from Accueil Vélo from a generic bike-friendly tag, so
+  the filter asks one question. Off, nothing is hidden; on, only a stay with
+  any cyclist label passes (`bikeFriendlyMatch()` in `assets/map/filters.js`).
+  Coverage stays match on `has cyl` (`applyStaysAccessFilter()` in
+  `assets/map/render.js`); pool stays match their stored `cyclistLabel`, or the
+  `cyl` of their tile. Like the preference chip, it counts in the pill while it
+  is on and Show all turns it off. A map preset stores it as `bikeFriendly`
+  ([map-presets.md](map-presets.md) section 1). The filter asks one question,
+  but the details keep the scheme's own name: the drawer's Cyclist label row
+  and the stay form always say Bett+Bike or Accueil Vélo, never only
+  Bike-friendly.
+- **The four chip groups share `attrMatch()`'s narrowing semantics.** With every chip
   on nothing is hidden, including items with no value; deselecting any option
   also hides valueless items, which cannot be confirmed to match. A chip set
   that lists fewer values than `CatalogFormRegistry` offers would make a climb

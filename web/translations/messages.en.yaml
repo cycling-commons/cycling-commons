@@ -1831,6 +1831,7 @@ map:
   access_step_free: 'Step-free'
   access_handbike: 'Handbike'
   access_wheelchair: 'Wheelchair'
+  stay_for_cyclists: 'Stays for cyclists'
   region_line: 'Wallonia, Belgium'
   sub_everything: 'Everything · full catalog'
   sub_confirmed: 'Confirmed · places somebody checked'

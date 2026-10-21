@@ -13,12 +13,23 @@ export function attrMatch(value, activeSet, allSet){
   return value ? activeSet.has(value) : true;
 }
 
+/* The stays Bike-friendly chip (coverage-provider.md §4, `cyl`), opt-in:
+   while it is on, only a stay with a cyclist label passes. */
+export function bikeFriendlyMatch(labels, on){
+  return !on || (Array.isArray(labels) && labels.length > 0);
+}
+
+/** A tile's `cyl` prop ("Bett+Bike;Accueil Vélo") as the label list. */
+export function tileLabels(cyl){
+  return String(cyl ?? '').split(';').filter(Boolean);
+}
+
 /** A chip group narrows the map exactly when something in it is deselected. */
 export function narrowed(activeSet, allSet){
   return !!(activeSet && allSet) && activeSet.size < allSet.size;
 }
 
-// The four chip facets narrow by deselection (.f-match). Preference is .f-optin.
+// The four chip facets narrow by deselection (.f-match). Preference and Bike-friendly are .f-optin.
 const FACETS = ['surface', 'traffic', 'effort', 'access'];
 
 /** How many filter groups are currently making the map show less. */
@@ -28,7 +39,8 @@ export function narrowingCount(state){
     const g = state[key];
     if(g && narrowed(g.active, g.all)) n++;
   }
-  if(state.prefFilterOn) n++;   // .f-optin: this one narrows while it is ON
+  if(state.prefFilterOn) n++;   // .f-optin: these narrow while they are ON
+  if(state.bikeFriendlyOn) n++;
   return n;
 }
 

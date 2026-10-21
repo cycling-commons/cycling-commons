@@ -229,6 +229,7 @@ test('every filter group declares how it narrows', () => {
     assert.ok(new RegExp(`class="chips f-match" id="${id}"`).test(s), `#${id} is not marked f-match`);
   }
   assert.ok(/class="chips f-optin"/.test(s), 'the opt-in preference filter is not marked f-optin');
+  assert.ok(/class="chips f-optin" id="labelf"/.test(s), 'the Bike-friendly chip is not marked f-optin');
 });
 
 test('the overlays left the top-right corner', () => {
@@ -433,6 +434,7 @@ test('a filter only appears when its layer can be filtered', () => {
   }
   const stays = s.slice(s.indexOf('data-layer="stays"'));
   assert.ok(stays.includes('id="accessf"'), '#accessf is not inside the stays filter group');
+  assert.ok(stays.includes('id="labelf"'), '#labelf is not inside the stays filter group');
   // Header and chips have to hide together, so both live under the wrapper.
   assert.ok(/<div class="fsub" data-layer="climbs" hidden>\s*<h4 class="fh">/.test(s),
     'the climbs filter header is outside its wrapper');

@@ -1238,6 +1238,7 @@ map:
   access_step_free: 'Sans marches'
   access_handbike: 'Handbike'
   access_wheelchair: 'Fauteuil roulant'
+  stay_for_cyclists: 'Hébergements pour cyclistes'
   region_line: 'Wallonie, Belgique'
   sub_everything: 'Tout · catalogue complet'
   sub_confirmed: 'Confirmé · lieux vérifiés par quelqu''un'

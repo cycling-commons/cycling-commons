@@ -76,6 +76,7 @@ final class MapPresetControllerTest extends WebTestCase
             'seasons' => ['summer'],
             'bikes' => ['Gravel'],
             'facets' => ['effortf' => ['Steady', 'Challenging']],
+            'bikeFriendly' => false,
         ];
     }
 
@@ -185,6 +186,7 @@ final class MapPresetControllerTest extends WebTestCase
         yield 'unknown season' => [['settings' => self::settings(['seasons' => ['monsoon']])]];
         yield 'unknown facet group' => [['settings' => self::settings(['facets' => ['colour' => ['Red']]])]];
         yield 'a facet value that is not a string' => [['settings' => self::settings(['facets' => ['sqf' => [1]]])]];
+        yield 'a Bike-friendly that is not a boolean' => [['settings' => self::settings(['bikeFriendly' => 'yes'])]];
         yield 'settings not an object' => [['settings' => 'curated']];
         yield 'unknown surface class' => [['settings' => self::settings(['surfaces' => ['lava']])]];
         yield 'unknown route type' => [['settings' => self::settings(['routes' => ['motorway']])]];
@@ -209,6 +211,22 @@ final class MapPresetControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(201);
         $client->request('GET', '/map/presets');
         self::assertSame(['sqf' => ['Smooth']], self::json($client)['presets'][0]['settings']['facets']);
+    }
+
+    public function testTheBikeFriendlyChipIsKeptAndOffWhenUnsaid(): void
+    {
+        $client = static::createClient();
+        $client->loginUser(self::user('preset-bikefriendly@test.test'));
+        self::post($client, '/map/presets/save', self::body(['settings' => self::settings(['bikeFriendly' => true])]));
+        self::assertResponseStatusCodeSame(201);
+        $settings = self::settings();
+        unset($settings['bikeFriendly']);
+        self::post($client, '/map/presets/save', self::body(['name' => 'No chip said', 'settings' => $settings]));
+        self::assertResponseStatusCodeSame(201);
+        $client->request('GET', '/map/presets');
+        $kept = array_column(self::json($client)['presets'], 'settings', 'name');
+        self::assertTrue($kept['Gravel weekend']['bikeFriendly']);
+        self::assertFalse($kept['No chip said']['bikeFriendly']);
     }
 
     public function testTheSeventhPresetIs409ButAnUpdateStillLands(): void

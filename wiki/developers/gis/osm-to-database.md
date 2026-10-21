@@ -245,7 +245,7 @@ and 36 are both correct and describe different things.
 |---|---|---|
 | **selector** | decides whether an object is kept at all, and is re-read at tile-build time to derive the type label | 11 |
 | **drawer** | `TAG_WHITELIST`: the keys the item panel is allowed to render | 36 |
-| **tile-derived** | read into a short tile property rather than shown as text: `amenity`, `check_date`, `drinking_water`, `shop`, `wheelchair` | 5 |
+| **tile-derived** | read into a short tile property rather than shown as text: `amenity`, `award:accueilvelo`, `bett_and_bike:ref`, `bettundbike`, `bike_friend`, `check_date`, `drinking_water`, `shop`, `wheelchair` | 9 |
 | **stored** | the union, and the only thing the harvest actually keeps | 47 |
 
 Three keys sit in all three sets (`amenity`, `drinking_water`, `shop`), because the pin's colour,

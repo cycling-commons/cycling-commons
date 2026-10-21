@@ -24,7 +24,7 @@ test('Road surface is an overlay only: a preset naming it as a layer loses it th
 
 test('normalize sorts the lists, drops unknown keys and fills what is missing', () => {
   const n = normalize({ mode: 'all', layers: ['water', 'climbs', 'nope'], overlays: ['routes', 'surface'], bikes: ['Road', 'Gravel'], facets: { effortf: ['Tough', 'Steady'], colour: ['Red'] } });
-  assert.deepEqual(n, { mode: 'all', layers: ['climbs', 'water'], overlays: ['routes', 'surface'], seasons: [], bikes: ['Gravel', 'Road'], facets: { effortf: ['Steady', 'Tough'] } });
+  assert.deepEqual(n, { mode: 'all', layers: ['climbs', 'water'], overlays: ['routes', 'surface'], seasons: [], bikes: ['Gravel', 'Road'], facets: { effortf: ['Steady', 'Tough'] }, bikeFriendly: false });
   assert.equal(normalize({}).mode, 'all');
 });
 
@@ -70,4 +70,15 @@ test('a preset carries the key\'s surface classes and route types; absent means 
   assert.deepEqual(clicks.filter(c => c.kind === 'surface').map(c => c.value), ['paved', 'pave', 'dirt', 'rock', 'unverified']);
   assert.deepEqual(clicks.filter(c => c.kind === 'route').map(c => c.value), ['national', 'mtb']);
   assert.deepEqual(clicksFor(cur, { mode: 'all', layers: [], overlays: [], seasons: [], bikes: [], facets: {} }, {}), [], 'an old preset leaves the key alone');
+});
+
+test('the Bike-friendly chip is a preset switch: one tap when it differs, none when it agrees', () => {
+  const off = { mode: 'all', layers: [], overlays: [], seasons: [], bikes: [], facets: {} };
+  const on = { ...off, bikeFriendly: true };
+  assert.equal(normalize(off).bikeFriendly, false, 'unsaid is off');
+  assert.equal(normalize({ ...off, bikeFriendly: 'yes' }).bikeFriendly, false, 'only true is on');
+  assert.deepEqual(clicksFor(off, on, {}), [{ kind: 'bikeFriendly' }]);
+  assert.deepEqual(clicksFor(on, off, {}), [{ kind: 'bikeFriendly' }]);
+  assert.deepEqual(clicksFor(on, on, {}), []);
+  assert.ok(!same(off, on));
 });

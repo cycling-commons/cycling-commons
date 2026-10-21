@@ -54,7 +54,7 @@ def test_letter_specific_tile_props():
     # and the badge on a coverage disc reads it.
     assert contract.letters["B"].tile_props == ["potable", "food", "cd"]
     assert contract.letters["D"].tile_props == ["kind", "cd"]
-    assert contract.letters["O"].tile_props == ["acc", "cd"]
+    assert contract.letters["O"].tile_props == ["acc", "cyl", "cd"]
     # `kind` joined P and Q on 2026-10-07, G on 2026-10-08: one kind per OSM tag, one glyph per kind.
     for letter in ("G", "P", "Q"):
         assert contract.letters[letter].tile_props == ["kind", "cd"]

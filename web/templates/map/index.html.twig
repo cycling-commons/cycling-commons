@@ -364,6 +364,9 @@
         </div>
 
         <div class="fsub" data-layer="stays" hidden>
+        {# One opt-in chip (coverage-provider.md §4, `cyl`): on keeps only stays with a cyclist label. #}
+        <h4 class="fh">{{ 'map.stay_for_cyclists'|trans }}</h4>
+        <div class="chips f-optin" id="labelf"><span class="chip" role="button" tabindex="0" aria-pressed="false">{{ 'Bike-friendly'|trans }}</span></div>
         <h4 class="fh">{{ 'map.stay_access'|trans }}</h4>
         <div class="chips f-match" id="accessf">
           <span class="chip on" data-v="Step-free access">{{ 'map.access_step_free'|trans }}</span><span class="chip on" data-v="Handbike-friendly">{{ 'map.access_handbike'|trans }}</span>

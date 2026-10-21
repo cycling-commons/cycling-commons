@@ -555,6 +555,18 @@ export function initChips(){
     applyStaysAccessFilter();
     render();
   });
+  // Stays Bike-friendly (.f-optin): one chip, on narrows to stays with a cyclist label.
+  document.querySelectorAll('#labelf .chip').forEach(c=>{
+    const flip=()=>{
+      const on=c.classList.toggle('on');
+      c.setAttribute('aria-pressed', on?'true':'false');
+      syncFacetChips();
+      applyStaysAccessFilter();
+      render();
+    };
+    c.onclick=flip;
+    c.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); flip(); } };
+  });
 
   // Ride-heatmap: points are fetched on first On — await, then re-read the button.
   document.querySelectorAll('#heattoggle button').forEach(b=>b.onclick=async()=>{

@@ -96,7 +96,7 @@ export function poolPinDrawn(key, id){
 export function poolDiscWaits(key, props, zoom, listed){
   return !listed && zoom < iconMinZoom(key) && pinClasses(props||{}).includes('disc');
 }
-/* The one chip a pool pin answers to: stays accessibility. A place shown anyway
+/* The chips a pool pin answers to: the stays accessibility and cyclist label. A place shown anyway
    (render.js showPlaceAnyway, docs/specs/map-and-search.md §9) passes. */
 function poolChipsPass(layer, key, p){
   if(key!=='stays' || staysAccessible(p)) return true;

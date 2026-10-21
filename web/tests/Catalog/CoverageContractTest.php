@@ -115,7 +115,7 @@ final class CoverageContractTest extends TestCase
         // and drops the badge on a coverage disc (data-provider-hierarchy.md §6.7.7).
         self::assertSame(['potable', 'food', 'cd'], $letters['B']['tileProps']);
         self::assertSame(['kind', 'cd'], $letters['D']['tileProps']);
-        self::assertSame(['acc', 'cd'], $letters['O']['tileProps']);
+        self::assertSame(['acc', 'cyl', 'cd'], $letters['O']['tileProps']);
         // G, P and Q carry their kind: one glyph per OSM tag (osm-data-architecture.md §5a).
         foreach (['G', 'P', 'Q'] as $letter) {
             self::assertSame(['kind', 'cd'], $letters[$letter]['tileProps']);

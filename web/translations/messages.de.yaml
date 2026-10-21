@@ -1243,6 +1243,7 @@ map:
   access_step_free: 'Stufenfrei'
   access_handbike: 'Handbike'
   access_wheelchair: 'Rollstuhl'
+  stay_for_cyclists: 'Unterkünfte für Radfahrende'
   region_line: 'Wallonien, Belgien'
   sub_everything: 'Alles · kompletter Katalog'
   sub_confirmed: 'Bestätigt · von jemandem geprüfte Orte'

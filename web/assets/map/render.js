@@ -14,7 +14,7 @@ import { covShownCount, coverageTotal, syncCoverageLayers, covIconFilter,
          COVERAGE_CCS, COVERAGE_ON, COVERAGE_KEYS } from './coverage.js';
 import { openDrawer, planPlace } from './drawer.js';
 import { NO_VALIDATE } from './tile-sources.js';
-import { attrMatch, narrowingCount, climbChipsMatch, modeShows, placeKey, createShownAnyway } from './filters.js';
+import { attrMatch, bikeFriendlyMatch, tileLabels, narrowingCount, climbChipsMatch, modeShows, placeKey, createShownAnyway } from './filters.js';
 import { fanPin, fanOffsetOf, scheduleFanOut } from './pin-fan.js';
 import { plannerTakesLineClick } from './plan-state.js';
 
@@ -369,21 +369,29 @@ export const ALL_TRAF=new Set(['Traffic-free','Quiet','Moderate','Busy']);
 /* attrMatch lives in filters.js (pure; answers 'why is my data missing?'). */
 export { attrMatch };
 export let activeEffort=chipSet('effortf'), activeAccess=chipSet('accessf');
+// The stays Bike-friendly chip (#labelf, .f-optin): on narrows to labelled stays.
+const bikeFriendlyChip = () => !!document.querySelector('#labelf .chip.on');
+export let bikeFriendlyOn = bikeFriendlyChip();
 
 // Chip facets and the preference toggle are owned here but driven from the rail.
 export function syncFacetChips(){
   activeSurface=chipSet('sqf'); activeTraffic=chipSet('trf');
-  activeEffort=chipSet('effortf'); activeAccess=chipSet('accessf');
+  activeEffort=chipSet('effortf'); activeAccess=chipSet('accessf'); bikeFriendlyOn=bikeFriendlyChip();
 }
 export const prefFilterEnabled = () => prefFilterOn;
 export function setPrefFilter(on){ prefFilterOn=!!on; }
-// Stays-accessibility as one exported predicate (osm-pools.js and coverage.js).
-export const staysAccessible = p => attrMatch(p.accessibility, activeAccess, ALL_ACCESS);
-// Stays coverage tiles narrow on the accessibility filter; clustered stays in updateConfMarkers.
+// The stays chips (accessibility, Bike-friendly) as one exported predicate
+// (osm-pools.js, listed-place.js): a stay passes when it passes both.
+export const staysAccessible = p => attrMatch(p.accessibility, activeAccess, ALL_ACCESS)
+  && bikeFriendlyMatch(Array.isArray(p.cyclistLabel) && p.cyclistLabel.length ? p.cyclistLabel : tileLabels(p.cyl), bikeFriendlyOn);
+// Stays coverage tiles narrow on the stays chips; clustered stays in updateConfMarkers.
 export function applyStaysAccessFilter(){
-  // docs/specs/coverage-provider.md §6 — coverage stays' icons narrow on the flat `acc` tile prop.
-  const extra = (!activeAccess || activeAccess.size===ALL_ACCESS.size) ? null
+  // docs/specs/coverage-provider.md §6: coverage stays' icons narrow on the flat `acc` and `cyl` tile props.
+  const access = (!activeAccess || activeAccess.size===ALL_ACCESS.size) ? null
     : ['any', ['!', ['has', 'acc']], ['in', ['get','acc'], ['literal', Array.from(activeAccess)]]];
+  // Bike-friendly: a stay whose tile carries any cyclist label.
+  const label = bikeFriendlyOn ? ['has', 'cyl'] : null;
+  const extra = access && label ? ['all', access, label] : (access || label);
   // Stays split per country: narrow every stays-<cc>-cov icon layer. One
   // filter object for all of them, unvalidated: see tile-sources.js NO_VALIDATE.
   const f = covIconFilter(extra);
@@ -409,6 +417,7 @@ export function chipState(){
     effort: {active: activeEffort, all: ALL_EFFORT},
     access: {active: activeAccess, all: ALL_ACCESS},
     prefFilterOn: prefFilterOn && PREFS.bikes.length > 0,
+    bikeFriendlyOn,
   };
 }
 

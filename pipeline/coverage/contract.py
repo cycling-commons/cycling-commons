@@ -23,7 +23,10 @@ LETTERS = frozenset("BCDFGOPQ")
 # per-letter tile properties. They must survive the storedTagKeys trim or the
 # derived tile column is silently always NULL; load_contract enforces that, and
 # test_tiles.py pins this constant to the SQL so the two cannot drift.
-TILE_DERIVED_TAG_KEYS = frozenset({"amenity", "check_date", "drinking_water", "shop", "wheelchair"})
+TILE_DERIVED_TAG_KEYS = frozenset({
+    "amenity", "award:accueilvelo", "bett_and_bike:ref", "bettundbike", "bike_friend",
+    "check_date", "drinking_water", "shop", "wheelchair",
+})
 
 # Tag keys parse.py writes itself, never read from OSM: what a ferry dock
 # inherits from the `route=ferry` ways that end at it (coverage-provider.md §3).

@@ -34,6 +34,8 @@ export function normalize(s){
     seasons: sortedUnique(src.seasons, SEASONS),
     bikes: sortedUnique(src.bikes),
     facets,
+    // The stays Bike-friendly chip (.f-optin): on or off, off when unsaid.
+    bikeFriendly: src.bikeFriendly === true,
   };
   if(Array.isArray(src.surfaces)) out.surfaces = sortedUnique(src.surfaces, SURFACES);
   if(Array.isArray(src.routes)) out.routes = sortedUnique(src.routes, ROUTE_TYPES);
@@ -46,7 +48,7 @@ export function same(a, b){ return JSON.stringify(normalize(a)) === JSON.stringi
 /**
  * The taps that take the panel from `current` to `target`, each a control
  * whose state differs: mode first, then the layer rows, the overlay rows, the
- * season and bike chips, the facet chips. `facetAll` names every chip of each
+ * season and bike chips, the facet chips, the Bike-friendly chip. `facetAll` names every chip of each
  * facet group; a group the target leaves out means every chip on.
  */
 export function clicksFor(current, target, facetAll){
@@ -66,6 +68,7 @@ export function clicksFor(current, target, facetAll){
     const now = c.facets[g] || all, want = t.facets[g] || all;
     for(const v of all){ if(now.includes(v) !== want.includes(v)) out.push({ kind: 'facet', group: g, value: v }); }
   }
+  if(c.bikeFriendly !== t.bikeFriendly) out.push({ kind: 'bikeFriendly' });
   return out;
 }
 

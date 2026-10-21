@@ -43,6 +43,23 @@ _POTABLE_SQL = ("CASE WHEN tags->>'drinking_water' = 'yes' OR "
 _FOOD_SQL = ("CASE WHEN tags ? 'shop' OR tags->>'amenity' IN "
              "('cafe', 'fast_food', 'restaurant', 'bar', 'pub') THEN true END")
 
+# O's cyclist labels, the rule of cyclistLabels() in web/assets/map/osm-tags.js:
+# Bett+Bike is bettundbike=yes or a Bett+Bike reference without bettundbike=no;
+# Accueil Vélo is award:accueilvelo as yes, an award year, or a range whose end
+# is this year or later (the CASE keeps the cast off values the regex refused);
+# bike_friend=yes counts only when no named label is there.
+_AV = "lower(btrim(tags->>'award:accueilvelo'))"
+_BETT_BIKE_SQL = ("(lower(btrim(tags->>'bettundbike')) = 'yes' OR "
+                  "(coalesce(lower(btrim(tags->>'bettundbike')), '') <> 'no' AND "
+                  "coalesce(btrim(tags->>'bett_and_bike:ref'), '') <> ''))")
+_ACCUEIL_VELO_SQL = ("(" + _AV + " ~ '^(yes|\\d{4})$' OR CASE WHEN " + _AV + " ~ '^\\d{4}\\s*-\\s*\\d{4}$' "
+                     "THEN right(" + _AV + ", 4)::int >= extract(year FROM current_date) ELSE false END)")
+_CYCLIST_SQL = ("NULLIF(concat_ws(';', "
+                "CASE WHEN " + _BETT_BIKE_SQL + " THEN 'Bett+Bike' END, "
+                "CASE WHEN " + _ACCUEIL_VELO_SQL + " THEN 'Accueil Vélo' END, "
+                "CASE WHEN lower(btrim(tags->>'bike_friend')) = 'yes' AND NOT (coalesce(" + _BETT_BIKE_SQL + ", false) "
+                "OR coalesce(" + _ACCUEIL_VELO_SQL + ", false)) THEN 'Bike-friendly' END), '')")
+
 _EXTRA_SQL = {
     "kind": "'kind', kind",
     # B: three answers, because the pin draws three kinds of tap
@@ -63,6 +80,10 @@ _EXTRA_SQL = {
     # vocabulary (web/assets/map/render.js applyStaysAccessFilter); the only OSM-derivable member
     # is wheelchair=yes → 'Wheelchair-accessible'. Everything else stays NULL.
     "acc": "'acc', CASE WHEN tags->>'wheelchair' = 'yes' THEN 'Wheelchair-accessible' END",
+    # O: the cyclist labels a stay carries, ';'-joined in a fixed order
+    # ("Bett+Bike;Accueil Vélo"); the stays Cyclist label filter matches each
+    # label as a substring (web/assets/map/render.js). NULL (stripped) when none.
+    "cyl": "'cyl', " + _CYCLIST_SQL,
     # Every letter: a dated OSM check_date is a published witness
     # (data-provider-hierarchy.md §6.7.7, rung 8), and the coverage disc drops
     # its "?" when the date is inside the freshness window. Only a full

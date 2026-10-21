@@ -1240,6 +1240,7 @@ map:
   access_step_free: 'Drempelvrij'
   access_handbike: 'Handbike'
   access_wheelchair: 'Rolstoel'
+  stay_for_cyclists: 'Verblijven voor fietsers'
   region_line: 'Wallonië, België'
   sub_everything: 'Alles · volledige catalogus'
   sub_confirmed: 'Bevestigd · plekken die iemand heeft gecontroleerd'
