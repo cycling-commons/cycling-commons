@@ -26,11 +26,29 @@ final class RegionDerivations
     ) {
     }
 
-    /** Neighbours and ranking outlines; run right after the region rows change. */
+    /** Neighbours, ranking outlines and drawn silhouettes; run right after the region rows change. */
     public function shapes(): void
     {
         $this->db->executeStatement(self::adjacencySql());
         $this->db->executeStatement(self::OUTLINE_SQL);
+        $this->db->executeStatement(self::silhouetteSql());
+    }
+
+    /**
+     * The shape a region page draws (RegionSilhouette): the same rings as the
+     * ranking outline, simplified at 0.008 degrees (about 800 m) instead of
+     * 0.05, so a province has about four times the points and reads as
+     * itself (owner 2026-10-20: double the detail, then double it again). Its own column, so the map's
+     * region registry and the globe keep the lighter outline they download.
+     * Shared with Version20261020030000.
+     */
+    public static function silhouetteSql(): string
+    {
+        return str_replace(
+            ['UPDATE region r SET outline = ', 'ST_SimplifyPreserveTopology(d.geom, 0.05)'],
+            ['UPDATE region r SET silhouette = ', 'ST_SimplifyPreserveTopology(d.geom, 0.008)'],
+            self::OUTLINE_SQL,
+        );
     }
 
     /**

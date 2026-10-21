@@ -9,7 +9,9 @@ namespace App\Catalog;
 use Doctrine\DBAL\Connection;
 
 /**
- * Inline SVG country outline, with a region filled or alone. Uses `region.outline`, not a slippy map.
+ * Inline SVG country outline, with a region filled or alone. Uses `region.silhouette`
+ * (finer than the ranking `outline`, RegionDerivations::silhouetteSql()), else
+ * `region.outline` for a row not derived since; not a slippy map.
  *
  * @api
  */
@@ -31,10 +33,10 @@ final class RegionSilhouette
      */
     public function forRegion(int $regionId, string $countryCode): ?array
     {
-        $regionRings = $this->rings('SELECT outline FROM region WHERE id = :id', ['id' => $regionId]);
+        $regionRings = $this->rings('SELECT COALESCE(silhouette, outline) FROM region WHERE id = :id', ['id' => $regionId]);
         // admin_level=2 for the same country — not LIMIT 1 on country_code (that would pick a province).
         $countryRings = $this->rings(
-            'SELECT outline FROM region WHERE country_code = :cc AND admin_level = 2 LIMIT 1',
+            'SELECT COALESCE(silhouette, outline) FROM region WHERE country_code = :cc AND admin_level = 2 LIMIT 1',
             ['cc' => $countryCode],
         );
 
@@ -66,7 +68,7 @@ final class RegionSilhouette
     public function forCountry(string $countryCode): ?array
     {
         $rings = $this->rings(
-            'SELECT outline FROM region WHERE country_code = :cc AND admin_level = 2 LIMIT 1',
+            'SELECT COALESCE(silhouette, outline) FROM region WHERE country_code = :cc AND admin_level = 2 LIMIT 1',
             ['cc' => $countryCode],
         );
         $box = self::bbox($rings);

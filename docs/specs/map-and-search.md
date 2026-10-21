@@ -870,6 +870,14 @@ languages.
   not the approving curator (owner 2026-10-01). Pinned by
   `PlaceTextProposalTest` and `RegionsPagesTest`.
 
+  **Four times the detail in the shape (2026-10-20).** The country outline with
+  the region filled is drawn from `region.silhouette`, the same rings as the
+  ranking `outline` simplified at 0.008 degrees (about 800 m) instead of
+  0.05 (about four times the points in the main ring: Noord-Holland 16 to
+  68, the Netherlands 67 to 424), the region and the country alike, kept current by
+  `RegionDerivations::shapes()` and filled by `Version20261020030000`. The
+  map's region registry and the globe keep the lighter `outline`.
+
   **The hero opens with the same three figures as `/coverage`**, in the same
   order and under the same labels: reference items on file, verified items,
   routes. With only the last two, a region holding thousands of reference
