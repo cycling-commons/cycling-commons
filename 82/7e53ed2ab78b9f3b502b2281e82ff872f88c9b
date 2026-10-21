@@ -1,0 +1,79 @@
+web/src/Routing/LocalizedPath.php
+  s_a49cab34432046::t_b733c241261bdf 80-88
+web/tests/Roadmap/RoadmapDoneTest.php
+  s_a49cab34432046::t_1bcc33e26258f2 1-12,14-15,17-47,49-73,75-76,78-103,106-110
+  s_a49cab34432046::t_2c8c82d8e6b47f 13,104-105
+  s_a49cab34432046::t_46be1e765faba5 16,48,74,77
+web/templates/pages/roadmap.html.twig
+  s_a49cab34432046::t_9e66d4c800df2c 13-17,33,111-129
+  s_a49cab34432046::t_30af15235a5600 130
+docs/specs/roadmap-and-changelog.md
+  s_a49cab34432046::t_49298068e8325c 301-302,308-330
+  s_a49cab34432046::t_555d3d92175104 222-228,275
+  s_a49cab34432046::t_bd74580711391b 331
+web/templates/pages/pages.html.twig
+  s_a49cab34432046::t_ddcdb18a149778 50,77
+web/translations/messages.de.yaml
+  s_a49cab34432046::t_6fd5a7eebc927a 5159
+  s_a49cab34432046::t_f98789ae8b5c84 283-284,3826-3827,5122-5123,5158
+  s_a49cab34432046::t_37c4c4a7b4c613 5160-5162
+web/src/Roadmap/RoadmapItems.php
+  s_a49cab34432046::t_0a0b93345794ef 69-96
+  s_a49cab34432046::t_b733c241261bdf 20-21
+  s_a49cab34432046::t_0e8b97d21d6141 68
+  s_a49cab34432046::t_a43e83e854c1c5 97-98
+web/translations/messages.en.yaml
+  s_a49cab34432046::t_f98789ae8b5c84 283-284,3840-3841,5139-5140,5175-5176
+  s_a49cab34432046::t_a045a00a37dcb6 5177-5179
+web/templates/pages/roadmap_done.html.twig
+  s_a49cab34432046::t_c5fff4a56d442e 1-52
+web/tests/Roadmap/RoadmapSayTest.php
+  s_a49cab34432046::t_1bcc33e26258f2 73-74
+docs/specs/page-caching.md
+  s_a49cab34432046::t_49298068e8325c 297
+web/translations/messages.nl.yaml
+  s_a49cab34432046::t_f98789ae8b5c84 283-284,3825-3826,5121-5122,5157-5158
+  s_a49cab34432046::t_9daa0957bc48c1 5159-5161
+web/src/Content/ReleaseNotes.php
+  s_a49cab34432046::t_6580b749f357b7 27-32
+web/assets/styles/page/pages/roadmap.css
+  s_a49cab34432046::t_9e66d4c800df2c 95-116
+  s_a49cab34432046::t_6580b749f357b7 13-14
+web/translations/messages.es.yaml
+  s_a49cab34432046::t_f98789ae8b5c84 285-286,3848-3849,5149-5150,5185-5186
+  s_a49cab34432046::t_5c06b90b6903cc 5187-5189
+web/migrations/Version20261021010000.php
+  s_a49cab34432046::t_6580b749f357b7 1-40
+web/src/Controller/SitemapController.php
+  s_a49cab34432046::t_b733c241261bdf 85
+web/src/Controller/RoadmapController.php
+  s_a49cab34432046::t_b733c241261bdf 41-43,54-56,87-104
+web/src/EventSubscriber/PublicPageCacheSubscriber.php
+  s_a49cab34432046::t_b733c241261bdf 90
+web/src/Roadmap/Entity/RoadmapItem.php
+  s_a49cab34432046::t_6580b749f357b7 46
+web/translations/messages.fr.yaml
+  s_a49cab34432046::t_f98789ae8b5c84 281-282,3821-3822,5117-5118,5153-5154
+  s_a49cab34432046::t_9138b684bff61b 5155-5157
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "827e53ed2ab78b9f3b502b2281e82ff872f88c9b",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_a49cab34432046": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "24d48133-4635-4c12-8c38-897a8924ca2d",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
