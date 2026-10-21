@@ -43,7 +43,7 @@ class RoadmapItem
     #[ORM\Column(type: Types::BIGINT)]
     private ?int $id = null;
 
-    /** `now`, `next` or `later` (ReleaseNotes::STATUSES). */
+    /** `progress`, `now`, `next` or `later` (ReleaseNotes::STATUSES). */
     #[ORM\Column(type: Types::STRING, length: 8)]
     private string $status;
 

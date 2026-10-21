@@ -47,6 +47,7 @@
     {id: 'credits',    href: path('credits'),    x: 270, y: 415, t: {x: 225, y: 905, lp: 'right'}, capital: false, h: 'pages.card_credits_h'|trans,    p: 'pages.card_credits_p'|trans},
     {id: 'changelog',  href: path('changelog'),  x: 420, y: 350, t: {x: 220, y: 955, lp: 'above'}, capital: false, h: 'footer.changelog'|trans,        p: 'changelog.lead'|trans|striptags},
     {id: 'roadmap',    href: path('roadmap'),    x: 545, y: 350, t: {x: 290, y: 975}, capital: false, h: 'roadmap.kicker'|trans,  p: 'roadmap.lead'|trans|striptags},
+    {id: 'roadmapdone', href: path('roadmap_done'), x: 560, y: 420, t: {x: 290, y: 1010, lp: 'left'}, capital: false, h: 'pages.card_roadmapdone_h'|trans, p: 'pages.card_roadmapdone_p'|trans},
   ]},
   {id: 'account', name: 'pages.group_account'|trans, box: {x: 650, y: 300, w: 330, h: 150}, t: {x: 22, y: 580, w: 308, h: 170}, pages: [
     {id: 'account',  href: account_href,     x: 740, y: 405, t: {x: 135, y: 665, lp: 'left'}, capital: false, h: 'pages.card_login_h'|trans,    p: 'pages.card_login_p'|trans},
@@ -73,7 +74,7 @@
   {a: 'route', b: 'vote', kind: 'trail'}, {a: 'improve', b: 'join', kind: 'trail'}, {a: 'join', b: 'wiki', kind: 'trail'}, {a: 'join', b: 'contributors', kind: 'trail'}, {a: 'map', b: 'scout', kind: 'trail'},
   {a: 'account', b: 'profile', kind: 'track'}, {a: 'profile', b: 'messages', kind: 'track'}, {a: 'profile', b: 'settings', kind: 'track'}, {a: 'contributors', b: 'profile', kind: 'track'},
   {a: 'map', b: 'mapkey', kind: 'path'}, {a: 'map', b: 'regions', kind: 'path'}, {a: 'map', b: 'coverage', kind: 'path'},
-  {a: 'developers', b: 'licenses', kind: 'path'}, {a: 'developers', b: 'api', kind: 'path'}, {a: 'changelog', b: 'blog', kind: 'path'}, {a: 'licenses', b: 'credits', kind: 'path'}, {a: 'changelog', b: 'roadmap', kind: 'path'}, {a: 'changelog', b: 'known', kind: 'path', bend: 0, wobble: 0.3, via: [{x: 485, y: 470}, {x: 485, y: 560}]},
+  {a: 'developers', b: 'licenses', kind: 'path'}, {a: 'developers', b: 'api', kind: 'path'}, {a: 'changelog', b: 'blog', kind: 'path'}, {a: 'licenses', b: 'credits', kind: 'path'}, {a: 'changelog', b: 'roadmap', kind: 'path'}, {a: 'roadmap', b: 'roadmapdone', kind: 'path'}, {a: 'changelog', b: 'known', kind: 'path', bend: 0, wobble: 0.3, via: [{x: 485, y: 470}, {x: 485, y: 560}]},
   {a: 'known', b: 'bug', kind: 'path'}, {a: 'bug', b: 'report', kind: 'path'}, {a: 'report', b: 'a11y', kind: 'path'}, {a: 'contact', b: 'report', kind: 'path', via: [{x: 540, y: 622}], t: {via: [{x: 316, y: 1280}, {x: 300, y: 1195}]}}, {a: 'about', b: 'privacy', kind: 'path'}, {a: 'privacy', b: 'terms', kind: 'path'},
 ] %}
 {#

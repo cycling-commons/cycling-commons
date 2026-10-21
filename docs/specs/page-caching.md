@@ -294,7 +294,7 @@ aim at (`PublicPageCacheSubscriber::CACHEABLE_ROUTES`, English paths shown):
 
 `/`, `/about`, `/developers`, `/developers/api`, `/developers/export`, `/licenses`, `/credits`,
 `/privacy`, `/terms`, `/accessibility`, `/contributors-and-curators`,
-`/roadmap`, `/whats-new`, `/regions`, `/regions/{slug}`,
+`/roadmap`, `/roadmap/done`, `/whats-new`, `/regions`, `/regions/{slug}`,
 `/regions/outlines.json`, `/blog`, `/blog/{slug}`, `/known-issues`, `/pages`,
 `/coverage`, `/best`, `/report` (the report guide), and the three guarded
 forms `/contact`, `/report-bug`, `/report/{type}/{id}`.

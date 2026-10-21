@@ -87,6 +87,7 @@ final readonly class PublicPageCacheSubscriber implements EventSubscriberInterfa
         'accessibility',
         'roles',
         'roadmap',
+        'roadmap_done',
         'changelog',
         'regions',
         'region_detail',

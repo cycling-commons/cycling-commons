@@ -10,6 +10,8 @@
    from a screen reader rather than read out eight times. */
 .rdot{flex:none;width:9px;height:9px;border-radius:50%;margin-top:.5rem}
 .rdot--now{background:var(--trail)}
+/* In progress: half done, half still the trail orange of Now. */
+.rdot--progress{background:linear-gradient(90deg,var(--spruce-lift) 50%,var(--trail) 50%)}
 .rdot--next{background:var(--ochre)}
 .rdot--later{background:var(--glacier)}
 .rissue{font-family:var(--mono);font-size:.7rem;color:var(--clay);white-space:nowrap;margin-left:.4rem}
@@ -90,3 +92,25 @@
 .rprop .cfield label.rprop-check{display:flex;gap:.5rem;align-items:flex-start;margin:.6rem 0 0;font-family:inherit;font-size:.92rem;letter-spacing:0;text-transform:none;color:#3a3d30;line-height:1.5}
 .rprop .cfield label.rprop-check input{margin-top:.25rem}
 .rprop-fits{margin:0 0 1.2rem}
+/* Latest additions: what shipped from the list, beside it on a wide screen,
+   under it on a narrow one (roadmap-and-changelog.md §8.2a). The done dot is
+   spruce: the trail colours belong to the three groups still to come. */
+.rlayout--done{display:grid;grid-template-columns:minmax(0,760px) minmax(15rem,19rem);gap:2.5rem 3.5rem;align-items:start}
+.rdot--done{background:var(--spruce-lift)}
+.rdone{border-left:2px solid var(--spruce-lift);padding:.2rem 0 .2rem 1.2rem;position:sticky;top:5.5rem}
+.rdone h2{font-family:var(--serif);font-weight:600;font-size:1.2rem;letter-spacing:-.01em;margin:0 0 .3rem}
+.rdone .gsub{font-size:.88rem;color:#595c4d;margin:0 0 .9rem;line-height:1.5}
+.rdone-list{list-style:none;margin:0 0 1rem;padding:0}
+.rdone-list li{display:flex;gap:.65rem;align-items:flex-start;padding:.55rem 0;border-bottom:1px solid rgba(20,22,14,.1)}
+.rdone-list li:last-child{border-bottom:0}
+.rdone-list .rdot{margin-top:.42rem}
+.rdone-list a{color:var(--ink);text-decoration:none;font-size:.95rem;line-height:1.45}
+.rdone-list a:hover b{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+.rdone-d{display:block;font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;margin-top:.15rem}
+.rdone-all{font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--clay);text-decoration:none}
+.rdone-all:hover{color:var(--trail)}
+@media(max-width:980px){.rlayout--done{grid-template-columns:minmax(0,1fr)}.rdone{position:static}}
+/* The Done page: one block per month, the newest first. */
+.rmonth{margin:0 0 2.2rem}
+.rmonth h2{font-family:var(--mono);font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--spruce-lift);margin:0 0 .4rem}
+.ritem .rdone-d{margin-top:.3rem}

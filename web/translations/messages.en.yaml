@@ -280,6 +280,8 @@ pages:
   card_coverage_p: 'Coverage and freshness by country — and where to help.'
   card_mapkey_h: 'Map key'
   card_mapkey_p: 'Every mark on the map and what it means.'
+  card_roadmapdone_h: 'Done on the roadmap'
+  card_roadmapdone_p: 'Everything from the roadmap that is now on the site.'
   card_contributors_h: 'Contributors'
   card_contributors_p: 'Non-personal recognition for facts, confirmations and OSM give-backs.'
   card_profile_h: 'Contributor profile'
@@ -3835,6 +3837,8 @@ meta:
   unsubscribed_description: 'You will no longer get Cycling Commons release emails.'
   roadmap_title: 'Roadmap · Cycling Commons'
   roadmap_description: 'What the Cycling Commons is building now, next and later. No dates and no fixed order.'
+  roadmap_done_title: 'Done · Roadmap · Cycling Commons'
+  roadmap_done_description: 'Everything from the Cycling Commons roadmap that is now on the site, newest first.'
   changelog_title: 'What is new · Cycling Commons'
   changelog_description: 'Every Cycling Commons release in plain words, with an Atom feed you can follow without an account.'
   home_title: 'Cycling Commons'
@@ -5132,6 +5136,8 @@ roadmap:
   kicker: 'Roadmap'
   title: 'What we are building next.'
   lead: 'No dates, because we would only be guessing. What is being built now, what comes next, and what we want but have not scheduled. The order within each group is not fixed.'
+  group_progress: 'In progress'
+  group_progress_sub: 'Partly on the site already, and still growing. More of it lands step by step, the way new countries open one by one.'
   group_now: 'Now'
   group_now_sub: 'Being built. These are the ones with someone actually on them.'
   group_next: 'Next'
@@ -5166,6 +5172,14 @@ roadmap:
   proposals_none: "No proposals open for votes yet. Propose one of your own."
   foot_contact_mid: ". Something missing that you need? Tell us on the"
   foot_contact_link: "contact page"
+  latest_h: 'Latest additions'
+  latest_sub: 'Shipped from this list.'
+  latest_all: 'Everything that is done'
+  done_title: 'Done.'
+  done_lead: 'Everything from the roadmap that is now on the site, newest first.'
+  done_empty: 'Nothing from the roadmap has shipped yet.'
+  done_on: 'Shipped %date%'
+  done_foot: 'What changed in each release is on <a href="%changelog%">What''s new</a>. What is still coming is on the <a href="%roadmap%">roadmap</a>.'
   propose:
     fits_h: "What fits best"
     fits: "Ideas that help riders find, check or add places and routes, or that make the open data easier to use and share. Some things, such as leaderboards, training plans or buying and selling, other apps already do well. We leave those to them, so they rarely make it onto our roadmap. We read every idea all the same."

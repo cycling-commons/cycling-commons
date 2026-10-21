@@ -17,7 +17,8 @@ use Doctrine\ORM\EntityManagerInterface;
  *
  * Only a live item and an open proposal are ever listed or markable: a
  * pending or declined proposal is seen by its author and the desk, nobody
- * else, and a shipped or removed item is off the roadmap.
+ * else, and a shipped or removed item is off the roadmap. A shipped item
+ * moves to "Latest additions" beside it and to the Done page.
  *
  * @phpstan-type Row array{ref: string, status: string, anchor: string, title: string, body: string, lang: string, issue: ?int, from_rider: bool, picture: ?int, votes: int, voted: bool, followed: bool}
  *
@@ -62,6 +63,37 @@ final class RoadmapItems
         }
 
         return $this->withMarks($rows, $userId);
+    }
+
+    /**
+     * The items that shipped, newest first: the "Latest additions" beside the
+     * roadmap (`$limit` of them) and the whole "Done" page (all of them). A
+     * removed item is not here; it was dropped, not built.
+     *
+     * @return list<array{anchor: string, title: string, body: string, lang: string, issue: ?int, from_rider: bool, shipped: \DateTimeImmutable}>
+     */
+    public function shippedRows(string $locale, ?int $limit = null): array
+    {
+        $items = $this->em->getRepository(RoadmapItem::class)->findBy(
+            ['state' => ItemState::Shipped],
+            ['closedAt' => 'DESC', 'id' => 'DESC'],
+            $limit,
+        );
+        $rows = [];
+        foreach ($items as $item) {
+            $text = $item->textFor($locale);
+            $rows[] = [
+                'anchor' => 'done-'.(int) $item->getId(),
+                'title' => $text?->getTitle() ?? '',
+                'body' => $text?->getBody() ?? '',
+                'lang' => $text?->getLocale() ?? $locale,
+                'issue' => $item->getIssue(),
+                'from_rider' => null !== $item->getSourceProposal(),
+                'shipped' => $item->getClosedAt() ?? $item->getUpdatedAt(),
+            ];
+        }
+
+        return $rows;
     }
 
     /**

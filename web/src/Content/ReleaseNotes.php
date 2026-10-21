@@ -24,8 +24,12 @@ namespace App\Content;
  */
 final class ReleaseNotes
 {
-    /** The roadmap's three groups, in display order. */
-    public const array STATUSES = ['now', 'next', 'later'];
+    /**
+     * The roadmap's four groups, in display order. `progress` is work partly
+     * on the site and still growing, such as new countries; `now` is being
+     * built and not on the site yet.
+     */
+    public const array STATUSES = ['progress', 'now', 'next', 'later'];
 
     /**
      * The groups a release's notes sit in, in display order, from 0.9.4-beta

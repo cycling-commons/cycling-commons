@@ -282,6 +282,8 @@ pages:
   card_coverage_p: 'Cobertura y frescura por país — y dónde ayudar.'
   card_mapkey_h: 'Leyenda del mapa'
   card_mapkey_p: 'Cada marca del mapa y su significado.'
+  card_roadmapdone_h: 'Hecho en la hoja de ruta'
+  card_roadmapdone_p: 'Todo lo de la hoja de ruta que ya está en el sitio.'
   card_contributors_h: 'Colaboradores'
   card_contributors_p: 'Reconocimiento no personal por hechos, confirmaciones y devoluciones a OSM.'
   card_profile_h: 'Perfil de colaborador'
@@ -3843,6 +3845,8 @@ meta:
   unsubscribed_description: 'Ya no recibirás correos de versión del Cycling Commons.'
   roadmap_title: 'Hoja de ruta · Cycling Commons'
   roadmap_description: 'Lo que el Cycling Commons está construyendo ahora, a continuación y más adelante. Sin fechas y sin un orden fijo.'
+  roadmap_done_title: 'Hecho · Hoja de ruta · Cycling Commons'
+  roadmap_done_description: 'Todo lo de la hoja de ruta del Cycling Commons que ya está en el sitio, lo más reciente primero.'
   changelog_title: 'Qué hay de nuevo · Cycling Commons'
   changelog_description: 'Cada versión del Cycling Commons en palabras llanas, con un canal Atom que puedes seguir sin cuenta.'
   home_title: 'Cycling Commons'
@@ -5142,6 +5146,8 @@ roadmap:
   kicker: 'Hoja de ruta'
   title: 'Qué construimos a continuación.'
   lead: 'Sin fechas, porque solo estaríamos adivinando. Lo que se construye ahora, lo que viene después y lo que queremos pero aún no hemos programado. El orden dentro de cada grupo no es fijo.'
+  group_progress: 'En marcha'
+  group_progress_sub: 'Ya está en parte en el sitio, y sigue creciendo. El resto llega paso a paso, como los países nuevos que se abren uno a uno.'
   group_now: 'Ahora'
   group_now_sub: 'En construcción. Aquí hay alguien trabajando de verdad.'
   group_next: 'A continuación'
@@ -5176,6 +5182,14 @@ roadmap:
   proposals_none: "Aún no hay propuestas abiertas a votación. Propón la tuya."
   foot_contact_mid: ". ¿Echas en falta algo que necesitas? Dínoslo en la"
   foot_contact_link: "página de contacto"
+  latest_h: 'Últimas novedades'
+  latest_sub: 'Hecho de esta lista.'
+  latest_all: 'Todo lo que está hecho'
+  done_title: 'Hecho.'
+  done_lead: 'Todo lo de la hoja de ruta que ya está en el sitio, lo más reciente primero.'
+  done_empty: 'Todavía no hay nada de la hoja de ruta hecho.'
+  done_on: 'Hecho el %date%'
+  done_foot: 'Lo que cambió en cada versión está en <a href="%changelog%">Novedades</a>. Lo que aún está por llegar está en la <a href="%roadmap%">hoja de ruta</a>.'
   propose:
     fits_h: "Lo que mejor encaja"
     fits: "Ideas que ayuden a los ciclistas a encontrar, comprobar o añadir lugares y rutas, o que hagan los datos abiertos más fáciles de usar y compartir. Algunas cosas, como clasificaciones, planes de entrenamiento o comprar y vender, ya las hacen bien otras aplicaciones. Se las dejamos a ellas, así que rara vez llegan a nuestra hoja de ruta. Aun así, leemos cada idea."

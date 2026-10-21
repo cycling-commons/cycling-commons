@@ -10,8 +10,11 @@
   button (roadmap/_marks.html.twig). The tab is in the URL, never in script
   state, so both tabs stay shareable in the public cache.
 
-  Only unfinished work appears here. What landed lives on /whats-new, linked
-  at the foot, so nothing is described in two places.
+  The list is unfinished work. An item the desk marks shipped moves to
+  "Latest additions" in the right-hand column (the newest
+  RoadmapController::LATEST_DONE), and to the Done page with all of them; on a
+  narrow screen the column follows the list. How it landed, release by
+  release, is /whats-new, linked at the foot.
 #}
 {% extends 'base.html.twig' %}
 
@@ -27,6 +30,7 @@
 </div></div>
 
 <section class="pad"><div class="wrap">
+  <div class="rlayout{% if latest_done is not empty %} rlayout--done{% endif %}">
   <div class="rwrap">
     {% if app.user %}
       {% for msg in app.flashes('error') %}<div class="rflash" role="alert">{{ msg|trans }}</div>{% endfor %}
@@ -103,6 +107,26 @@
       <a href="{{ path('contact') }}">{% trans %}roadmap.foot_contact_link{% endtrans %}</a>{% trans %}roadmap.foot_shipped_post{% endtrans %}
       {%- endif %}
     </div>
+  </div>
+
+  {% if latest_done is not empty %}
+  <aside class="rdone" aria-labelledby="rdone-h">
+    <h2 id="rdone-h">{% trans %}roadmap.latest_h{% endtrans %}</h2>
+    <p class="gsub">{% trans %}roadmap.latest_sub{% endtrans %}</p>
+    <ol class="rdone-list">
+      {% for item in latest_done %}
+        <li>
+          <span class="rdot rdot--done" aria-hidden="true"></span>
+          <div>
+            <a href="{{ path('roadmap_done') }}#{{ item.anchor }}"{% if item.lang != app.request.locale %} lang="{{ item.lang }}"{% endif %}><b>{{ item.title }}</b></a>
+            <time class="rdone-d" datetime="{{ item.shipped|date('Y-m-d') }}">{{ item.shipped|cc_date }}</time>
+          </div>
+        </li>
+      {% endfor %}
+    </ol>
+    <a class="rdone-all" href="{{ path('roadmap_done') }}">{% trans %}roadmap.latest_all{% endtrans %} &rarr;</a>
+  </aside>
+  {% endif %}
   </div>
 </div></section>
 {% endblock %}

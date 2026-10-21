@@ -1,0 +1,52 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  Done (docs/specs/roadmap-and-changelog.md §8.2a): every roadmap item the
+  desk marked shipped, newest first, one block per month it shipped. Each item
+  keeps the words it had on the roadmap. A removed item is not here: it was
+  dropped, not built. What changed in each release is /whats-new, linked at
+  the foot, so a release is still described in one place.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+<link rel="stylesheet" href="{{ asset('styles/page/pages/roadmap.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="rhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{% trans %}roadmap.kicker{% endtrans %}</div>
+  <h1 class="disp">{% trans %}roadmap.done_title{% endtrans %}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{% trans %}roadmap.done_lead{% endtrans %}</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="rwrap">
+    {% if done is empty %}
+      <p class="rempty">{% trans %}roadmap.done_empty{% endtrans %}</p>
+    {% else %}
+      {% set months = [] %}
+      {% for item in done %}{% set m = item.shipped|date('Y-m') %}{% if m not in months %}{% set months = months|merge([m]) %}{% endif %}{% endfor %}
+      {% for m in months %}
+        {% set items = done|filter(i => i.shipped|date('Y-m') == m) %}
+        <div class="rmonth">
+          <h2>{{ items|first.shipped|cc_month }}</h2>
+          <div class="rroute">
+          {% for item in items %}
+            <div class="ritem" id="{{ item.anchor }}">
+              <span class="rdot rdot--done" aria-hidden="true"></span>
+              <div class="rbody">
+                <p{% if item.lang != app.request.locale %} lang="{{ item.lang }}"{% endif %}><b>{{ item.title }}</b>{{ item.title matches '/[.!?]$/' ? '' : '.' }} {{ item.body }}{% if item.issue %}<a class="rissue" href="https://github.com/cycling-commons/cycling-commons/issues/{{ item.issue }}">#{{ item.issue }}</a>{% endif %}</p>
+                {% if item.from_rider %}<span class="ridea">{% trans %}roadmap.idea_badge{% endtrans %}</span>{% endif %}
+                <time class="rdone-d" datetime="{{ item.shipped|date('Y-m-d') }}">{{ 'roadmap.done_on'|trans({'%date%': item.shipped|cc_date}) }}</time>
+              </div>
+            </div>
+          {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="rfoot">{{ 'roadmap.done_foot'|trans({'%changelog%': path('changelog'), '%roadmap%': path('roadmap')})|rich }}</div>
+  </div>
+</div></section>
+{% endblock %}

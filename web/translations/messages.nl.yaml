@@ -280,6 +280,8 @@ pages:
   card_coverage_p: 'Dekking en versheid per land — en waar je kunt helpen.'
   card_mapkey_h: 'Kaartlegenda'
   card_mapkey_p: 'Elke markering op de kaart en wat die betekent.'
+  card_roadmapdone_h: 'Klaar op de routekaart'
+  card_roadmapdone_p: 'Alles van de routekaart dat nu op de site staat.'
   card_contributors_h: 'Bijdragers'
   card_contributors_p: 'Niet-persoonlijke erkenning voor feiten, bevestigingen en teruggaven aan OSM.'
   card_profile_h: 'Bijdragersprofiel'
@@ -3820,6 +3822,8 @@ meta:
   unsubscribed_description: 'Je krijgt geen Cycling Commons-uitgavemails meer.'
   roadmap_title: 'Routekaart · Cycling Commons'
   roadmap_description: 'Wat de Cycling Commons nu, hierna en later bouwt. Geen datums en geen vaste volgorde.'
+  roadmap_done_title: 'Klaar · Routekaart · Cycling Commons'
+  roadmap_done_description: 'Alles van de routekaart van de Cycling Commons dat nu op de site staat, het nieuwste eerst.'
   changelog_title: 'Wat er nieuw is · Cycling Commons'
   changelog_description: 'Elke uitgave van de Cycling Commons in gewone woorden, met een Atom-feed die je zonder account kunt volgen.'
   home_title: 'Cycling Commons'
@@ -5114,6 +5118,8 @@ roadmap:
   kicker: 'Routekaart'
   title: 'Wat we hierna bouwen.'
   lead: 'Geen datums, want dan zouden we alleen gokken. Wat we nu bouwen, wat hierna komt, en wat we willen maar nog niet hebben ingepland. De volgorde binnen elke groep ligt niet vast.'
+  group_progress: 'Bezig'
+  group_progress_sub: 'Al deels op de site, en het groeit nog. De rest komt stap voor stap, zoals nieuwe landen die een voor een opengaan.'
   group_now: 'Nu'
   group_now_sub: 'In aanbouw. Hier zit echt iemand op.'
   group_next: 'Hierna'
@@ -5148,6 +5154,14 @@ roadmap:
   proposals_none: "Nog geen voorstellen open voor stemmen. Stel er zelf een voor."
   foot_contact_mid: ". Mis je iets dat je nodig hebt? Laat het weten via de"
   foot_contact_link: "contactpagina"
+  latest_h: 'Laatste toevoegingen'
+  latest_sub: 'Klaar van deze lijst.'
+  latest_all: 'Alles wat klaar is'
+  done_title: 'Klaar.'
+  done_lead: 'Alles van de routekaart dat nu op de site staat, het nieuwste eerst.'
+  done_empty: 'Er is nog niets van de routekaart klaar.'
+  done_on: 'Klaar op %date%'
+  done_foot: 'Wat er per versie veranderde, staat bij <a href="%changelog%">Wat is er nieuw</a>. Wat nog komt, staat op de <a href="%roadmap%">routekaart</a>.'
   propose:
     fits_h: "Wat het best past"
     fits: "Ideeën die rijders helpen plekken en routes te vinden, te controleren of toe te voegen, of die de open data makkelijker te gebruiken en te delen maken. Sommige dingen, zoals ranglijsten, trainingsschema's of kopen en verkopen, doen andere apps al goed. Die laten we aan hen, dus ze komen zelden op onze routekaart. We lezen toch elk idee."

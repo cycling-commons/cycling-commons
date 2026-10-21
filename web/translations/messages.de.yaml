@@ -280,6 +280,8 @@ pages:
   card_coverage_p: 'Abdeckung und Aktualität nach Land — und wo du helfen kannst.'
   card_mapkey_h: 'Kartenlegende'
   card_mapkey_p: 'Jede Markierung auf der Karte und was sie bedeutet.'
+  card_roadmapdone_h: 'Erledigt im Fahrplan'
+  card_roadmapdone_p: 'Alles aus dem Fahrplan, was jetzt auf der Seite ist.'
   card_contributors_h: 'Beitragende'
   card_contributors_p: 'Nicht-personenbezogene Anerkennung für Fakten, Bestätigungen und OSM-Rückgaben.'
   card_profile_h: 'Beitragendenprofil'
@@ -3821,6 +3823,8 @@ meta:
   unsubscribed_description: 'Du bekommst keine Cycling-Commons-Release-E-Mails mehr.'
   roadmap_title: 'Fahrplan · Cycling Commons'
   roadmap_description: 'Was die Cycling Commons jetzt, als Nächstes und später baut. Keine Termine und keine feste Reihenfolge.'
+  roadmap_done_title: 'Erledigt · Fahrplan · Cycling Commons'
+  roadmap_done_description: 'Alles aus dem Fahrplan des Cycling Commons, was jetzt auf der Seite ist, das Neueste zuerst.'
   changelog_title: 'Was neu ist · Cycling Commons'
   changelog_description: 'Jede Version der Cycling Commons in einfachen Worten, mit einem Atom-Feed, dem du ohne Konto folgen kannst.'
   home_title: 'Cycling Commons'
@@ -5115,6 +5119,8 @@ roadmap:
   kicker: 'Fahrplan'
   title: 'Was wir als Nächstes bauen.'
   lead: 'Keine Termine, denn wir würden nur raten. Was jetzt gebaut wird, was als Nächstes kommt und was wir wollen, aber noch nicht eingeplant haben. Die Reihenfolge innerhalb jeder Gruppe steht nicht fest.'
+  group_progress: 'In Arbeit'
+  group_progress_sub: 'Schon zum Teil auf der Seite, und es wächst weiter. Der Rest kommt Schritt für Schritt, so wie neue Länder eins nach dem anderen dazukommen.'
   group_now: 'Jetzt'
   group_now_sub: 'Im Bau. Hier sitzt tatsächlich jemand dran.'
   group_next: 'Als Nächstes'
@@ -5149,6 +5155,14 @@ roadmap:
   proposals_none: "Noch keine Vorschläge offen zur Abstimmung. Schlag selbst einen vor."
   foot_contact_mid: ". Fehlt etwas, das du brauchst? Sag es uns auf der"
   foot_contact_link: "Kontaktseite"
+  latest_h: 'Zuletzt hinzugekommen'
+  latest_sub: 'Erledigt aus dieser Liste.'
+  latest_all: 'Alles, was erledigt ist'
+  done_title: 'Erledigt.'
+  done_lead: 'Alles aus dem Fahrplan, was jetzt auf der Seite ist, das Neueste zuerst.'
+  done_empty: 'Aus dem Fahrplan ist noch nichts erledigt.'
+  done_on: 'Erledigt am %date%'
+  done_foot: 'Was sich in jeder Version geändert hat, steht unter <a href="%changelog%">Was neu ist</a>. Was noch kommt, steht im <a href="%roadmap%">Fahrplan</a>.'
   propose:
     fits_h: "Was am besten passt"
     fits: "Ideen, die Fahrenden helfen, Orte und Routen zu finden, zu prüfen oder hinzuzufügen, oder die offenen Daten leichter nutzbar und teilbar machen. Manches, etwa Ranglisten, Trainingspläne oder Kaufen und Verkaufen, machen andere Apps schon gut. Das überlassen wir ihnen, deshalb kommt es selten auf unseren Fahrplan. Wir lesen trotzdem jede Idee."

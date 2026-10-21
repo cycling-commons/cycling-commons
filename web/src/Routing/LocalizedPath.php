@@ -77,6 +77,15 @@ final class LocalizedPath
         'es' => '/hoja-de-ruta',
     ];
 
+    /** @var array<string, string> */
+    public const array ROADMAP_DONE = [
+        'en' => '/roadmap/done',
+        'fr' => '/feuille-de-route/realise',
+        'nl' => '/routekaart/klaar',
+        'de' => '/fahrplan/erledigt',
+        'es' => '/hoja-de-ruta/hecho',
+    ];
+
     /**
      * Where a rider writes an idea for the roadmap, under the roadmap's own path.
      *

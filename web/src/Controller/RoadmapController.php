@@ -38,8 +38,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * be, so the page stays shareable in the public cache. The tab is in the URL
  * (`?tab=proposals`) for the same reason.
  *
- * It shows only unfinished work. What landed is the changelog, linked from
- * the foot of the page, so no item is described twice.
+ * The list is unfinished work. An item that shipped moves to "Latest
+ * additions" beside it, the newest few, and to the Done page, all of them.
+ * How it landed, release by release, is the changelog, linked from the foot.
  *
  * @see docs/specs/roadmap-and-changelog.md §8
  *
@@ -49,6 +50,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 final class RoadmapController extends AbstractController
 {
     public const string CSRF_ID = 'roadmap-mark';
+
+    /** How many shipped items "Latest additions" shows; the rest are on the Done page. */
+    public const int LATEST_DONE = 5;
 
     public function __construct(
         private readonly RoadmapItems $items,
@@ -80,6 +84,24 @@ final class RoadmapController extends AbstractController
             'proposal_count' => $live ? \count($this->items->openProposals()) : 0,
             'csrf_id' => self::CSRF_ID,
             'latest' => ReleaseNotes::latestRelease(),
+            'latest_done' => $this->items->shippedRows($request->getLocale(), self::LATEST_DONE),
+        ]);
+    }
+
+    /**
+     * Everything the roadmap promised that is now on the site, newest first,
+     * by the month it shipped.
+     *
+     * @see docs/specs/roadmap-and-changelog.md §8.2a
+     */
+    #[Route(LocalizedPath::ROADMAP_DONE, name: 'roadmap_done', methods: ['GET'])]
+    public function done(Request $request): Response
+    {
+        return $this->render('pages/roadmap_done.html.twig', [
+            'page_title' => 'meta.roadmap_done_title',
+            'page_description' => 'meta.roadmap_done_description',
+            'nav_active' => '',
+            'done' => $this->items->shippedRows($request->getLocale()),
         ]);
     }
 

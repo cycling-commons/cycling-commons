@@ -82,6 +82,7 @@ final class SitemapController extends AbstractController
         // this ("what does the red dashed line mean"), and it is the one page
         // that explains the map without loading it.
         ['map_key', 'monthly'],
+        ['roadmap_done', 'weekly'],
         ['privacy', 'yearly'],
         ['terms', 'yearly'],
     ];

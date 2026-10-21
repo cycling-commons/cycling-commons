@@ -70,7 +70,8 @@ final class RoadmapSayTest extends WebTestCase
                 foreach ($hidden as $proposal) {
                     self::assertStringNotContainsString($proposal->getTitle(), $html);
                 }
-                self::assertStringNotContainsString('Shipped item title', $html);
+                // A shipped item leaves the list (§8.2a): it may stand in Latest additions beside it, never in it.
+                self::assertStringNotContainsString('Shipped item title', $page->filter('.rwrap')->html());
             }
             self::assertCount(1, $page->filter('#idea-'.$open->getId()));
         }

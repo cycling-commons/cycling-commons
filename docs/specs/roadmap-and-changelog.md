@@ -219,8 +219,13 @@ data providers, the seasonal vote, more countries, Scout on more devices and
 giving data back. Bugs, deploy prerequisites, operations chores, content
 review rows and smaller features stay off it; the smaller features are private
 known issues on the curator desk (`is_public` false, status `planned`).
-Items sit in three groups, `now`, `next` and `later`
-(`ReleaseNotes::STATUSES`), in the order the desk sets. The order inside a
+Items sit in four groups, `progress`, `now`, `next` and `later`
+(`ReleaseNotes::STATUSES`), in the order the desk sets. **In progress**
+(`progress`, owner 2026-10-21) is work that is partly on the site and still
+growing, such as new countries: it opens one country at a time and stays in
+progress for a while. **Now** is work being built that is not on the site yet.
+The group's dot is half spruce, half trail orange. Migration
+`Version20261021010000` adds `progress` to `roadmap_item_status_check`. The order inside a
 group is not a promise. An item that shipped is marked shipped on the desk the
 day it ships, whether or not a release has been tagged yet; the changelog
 names it at the next tag (§6 step 4). Fifteen items is the size it has now; it should stay
@@ -267,7 +272,7 @@ tab" and votable before they are promoted to real items.
 
 | Table | Holds |
 |---|---|
-| `roadmap_item` | one item: group (`now`, `next`, `later`), place in the group, optional GitHub issue, state (`live`, `shipped`, `removed`), the proposal it came from |
+| `roadmap_item` | one item: group (`progress`, `now`, `next`, `later`), place in the group, optional GitHub issue, state (`live`, `shipped`, `removed`), the proposal it came from |
 | `roadmap_item_text` | one item's title and text in one language |
 | `roadmap_proposal` | one rider's proposal, its status and the desk's decision |
 | `roadmap_proposal_image` | the one picture a proposal may carry |
@@ -293,11 +298,36 @@ so both tabs stay shareable in the public cache (page-caching.md).
 
 **Only a live item and an open proposal are ever listed or markable.** A
 waiting or declined proposal is seen by its rider and the desk only; a
-shipped or removed item is off the page. `RoadmapItems::anchorOf()` refuses a
+shipped item leaves the list for "Latest additions" and the Done page (§8.2a),
+and a removed item is off the page. `RoadmapItems::anchorOf()` refuses a
 vote or a follow on anything else. `RoadmapSayTest::testOnlyAnOpenProposalIsShownAndOnlyLiveThingsAreMarkable`
 checks both, for a visitor and for another rider. An item that came from a
 proposal, and every proposal, is marked "Idea from a rider", never with the
 rider's name.
+
+### 8.2a Latest additions and the Done page
+
+Owner, 2026-10-21: what is built moves "to the right side of the list as
+latest additions", with "a separate history page where all done roadmap items
+go to".
+
+- **Latest additions.** Beside the list on a wide screen, under it on a narrow
+  one, on both tabs: the newest `RoadmapController::LATEST_DONE` (value `5`)
+  shipped items, newest first, each its title, the date it shipped, a link to
+  it on the Done page, and a link to the whole page. No shipped item, no
+  column.
+- **The Done page.** `/roadmap/done` (`roadmap_done`, localised paths in
+  `LocalizedPath::ROADMAP_DONE`) lists every shipped item, newest first, one
+  block per month, each with the words it had on the roadmap, "Idea from a
+  rider" where it came from a proposal, and the date it shipped. A removed
+  item is not on it: it was dropped, not built. The foot links What's new,
+  where each release says what changed, and the roadmap.
+
+Both read `RoadmapItems::shippedRows()`: state `shipped`, newest `closed_at`
+first. The date is the day the desk marked the item shipped (§6a), so a shipped
+item shows here before the release that names it is tagged. The Done page is
+in the public cache (page-caching.md §6), the sitemap and the directory
+(`/pages`, next to the roadmap). Pinned by `RoadmapDoneTest`.
 
 ### 8.3 The switch
 
