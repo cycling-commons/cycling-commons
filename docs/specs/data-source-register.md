@@ -192,9 +192,19 @@ source.
 |---|---|---|---|---|
 | Tourisme Wallonie PIVOT | Official Walloon accommodation | CC BY | **Ingest**, in use, as a `data_provider` authority row (`wallonie-pivot`, [`data-provider-hierarchy.md`](data-provider-hierarchy.md)) | verified (in use) |
 | **DATAtourisme** (ADN Tourisme, France) | **400,000+ French tourism points of interest**, daily-updated, national ontology, application programming interface plus bulk download | Licence Ouverte 2.0 | **Ingest.** The single largest actionable find in this register | verified |
-| Accueil Vélo datasets on data.gouv.fr | France's cyclist-welcome label, as data, the exact semantic O wants | Licence Ouverte 2.0 | **Ingest** | verified |
+| Accueil Vélo datasets on data.gouv.fr | Two small sets only: Loire-Atlantique (last updated 2013, ODbL) and Hérault (tourist offices, no stays). No national label set exists there | ODbL / Licence Ouverte 2.0 | **No.** Too old or not stays; OSM `award:accueilvelo` carries the label instead | verified |
+| OSM cyclist labels: `bettundbike`, `bett_and_bike:ref`, `award:accueilvelo`, `bike_friend` | The Bett+Bike, Accueil Vélo and bike-friendly labels on a stay, worldwide: 497, 191, 312 and 302 objects (taginfo, 2026-10-21) | ODbL | **Ingest**, in use: stored by the harvest, shown as the drawer's Cyclist label row ([coverage-provider.md §2.1](coverage-provider.md)) | verified (in use) |
+| Toerisme Vlaanderen linked open data (`linked.toerismevlaanderen.be`, SPARQL, JSON:API, RDF dumps) | Every registered Flemish stay with name, address, location, beds, photo and quality labels; 420 carry "Opgenomen in icoonfietsroutes" (part of an iconic cycling route) | Copyright, attribution "Bron: Toerisme Vlaanderen"; no open licence stated | **Ask.** The label is the cyclist semantic O wants; ODbL compatibility needs a written grant | verified |
 | OSM `tourism=hotel/guest_house/camp_site` + `bicycle=*` amenities | Baseline, worldwide | ODbL | **Ingest** (baseline) | verified |
 | Bett+Bike (ADFC, Germany) | Thousands of certified German properties | Closed scheme, no reuse licence found | **Ask.** A natural partner, same ethos | unverified |
+| **Taiwan Tourism Administration lodging database** (`data.gov.tw` dataset 7780, daily JSON) | 15,656 licensed stays with coordinates; **4,901 carry the official "自行車友善旅宿" (bicycle-friendly stay) flag** in `ServiceInfo` | Open Government Data License v1.0, CC BY 4.0-compatible (clause 4.2) | **Ingest**, flag + coordinates; drop operator names and phones (homestays are family-run) | verified |
+| Recreation.gov RIDB (full CSV export or API) | 130,856 US federal campsites; 116 named "Hiker/Bicyclist" in 12 campgrounds, plus the C&O Canal Hiker-Biker Overnight sites; no structured hiker-biker type, so matched by name | US federal data, public domain; credit "Data Source: Recreation.gov" | **Ingest** | verified |
+| NPS API `/campgrounds` | 665 US national-park campgrounds; 49 mention hiker-biker sites in their text | Public domain (images excepted) | **Ingest**, text and coordinates only | stated |
+| California State Parks Campgrounds layer (ArcGIS) | 531 camp areas, 43 typed "Hike/Bike Camp Area" | Conflicting: the item says all rights reserved, data.gov says CC BY | **Ask** (geodata@parks.ca.gov) | verified |
+| SIT Québec campings (Données Québec) | 1,227 campgrounds; 116 list bike racks, bike sheds or e-bike charging (`ServicesPourMobiliteActives`). The Bienvenue cyclistes! label is not in the data | CC BY 4.0 | **Ingest**, the bike-service flag only | verified |
+| DOC NZ campsites and huts (`*_Open_Data` services) | 328 campsites and 963 huts, not cyclist-specific, along the Ngā Haerenga trails | CC BY 4.0, Crown copyright | **Ingest** (generic stays) | verified |
+| Vélo Québec Bienvenue cyclistes!, Ontario By Bike | 400+ and about 1,656 certified businesses, the Canadian cyclist-welcome labels | No licence stated, map only | **Ask** | stated |
+| League of American Bicyclists, Adventure Cycling, ATDW (Australia), Tourism NZ database, WA Munda Biddi data | Business listings, paid maps, distributor feeds, trail lines | All rights reserved, distributor or non-commercial (CC BY-NC) terms | **No** | stated |
 | Vrienden op de Fiets (NL) | The Dutch equivalent | Closed | **No** (prior decision) | stated |
 | Warmshowers | Hospitality network | Closed; member data is personal data regardless | **No** (prior decision) | stated |
 | Welcome To My Garden | Belgian/European cyclist-camping network | Non-profit, ethos-aligned, **no public data licence** | **Ask, do not scrape** (standing decision) | stated |
@@ -203,8 +213,12 @@ source.
 | Booking.com, Airbnb, Park4Night | Scale | Proprietary, ToS forbids bulk reuse | **No** | stated |
 
 **Assessment.** O was the letter with the least non-OSM supply, and it is now
-the letter with the most: DATAtourisme plus the Accueil Vélo label sets make
-France's stays layer a data-loading job rather than a research job. Bett+Bike is
+the letter with the most: DATAtourisme makes France's stays layer a
+data-loading job rather than a research job, and the OSM cyclist labels mark
+the bike-friendly stays in Germany, Austria, France and Denmark. Outside
+Europe no cyclist label is tagged in OSM; Taiwan's national register is the
+one official open set with the label itself, and the US federal hiker-biker
+camps are public domain. Bett+Bike is
 the one worth a conversation: an ADFC certification scheme and an open cycling
 atlas want the same thing, and a licence grant costs them nothing.
 
@@ -277,18 +291,19 @@ In order of value per unit of work:
    route geometry. Nothing to negotiate. Decide how it relates to rider-proposed
    R routes (it is reference-grade, not community-proposed, so likely its own
    `data_provider` authority row, the way `wallonie-pivot` is for O).
-2. **DATAtourisme plus the Accueil Vélo sets, Licence Ouverte 2.0.** Turns
-   France's stays layer from empty into populated, with a cyclist-welcome
-   semantic already attached, which is exactly what O means and what OSM cannot
-   express.
+2. **DATAtourisme, Licence Ouverte 2.0.** Turns France's stays layer from
+   empty into populated. Whether it carries the Accueil Vélo label is not yet
+   confirmed; OSM `award:accueilvelo` carries it for 312 places today.
 3. **Municipal fountain and toilet datasets.** Dozens of permissive
    authoritative sources for B and C. Build one per-city adapter pipeline rather
    than deciding city by city.
 4. **National heritage registers** for Q, once the editorial selection rule
    exists. Supply is not currently Q's problem.
-5. **Two conversations worth having**, both with organisations whose mission
-   matches ours and neither of which can be scraped in the meantime:
-   **Bett+Bike** (ADFC) for German stays, and **BikeMaps.org** for hazards.
+5. **Three conversations worth having**, all with organisations whose mission
+   matches ours and none of which can be scraped in the meantime:
+   **Bett+Bike** (ADFC) for German stays, **Toerisme Vlaanderen** for Flemish
+   stays (its open register already marks the stays on iconic cycling routes;
+   only a licence grant is missing), and **BikeMaps.org** for hazards.
    Welcome To My Garden remains ask-don't-scrape.
 
 **Explicitly not worth more research:** road surface (no second open source
