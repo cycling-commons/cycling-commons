@@ -1,0 +1,54 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* The catalogue cards, one definition for both pages that show them
+   (docs/specs/moderation-and-contribution.md §1): the home page's field
+   guide and the contribute hub. Each card is templates/partials/_catalog_card.html.twig. */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:2.6rem}
+.card{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:6px;padding:1.1rem 1.3rem;position:relative;transition:all .25s;overflow:hidden;
+  display:grid;grid-template-columns:auto 1fr auto;column-gap:.7rem;align-items:start;align-content:start}
+/* Icon and title share the first row; everything else spans the card under them. */
+.card > *{grid-column:1 / -1}
+.card > .q-icon,.card > .ic{grid-column:1}
+.card > .q-icon + h4,.card > .ic + h4{grid-column:2}
+a.card{color:inherit;text-decoration:none}
+a.card:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
+/* Freshness dots: this kind of place is confirmed by riders and ages. */
+.card > h4 + .fr{grid-column:3;display:flex;gap:4px;margin-top:.6rem}
+.fr i,.fresh-key .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.fr .g,.dot.g{background:#3e7d4f} .fr .o,.dot.o{background:var(--ochre)} .fr .r,.dot.r{background:var(--clay)}
+.fresh-key{margin-top:1rem;font-size:.92rem;color:#5a5d4d}
+.fresh-key .dot{width:14px;height:14px;vertical-align:-2px;margin:0 .35rem 0 .2rem}
+.card:hover{transform:translateY(-3px);box-shadow:0 14px 30px -16px rgba(20,22,14,.5)}
+/* The icon alone, big and in the deep ochre the letter used to wear
+   (owner 2026-09-09: "drop the letters, only the icons bigger in that
+   brownish colour"). */
+.card .q-icon{display:flex;align-items:center;height:1.7rem;color:#8A6425}
+.card .q-icon svg{width:1.7rem;height:1.7rem}
+.card .ic{font-size:1.3rem;height:1.7rem;display:flex;align-items:center;line-height:1;filter:brightness(0)}  /* flatten colour-emoji to a black silhouette */
+.card h4{font-family:var(--serif);font-weight:600;font-size:1.2rem;line-height:1.2;margin-top:.12rem}
+.card p{font-size:.90rem;color:#4a4d40;margin-top:.45rem}
+/* What a card on the contribute hub does, at its foot: one action for a
+   card that is a link, a link per action for a card with several. */
+.card:has(> .acts){grid-template-rows:auto auto 1fr}
+.card .acts{align-self:end;display:flex;flex-direction:column;gap:.35rem;margin-top:.9rem}
+.card .go{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);text-decoration:none}
+a.go:hover{text-decoration:underline}
+/* Arriving from a home-page card (/contribute#type-…): that card is marked. */
+.card{scroll-margin-top:6rem}
+.card:target{border-color:var(--trail);box-shadow:0 0 0 3px rgba(255,90,31,.35);animation:cardHi 1.4s ease-out 2}
+@keyframes cardHi{0%{box-shadow:0 0 0 0 rgba(255,90,31,.55)}100%{box-shadow:0 0 0 12px rgba(255,90,31,0)}}
+@media (prefers-reduced-motion:reduce){.card:target{animation:none}}
+.card.suggest{background:transparent;border:1px dashed rgba(20,22,14,.32);align-content:center}
+.card.suggest:hover{border-color:var(--clay);transform:translateY(-3px);box-shadow:none}
+.card.suggest h4{color:var(--clay)}
+.card.suggest p{margin-bottom:.7rem}
+.card.suggest a{font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);text-decoration:none;font-weight:600}
+.card.suggest a:hover{text-decoration:underline}
+
+.cat-h{font-family:var(--mono);font-size:.92rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);margin-top:2.8rem;display:flex;align-items:baseline;gap:.8rem}
+.cat-h b{color:var(--clay)}
+.cat-h span{font-family:var(--sans);font-weight:400;font-size:1rem;letter-spacing:0;text-transform:none;color:#5a5d4d}
+.cat-h:first-of-type{margin-top:2.2rem}
+.cat-h + .grid{margin-top:1rem}
+/* Narrow screens: the label on its own line, the subtitle on one line under it,
+   instead of the subtitle wrapping beside the label (owner 2026-08-25). */
+@media(max-width:820px){.cat-h{flex-wrap:wrap;gap:.25rem .8rem}.cat-h span{flex-basis:100%}}

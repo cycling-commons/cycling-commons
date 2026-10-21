@@ -1,0 +1,21 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# One catalogue card, the same on the home page and the contribute hub
+   (docs/specs/moderation-and-contribution.md §1, styles/catalog-cards.css):
+   the category icon beside the title, the freshness dots when the type's
+   confirmations age (ItemType::confirmationAges() via cc_type_ages()), the
+   line under them.
+   Params: `letter` (a category's icon and dots) or `glyph` (another icon),
+   `title` and `text` (translation keys), `id`, `d` (the home page's reveal
+   delay), and either `href` (the whole card links there, with `go`, an
+   optional action label at its foot) or `actions` (a list of {href, label}:
+   the card is no link, each action is). #}
+{% set acts = actions|default([]) %}
+{% set tag = acts is empty ? 'a' : 'div' %}
+<{{ tag }} class="card{{ d|default(null) ? ' rv' }}"{% if d|default(null) %} data-d="{{ d }}"{% endif %}{% if id|default(null) %} id="{{ id }}"{% endif %}{% if tag == 'a' %} href="{{ href }}"{% endif %}>
+  {%- if letter|default(null) %}{% include 'partials/_type_icon.html.twig' with {letter: letter} only %}{% elseif glyph|default(null) %}<span class="ic" aria-hidden="true">{{ glyph }}</span>{% endif -%}
+  <h4>{{ title|trans|rich }}</h4>
+  {%- if letter|default(null) and letter in cc_type_ages() %}<span class="fr" aria-hidden="true"><i class="g"></i><i class="o"></i><i class="r"></i></span>{% endif -%}
+  <p>{{ text|trans|rich }}</p>
+  {%- if go|default(null) %}<span class="acts"><span class="go">{{ go|trans }}</span></span>{% endif -%}
+  {%- if acts is not empty %}<span class="acts">{% for a in acts %}<a class="go" href="{{ a.href }}">{{ a.label|trans }}</a>{% endfor %}</span>{% endif -%}
+</{{ tag }}>

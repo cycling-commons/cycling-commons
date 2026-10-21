@@ -27,6 +27,10 @@ use Twig\TwigFunction;
  *
  * `cc_surface_colours()`: the surface line palette (SurfaceVocabulary::LINE_COLOUR).
  *
+ * `cc_type_ages()`: the letters whose confirmations age
+ * (ItemType::confirmationAges()), the catalogue cards that wear the
+ * freshness dots (partials/_catalog_card.html.twig).
+ *
  * @api
  */
 final class TypeIconExtension extends AbstractExtension
@@ -40,6 +44,10 @@ final class TypeIconExtension extends AbstractExtension
             new TwigFunction('cc_text_icons', static fn (): array => PlaceText::ICONS),
             new TwigFunction('cc_basemap_icons', static fn (): array => BasemapIcons::set()),
             new TwigFunction('cc_surface_colours', static fn (): array => SurfaceVocabulary::LINE_COLOUR),
+            new TwigFunction('cc_type_ages', static fn (): array => array_values(array_map(
+                static fn (ItemType $type): string => $type->letter(),
+                array_filter(ItemType::cases(), static fn (ItemType $type): bool => $type->confirmationAges()),
+            ))),
             // Letter => fill colour, from the public API's category table: the
             // one server-side copy of catalog.js's colours, for both map keys.
             new TwigFunction('cc_category_colours', static fn (): array => array_column(CategoryTable::CATEGORIES, 'color', 'letter')),

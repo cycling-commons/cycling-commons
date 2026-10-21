@@ -42,10 +42,21 @@ documents own the surrounding contracts:
 `/contribute#type-<item-type slug>` (`#type-quality-rides` for routes), and
 each card on the `/contribute` hub carries that id, so the rider lands on the
 card they clicked; `:target` marks it with an orange ring that pulses twice.
-The home cards for the types whose confirmations age
-(`ItemType::confirmationAges()`, §10.1a) show three dots, green, orange and
-red for fresh, ageing and stale, and one line above the cards explains them.
-Keep the dotted cards in step with `confirmationAges()`.
+The cards for the types whose confirmations age
+(`ItemType::confirmationAges()`, §10.1a, through `cc_type_ages()`) show three
+dots, green, orange and red for fresh, ageing and stale, and one line above
+the cards explains them.
+
+**One card on both pages.** The home page's field guide and the `/contribute`
+hub draw the same cards (`partials/_catalog_card.html.twig`,
+`styles/catalog-cards.css`): the same group headings, the category's drawn
+icon beside its title, the dots, the same title and line (`home.cat_card_*`)
+and the dots' legend above. On the hub each card ends in what it adds
+("Add a point →") and opens the add form. General facilities holds two forms,
+so its hub card is no link and carries two: "Add a water or food stop →"
+(`water-food`) and "Add a toilet →" (`public-toilets`). The hub adds the
+climb vote card, a "Suggest a category" card per group as on the home page,
+and the translation card under The atlas.
 
 `/improve` is a single-column 4-step wizard (`web/templates/contribute/improve.html.twig`,
 `web/assets/contribute/improve.js`) for adding and editing items: **1 Locate →

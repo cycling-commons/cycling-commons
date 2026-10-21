@@ -2,6 +2,7 @@
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 <link rel="stylesheet" href="{{ asset('styles/scout-devices.css') }}" />
+<link rel="stylesheet" href="{{ asset('styles/catalog-cards.css') }}" />
 <link rel="stylesheet" href="{{ asset('styles/page/pages/index.css') }}">
 {% endblock %}
 {% block body %}
@@ -165,22 +166,22 @@
 
     <h3 class="cat-h rv" data-d="1"><b>{{ 'home.cat_practical_h'|trans }}:</b> <span>{{ 'home.cat_practical_sub'|trans|rich }}</span></h3>
     <div class="grid">
-      <a class="card rv" data-d="1" href="{{ path('contribute') }}#type-road-surface">{% include 'partials/_type_icon.html.twig' with {letter: 'A'} only %}<h4>{{ 'home.cat_card_surface_h'|trans }}</h4><span class="fr" aria-hidden="true"><i class="g"></i><i class="o"></i><i class="r"></i></span><p>{{ 'home.cat_card_surface_p'|trans }}</p></a>
-      <a class="card rv" data-d="1" href="{{ path('contribute') }}#type-water-food">{% include 'partials/_type_icon.html.twig' with {letter: 'B'} only %}<h4>{{ 'home.cat_card_water_h'|trans }}</h4><span class="fr" aria-hidden="true"><i class="g"></i><i class="o"></i><i class="r"></i></span><p>{{ 'home.cat_card_water_p'|trans|rich }}</p></a>
-      <a class="card rv" data-d="2" href="{{ path('contribute') }}#type-bike-services">{% include 'partials/_type_icon.html.twig' with {letter: 'D'} only %}<h4>{{ 'home.cat_card_services_h'|trans }}</h4><span class="fr" aria-hidden="true"><i class="g"></i><i class="o"></i><i class="r"></i></span><p>{{ 'home.cat_card_services_p'|trans }}</p></a>
-      <a class="card rv" data-d="2" href="{{ path('contribute') }}#type-hazards">{% include 'partials/_type_icon.html.twig' with {letter: 'E'} only %}<h4>{{ 'home.cat_card_hazards_h'|trans }}</h4><span class="fr" aria-hidden="true"><i class="g"></i><i class="o"></i><i class="r"></i></span><p>{{ 'home.cat_card_hazards_p'|trans|rich }}</p></a>
-      <a class="card rv" data-d="3" href="{{ path('contribute') }}#type-getting-there">{% include 'partials/_type_icon.html.twig' with {letter: 'F'} only %}<h4>{{ 'home.cat_card_getting_h'|trans }}</h4><span class="fr" aria-hidden="true"><i class="g"></i><i class="o"></i><i class="r"></i></span><p>{{ 'home.cat_card_getting_p'|trans }}</p></a>
-      <a class="card rv" data-d="3" href="{{ path('contribute') }}#type-shelter">{% include 'partials/_type_icon.html.twig' with {letter: 'G'} only %}<h4>{{ 'home.cat_card_shelter_h'|trans|rich }}</h4><span class="fr" aria-hidden="true"><i class="g"></i><i class="o"></i><i class="r"></i></span><p>{{ 'home.cat_card_shelter_p'|trans|rich }}</p></a>
+      {% include 'partials/_catalog_card.html.twig' with {letter: 'A', title: 'home.cat_card_surface_h', text: 'home.cat_card_surface_p', href: path('contribute') ~ '#type-road-surface', d: 1} only %}
+      {% include 'partials/_catalog_card.html.twig' with {letter: 'B', title: 'home.cat_card_water_h', text: 'home.cat_card_water_p', href: path('contribute') ~ '#type-water-food', d: 1} only %}
+      {% include 'partials/_catalog_card.html.twig' with {letter: 'D', title: 'home.cat_card_services_h', text: 'home.cat_card_services_p', href: path('contribute') ~ '#type-bike-services', d: 2} only %}
+      {% include 'partials/_catalog_card.html.twig' with {letter: 'E', title: 'home.cat_card_hazards_h', text: 'home.cat_card_hazards_p', href: path('contribute') ~ '#type-hazards', d: 2} only %}
+      {% include 'partials/_catalog_card.html.twig' with {letter: 'F', title: 'home.cat_card_getting_h', text: 'home.cat_card_getting_p', href: path('contribute') ~ '#type-getting-there', d: 3} only %}
+      {% include 'partials/_catalog_card.html.twig' with {letter: 'G', title: 'home.cat_card_shelter_h', text: 'home.cat_card_shelter_p', href: path('contribute') ~ '#type-shelter', d: 3} only %}
       <div class="card suggest rv" data-d="3"><span class="ic">✎</span><h4>{{ 'home.cat_suggest_h'|trans }}</h4><p>{{ 'home.cat_suggest_p'|trans }}</p><a href="https://github.com/cycling-commons/cycling-commons/issues/new/choose">{{ 'home.cat_suggest_link'|trans }}</a></div>
     </div>
 
     <h3 class="cat-h rv" data-d="1"><b>{{ 'home.cat_emotional_h'|trans }}:</b> <span>{{ 'home.cat_emotional_sub'|trans|rich }}</span></h3>
     <div class="grid">
-      <a class="card rv" data-d="1" href="{{ path('contribute') }}#type-climbs">{% include 'partials/_type_icon.html.twig' with {letter: 'N'} only %}<h4>{{ 'home.cat_card_climbs_h'|trans }}</h4><p>{{ 'home.cat_card_climbs_p'|trans }}</p></a>
-      <a class="card rv" data-d="1" href="{{ path('contribute') }}#type-where-to-sleep">{% include 'partials/_type_icon.html.twig' with {letter: 'O'} only %}<h4>{{ 'home.cat_card_sleep_h'|trans }}</h4><span class="fr" aria-hidden="true"><i class="g"></i><i class="o"></i><i class="r"></i></span><p>{{ 'home.cat_card_sleep_p'|trans }}</p></a>
-      <a class="card rv" data-d="2" href="{{ path('contribute') }}#type-scenic-views">{% include 'partials/_type_icon.html.twig' with {letter: 'P'} only %}<h4>{{ 'home.cat_card_scenic_h'|trans }}</h4><p>{{ 'home.cat_card_scenic_p'|trans }}</p></a>
-      <a class="card rv" data-d="2" href="{{ path('contribute') }}#type-history-culture">{% include 'partials/_type_icon.html.twig' with {letter: 'Q'} only %}<h4>{{ 'home.cat_card_history_h'|trans|rich }}</h4><p>{{ 'home.cat_card_history_p'|trans|rich }}</p></a>
-      <a class="card rv" data-d="3" href="{{ path('contribute') }}#type-quality-rides">{% include 'partials/_type_icon.html.twig' with {letter: 'R'} only %}<h4>{{ 'home.cat_card_quality_h'|trans }}</h4><p>{{ 'home.cat_card_quality_p'|trans|rich }}</p></a>
+      {% include 'partials/_catalog_card.html.twig' with {letter: 'N', title: 'home.cat_card_climbs_h', text: 'home.cat_card_climbs_p', href: path('contribute') ~ '#type-climbs', d: 1} only %}
+      {% include 'partials/_catalog_card.html.twig' with {letter: 'O', title: 'home.cat_card_sleep_h', text: 'home.cat_card_sleep_p', href: path('contribute') ~ '#type-where-to-sleep', d: 1} only %}
+      {% include 'partials/_catalog_card.html.twig' with {letter: 'P', title: 'home.cat_card_scenic_h', text: 'home.cat_card_scenic_p', href: path('contribute') ~ '#type-scenic-views', d: 2} only %}
+      {% include 'partials/_catalog_card.html.twig' with {letter: 'Q', title: 'home.cat_card_history_h', text: 'home.cat_card_history_p', href: path('contribute') ~ '#type-history-culture', d: 2} only %}
+      {% include 'partials/_catalog_card.html.twig' with {letter: 'R', title: 'home.cat_card_quality_h', text: 'home.cat_card_quality_p', href: path('contribute') ~ '#type-quality-rides', d: 3} only %}
       <div class="card suggest rv" data-d="3"><span class="ic">✎</span><h4>{{ 'home.cat_suggest2_h'|trans }}</h4><p>{{ 'home.cat_suggest2_p'|trans }}</p><a href="https://github.com/cycling-commons/cycling-commons/issues/new/choose">{{ 'home.cat_suggest_link'|trans }}</a></div>
     </div>
   </div>

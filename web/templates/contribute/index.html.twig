@@ -1,6 +1,7 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
+<link rel="stylesheet" href="{{ asset('styles/catalog-cards.css') }}" />
 <link rel="stylesheet" href="{{ asset('styles/page/contribute/index.css') }}">
 {% endblock %}
 {% block body %}
@@ -11,98 +12,41 @@
 </div></div>
 
 <section class="pad"><div class="wrap">
-  <h3 class="cat-h"><b>{{ 'contribute_hub.cat_practical_h'|trans }}</b> <span>{{ 'contribute_hub.cat_practical_sub'|trans }}</span></h3>
+  {# The same cards as the home page's field guide (partials/_catalog_card.html.twig),
+     each with what it lets a rider add at its foot. #}
+  <p class="fresh-key">{{ 'home.cat_fresh_key'|trans|rich }}</p>
+
+  <h3 class="cat-h"><b>{{ 'home.cat_practical_h'|trans }}:</b> <span>{{ 'home.cat_practical_sub'|trans|rich }}</span></h3>
   <div class="grid">
-    <a class="card" id="type-road-surface" href="{{ path('improve', {type: 'road-surface', mode: 'add'}) }}">
-      <span class="ic">▰</span>
-      <h4>{{ 'contribute_hub.card_surface_h'|trans }}</h4>
-      <p>{{ 'contribute_hub.card_surface_p'|trans }}</p>
-      <span class="go">{{ 'contribute_hub.card_surface_go'|trans }}</span>
-    </a>
-    <a class="card" id="type-water-food" href="{{ path('improve', {type: 'water-food', mode: 'add'}) }}">
-      <span class="ic">💧</span>
-      <h4>{{ 'contribute_hub.card_water_h'|trans }}</h4>
-      <p>{{ 'contribute_hub.card_water_p'|trans }}</p>
-      <span class="go">{{ 'contribute_hub.card_water_go'|trans }}</span>
-    </a>
-    {# Toilets (C) sit next to water, in catalogue order. #}
-    <a class="card" id="type-public-toilets" href="{{ path('improve', {type: 'public-toilets', mode: 'add'}) }}">
-      <span class="ic">🚻</span>
-      <h4>{{ 'contribute_hub.card_toilets_h'|trans }}</h4>
-      <p>{{ 'contribute_hub.card_toilets_p'|trans }}</p>
-      <span class="go">{{ 'contribute_hub.card_toilets_go'|trans }}</span>
-    </a>
-    <a class="card" id="type-bike-services" href="{{ path('improve', {type: 'bike-services', mode: 'add'}) }}">
-      <span class="ic">⚙</span>
-      <h4>{{ 'contribute_hub.card_services_h'|trans }}</h4>
-      <p>{{ 'contribute_hub.card_services_p'|trans }}</p>
-      <span class="go">{{ 'contribute_hub.card_services_go'|trans }}</span>
-    </a>
-    <a class="card" id="type-hazards" href="{{ path('improve', {type: 'hazards', mode: 'add'}) }}">
-      <span class="ic">⚠</span>
-      <h4>{{ 'contribute_hub.card_hazards_h'|trans }}</h4>
-      <p>{{ 'contribute_hub.card_hazards_p'|trans }}</p>
-      <span class="go">{{ 'contribute_hub.card_hazards_go'|trans }}</span>
-    </a>
-    <a class="card" id="type-getting-there" href="{{ path('improve', {type: 'getting-there', mode: 'add'}) }}">
-      <span class="ic">🚆</span>
-      <h4>{{ 'contribute_hub.card_transit_h'|trans }}</h4>
-      <p>{{ 'contribute_hub.card_transit_p'|trans }}</p>
-      <span class="go">{{ 'contribute_hub.card_transit_go'|trans }}</span>
-    </a>
-    <a class="card" id="type-shelter" href="{{ path('improve', {type: 'shelter', mode: 'add'}) }}">
-      <span class="ic">⛑</span>
-      <h4>{{ 'contribute_hub.card_shelter_h'|trans }}</h4>
-      <p>{{ 'contribute_hub.card_shelter_p'|trans }}</p>
-      <span class="go">{{ 'contribute_hub.card_shelter_go'|trans }}</span>
-    </a>
+    {% include 'partials/_catalog_card.html.twig' with {letter: 'A', title: 'home.cat_card_surface_h', text: 'home.cat_card_surface_p', id: 'type-road-surface', href: path('improve', {type: 'road-surface', mode: 'add'}), go: 'contribute_hub.card_surface_go'} only %}
+    {# Water and food, and public toilets (C): two forms behind one card, as on the home page. #}
+    {% include 'partials/_catalog_card.html.twig' with {letter: 'B', title: 'home.cat_card_water_h', text: 'home.cat_card_water_p', id: 'type-water-food', actions: [
+      {href: path('improve', {type: 'water-food', mode: 'add'}), label: 'contribute_hub.card_water_go'},
+      {href: path('improve', {type: 'public-toilets', mode: 'add'}), label: 'contribute_hub.card_toilets_go'},
+    ]} only %}
+    {% include 'partials/_catalog_card.html.twig' with {letter: 'D', title: 'home.cat_card_services_h', text: 'home.cat_card_services_p', id: 'type-bike-services', href: path('improve', {type: 'bike-services', mode: 'add'}), go: 'contribute_hub.card_services_go'} only %}
+    {% include 'partials/_catalog_card.html.twig' with {letter: 'E', title: 'home.cat_card_hazards_h', text: 'home.cat_card_hazards_p', id: 'type-hazards', href: path('improve', {type: 'hazards', mode: 'add'}), go: 'contribute_hub.card_hazards_go'} only %}
+    {% include 'partials/_catalog_card.html.twig' with {letter: 'F', title: 'home.cat_card_getting_h', text: 'home.cat_card_getting_p', id: 'type-getting-there', href: path('improve', {type: 'getting-there', mode: 'add'}), go: 'contribute_hub.card_transit_go'} only %}
+    {% include 'partials/_catalog_card.html.twig' with {letter: 'G', title: 'home.cat_card_shelter_h', text: 'home.cat_card_shelter_p', id: 'type-shelter', href: path('improve', {type: 'shelter', mode: 'add'}), go: 'contribute_hub.card_shelter_go'} only %}
+    <div class="card suggest"><span class="ic">✎</span><h4>{{ 'home.cat_suggest_h'|trans }}</h4><p>{{ 'home.cat_suggest_p'|trans }}</p><a href="https://github.com/cycling-commons/cycling-commons/issues/new/choose">{{ 'home.cat_suggest_link'|trans }}</a></div>
   </div>
 
-  <h3 class="cat-h"><b>{{ 'contribute_hub.cat_emotional_h'|trans }}</b> <span>{{ 'contribute_hub.cat_emotional_sub'|trans }}</span></h3>
+  <h3 class="cat-h"><b>{{ 'home.cat_emotional_h'|trans }}:</b> <span>{{ 'home.cat_emotional_sub'|trans|rich }}</span></h3>
   <div class="grid">
-    <a class="card" id="type-climbs" href="{{ path('improve', {type: 'climbs', mode: 'add'}) }}">
-      <span class="ic"><svg class="ic-mtn" viewBox="0 0 24 18" width="26" height="20" aria-hidden="true" focusable="false"><path d="M0 18 L7.5 4 L11 10 L14.5 5.5 L24 18 Z" fill="currentColor"/></svg></span>
-      <h4>{{ 'contribute_hub.card_climbs_h'|trans }}</h4>
-      <p>{{ 'contribute_hub.card_climbs_p'|trans }}</p>
-      <span class="go">{{ 'contribute_hub.card_climbs_go'|trans }}</span>
-    </a>
-    <a class="card" id="type-where-to-sleep" href="{{ path('improve', {type: 'where-to-sleep', mode: 'add'}) }}">
-      <span class="ic">⛺</span>
-      <h4>{{ 'contribute_hub.card_sleep_h'|trans }}</h4>
-      <p>{{ 'contribute_hub.card_sleep_p'|trans }}</p>
-      <span class="go">{{ 'contribute_hub.card_sleep_go'|trans }}</span>
-    </a>
-    <a class="card" id="type-scenic-views" href="{{ path('improve', {type: 'scenic-views', mode: 'add'}) }}">
-      <span class="ic">📷</span>
-      <h4>{{ 'contribute_hub.card_views_h'|trans }}</h4>
-      <p>{{ 'contribute_hub.card_views_p'|trans }}</p>
-      <span class="go">{{ 'contribute_hub.card_views_go'|trans }}</span>
-    </a>
-    <a class="card" id="type-history-culture" href="{{ path('improve', {type: 'history-culture', mode: 'add'}) }}">
-      <span class="ic">🏛</span>
-      <h4>{{ 'contribute_hub.card_history_h'|trans }}</h4>
-      <p>{{ 'contribute_hub.card_history_p'|trans }}</p>
-      <span class="go">{{ 'contribute_hub.card_history_go'|trans }}</span>
-    </a>
-    <a class="card" id="type-quality-rides" href="{{ path('propose_route') }}">
-      <span class="ic">★</span>
-      <h4>{{ 'contribute_hub.card_rides_h'|trans }}</h4>
-      <p>{{ 'contribute_hub.card_rides_p'|trans }}</p>
-      <span class="go">{{ 'contribute_hub.card_rides_go'|trans }}</span>
-    </a>
-    <a class="card" href="{{ path('vote') }}">
-      <span class="ic">◬</span>
-      <h4>{{ 'vote.tab_climbs'|trans }}</h4>
-      <p>{{ 'pages.card_vote_p'|trans }}</p>
-      <span class="go">{{ 'region.cta_vote'|trans }}</span>
-    </a>
+    {% include 'partials/_catalog_card.html.twig' with {letter: 'N', title: 'home.cat_card_climbs_h', text: 'home.cat_card_climbs_p', id: 'type-climbs', href: path('improve', {type: 'climbs', mode: 'add'}), go: 'contribute_hub.card_climbs_go'} only %}
+    {% include 'partials/_catalog_card.html.twig' with {letter: 'O', title: 'home.cat_card_sleep_h', text: 'home.cat_card_sleep_p', id: 'type-where-to-sleep', href: path('improve', {type: 'where-to-sleep', mode: 'add'}), go: 'contribute_hub.card_sleep_go'} only %}
+    {% include 'partials/_catalog_card.html.twig' with {letter: 'P', title: 'home.cat_card_scenic_h', text: 'home.cat_card_scenic_p', id: 'type-scenic-views', href: path('improve', {type: 'scenic-views', mode: 'add'}), go: 'contribute_hub.card_views_go'} only %}
+    {% include 'partials/_catalog_card.html.twig' with {letter: 'Q', title: 'home.cat_card_history_h', text: 'home.cat_card_history_p', id: 'type-history-culture', href: path('improve', {type: 'history-culture', mode: 'add'}), go: 'contribute_hub.card_history_go'} only %}
+    {% include 'partials/_catalog_card.html.twig' with {letter: 'R', title: 'home.cat_card_quality_h', text: 'home.cat_card_quality_p', id: 'type-quality-rides', href: path('propose_route'), go: 'contribute_hub.card_rides_go'} only %}
+    {% include 'partials/_catalog_card.html.twig' with {letter: 'N', title: 'vote.tab_climbs', text: 'pages.card_vote_p', href: path('vote'), go: 'region.cta_vote'} only %}
+    <div class="card suggest"><span class="ic">✎</span><h4>{{ 'home.cat_suggest2_h'|trans }}</h4><p>{{ 'home.cat_suggest2_p'|trans }}</p><a href="https://github.com/cycling-commons/cycling-commons/issues/new/choose">{{ 'home.cat_suggest_link'|trans }}</a></div>
   </div>
 
   {# HIDDEN UNTIL THERE ARE RIDES TO DRAW (docs/TODO.md, "Ride heatmap").
      The whole category goes, not just the card: the heatmap is the only thing
      in it, and a heading over an empty grid reads as something broken rather
      than something coming. Restore both together.
-  <h3 class="cat-h"><b>{{ 'contribute_hub.cat_derived_h'|trans }}</b> <span>{{ 'contribute_hub.cat_derived_sub'|trans }}</span></h3>
+  <h3 class="cat-h"><b>{{ 'contribute_hub.cat_derived_h'|trans }}:</b> <span>{{ 'contribute_hub.cat_derived_sub'|trans }}</span></h3>
   <div class="grid">
     <div class="card off">
       <span class="ic">◴</span>
@@ -113,14 +57,9 @@
   </div>
   #}
 
-  <h3 class="cat-h"><b>{{ 'contribute_hub.cat_atlas_h'|trans }}</b> <span>{{ 'contribute_hub.cat_atlas_sub'|trans }}</span></h3>
+  <h3 class="cat-h"><b>{{ 'contribute_hub.cat_atlas_h'|trans }}:</b> <span>{{ 'contribute_hub.cat_atlas_sub'|trans }}</span></h3>
   <div class="grid">
-    <a class="card" href="{{ path('translate') }}">
-      <span class="ic">文</span>
-      <h4>{{ 'contribute_hub.card_translate_h'|trans }}</h4>
-      <p>{{ 'contribute_hub.card_translate_p'|trans }}</p>
-      <span class="go">{{ 'contribute_hub.card_translate_go'|trans }}</span>
-    </a>
+    {% include 'partials/_catalog_card.html.twig' with {glyph: '文', title: 'contribute_hub.card_translate_h', text: 'contribute_hub.card_translate_p', href: path('translate'), go: 'contribute_hub.card_translate_go'} only %}
   </div>
 
   <div class="notice">

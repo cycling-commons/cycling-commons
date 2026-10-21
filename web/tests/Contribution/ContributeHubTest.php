@@ -82,6 +82,33 @@ final class ContributeHubTest extends WebTestCase
         self::assertStringNotContainsString('item=repair-station', $body);
     }
 
+    public function testTheHubShowsTheHomePagesCards(): void
+    {
+        $client = static::createClient();
+        $home = $client->request('GET', '/');
+        self::assertResponseIsSuccessful();
+        $homeTitles = $home->filter('.grid a.card h4')->each(static fn ($h): string => $h->text());
+
+        $hub = $client->request('GET', '/contribute');
+        self::assertResponseIsSuccessful();
+        $hubTitles = $hub->filter('.grid .card[id^="type-"] h4')->each(static fn ($h): string => $h->text());
+
+        self::assertSame($homeTitles, $hubTitles, 'the hub has the home page\'s cards, in its order');
+        self::assertSame(
+            $home->filter('.grid a.card .fr')->count(),
+            $hub->filter('.grid .card[id^="type-"] .fr')->count(),
+            'the same cards wear the freshness dots',
+        );
+        self::assertCount(1, $hub->filter('.fresh-key'), 'the dots are explained above the cards');
+        self::assertCount(0, $hub->filter('.card[id^="type-"] > .ic'), 'categories wear their drawn icon, not an emoji');
+
+        // General facilities holds two forms: water and food, and public toilets.
+        $facilities = $hub->filter('#type-water-food');
+        self::assertSame('div', $facilities->nodeName());
+        self::assertCount(1, $facilities->filter('a[href="/improve?type=water-food&mode=add"]'));
+        self::assertCount(1, $facilities->filter('a[href="/improve?type=public-toilets&mode=add"]'));
+    }
+
     public function testPageContainsVoteLink(): void
     {
         $client = static::createClient();
