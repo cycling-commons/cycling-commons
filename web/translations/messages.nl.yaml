@@ -2056,6 +2056,7 @@ map:
   d_text_edit_signin: 'Log in om deze tekst te bewerken'
   d_text_add_signin: 'Log in om een tekst voor deze plaats te schrijven'
   d_place_text_label: 'Tekst ({lang})'
+  d_lang_title: "Geschreven in het %lang%"
   d_founded: 'Gesticht'
   d_inhabitants: 'Inwoners'
   d_circa: 'ca.'
@@ -2765,6 +2766,7 @@ place_text:
     source_required: 'Zeg waar je tekst vandaan komt: bewerkt uit het Wikipedia-artikel, of je eigen tekst.'
 
 moderate:
+  lang_title: "Geschreven in het %lang%"
   rider_removed: 'een fietser met verwijderd account'
   town:
     title: 'Tekst van de stadskaart'

@@ -220,3 +220,5 @@
   .q-osm-chip .q-osm .btn-act:hover{background:rgba(160,71,42,.08);border-color:#A0472A}
   .q-osm{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem}
   .q-osm form{display:inline}
+  /* The language a contribution is written in, beside its type: quiet mono caps. */
+  .q-tag--lang{font-family:var(--mono);letter-spacing:.08em}

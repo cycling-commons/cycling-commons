@@ -664,7 +664,7 @@ final class MapController extends AbstractController
             // docs/specs/moderation-and-contribution.md §3.1b: who wrote the town text, its pencil, and the link to write one.
             'wikiEditedBy' => 'd_wiki_edited_by', 'textWritten' => 'd_text_written', 'textWrittenBy' => 'd_text_written_by',
             'textEdit' => 'd_text_edit', 'textAdd' => 'd_text_add', 'textEditSignin' => 'd_text_edit_signin',
-            'textAddSignin' => 'd_text_add_signin', 'placeTextLabel' => 'd_place_text_label',
+            'textAddSignin' => 'd_text_add_signin', 'placeTextLabel' => 'd_place_text_label', 'langTitle' => 'd_lang_title',
             'reportText' => 'd_report_text', 'wikiEdited' => 'd_wiki_edited', 'founded' => 'd_founded', 'inhabitants' => 'd_inhabitants', 'circa' => 'd_circa', 'yearBc' => 'd_year_bc',
             'raceStageStart' => 'd_race_stage_start', 'raceStageFinish' => 'd_race_stage_finish', 'raceStageStartFinish' => 'd_race_stage_start_finish', 'nothingHere' => 'd_nothing_here',
             'kindShop' => 'd_kind_shop', 'kindStation' => 'd_kind_station', 'kindPump' => 'd_kind_pump',

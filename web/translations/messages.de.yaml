@@ -2059,6 +2059,7 @@ map:
   d_text_edit_signin: 'Anmelden, um diesen Text zu bearbeiten'
   d_text_add_signin: 'Anmelden, um einen Text für diesen Ort zu schreiben'
   d_place_text_label: 'Text ({lang})'
+  d_lang_title: "Geschrieben auf %lang%"
   d_founded: 'Gegründet'
   d_inhabitants: 'Einwohner'
   d_circa: 'ca.'
@@ -2766,6 +2767,7 @@ place_text:
     source_required: 'Gib an, woher dein Text stammt: aus dem Wikipedia-Artikel bearbeitet oder selbst geschrieben.'
 
 moderate:
+  lang_title: "Geschrieben auf %lang%"
   rider_removed: 'ein Fahrer mit gelöschtem Konto'
   town:
     title: 'Text der Ortskarte'

@@ -947,6 +947,28 @@ Pinned by `PlaceTextProposalTest`, `TownControllerTest`,
 `DeskSeenTest::testTheTextCardsEditLinkOpensTheSubmission`,
 `tests/js/town-text.test.mjs` and `tests/js/text-credit-actions.test.mjs`.
 
+### 3.1d The language a contribution is written in (2026-10-20)
+
+Every submission carries the language it is written in, `submission.lang`
+(two letters, `Version20261020040000`), so a curator knows what they are
+reading and a text can later be translated from it. When none is given it is
+English (owner 2026-10-20).
+
+- **A town or region text:** the language the writer chose on its form.
+- **The site's forms** (add, improve, Scout): the language of the page the
+  rider sent it from (`CatalogContributionService::langOf()`), English when
+  there is no page.
+- **A partner app:** its `lang`
+  ([public-api.md](public-api.md) §8), English when absent.
+- Only a language the build carries (`en fr nl de es`); anything else is
+  English. Submissions from before the column are English, texts keep the
+  language they named.
+
+The queue card, the History desk and the map drawer show it as a small tag
+beside the type ("NL", title "Written in NL"), English included. A town or
+region text's change line no longer starts with its `text:nl:` key: the tag
+says the language.
+
 ### 3.2 The `changes` contract
 
 - Computed **at submit against the item's then-current values**; only fields

@@ -76,6 +76,7 @@ final class ContributionApiTest extends WebTestCase
         self::assertSame('u-8f3a', $row['external_author_ref']);
         self::assertSame('Sam', $row['external_author_name']);
         self::assertSame('pending', $row['status']);
+        self::assertSame('en', $row['lang'], 'an app that names no language writes English');
         self::assertSame(['licence' => 'ODbL-1.0'], json_decode((string) $row['payload'], true)['_consent']);
         self::assertSame("Behind the church.\nLow flow.", json_decode((string) $row['changes'], true)['note']['now'], 'a note keeps its line break');
 
@@ -89,6 +90,19 @@ final class ContributionApiTest extends WebTestCase
 
         self::assertSame(['name' => 'Sam (Example Rides)', 'uuid' => null], DeskRider::ofApp('Sam', 'u-8f3a', 'Example Rides'));
         self::assertSame(['name' => '#u-8f3a (Example Rides)', 'uuid' => null], DeskRider::ofApp(null, 'u-8f3a', 'Example Rides'));
+    }
+
+    public function testAContributionCarriesTheLanguageItIsWrittenIn(): void
+    {
+        $client = static::createClient();
+        $key = $this->app('Example Rides NL');
+
+        $accepted = $this->post($client, $key, ['lang' => 'nl', 'name' => 'Fontein op het plein'] + self::NEW_PLACE);
+        self::assertSame('nl', $this->db()->fetchOne('SELECT lang FROM submission WHERE id = :id', ['id' => $accepted['submission_id']]));
+
+        $refused = $this->call($client, 'POST', '/v1/contributions', $key, ['lang' => 'xx'] + self::NEW_PLACE);
+        self::assertResponseStatusCodeSame(400);
+        self::assertSame('invalid_lang', $refused['error'] ?? null);
     }
 
     public function testTheCuratorDeskNamesTheAuthorAndTheApp(): void

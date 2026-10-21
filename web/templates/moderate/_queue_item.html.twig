@@ -56,6 +56,8 @@
            town or region icon before it says what it edits (owner 2026-10-01). #}
         {% set tag_type = item.type == 'text' ? 'edit' : item.type %}
         <span class="q-tag q-tag--{{ tag_type }}">{{ ('moderate.type.' ~ tag_type)|trans }}</span>
+        {# The language it is written in (§3.1d): shown on every card, English included. #}
+                <span class="q-tag q-tag--quiet q-tag--lang" title="{{ 'moderate.lang_title'|trans({'%lang%': (item.lang|default('en'))|upper}) }}">{{ (item.lang|default('en'))|upper }}</span>
         {# The rider answered a needs-info question. It used to arrive as a
            message in the curator's PERSONAL inbox; moderation work belongs on
            the desk, so the signal has to be here where it can be scanned

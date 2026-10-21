@@ -35,6 +35,7 @@ use App\Moderation\OutOfScopeException;
 use App\Service\ContributionReceipt;
 use App\Service\ContributionStubInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
@@ -69,6 +70,7 @@ final class CatalogContributionService implements ContributionStubInterface
         private readonly RateLimiterFactoryInterface $elevationLimiter,
         private readonly RateLimiterFactoryInterface $routeSnapLimiter,
         private readonly WebsiteGate $websites,
+        private readonly RequestStack $requests,
     ) {
     }
 
@@ -76,7 +78,7 @@ final class CatalogContributionService implements ContributionStubInterface
      * The payload keys a partner app's contribution may carry: no media, no
      * curator answers, no ticks, no channel claims.
      */
-    private const array APP_KEYS = ['type', 'lat', 'lng', 'details', '_item_id', '_osm_ref', '_consent'];
+    private const array APP_KEYS = ['type', 'lat', 'lng', 'details', '_item_id', '_osm_ref', '_consent', '_lang'];
 
     /** Payload keys this service refuses. `photoUrl` is never accepted. */
     private const array REFUSED_KEYS = ['photoUrl'];
@@ -902,6 +904,7 @@ final class CatalogContributionService implements ContributionStubInterface
                 ->setGeom($point)
                 ->setCountryCode($geo['countryCode'])
                 ->setRegionId($geo['regionId'])
+                ->setLang($this->langOf($rawPayload, $by))
                 ->setChanges(SubmissionType::NewItem === $type
                     ? self::newItemChanges($draft->attributes, $rawPayload['_osm_was'] ?? null)
                     : $changes /* Edit passes a ready was/now map */)
@@ -1002,6 +1005,25 @@ final class CatalogContributionService implements ContributionStubInterface
         $this->checkLinks($decoded);
 
         return $proposed;
+    }
+
+    /**
+     * The language a contribution is written in (moderation-and-contribution.md
+     * §3.1d): a partner app's `lang` (ContributionRequest, `_lang`), else the
+     * language of the page the rider sent it from, else English. Only a
+     * language the build carries; anything else is English.
+     *
+     * @param array<string, mixed> $payload
+     */
+    private function langOf(array $payload, User|ApiAuthor $by): string
+    {
+        $named = $payload['_lang'] ?? null;
+        if (\is_string($named) && \in_array($named, PlaceText::LANGS, true)) {
+            return $named;
+        }
+        $page = $by instanceof User ? $this->requests->getCurrentRequest()?->getLocale() : null;
+
+        return \is_string($page) && \in_array($page, PlaceText::LANGS, true) ? $page : Submission::DEFAULT_LANG;
     }
 
     /**

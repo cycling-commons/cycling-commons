@@ -26,6 +26,9 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'idx_submission_user', columns: ['user_id'])]
 class Submission
 {
+    /** The language a contribution is taken to be in when it names none. */
+    public const string DEFAULT_LANG = 'en';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'bigint')]
@@ -72,6 +75,14 @@ class Submission
 
     #[ORM\Column(type: 'string', length: 2)]
     private string $countryCode = '';
+
+    /**
+     * The language the contribution is written in (moderation-and-contribution.md
+     * §3.1d): a text's own, the page's for the site's forms, the partner
+     * app's `lang`; English when none was given.
+     */
+    #[ORM\Column(type: 'string', length: 2, options: ['default' => 'en'])]
+    private string $lang = self::DEFAULT_LANG;
 
     #[ORM\Column(type: 'bigint', nullable: true)]
     private ?int $regionId = null;
@@ -278,6 +289,20 @@ class Submission
     public function getCountryCode(): string
     {
         return $this->countryCode;
+    }
+
+    public function getLang(): string
+    {
+        return $this->lang;
+    }
+
+    /** Two lowercase letters; anything else is English, the language assumed when none is given. */
+    public function setLang(?string $lang): static
+    {
+        $lang = strtolower(trim((string) $lang));
+        $this->lang = 1 === preg_match('/^[a-z]{2}$/', $lang) ? $lang : self::DEFAULT_LANG;
+
+        return $this;
     }
 
     public function setCountryCode(string $countryCode): static

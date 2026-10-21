@@ -6,8 +6,10 @@ declare(strict_types=1);
 
 namespace App\Api\V1;
 
+use App\Catalog\Entity\Submission;
 use App\Catalog\FieldKind;
 use App\Catalog\ItemType;
+use App\Contribution\PlaceText;
 
 /**
  * A `POST /v1/contributions` body, checked and turned into the payload the
@@ -32,7 +34,7 @@ final readonly class ContributionRequest
     /** The licence the author agrees their contribution is published under. */
     public const string LICENCE = 'ODbL-1.0';
 
-    private const array KEYS = ['letter', 'item_id', 'osm_ref', 'name', 'geometry', 'fields', 'author', 'licence'];
+    private const array KEYS = ['letter', 'item_id', 'osm_ref', 'name', 'geometry', 'fields', 'author', 'licence', 'lang'];
 
     /**
      * @param 'add'|'improve'      $kind
@@ -75,6 +77,11 @@ final readonly class ContributionRequest
             if ('' === $name || mb_strlen($name) > 80) {
                 return self::bad('invalid_author', 'author.name is the name the author chose to share: 1 to 80 characters, or absent');
             }
+        }
+
+        $lang = $body['lang'] ?? Submission::DEFAULT_LANG;
+        if (!\is_string($lang) || !\in_array($lang, PlaceText::LANGS, true)) {
+            return self::bad('invalid_lang', 'lang must be the language the contribution is written in, one of '.implode(', ', PlaceText::LANGS).', or absent for en');
         }
 
         $itemId = $body['item_id'] ?? null;
@@ -142,6 +149,8 @@ final readonly class ContributionRequest
             }
         }
         $payload['_consent'] = ['licence' => self::LICENCE];
+        // The language the fields are written in; English when the app names none.
+        $payload['_lang'] = $lang;
 
         return new self($editing ? 'improve' : 'add', $editing ? $itemId : null, $letter, $ref, $name, $payload);
     }

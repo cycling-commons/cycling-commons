@@ -2054,6 +2054,7 @@ map:
   d_text_edit_signin: 'Connectez-vous pour modifier ce texte'
   d_text_add_signin: 'Connectez-vous pour écrire un texte pour cette ville'
   d_place_text_label: 'Texte ({lang})'
+  d_lang_title: "Écrit en %lang%"
   d_founded: 'Fondée'
   d_inhabitants: 'Habitants'
   d_circa: 'v.'
@@ -2761,6 +2762,7 @@ place_text:
     source_required: 'Indiquez d’où vient votre texte : adapté de l’article Wikipédia, ou écrit par vous.'
 
 moderate:
+  lang_title: "Écrit en %lang%"
   rider_removed: 'un cycliste au compte supprimé'
   town:
     title: 'Texte de la fiche ville'

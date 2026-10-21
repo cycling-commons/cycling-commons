@@ -713,9 +713,12 @@ function buildRecord(layer, f){
     }
     // catalog-data-model.md §5b — a new place's OSM question, asked where it is approved.
     const osmQ = 'new' === s.type ? osmQuestionHtml(s.osm, D) + replacesHtml(s.replaces, D, s.replacesOsm) : '';
+    /* The language it is written in (moderation-and-contribution.md §3.1d). */
+    const lang = escPend(String(s.lang || 'en').toUpperCase());
+    const langTag = ` <span class="cc-mod-lang" title="${escPend((D.langTitle || 'Written in %lang%').replace('%lang%', lang))}">${lang}</span>`;
     const badge = 'needs_info' === s.status
-      ? `<div class="cc-mod-badge waiting">? ${D.waitingOnRider||'Waiting on the rider'}</div>`
-      : `<div class="cc-mod-badge">⚑ ${I18N.pendingReview||'Pending review'}</div>`;
+      ? `<div class="cc-mod-badge waiting">? ${D.waitingOnRider||'Waiting on the rider'}${langTag}</div>`
+      : `<div class="cc-mod-badge">⚑ ${I18N.pendingReview||'Pending review'}${langTag}</div>`;
     /* Also-confirm on approve (not water, not K, not absence). Unticked by default. */
     const NEGATIVE_NOW = ['Out of order', 'Closed', 'Not there anymore', 'Gone — clear now', 'Reduced'];
     const assertsAbsence = chList.some(c => NEGATIVE_NOW.includes(c.now));

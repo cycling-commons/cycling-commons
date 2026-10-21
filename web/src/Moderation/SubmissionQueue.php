@@ -50,7 +50,7 @@ final class SubmissionQueue
     ) {
     }
 
-    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,corrected:bool,textTarget:?string}> */
+    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,corrected:bool,textTarget:?string,lang:string}> */
     public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?int $byUser = null, ?string $letter = null): array
     {
         [$where, $params] = $this->openFilters($country, $region, $type, $q, $byUser, $letter);
@@ -172,7 +172,7 @@ final class SubmissionQueue
     /**
      * Map pending layer: pending only, plus optional `$focusId` for a needs-info pin.
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,corrected:bool,textTarget:?string}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,corrected:bool,textTarget:?string,lang:string}>
      */
     public function pendingForMap(ModerationScope $scope, ?int $focusId = null): array
     {
@@ -232,10 +232,13 @@ final class SubmissionQueue
             if (\in_array($field, self::SHAPE_FIELDS, true)) {
                 continue;
             }
+            // A town or region text is the whole change, and the card's language
+            // tag already says which language: no `text:nl:` before the words.
+            $label = null !== PlaceText::langOfKey((string) $field) ? '' : $field.': ';
             if (null !== ($pair['was'] ?? null)) {
-                $was[] = $field.': '.ChangeValue::format($field, $pair['was']);
+                $was[] = $label.ChangeValue::format($field, $pair['was']);
             }
-            $new[] = $field.': '.ChangeValue::format($field, $pair['now'] ?? null);
+            $new[] = $label.ChangeValue::format($field, $pair['now'] ?? null);
         }
 
         return [implode(' · ', $was), implode(' · ', $new)];
@@ -247,7 +250,7 @@ final class SubmissionQueue
      * @param ?int    $decidedBy scope to one moderator's own decisions
      * @param ?string $status    'approved' | 'rejected'; null = both
      *
-     * @return list<array{id:int,itemId:?int,title:string,type:string,was:string,now:string,who:?string,whoUuid:string,when:string,status:string,decidedBy:?string,decidedByUuid:?string,note:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,thread:list<array{who:string,body:string,when:string}>,sortAt:int,textTarget:?string}>
+     * @return list<array{id:int,itemId:?int,title:string,type:string,was:string,now:string,who:?string,whoUuid:string,when:string,status:string,decidedBy:?string,decidedByUuid:?string,note:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,thread:list<array{who:string,body:string,when:string}>,sortAt:int,textTarget:?string,lang:string}>
      */
     public function history(ModerationScope $scope, ?int $decidedBy = null, ?string $status = null, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?string $country = null, ?string $region = null, ?string $type = null, ?int $byUser = null, ?string $letter = null): array
     {
@@ -256,7 +259,7 @@ final class SubmissionQueue
         $params['off'] = self::offset($page, $perPage);
 
         $rows = $this->db->fetchAllAssociative(
-            'SELECT s.id, s.item_id, s.title, s.type, s.letter, s.status, s.user_id, s.decided_at, s.decision_note,
+            'SELECT s.id, s.item_id, s.title, s.type, s.letter, s.status, s.user_id, s.decided_at, s.decision_note, s.lang,
                     CASE WHEN s.type = \'text\' THEN s.payload->>\'target\' END AS text_target,
                     s.changes, u.display_name AS decided_by_name, u.public_profile AS decided_by_public, u.uuid AS decided_by_uuid,
                     su.public_profile, su.display_name, su.uuid AS user_uuid, su.pseudonym,
@@ -296,6 +299,8 @@ final class SubmissionQueue
                 'type' => (string) $r['type'],
                 'letter' => (string) $r['letter'],
                 'textTarget' => self::textTarget($r['text_target'] ?? null),
+                /* The language it is written in (moderation-and-contribution.md §3.1d). */
+                'lang' => (string) ($r['lang'] ?? 'en'),
                 /* Type label from letter; template omits null. */
                 'typeLabel' => ItemType::fromLetter((string) $r['letter'])?->labelKey(),
                 'was' => $was,
@@ -526,7 +531,7 @@ final class SubmissionQueue
      *                                     via $params, never interpolated
      * @param array<string, mixed> $params bound query parameters
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,corrected:bool,textTarget:?string}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,corrected:bool,textTarget:?string,lang:string}>
      */
     private function rows(ModerationScope $scope, string $where, array $params, ?int $limit = null, int $offset = 0): array
     {
@@ -536,7 +541,7 @@ final class SubmissionQueue
             $params += $frag['params'];
         }
         $rows = $this->db->fetchAllAssociative(
-            'SELECT s.id, s.item_id, s.type, s.letter, s.country_code, COALESCE(r.name, \'\') AS region, s.title, s.status, s.decision_note,
+            'SELECT s.id, s.item_id, s.type, s.letter, s.country_code, COALESCE(r.name, \'\') AS region, s.title, s.status, s.decision_note, s.lang,
                     ST_Y(s.geom) AS lat, ST_X(s.geom) AS lng, s.user_id, s.created_at, s.changes,
                     COALESCE(s.payload->\'details\'->>\'note\', \'\') AS body,
                     s.payload->\'_bikeway\' AS bikeway,
@@ -626,6 +631,8 @@ final class SubmissionQueue
                 'replacesOsm' => $this->replacesOsm($r),
                 /* A Text proposal a curator corrected before deciding (moderation-and-contribution.md §3.1b). */
                 'corrected' => 1 === (int) $r['corrected'],
+                /* The language it is written in (moderation-and-contribution.md §3.1d). */
+                'lang' => (string) ($r['lang'] ?? 'en'),
                 /* A Text proposal's town or region, for the row's icon. */
                 'textTarget' => self::textTarget($r['text_target'] ?? null),
             ];

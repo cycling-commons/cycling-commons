@@ -502,8 +502,12 @@ which the app-scoped reference below provides.
   Registered by an operator with `app:api-app register "<name>" <address>`;
   the key is printed once. There is no self-serve page: an app writes only
   under a partner agreement.
-- **Request.** `{letter, item_id?, osm_ref?, name?, geometry?, fields?,
-  author: {ref, name?}, licence: "ODbL-1.0"}`, checked by
+- **Request.** `{letter, item_id?, osm_ref?, lang?, name?, geometry?, fields?,
+  author: {ref, name?}, licence: "ODbL-1.0"}`. `lang` is the language the
+  name and fields are written in, one of `en fr nl de es`, English when
+  absent (`invalid_lang` otherwise); the curator sees it on the card
+  ([moderation-and-contribution.md](moderation-and-contribution.md) §3.1d).
+  Checked by
   `App\Api\V1\ContributionRequest` before anything reaches the queue: a
   letter `/v1/catalog` marks `contributions` (B, C, D, E, F, G, O, P, Q:
   the places a pin locates; a road surface, a climb and a route keep their

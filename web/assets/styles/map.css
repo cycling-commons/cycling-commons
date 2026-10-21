@@ -2378,3 +2378,5 @@
   /* Over the ride line a click inserts a checkpoint: the insert cursor beats any layer's hover pointer. */
   .cc-insert .maplibregl-canvas{cursor:copy!important}
   .cc-guide-glow.spot{border-radius:50%}
+/* The language a pending contribution is written in, after its badge (moderation-and-contribution.md §3.1d). */
+.cc-mod-lang{display:inline-block;margin-left:.5rem;padding:0 .35rem;border:1px solid currentColor;border-radius:3px;opacity:.8}

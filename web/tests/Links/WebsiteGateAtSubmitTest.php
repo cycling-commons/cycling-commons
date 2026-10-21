@@ -82,6 +82,31 @@ final class WebsiteGateAtSubmitTest extends KernelTestCase
         }
     }
 
+    public function testAContributionTakesThePagesLanguage(): void
+    {
+        $item = $this->item();
+        $stack = static::getContainer()->get('request_stack');
+        $request = \Symfony\Component\HttpFoundation\Request::create('/nl/improve');
+        $request->setLocale('nl');
+        $stack->push($request);
+        try {
+            $receipt = $this->submit(['_item_id' => $item->getId(), 'details' => ['web' => 'https://open.test/']]);
+        } finally {
+            $stack->pop();
+        }
+        $lang = $this->db()->fetchOne('SELECT lang FROM submission WHERE item_id = :i ORDER BY id DESC LIMIT 1', ['i' => $item->getId()]);
+        self::assertSame('nl', $lang, 'sent from a Dutch page: Dutch');
+        unset($receipt);
+
+        $other = (new Item())->setLetter('B')->setName('Fontaine 2')
+            ->setGeom('{"type":"Point","coordinates":[5.87,50.48]}')->setCountryCode('BE')
+            ->setState(ItemState::Verified)->setSource(ItemSource::User)->setSourceRef('test-other');
+        $this->em->persist($other);
+        $this->em->flush();
+        $this->submit(['_item_id' => $other->getId(), 'details' => ['web' => 'https://open.test/b']]);
+        self::assertSame('en', $this->db()->fetchOne('SELECT lang FROM submission WHERE item_id = :i ORDER BY id DESC LIMIT 1', ['i' => $other->getId()]), 'no page: English');
+    }
+
     public function testAWebsiteThatDidNotAnswerInTimeIsAccepted(): void
     {
         $item = $this->item();

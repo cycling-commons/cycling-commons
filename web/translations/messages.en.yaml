@@ -2674,6 +2674,7 @@ map:
   d_text_edit_signin: 'Sign in to edit this text'
   d_text_add_signin: 'Sign in to write a text for this town'
   d_place_text_label: 'Text ({lang})'
+  d_lang_title: "Written in %lang%"
   d_founded: 'Founded'
   d_inhabitants: 'Inhabitants'
   d_circa: 'c.'
@@ -2780,6 +2781,7 @@ place_text:
     source_required: 'Say where your text comes from: adapted from the Wikipedia article, or your own text.'
 
 moderate:
+  lang_title: "Written in %lang%"
   rider_removed: 'a removed rider'
   town:
     title: 'Town card text'

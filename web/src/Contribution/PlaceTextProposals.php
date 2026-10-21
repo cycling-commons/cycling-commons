@@ -489,6 +489,7 @@ final readonly class PlaceTextProposals
                 ->setGeom($point)
                 ->setCountryCode($countryCode)
                 ->setRegionId($regionId)
+                ->setLang(\is_string($payload['lang'] ?? null) ? $payload['lang'] : null)
                 ->setChanges($changes)
                 ->setPayload($payload)
                 ->setDecisionNote(null)

@@ -1042,6 +1042,11 @@ components:
           type: string
           description: A new place taken from this OpenStreetMap object.
           pattern: '^(node|way)/\d{1,16}$'
+        lang:
+          type: string
+          enum: [en, fr, nl, de, es]
+          default: en
+          description: The language the name and fields are written in, shown to the curator. Absent means English.
         name:
           type: string
           maxLength: 200
