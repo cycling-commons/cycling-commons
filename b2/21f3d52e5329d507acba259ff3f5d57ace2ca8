@@ -1,0 +1,69 @@
+docs/specs/moderation-and-contribution.md
+  s_4a9259c4225e4b::t_d987eec504d470 950-971
+docs/specs/public-api.md
+  s_98eb2fc2096856::t_895a02453f1d0e 505-510
+web/assets/map/drawer.js
+  s_4a9259c4225e4b::t_4d53be00e28942 716-718,720-721
+web/assets/styles/map.css
+  s_98eb2fc2096856::t_182056a61ca348 2381-2382
+web/assets/styles/page/moderate/_card_styles.css
+  s_98eb2fc2096856::t_de24c513ad696b 223-224
+web/migrations/Version20261020040000.php
+  s_98eb2fc2096856::t_1acbb9078aa396 1-39
+web/public/api/openapi.yaml
+  s_98eb2fc2096856::t_918dffef02a4e4 1045-1049
+web/src/Api/V1/ContributionRequest.php
+  s_98eb2fc2096856::t_97661464752b3e 9,12,37,82-86,152-153
+web/src/Catalog/Entity/Submission.php
+  s_98eb2fc2096856::t_aa650a5e26606f 29-31,79-86,294-307
+web/src/Contribution/CatalogContributionService.php
+  s_98eb2fc2096856::t_a41866275a1746 38,73,81,907,1010-1028
+web/src/Contribution/PlaceTextProposals.php
+  s_4a9259c4225e4b::t_bb34b85f65ee99 492
+web/src/Controller/MapController.php
+  s_4a9259c4225e4b::t_21a26621f0d31a 667
+web/src/Moderation/SubmissionQueue.php
+  s_4a9259c4225e4b::t_b9d910fde3fe18 53,175,235-237,239,241,253,262,302-303,534,544,634-635
+web/templates/moderate/_queue_item.html.twig
+  s_4a9259c4225e4b::t_e468c965e08cdf 59-60
+web/templates/moderate/history.html.twig
+  s_4a9259c4225e4b::t_25e8e2c3ad2d22 124-125
+web/tests/Api/ContributionApiTest.php
+  s_98eb2fc2096856::t_6af45ebd9d716f 79,95-107
+web/tests/Links/WebsiteGateAtSubmitTest.php
+  s_98eb2fc2096856::t_9b352033b38b0f 85-109
+web/translations/messages.de.yaml
+  s_4a9259c4225e4b::t_c632f00c4d13c0 2062,2770
+web/translations/messages.en.yaml
+  s_4a9259c4225e4b::t_a94e6d55de7d46 2677,2784
+web/translations/messages.es.yaml
+  s_4a9259c4225e4b::t_9664206c716fe6 2684,2791
+web/translations/messages.fr.yaml
+  s_4a9259c4225e4b::t_b4e2ffa301a2f3 2057,2765
+web/translations/messages.nl.yaml
+  s_4a9259c4225e4b::t_45289198ed8aa7 2059,2769
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b221f3d52e5329d507acba259ff3f5d57ace2ca8",
+  "prompts": {},
+  "sessions": {
+    "s_4a9259c4225e4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aa072c1e-46c1-4bc8-a73b-4327426f865a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_98eb2fc2096856": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eed14279-d39c-4acf-a1ff-88e21ea8830d",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
