@@ -1,0 +1,26 @@
+docs/specs/map-presets.md
+  s_040e7dfac18e31::t_06becf2f6d6a3a 137-141
+web/templates/settings/index.html.twig
+  s_040e7dfac18e31::t_788abbdc800ec6 364
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "fd9c1b96ab74520569e9c41d5748204c2dad4b04",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_040e7dfac18e31": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "14984811-ef34-4cff-9ec4-54c041744da9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
