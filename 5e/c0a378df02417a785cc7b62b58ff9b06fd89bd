@@ -1,0 +1,74 @@
+web/templates/pages/index.html.twig
+  s_4a9259c4225e4b::t_0ba08d6f674708 5,169-174,180-184
+web/assets/styles/catalog-cards.css
+  s_4a9259c4225e4b::t_a777de031cc76e 1-54
+web/templates/contribute/index.html.twig
+  s_4a9259c4225e4b::t_217b1a731946c7 49,60
+  s_4a9259c4225e4b::t_7bec9ff8dfea4a 4,15-19,21-31,34,36-42,62
+web/translations/messages.nl.yaml
+  s_4a9259c4225e4b::t_93f15a45cb1515 345
+  h_fb5318cde6cf17 379
+  s_4a9259c4225e4b::t_df22adc0667a26 388
+  s_4a9259c4225e4b::t_44ecab5c8dfd87 366
+  s_4a9259c4225e4b::t_ab16b8e91b406d 367
+  s_4a9259c4225e4b::t_fc9e0619a7c2c4 373
+  s_4a9259c4225e4b::t_5297eb93b2c745 361
+  h_fb5318cde6cf17 2022,2349-2350
+web/translations/messages.de.yaml
+  s_4a9259c4225e4b::t_fc9e0619a7c2c4 373
+  s_4a9259c4225e4b::t_44ecab5c8dfd87 366
+  s_4a9259c4225e4b::t_93f15a45cb1515 345
+  s_4a9259c4225e4b::t_ab16b8e91b406d 367
+  h_fb5318cde6cf17 2352-2353
+web/assets/styles/page/contribute/index.css
+  s_4a9259c4225e4b::t_217b1a731946c7 2,5
+web/translations/messages.fr.yaml
+  s_4a9259c4225e4b::t_44ecab5c8dfd87 364
+  s_4a9259c4225e4b::t_fc9e0619a7c2c4 371
+  s_4a9259c4225e4b::t_ab16b8e91b406d 365
+  s_4a9259c4225e4b::t_93f15a45cb1515 343
+  h_fb5318cde6cf17 2347-2348
+web/translations/messages.en.yaml
+  s_4a9259c4225e4b::t_ab16b8e91b406d 367
+  s_4a9259c4225e4b::t_44ecab5c8dfd87 366
+  s_4a9259c4225e4b::t_fc9e0619a7c2c4 373
+  s_4a9259c4225e4b::t_c2e0a2a860f95a 1376-1377
+  s_4a9259c4225e4b::t_93f15a45cb1515 345
+web/src/Twig/TypeIconExtension.php
+  s_4a9259c4225e4b::t_6cc340cd011f99 30-33
+  s_4a9259c4225e4b::t_ef49f4244019ca 47-50
+docs/specs/moderation-and-contribution.md
+  s_4a9259c4225e4b::t_4919afc186714f 45-59
+web/templates/partials/_catalog_card.html.twig
+  s_4a9259c4225e4b::t_12047952999c6f 1-21
+web/translations/messages.es.yaml
+  s_4a9259c4225e4b::t_c2e0a2a860f95a 1386-1387
+  s_4a9259c4225e4b::t_ab16b8e91b406d 369
+  s_4a9259c4225e4b::t_93f15a45cb1515 347
+  s_4a9259c4225e4b::t_fc9e0619a7c2c4 375
+  s_4a9259c4225e4b::t_44ecab5c8dfd87 368
+web/tests/Contribution/ContributeHubTest.php
+  s_4a9259c4225e4b::t_12b56948e6c83f 85-102,104-111
+  s_4a9259c4225e4b::t_ace301fd7ffcae 103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5ec0a378df02417a785cc7b62b58ff9b06fd89bd",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_4a9259c4225e4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aa072c1e-46c1-4bc8-a73b-4327426f865a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
