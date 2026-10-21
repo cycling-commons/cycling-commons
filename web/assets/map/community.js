@@ -375,6 +375,11 @@ export function submitModeration(btn){
         mapToast(D.textCreditUndecided||'Approve this text on its form (✎): choose there whether the Wikipedia credit stays.', {center:true});
         return;
       }
+      if('text_links_unconfirmed'===code){
+        // moderation-and-contribution.md §3.1c - links that are not plainly fine are confirmed on the text's form.
+        mapToast(D.textLinksUnconfirmed||'Approve this text on its form (✎): confirm there that you opened the links that are not marked OK.', {center:true});
+        return;
+      }
       if('needs_info_note_required'===code){
         mapToast(D.needsInfoNote||'Ask the rider what you need to know — a needs-info with no question tells them nothing.', {center:true});
         return;

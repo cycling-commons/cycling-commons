@@ -868,6 +868,7 @@ no key) reads "could not be checked", never clean. The two call sites:
 |---|---|---|
 | **submit** (`CatalogContributionService::checkLinks`) | fail OPEN, never blocks | asks (a fresh stored answer, else Google), records whatever comes back, and swallows every error: nothing about a background check may cost a rider their save |
 | **the queue card** (`SubmissionQueue::linkFlags`, `linkFlag` on the row) | flag, never reject | shows the worst verdict for the links THIS submission proposes, `unsafe` ("A link in this submission is on a known-unsafe list. Do not click it.") and `unknown` differently, on both the desk template and the map drawer; an expired verdict is asked again first, so no card shows "unsafe" on an answer older than the terms allow |
+| **a region's history text** (`PlaceTextProposals::checkLinks`, at send and live in the form) | refuses `unsafe` | see [moderation-and-contribution.md](moderation-and-contribution.md) §3.1c |
 
 `SAFE_BROWSING_KEY` is on the deploy-prerequisites list (operations.md §3).
 

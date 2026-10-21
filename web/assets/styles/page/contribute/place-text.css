@@ -25,3 +25,81 @@
   font-size:.90rem;line-height:1.55;color:#3a3d30;cursor:pointer}
 .pt-pick .cinline input{flex:0 0 auto;margin-top:.25rem}
 .pt-credit .pt-credit-claim{font-style:italic}
+/* The link editor of a history text (place-text.js, §3.1c). The layer
+   (.pt-hl) sits under the textarea and draws the same text invisibly, so
+   only its tints show through the transparent box: the link words, their
+   address, a refused word in red. Both wrap and break text the same way;
+   the script copies the box's font, padding and borders onto the layer. */
+.pt-hl-wrap{position:relative}
+.pt-hl-wrap.is-on textarea{position:relative;z-index:1;background:transparent;
+  white-space:pre-wrap;overflow-wrap:break-word;word-break:normal}
+.pt-hl{position:absolute;top:0;left:0;z-index:0;box-sizing:border-box;overflow:hidden;
+  border-style:solid;border-color:transparent;background:var(--paper);color:transparent;
+  white-space:pre-wrap;overflow-wrap:break-word;word-break:normal;pointer-events:none}
+.pt-hl mark{color:transparent;padding:0;border-radius:3px}
+.pt-hl mark.w,.pt-howto mark.w{background:rgba(196,98,45,.20)}
+.pt-hl mark.u,.pt-howto mark.u{background:rgba(20,22,14,.07)}
+.pt-hl mark.w.bad,.pt-hl mark.u.bad{background:rgba(200,40,30,.32)}
+/* A [hidden] part of the editor stays hidden: .btn and the flex rows set a
+   display of their own that would otherwise win over the attribute. */
+.pt-editor [hidden]{display:none !important}
+/* The button above the box, and the address field it opens in its place. */
+.pt-linkbar{margin:.1rem 0 .55rem}
+.pt-link-open{font-size:.85rem;padding:.35rem .8rem}
+.pt-link-form{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}
+.pt-link-form label{font-size:.85rem;color:#3a3d30}
+.pt-link-form input{flex:1 1 14rem;max-width:22rem;font-family:inherit;font-size:.9rem;padding:.45rem .6rem;
+  color:var(--ink);border:1px solid rgba(20,22,14,.24);border-radius:5px;background:var(--paper)}
+.pt-link-form input:focus{outline:2px solid var(--clay);outline-offset:1px;border-color:var(--clay)}
+.pt-link-form .btn{font-size:.85rem;padding:.4rem .8rem}
+.pt-link-msg:empty{display:none}
+/* The links in the text, in order, under the box. */
+.pt-links{margin:.6rem 0 0;padding:.6rem .8rem;background:var(--paper-deep);border-radius:5px;font-size:.85rem;line-height:1.5}
+.pt-links-h{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin:0 0 .35rem}
+.pt-links ol{margin:0;padding-left:1.4rem}
+.pt-links li{margin:.15rem 0;overflow-wrap:anywhere}
+.pt-links-w{font-weight:600;color:#3a3d30}
+.pt-links a{color:#595c4d}
+.pt-links li.is-bad .pt-links-w{color:#b3261e}
+.pt-links-bad{color:#b3261e}
+/* How to write it: steps under the box on a narrow screen; on a wide one
+   a column right of it, outside the form's 760 px, so the box keeps the
+   form's width and the steps sit where the eye is while writing. */
+.pt-editor{position:relative}
+.pt-howto{margin:.8rem 0 0;padding:.8rem 1rem;border-left:3px solid rgba(196,98,45,.45);
+  background:var(--paper-deep);border-radius:0 6px 6px 0;font-size:.86rem;line-height:1.55;color:#3a3d30}
+.pt-howto-h{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--clay);margin:0 0 .45rem}
+.reppage .pt-howto-h{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);line-height:1.4;margin:0 0 .45rem}
+.pt-howto ol{margin:0;padding-left:1.2rem}
+.pt-howto li{margin:0 0 .55rem}
+.pt-howto li:last-child{margin-bottom:0}
+.pt-howto-ex{display:block;margin:.35rem 0;font-family:var(--mono);font-size:.76rem;line-height:1.6;
+  overflow-wrap:anywhere;color:#2a2c22}
+.pt-howto-ex mark{color:inherit;padding:0 .05em;border-radius:3px}
+.pt-howto-link{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+/* Its top lines up with the first field's box, the language select: the
+   form is the anchor, and the offset is that field's label (its .68rem
+   type at the body's 1.6 line height, plus the label's .4rem margin). */
+@media(min-width:1140px){
+  .pt-story-form{position:relative}
+  .pt-story-form .pt-editor{position:static}
+  .pt-howto{position:absolute;top:calc(.68rem * 1.6 + .4rem);left:calc(100% + 2rem);width:15rem;margin:0}
+}
+/* Each link's check, after its address: a small chip in the mono label
+   type. Checked and fine in green, waiting grey, could not check amber,
+   refused red. */
+.pt-links-st{display:inline-block;margin-left:.15rem;padding:.02rem .45rem;border-radius:999px;
+  font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;vertical-align:.08em;white-space:nowrap}
+.pt-links-st.is-ok{background:rgba(46,125,50,.14);color:#25642a}
+.pt-links-st.is-wait{background:rgba(20,22,14,.07);color:#595c4d}
+.pt-links-st.is-warn{background:rgba(196,140,20,.18);color:#7a5a0c}
+.pt-links-st.is-bad{background:rgba(200,40,30,.16);color:#b3261e}
+/* The tick confirming links that are not plainly fine, under their list. */
+.pt-links-ok{display:flex;align-items:flex-start;gap:.55rem;margin:.6rem 0 0;padding:.55rem .8rem;
+  border-left:3px solid rgba(196,140,20,.6);background:rgba(196,140,20,.08);border-radius:0 5px 5px 0;
+  font-size:.88rem;line-height:1.5;color:#3a3d30;cursor:pointer}
+.pt-links-ok input{flex:0 0 auto;margin-top:.25rem}
+.pt-editor .pt-links-ok[hidden]{display:none !important}
+/* Which of a region's two texts this is, with the way to the other. */
+.reppage .pt-purpose p{margin:0}

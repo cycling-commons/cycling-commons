@@ -32,6 +32,7 @@ use App\Moderation\OutOfScopeException;
 use App\Moderation\StatementGround;
 use App\Moderation\SubmissionQueue;
 use App\Moderation\TextCreditUndecidedException;
+use App\Moderation\TextLinksUnconfirmedException;
 use App\Moderation\TrashBin;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
@@ -337,6 +338,16 @@ final class ModerateController extends AbstractController
                 }
 
                 $this->addFlash('error', 'moderate.error.text_credit_undecided');
+
+                return $this->redirectToRoute('moderate_submissions');
+            } catch (TextLinksUnconfirmedException) {
+                // moderation-and-contribution.md §3.1c - links that are not plainly
+                // fine are confirmed by hand, on the text's own form.
+                if ($wantsJson) {
+                    return $this->json(['error' => 'text_links_unconfirmed', 'form' => $this->generateUrl('moderate_text', ['id' => (int) $data['submission_id']])], Response::HTTP_UNPROCESSABLE_ENTITY);
+                }
+
+                $this->addFlash('error', 'moderate.error.text_links_unconfirmed');
 
                 return $this->redirectToRoute('moderate_submissions');
             } catch (AlreadyDecidedException|\InvalidArgumentException|\LogicException) {

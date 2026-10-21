@@ -7,37 +7,44 @@ declare(strict_types=1);
 namespace App\Contribution;
 
 use App\Catalog\RegionLead;
+use App\Catalog\RegionStory;
 
 /**
- * A town card's or a region page's about text in one language, as a Text
- * submission carries it.
+ * A town card's or a region page's about text in one language, or a region's
+ * "History, nature and culture" text, as a Text submission carries it.
  *
  * The payload names the target and the words; `changes` holds the same text
- * as one was/now pair under `text:<lang>`, which is what the desk card, the
- * drawer and the rider's own list render.
+ * as one was/now pair under `text:<lang>` (`story:<lang>` for the history
+ * text), which is what the desk card, the drawer and the rider's own list
+ * render.
  *
- * @see docs/specs/moderation-and-contribution.md §3.1b
+ * @see docs/specs/moderation-and-contribution.md §3.1b and §3.1c
  *
  * @api
  */
 final class PlaceText
 {
     public const string TOWN = 'town';
+    /** A region's geography text: where it lies, its landscape, size and neighbours (the page's first text, RegionLead). */
     public const string REGION = 'region';
+    /** A region's history, nature and culture text (RegionStory). */
+    public const string STORY = 'story';
 
     /**
      * The row icon of a Text submission, by target, drawn in the 24-box of
      * the category icons (partials/_type_icon.html.twig, via
      * `cc_text_icons()`): a text has no catalogue letter, so it has no
      * category icon of its own (owner 2026-10-01: "add a city or a region
-     * icon"). Town: two houses with windows. Region: a folded map.
+     * icon"). Town: two houses with windows. Region: a folded map. A
+     * region's history text: an open book.
      */
     public const array ICONS = [
         self::TOWN => 'M2 21V11.5l4.5-3.5 4.5 3.5V21Z M12 21V6.5l5-4 5 4V21Z M5.5 14h2v2h-2Z M15.5 8.5h3v2h-3Z M15.5 12.5h3v2h-3Z M15.5 16.5h3v2h-3Z',
         self::REGION => 'M2 5l6.5-2.5 7 2.5L22 2.5V19l-6.5 2.5-7-2.5L2 21.5Z M8 4.5h1v14h-1Z M15 7h1v13h-1Z',
+        self::STORY => 'M2 5c3.3-1.4 6.3-1.2 9 .6V20.5c-2.7-1.6-5.7-1.8-9-.6Z M13 5.6c2.7-1.8 5.7-2 9-.6v14.9c-3.3-1.2-6.3-1-9 .6Z',
     ];
 
-    /** Same cap for both: a region's lead and a town card's paragraph. */
+    /** Same cap for both: a region's lead and a town card's paragraph. The history text has its own ({@see RegionStory::MAX}, {@see RegionStory::RAW_MAX}). */
     public const int MAX = 1200;
 
     /** The rider's note to the curator. */
@@ -50,16 +57,22 @@ final class PlaceText
      */
     public const array LANGS = RegionLead::LOCALES;
 
-    /** The `changes` key for one language: `text:nl`. */
-    public static function changeKey(string $lang): string
+    /** The `changes` key for one language's text: `text:nl`, or `story:nl` for a region's history text. */
+    public static function changeKey(string $lang, string $target = self::TOWN): string
     {
-        return 'text:'.$lang;
+        return (self::STORY === $target ? 'story:' : 'text:').$lang;
     }
 
     /** The language a `changes` key names, or null when it is no text key. */
     public static function langOfKey(string $key): ?string
     {
         return 1 === preg_match('/^text:([a-z]{2})$/', $key, $m) ? $m[1] : null;
+    }
+
+    /** The language a history-text `changes` key names (`story:nl`), or null when it is none. */
+    public static function storyLangOfKey(string $key): ?string
+    {
+        return 1 === preg_match('/^story:([a-z]{2})$/', $key, $m) ? $m[1] : null;
     }
 
     /** One paragraph: runs of whitespace fold to one space, as the town page always did. */
@@ -71,7 +84,8 @@ final class PlaceText
     /**
      * The target a payload names, or null when it names none.
      *
-     * `ref` is `node/123` for a town and the region id (as a string) for a region.
+     * `ref` is `node/123` for a town and the region id (as a string) for a
+     * region and its history text.
      *
      * @param array<string, mixed> $payload
      *
@@ -83,19 +97,27 @@ final class PlaceText
         $ref = $payload['ref'] ?? null;
         $lang = $payload['lang'] ?? null;
         $text = $payload['text'] ?? null;
-        if (!\is_string($lang) || !\in_array($lang, self::LANGS, true) || !\is_string($text) || '' === $text || mb_strlen($text) > self::MAX) {
+        $max = self::STORY === $target ? RegionStory::RAW_MAX : self::MAX;
+        if (!\is_string($lang) || !\in_array($lang, self::LANGS, true) || !\is_string($text) || '' === $text || mb_strlen($text) > $max) {
             return null;
         }
         $validRef = match ($target) {
             self::TOWN => \is_string($ref) && 1 === preg_match('~^(node|way|relation)/\d{1,16}$~', $ref),
-            self::REGION => (\is_int($ref) || \is_string($ref)) && 1 === preg_match('~^\d{1,16}$~', (string) $ref),
+            self::REGION, self::STORY => (\is_int($ref) || \is_string($ref)) && 1 === preg_match('~^\d{1,16}$~', (string) $ref),
             default => false,
         };
         if (!$validRef) {
             return null;
         }
 
-        return ['target' => $target, 'ref' => (string) $ref, 'lang' => $lang, 'text' => $text, 'derived' => true === ($payload['derived'] ?? null)];
+        return [
+            'target' => $target,
+            'ref' => (string) $ref,
+            'lang' => $lang,
+            'text' => $text,
+            // The history text has no Wikipedia article to credit.
+            'derived' => self::STORY !== $target && true === ($payload['derived'] ?? null),
+        ];
     }
 
     /**

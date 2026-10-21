@@ -5,29 +5,29 @@
 {% endblock %}
 {% block body %}
 
-<div class="rhero"><div class="wrap">
-  <div class="rhero-top">
-    <div class="rhero-head">
+<div class="rhero"><div class="wrap rhero-cols">
+  {# Where this region sits in its country. Decorative: the shapes carry no
+     information the text does not, so it is aria-hidden rather than given a
+     label nobody needs read to them. First in the markup so a phone floats
+     it beside the title; a wide screen gives it the hero's right column,
+     beside everything else (region.css). #}
+  {% if silhouette %}
+    <figure class="rshape" aria-hidden="true">
+      <svg viewBox="0 0 {{ silhouette.width }} {{ silhouette.height }}" role="presentation" focusable="false">
+        {% if silhouette.country %}<path class="co-out" d="{{ silhouette.country }}" fill-rule="evenodd"/>{% endif %}
+        {% if silhouette.region %}<path class="rg-in" d="{{ silhouette.region }}" fill-rule="evenodd"/>{% endif %}
+      </svg>
+    </figure>
+  {% endif %}
+  <div class="rhero-main">
   <div class="co">
     <img src="{{ asset(region.flag) }}" alt="" width="20" height="15">
-    <span>{{ region.countryName }}</span>
+    {# The country leads to its own regions, opened on the list (regions-map.js reads #country-XX). #}
+    <a class="co-link" href="{{ path('regions') }}#country-{{ region.countryCode }}">{{ region.countryName }}</a>
     <span>· {{ ('regions.tier_' ~ region.tier)|trans }}</span>
     {% if region.stewardship != 'none' %}<span>· {{ ('regions.status_' ~ region.stewardship)|trans }}</span>{% endif %}
   </div>
   <h1 class="disp">{{ cc_region_label(region.slug) }}</h1>
-    </div>
-    {# Where this region sits in its country. Decorative: the shapes carry no
-       information the text does not, so it is aria-hidden rather than given a
-       label nobody needs read to them. #}
-    {% if silhouette %}
-      <figure class="rshape" aria-hidden="true">
-        <svg viewBox="0 0 {{ silhouette.width }} {{ silhouette.height }}" role="presentation" focusable="false">
-          {% if silhouette.country %}<path class="co-out" d="{{ silhouette.country }}" fill-rule="evenodd"/>{% endif %}
-          {% if silhouette.region %}<path class="rg-in" d="{{ silhouette.region }}" fill-rule="evenodd"/>{% endif %}
-        </svg>
-      </figure>
-    {% endif %}
-  </div>
   {# THE SAME THREE FIGURES AS /coverage, in the same order (owner 2026-08-14).
      That page opens with reference items, catalog items and routes; a region
      page that opened with only the last two made the region look like it holds
@@ -90,9 +90,12 @@
     <a class="btn btn-p" href="{{ path('map') }}?scope=region:{{ region.slug }}">{% trans %}region.cta_map{% endtrans %}</a>
     <a class="btn btn-g" style="border-color:rgba(239,230,212,.4);color:var(--paper)" href="{{ path('join_country', {cc: region.countryCode}) }}?region={{ region.slug }}">{% trans %}region.cta_apply{% endtrans %}</a>
   </div>
+  </div>
 </div></div>
 
-{# A short encyclopedic lead, harvested at BUILD time (never fetched live) in
+{# The region's GEOGRAPHY text: where it lies, its landscape, size and
+   neighbours. History, nature and culture are the other text below
+   (#story). A short encyclopedic lead, harvested at BUILD time (never fetched live) in
    the reader's locale with an English fallback. Verbatim, with its
    attribution rendered from the SAME stored entry as the text: the extract
    is CC BY-SA 4.0 and the credit line must never drift from what it credits.
@@ -103,7 +106,13 @@
    there is no credit line, so one plain link to write one stands instead.
    Both are the same for everybody, so the page stays cacheable; a visitor
    signs in on the way to the form. #}
-<section class="pad rg-about"><div class="wrap">
+{# Two columns on a wide screen: the two texts to read on the left, what
+   riders find here as a list on the right (region.css .rbody). One column,
+   in this order, on a phone. #}
+<section class="pad rbody"><div class="wrap">
+<div class="rbody-cols">
+<div class="rbody-main">
+<div class="rg-about">
   <div class="kicker">{% trans %}region.about_h{% endtrans %}</div>
   {% if region.context %}
     <p class="rg-about-text">{{ region.context.text }}</p>
@@ -143,9 +152,46 @@
   {% else %}
     <p class="rg-about-write"><a href="{{ path('region_text', {slug: region.slug}) }}">{{ 'region.about_write'|trans }}</a></p>
   {% endif %}
-</div></section>
+</div>
 
-<section class="pad"><div class="wrap">
+{# "History, nature and culture": what the land is about, beside the
+   geographic lead above (RegionStory, moderation-and-contribution.md
+   §3.1c). Written by riders and curators, never harvested, so its credit
+   line names its writer and it links its sources in place. Shown in
+   the reader's language, else English, else any: a text in another
+   language says so and links to the form to translate it. The ringed
+   icons are the lead's: report it, or edit it in the language shown.
+   Its links are citations a curator approved: they open in a new tab and
+   carry no nofollow, so search engines follow them as the editorial links
+   they are (§3.1c). #}
+<div class="rg-about rg-story" id="story">
+  <div class="kicker">{% trans %}region.story_h{% endtrans %}</div>
+  {% if region.story %}
+    {% set story = region.story %}
+    {% set other_lang = story.lang != app.request.locale %}
+    <div class="rg-story-text"{% if other_lang %} lang="{{ story.lang }}"{% endif %}>
+      {% for p in story.paragraphs %}<p>{{ include('pages/_story_parts.html.twig', {parts: p}) }}</p>{% endfor %}
+    </div>
+    {% set rider = story.byRider ? (story.author ?? 'region.about_removed_rider'|trans) : null %}
+    <p class="rg-about-attrib tc-line">{% if rider %}{{ 'region.about_source_rider'|trans({'%name%': rider}) }}{% else %}{% trans %}region.about_source_curator{% endtrans %}{% endif %}
+      <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noopener noreferrer">CC BY-SA 4.0</a>
+      {{- include('partials/_text_credit_actions.html.twig', {
+        report_href: path('content_report', {type: 'region', id: region.id, from: app.request.pathInfo}),
+        report_label: 'region.about_report'|trans,
+        edit_href: path('region_story', {slug: region.slug, lang: story.lang}),
+        edit_label: 'region.about_edit'|trans,
+      }) }}</p>
+    {% if other_lang %}
+      <p class="rg-about-write">{{ 'region.story_other_lang'|trans({'%lang%': story.langName}) }}
+        <a href="{{ path('region_story', {slug: region.slug, lang: app.request.locale}) }}">{{ 'region.story_translate'|trans }}</a></p>
+    {% endif %}
+  {% else %}
+    <p class="rg-about-write"><a href="{{ path('region_story', {slug: region.slug}) }}">{{ 'region.story_write'|trans }}</a></p>
+  {% endif %}
+</div>
+</div>
+
+<aside class="rbody-side">
   {% if region.byKind is not empty %}
     <div class="kicker">{% trans %}region.by_kind_h{% endtrans %}</div>
     <div class="kinds">
@@ -177,6 +223,8 @@
     <div class="kicker">{% trans %}region.empty_h{% endtrans %}</div>
     <p style="max-width:62ch;line-height:1.6">{% trans %}region.empty_p{% endtrans %}</p>
   {% endif %}
+</aside>
+</div>
   <p style="margin-top:2rem"><a href="{{ path('regions') }}">{% trans %}region.back{% endtrans %}</a></p>
   {# Notice and action, DSA Article 16. The description on this page is written
      text like any other and can be wrong, or about a person

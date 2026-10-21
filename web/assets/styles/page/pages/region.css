@@ -31,8 +31,18 @@
 /* The country in outline with this region filled. Inline SVG, no request and
    no JavaScript: a region page is read once, often on a phone, and the
    button beside it opens the real map for anyone who wants to pan. */
-.rshape{flex:0 0 auto;margin-left:auto}
-.rshape svg{display:block;width:132px;height:99px;overflow:visible}
+/* A wide screen gives it the hero's right column, beside the title, the
+   figures and the buttons, at up to 300 px; a phone floats it small beside
+   the title, and the figures clear it. The box is the silhouette's 4:3. */
+.rshape{float:right;margin:0 0 .6rem 1rem}
+.rshape svg{display:block;width:clamp(104px,26vw,132px);aspect-ratio:4/3;height:auto;overflow:visible}
+.rhero-main .rstats{clear:both}
+@media(min-width:760px){
+  .rhero-cols{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2.5rem;align-items:start}
+  .rshape{float:none;margin:0;grid-column:2;grid-row:1}
+  .rshape svg{width:clamp(200px,26vw,300px)}
+  .rhero-main{grid-column:1;grid-row:1;min-width:0}
+}
 .rshape .co-out{fill:rgba(239,230,212,.10);stroke:rgba(239,230,212,.38);stroke-width:.8;
   stroke-linejoin:round;vector-effect:non-scaling-stroke}
 .rshape .rg-in{fill:var(--clay);fill-opacity:.9;stroke:var(--paper);stroke-width:.8;
@@ -62,23 +72,32 @@ a.rsteward-name:hover{background:rgba(239,230,212,.16);border-color:rgba(239,230
 .rsteward-name.is-anon{color:rgba(239,230,212,.72);font-weight:400}
 .rsteward-reach{border-radius:0 999px 999px 0;background:transparent;
   color:rgba(239,230,212,.6);letter-spacing:.08em}
-.rhero-top{display:flex;align-items:flex-start;gap:1.5rem;flex-wrap:wrap}
-.rhero-top > .rhero-head{flex:1 1 260px;min-width:0}
-@media(max-width:640px){.rshape{margin-left:0}.rshape svg{width:104px;height:78px}}
-/* The about block and the section under it are one reading flow, not two
-   chapters (owner 2026-08-16: the gap read as dead space). Selector
-   shapes are deliberate: atlas.css sets section.pad:has(+ section.pad)
-   padding-bottom at (0,2,2) specificity, which silently beat both a lone
-   class and section.rg-about when this was first written - the zero has
-   to ride the same :has() shape to win the tie as the later sheet. */
-section.rg-about{padding-bottom:0}
-section.rg-about:has(+ section.pad){padding-bottom:0}
-/* The same clamp as .rhero+section.pad, so hero->About and About->next
-   header breathe identically at every width (owner 2026-08-16). */
-section.rg-about+section.pad{padding-top:clamp(1.75rem,3.5vw,2.75rem)}
+/* Under the hero: the two texts to read on the left, what riders find here
+   on the right as one list, from 980 px; one column in that order below.
+   The right column is wide enough for a kind's two figures on one line. */
+.rbody-cols{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(1.75rem,3.5vw,2.75rem)}
+@media(min-width:980px){
+  .rbody-cols{grid-template-columns:minmax(0,1fr) 300px;gap:3.5rem;align-items:start}
+  .rbody-side .kinds{grid-template-columns:minmax(0,1fr)}
+}
+/* About and History are one reading flow: the same clamp between them as
+   between the hero and the first header. */
+.rg-about + .rg-about{margin-top:clamp(1.75rem,3.5vw,2.75rem)}
 .rg-about-text{max-width:46rem;font-size:1.02rem;line-height:1.65;margin:.4rem 0 .5rem}
 /* The credit line: its type, underlines and ringed icons are text-credit.css's (.tc-line). */
 .rg-about-attrib{color:#5a5d4d}
 /* A region with no text: the one plain link to write one. */
 .rg-about-write{font-size:.9rem;line-height:1.55;color:#4f5344;margin:.5rem 0 0}
 .rg-about-write a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+/* "History, nature and culture": the lead's measure and type, one <p> per
+   paragraph. */
+.rg-story-text{max-width:46rem;font-size:1.02rem;line-height:1.65;margin:.4rem 0 .5rem}
+.rg-story-text p{margin:0 0 .9rem}
+.rg-story-text p:last-child{margin-bottom:0}
+/* A source linked in the text: the page's link colour, underlined, so it
+   reads as a citation inside the sentence. */
+.rg-story-text a{color:var(--clay);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+/* The country in the kicker leads to its regions on the list: the kicker's
+   own type, with a quiet underline that says it is a link. */
+.rhero .co a.co-link{color:inherit;text-decoration:underline;text-decoration-color:rgba(239,230,212,.35);text-underline-offset:3px}
+.rhero .co a.co-link:hover{text-decoration-color:currentColor;color:var(--paper)}

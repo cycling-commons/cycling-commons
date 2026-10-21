@@ -870,6 +870,19 @@ languages.
   not the approving curator (owner 2026-10-01). Pinned by
   `PlaceTextProposalTest` and `RegionsPagesTest`.
 
+  **Two texts, two purposes (2026-10-20).** The first text is the region's
+  GEOGRAPHY, kicker "Geography": where it lies, its landscape, size and
+  neighbours (`RegionLead`, the Wikipedia lead or a local one, §3.1b of
+  [moderation-and-contribution.md](moderation-and-contribution.md)); with
+  none, the link reads "Write about the geography of this region". The second
+  is "History, nature and culture" (`RegionStory`, below). The Wikipedia
+  harvest still takes the article's opening summary; a curator replaces it
+  where it strays from geography.
+
+  **The country leads to its regions.** The country name in the hero's
+  kicker links to `/regions#country-XX`, which opens that country's regions
+  on the list (`regions-map.js` reads the hash).
+
   **Four times the detail in the shape (2026-10-20).** The country outline with
   the region filled is drawn from `region.silhouette`, the same rings as the
   ranking `outline` simplified at 0.008 degrees (about 800 m) instead of
@@ -877,6 +890,40 @@ languages.
   68, the Netherlands 67 to 424), the region and the country alike, kept current by
   `RegionDerivations::shapes()` and filled by `Version20261020030000`. The
   map's region registry and the globe keep the lighter `outline`.
+
+  **Layout (2026-10-20).** From 760 px wide the hero has two columns: the
+  title, figures, curators and buttons on the left, the country outline with
+  the region filled on the right at up to 300 px wide (4:3). Narrower, the
+  outline floats small beside the title and the figures clear it. Under the
+  hero, from 980 px: the About text and the History text on the left, "What
+  riders find here" on the right as one 300 px list; narrower, one column in
+  that order. The back link and the report link run under both columns.
+
+  **History, nature and culture (2026-10-20).** Under the About text, a
+  second text (`#story`, kicker "History, nature and culture")
+  says what the region is about in its historical, natural and cultural
+  context, where the lead above stays geographic. It is never harvested:
+  riders and curators write it through the same Text proposals
+  ([moderation-and-contribution.md](moderation-and-contribution.md) §3.1c).
+  The text is several paragraphs, one `<p>` per line as stored. The reader
+  gets their own language, else English, else the first language that has a
+  text (`App\Catalog\RegionStory::resolve()`); a text in another language
+  carries a `lang` attribute and one line under the credit, "This text is in
+  {language}. Nobody has translated it yet." with the link "Translate it" to
+  `/regions/{slug}/story?lang={reader's language}`. The credit line is the
+  lead's: "Written by {name}," or "Written by this region's curators," then
+  the linked "CC BY-SA 4.0" and the two ringed icons, the pencil to
+  `/regions/{slug}/story?lang={language shown}`. The text links its sources
+  in place on the words that describe them (`[words](address)`,
+  `pages/_story_parts.html.twig`); there is no separate list of sources.
+  Every link opens in a new tab with `rel="noopener noreferrer"` and no
+  `nofollow`: they are citations a curator approved
+  ([moderation-and-contribution.md](moderation-and-contribution.md) §3.1c).
+  A region with no text has one plain link, "Write about the history,
+  nature and culture of this region". North Holland's English text, with
+  its citations, came with migration
+  `Version20261020010000`, as a system text (no writer, no approver). Pinned
+  by `RegionStoryProposalTest` and `tests/Catalog/RegionStoryTest.php`.
 
   **The hero opens with the same three figures as `/coverage`**, in the same
   order and under the same labels: reference items on file, verified items,
@@ -887,7 +934,9 @@ languages.
   queried again, and is zero when the pipeline's `coverage_poi` is absent.
 
   **"What riders find here" reports two numbers per kind, never their sum.**
-  `N in the Commons` is what somebody has stood at and a curator approved;
+  `N in the Commons` counts the verified places we keep (`item.state =
+  verified`: confirmed by riders or by a curator), whether a rider added
+  them or they came from OpenStreetMap and someone improved them;
   `N on the map` is what OpenStreetMap knows is there and the coverage layer
   draws underneath. Showing only the first would tell a reader that a region
   holds 2 water points where the map draws 1,650. They are not added together:

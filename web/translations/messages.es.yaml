@@ -638,7 +638,7 @@ region:
     label: 'Mi zona'
   everywhere:
     label: 'Todo el mundo'
-  about_h: 'Sobre esta región'
+  about_h: "Geografía"
   about_source: 'Texto de Wikipedia:'
   about_source_adapted: "Adaptado de Wikipedia por los curadores de esta región:"
   about_source_curator: "Escrito por los curadores de esta región,"
@@ -647,7 +647,11 @@ region:
   about_removed_rider: 'un ciclista con la cuenta eliminada'
   about_edit: 'Editar este texto'
   about_report: 'Denunciar este texto'
-  about_write: 'Escribir un texto para esta región'
+  about_write: "Escribir sobre la geografía de esta región"
+  story_h: "Historia, naturaleza y cultura"
+  story_write: "Escribir sobre la historia, la naturaleza y la cultura de esta región"
+  story_other_lang: "Este texto está en %lang%. Nadie lo ha traducido todavía."
+  story_translate: "Traducirlo"
   cta_map: 'Abrir esta región en el mapa'
   cta_apply: 'Presentarse como curador'
   # Todavía lo usa la tarjeta Votar de contribute/index.html.twig (el texto del
@@ -660,7 +664,7 @@ region:
   by_kind_h: 'Qué encuentran aquí los ciclistas'
   kind_verified: 'en el Commons'
   kind_coverage: 'en el mapa'
-  by_kind_note: '<code>En el Commons</code> significa un lugar que los ciclistas han añadido aquí y un curador ha aprobado. <code>En el mapa</code> es lo que OpenStreetMap conoce, dibujado debajo. Ambos se pueden rodar; el primero lo mantenemos nosotros.'
+  by_kind_note: "<code>En el Commons</code> significa un lugar que cuidamos y que ciclistas o un curador han comprobado: uno que un ciclista añadió aquí, o un lugar de OpenStreetMap que alguien mejoró. <code>En el mapa</code> es lo que OpenStreetMap conoce, dibujado debajo. Ambos se pueden rodar; el primero lo mantenemos nosotros."
   empty_h: 'Recién incorporada'
   empty_p: 'Esta región está en el mapa, pero su commons todavía está vacío. ¿Ruedas por aquí? Confirma lo que existe, añade lo que falta — o preséntate como su curador.'
   back: '← Todas las regiones'
@@ -2682,6 +2686,7 @@ map:
   d_text_add_signin: 'Inicia sesión para escribir un texto para esta localidad'
   d_place_text_label: 'Texto ({lang})'
   d_lang_title: "Escrito en %lang%"
+  d_place_story_label: "Historia, naturaleza y cultura ({lang})"
   d_founded: 'Fundada'
   d_inhabitants: 'Habitantes'
   d_circa: 'h.'
@@ -2734,12 +2739,47 @@ map:
 # signed in (PlaceTextController, moderation-and-contribution.md §3.1b).
 place_text:
   kicker_town: 'Texto de una localidad'
-  kicker_region: 'Texto de una región'
+  kicker_region: "Geografía"
   lead_town: 'Cualquier persona con sesión iniciada puede proponer un cambio en el texto de la ficha de esta localidad. Un curador de la región donde está lo aprueba antes de que aparezca.'
-  lead_region: 'Cualquier persona con sesión iniciada puede proponer un cambio en el texto de presentación de esta región. Un curador de esta región lo aprueba antes de que aparezca.'
+  lead_region: "Cualquier persona con sesión iniciada puede proponer un cambio en el texto de geografía de esta región: dónde está, su paisaje, su tamaño y sus vecinas. Un curador de esta región lo aprueba antes de que aparezca."
+  kicker_story: "Historia, naturaleza y cultura"
+  lead_story: "Cualquier persona con sesión iniciada puede escribir, cambiar o traducir el texto sobre la historia, la naturaleza y la cultura de esta región. Un curador de esta región lo aprueba antes de que aparezca."
+  purpose_region: "Este es el texto de geografía: dónde está la región, su paisaje, su tamaño y sus vecinas. La historia, la naturaleza y la cultura tienen su propio texto."
+  purpose_story: "Este es el texto sobre la historia, la naturaleza y la cultura. Dónde está la región y cómo es su tierra van en el texto de geografía."
+  purpose_go_story: "Escribir sobre su historia, naturaleza y cultura"
+  purpose_go_region: "Escribir sobre su geografía"
+  purpose_region_correct: "Este es el texto de geografía. Antes de aprobar, comprueba que se ciñe a dónde está la región, su paisaje, su tamaño y sus vecinas: la historia, la naturaleza y la cultura van en el otro texto."
+  purpose_story_correct: "Este es el texto sobre la historia, la naturaleza y la cultura. Antes de aprobar, comprueba que no describe dónde está la región: eso va en el texto de geografía."
+  geography_change_label: "Geografía (%lang%)"
   field_lang: 'Idioma'
   field_text: 'Texto'
   field_text_hint: 'Escribe el texto completo tal como deben verlo los lectores, no solo el cambio.'
+  howto_h: "Cómo escribirlo"
+  howto_whole: "Escribe el texto completo tal como deben verlo los lectores, como mucho %max% caracteres. Las direcciones de los enlaces no cuentan."
+  howto_paragraph: "Empieza cada párrafo en una línea nueva."
+  howto_cite: "Cita una fuente donde la uses. Selecciona las palabras y pulsa «Enlazar las palabras seleccionadas», o escribe las palabras entre corchetes y la dirección justo detrás:"
+  howto_reads: "En la página se lee:"
+  howto_ex_words: "Línea de defensa de Ámsterdam"
+  howto_ex_url: "https://whc.unesco.org/es/list/759"
+  howto_words: "Enlaza las palabras que dicen de qué trata la página, nunca «fuente» ni «aquí»."
+  howto_sites: "Enlaza solo la fuente misma: un organismo público, un archivo, o una organización de patrimonio o de naturaleza. Nada de blogs, tiendas ni páginas llenas de anuncios."
+  link_add: "Enlazar las palabras seleccionadas"
+  link_url: "Dirección web"
+  link_insert: "Añadir enlace"
+  link_select_first: "Selecciona primero en el texto las palabras que quieres enlazar y después pulsa el botón."
+  link_bad_url: "Escribe la dirección web completa, que empieza por https://"
+  link_for: "Enlace para: %words%"
+  links_h: "Enlaces en este texto (%count%)"
+  links_generic: "Di de qué trata la página, no «fuente» ni «aquí»."
+  links_confirm: "He abierto yo mismo los enlaces que no están marcados como «Comprobado: OK», y llevan a las páginas correctas."
+  link_st_checking: "Comprobando…"
+  link_st_ok: "Comprobado: OK"
+  link_st_dead: "Ningún sitio responde"
+  link_st_parked: "Dominio en venta o sin uso"
+  link_st_unsafe: "Google advierte sobre él"
+  link_st_unknown: "No se pudo comprobar"
+  link_st_limit: "Límite alcanzado, se comprobará al enviar"
+  translate_h: "Para traducir desde (%lang%)"
   current_h: 'Texto actual'
   current_none: 'Todavía no hay texto en este idioma.'
   count: '%count% de %max%'
@@ -2758,8 +2798,10 @@ place_text:
   sent_ref: 'Tu referencia: %ref%'
   back_town: 'Volver al mapa'
   back_region: 'Volver a la región'
+  back_story: "Volver a la región"
   follow: 'Síguelo en tu perfil'
   change_label: 'Texto (%lang%)'
+  story_change_label: "Historia, naturaleza y cultura (%lang%)"
   correct:
     lead: "Corrige erratas y pequeños errores de esta sugerencia, y apruébala aquí, o guarda la corrección y decide más tarde. Sigue siendo el texto del ciclista: una vez aprobado se atribuye al ciclista, y la sugerencia deja constancia de que lo corregiste."
     note_h: 'Nota del ciclista'
@@ -2786,6 +2828,8 @@ place_text:
     correct_unchanged: 'Es el texto tal como lo envió el ciclista. Cambia algo o vuelve a la cola.'
     credit_required: 'Elige si el crédito de Wikipedia se mantiene y luego aprueba.'
     source_required: 'Indica de dónde viene tu texto: adaptado del artículo de Wikipedia, o escrito por ti.'
+    generic_anchor: "Un enlace dice solo «fuente», «enlace» o «aquí». Enlaza mejor las palabras que dicen de qué trata la página."
+    links_unconfirmed: "Algunos enlaces no están marcados como «Comprobado: OK»: %urls%. Ábrelos tú mismo y marca la casilla bajo los enlaces, o cámbialos."
 
 moderate:
   lang_title: "Escrito en %lang%"
@@ -2941,6 +2985,7 @@ moderate:
     no_recipient: 'No se ha podido identificar a quién escribir.'
     osm_unanswered: 'Vincula este lugar a OSM, o registra que no tiene equivalente en OSM, antes de aprobarlo.'
     text_credit_undecided: 'Aprueba este texto en su formulario (✎): allí eliges si el crédito de Wikipedia se mantiene.'
+    text_links_unconfirmed: "Aprueba este texto en su formulario (✎): confirma allí que abriste los enlaces que no están marcados como OK."
   osm:
     question: '¿Qué objeto de OSM es este lugar?'
     none: 'No está en OSM'
@@ -4947,9 +4992,9 @@ moderate_regions:
   flash_not_ready: 'Esa región todavía no ha alcanzado el umbral de Lo mejor.'
   about:
     kicker: "Ajustes de la región"
-    title: "El texto de la página de región"
-    lead: "La entradilla breve que el lector encuentra al principio de la página de región, en cada idioma. Deja un idioma vacío y la página conserva el texto de Wikipedia que recogimos. Lo que escribas aquí lo sustituye, y sobrevive a la siguiente importación de Wikipedia."
-    link: "Texto de la región"
+    title: "El texto de geografía de la página de región"
+    lead: "El texto de geografía que el lector encuentra al principio de la página de región, en cada idioma: dónde está la región, su paisaje, su tamaño y sus vecinas. La historia, la naturaleza y la cultura tienen su propio texto. Deja un idioma vacío y la página conserva el texto de Wikipedia que recogimos. Lo que escribas aquí lo sustituye, y sobrevive a la siguiente importación de Wikipedia."
+    link: "Texto de geografía"
     no_article: "Wikipedia no tiene artículo sobre esta región en este idioma, así que la página no muestra nada aquí hasta que escribas algo."
     placeholder: "Déjalo vacío para conservar el texto de Wikipedia."
     derived_label: "He editado el texto de Wikipedia de arriba en lugar de escribir el mío. La página conserva entonces el crédito de Wikipedia e indica que el texto se cambió."

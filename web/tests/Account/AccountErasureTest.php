@@ -148,6 +148,12 @@ final class AccountErasureTest extends KernelTestCase
                 AND ((e.value->>'userId')::bigint = :u OR (e.value->>'approvedBy')::bigint = :u)",
             ['u' => $g],
         ), 'a region lead still names its writer or approver');
+        self::assertSame(0, (int) $this->db->fetchOne(
+            "SELECT COUNT(*) FROM region r, jsonb_each(r.story) e
+              WHERE jsonb_typeof(e.value) = 'object'
+                AND ((e.value->>'userId')::bigint = :u OR (e.value->>'approvedBy')::bigint = :u)",
+            ['u' => $g],
+        ), 'a region history text still names its writer or approver');
 
         // Personal, and worth nothing without the person: deleted.
         self::assertFalse($this->db->fetchOne('SELECT 1 FROM curator_application WHERE id = ?', [$f['application']]), 'the curator application goes');
@@ -185,6 +191,14 @@ final class AccountErasureTest extends KernelTestCase
             (array) json_decode((string) $this->db->fetchOne("SELECT context_curated->'en' FROM region WHERE id = ?", [$f['region']]), true),
             ['text' => 1, 'userId' => 1, 'approvedBy' => 1],
         ));
+        self::assertEquals(['text' => 'A history.', 'userId' => null, 'approvedBy' => $o], array_intersect_key(
+            (array) json_decode((string) $this->db->fetchOne("SELECT story->'en' FROM region WHERE id = ?", [$f['region']]), true),
+            ['text' => 1, 'userId' => 1, 'approvedBy' => 1],
+        ), 'the history text stays, no longer credited to the account; its other approver stays');
+        self::assertEquals(['userId' => $o, 'approvedBy' => null], array_intersect_key(
+            (array) json_decode((string) $this->db->fetchOne("SELECT story->'fr' FROM region WHERE id = ?", [$f['region']]), true),
+            ['userId' => 1, 'approvedBy' => 1],
+        ), 'another writer keeps their credit; the account as approver goes');
 
         // What readers make of an unlinked row.
         $route = $this->em->find(RecommendedRoute::class, $f['route']);
@@ -304,11 +318,14 @@ final class AccountErasureTest extends KernelTestCase
             ['r' => 'r'.random_int(1, 1_000_000_000), 'u' => $g],
         );
         $f['region'] = $this->id(
-            "INSERT INTO region (slug, name, geom, area_km2, country_code, admin_level, context_curated, created_at, updated_at)
-             VALUES (:s, 'Erasure region', ST_SetSRID(ST_MakeEnvelope(5.0, 50.0, 6.0, 51.0), 4326), 100, 'BE', 4, CAST(:c AS jsonb), NOW(), NOW()) RETURNING id",
+            "INSERT INTO region (slug, name, geom, area_km2, country_code, admin_level, context_curated, story, created_at, updated_at)
+             VALUES (:s, 'Erasure region', ST_SetSRID(ST_MakeEnvelope(5.0, 50.0, 6.0, 51.0), 4326), 100, 'BE', 4, CAST(:c AS jsonb), CAST(:h AS jsonb), NOW(), NOW()) RETURNING id",
             ['s' => 'erasure-'.uniqid(), 'c' => json_encode([
                 'en' => ['text' => 'A lead.', 'derived' => false, 'userId' => $g, 'approvedBy' => $g, 'submissionId' => null, 'at' => '2026-10-01T00:00:00+00:00'],
                 'fr' => ['text' => 'Un autre.', 'derived' => false, 'userId' => $o, 'approvedBy' => $o, 'submissionId' => null, 'at' => '2026-10-01T00:00:00+00:00'],
+            ]), 'h' => json_encode([
+                'en' => ['text' => 'A history.', 'userId' => $g, 'approvedBy' => $o, 'submissionId' => null, 'at' => '2026-10-01T00:00:00+00:00'],
+                'fr' => ['text' => 'Une histoire.', 'userId' => $o, 'approvedBy' => $g, 'submissionId' => null, 'at' => '2026-10-01T00:00:00+00:00'],
             ])],
         );
 

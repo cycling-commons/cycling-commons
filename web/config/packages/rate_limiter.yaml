@@ -65,6 +65,8 @@ framework:
                 adapter: cache.app
             cache.display_name_check_limiter:
                 adapter: cache.app
+            cache.link_check_limiter:
+                adapter: cache.app
             cache.media_upload_limiter:
                 adapter: cache.app
             cache.translation_propose_limiter:
@@ -367,6 +369,16 @@ framework:
             limit: 30
             interval: '1 hour'
             cache_pool: cache.display_name_check_limiter
+        # The history text's live link check (moderation-and-contribution.md
+        # §3.1c): asked as links appear in the box, at most 20 addresses a
+        # time, each host fetched at most once per verdict period. Enough for
+        # writing and translating a few texts in an hour; a ceiling on using
+        # our server to fetch addresses in bulk.
+        link_check:
+            policy: sliding_window
+            limit: 60
+            interval: '1 hour'
+            cache_pool: cache.link_check_limiter
         # Photo uploads (photo-uploads.md §7): generous for a real day of
         # contributing, bounded against bulk abuse. Each accepted upload costs
         # an Imagick decode plus three encodes, so this is a compute gate as
@@ -561,6 +573,8 @@ when@test:
                 cache.verify_resend_limiter:
                     adapter: cache.adapter.array
                 cache.display_name_check_limiter:
+                    adapter: cache.adapter.array
+                cache.link_check_limiter:
                     adapter: cache.adapter.array
                 cache.media_upload_limiter:
                     adapter: cache.adapter.array

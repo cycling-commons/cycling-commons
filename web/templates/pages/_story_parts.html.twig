@@ -1,0 +1,10 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  One paragraph of a region's history text, as plain text and links
+  (App\Catalog\RegionStory::paragraphs()). A link is a
+  citation a curator approved: new tab, no nofollow (moderation-and-
+  contribution.md §3.1c). Param: parts, list of {text, href}.
+#}
+{%- for part in parts -%}
+  {%- if part.href %}<a href="{{ part.href }}" target="_blank" rel="noopener noreferrer">{{ part.text }}</a>{% else %}{{ part.text }}{% endif -%}
+{%- endfor -%}

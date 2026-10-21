@@ -665,6 +665,7 @@ final class MapController extends AbstractController
             'wikiEditedBy' => 'd_wiki_edited_by', 'textWritten' => 'd_text_written', 'textWrittenBy' => 'd_text_written_by',
             'textEdit' => 'd_text_edit', 'textAdd' => 'd_text_add', 'textEditSignin' => 'd_text_edit_signin',
             'textAddSignin' => 'd_text_add_signin', 'placeTextLabel' => 'd_place_text_label', 'langTitle' => 'd_lang_title',
+            'placeStoryLabel' => 'd_place_story_label',
             'reportText' => 'd_report_text', 'wikiEdited' => 'd_wiki_edited', 'founded' => 'd_founded', 'inhabitants' => 'd_inhabitants', 'circa' => 'd_circa', 'yearBc' => 'd_year_bc',
             'raceStageStart' => 'd_race_stage_start', 'raceStageFinish' => 'd_race_stage_finish', 'raceStageStartFinish' => 'd_race_stage_start_finish', 'nothingHere' => 'd_nothing_here',
             'kindShop' => 'd_kind_shop', 'kindStation' => 'd_kind_station', 'kindPump' => 'd_kind_pump',
@@ -947,6 +948,8 @@ final class MapController extends AbstractController
                 // curator decides the Wikipedia credit (moderation-and-contribution.md §3.1b).
                 'approveOnForm' => $t->trans('moderate.action.approve_on_form'),
                 'textCreditUndecided' => $t->trans('moderate.error.text_credit_undecided'),
+                // A history text whose links are not plainly fine is approved on its form, with a tick (§3.1c).
+                'textLinksUnconfirmed' => $t->trans('moderate.error.text_links_unconfirmed'),
             ],
         ];
     }

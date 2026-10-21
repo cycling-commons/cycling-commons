@@ -11,6 +11,7 @@ use App\Catalog\Import\OsmCandidates;
 use App\Catalog\ItemType;
 use App\Catalog\Links\LinkSafety;
 use App\Catalog\Links\SafeBrowsing;
+use App\Catalog\RegionStory;
 use App\Catalog\SubmissionType;
 use App\Contribution\ChangeValue;
 use App\Contribution\PlaceText;
@@ -233,8 +234,8 @@ final class SubmissionQueue
                 continue;
             }
             // A town or region text is the whole change, and the card's language
-            // tag already says which language: no `text:nl:` before the words.
-            $label = null !== PlaceText::langOfKey((string) $field) ? '' : $field.': ';
+            // tag already says which language: no `story:nl:` before the words.
+            $label = null !== PlaceText::langOfKey((string) $field) || null !== PlaceText::storyLangOfKey((string) $field) ? '' : $field.': ';
             if (null !== ($pair['was'] ?? null)) {
                 $was[] = $label.ChangeValue::format($field, $pair['was']);
             }
@@ -789,6 +790,12 @@ final class SubmissionQueue
             $changes = json_decode((string) $r['changes'], true) ?: [];
             $links = \is_array($changes['links'] ?? null) ? ($changes['links']['now'] ?? null) : null;
             $urls = SafeBrowsing::urlsIn($links);
+            // A region's history text cites in place: its links are in the words (§3.1c).
+            foreach ($changes as $key => $pair) {
+                if (null !== PlaceText::storyLangOfKey((string) $key) && \is_array($pair) && \is_string($pair['now'] ?? null)) {
+                    $urls = array_values(array_unique([...$urls, ...array_column(RegionStory::links($pair['now']), 'href')]));
+                }
+            }
             if ([] !== $urls) {
                 $bySubmission[(int) $r['id']] = $urls;
             }

@@ -636,7 +636,7 @@ region:
     label: 'My area'
   everywhere:
     label: 'Everywhere'
-  about_h: 'About this region'
+  about_h: "Geography"
   about_source: 'Text from Wikipedia:'
   about_source_adapted: "Adapted from Wikipedia by this region's curators:"
   about_source_curator: "Written by this region's curators,"
@@ -645,7 +645,11 @@ region:
   about_removed_rider: 'a removed rider'
   about_edit: 'Edit this text'
   about_report: 'Report this text'
-  about_write: 'Write a text for this region'
+  about_write: "Write about the geography of this region"
+  story_h: "History, nature and culture"
+  story_write: "Write about the history, nature and culture of this region"
+  story_other_lang: "This text is in %lang%. Nobody has translated it yet."
+  story_translate: "Translate it"
   cta_map: 'Open this region on the map'
   cta_apply: 'Volunteer as curator'
   # Still used by contribute/index.html.twig's Vote card ("go" link text) —
@@ -657,7 +661,7 @@ region:
   by_kind_h: 'What riders find here'
   kind_verified: 'in the Commons'
   kind_coverage: 'on the map'
-  by_kind_note: '<code>In the Commons</code> means a place riders have added here and a curator has approved. <code>On the map</code> is what OpenStreetMap knows is there, drawn underneath. Both are rideable; the first is ours to keep correct.'
+  by_kind_note: "<code>In the Commons</code> means a place we look after that riders or a curator have checked: one a rider added here, or an OpenStreetMap place someone improved. <code>On the map</code> is what OpenStreetMap knows is there, drawn underneath. Both are rideable; the first is ours to keep correct."
   empty_h: 'Freshly onboarded'
   empty_p: 'This region is on the map, but its commons is still empty. Ride here? Confirm what exists, add what is missing — or volunteer as its curator.'
   back: '← All regions'
@@ -2675,6 +2679,7 @@ map:
   d_text_add_signin: 'Sign in to write a text for this town'
   d_place_text_label: 'Text ({lang})'
   d_lang_title: "Written in %lang%"
+  d_place_story_label: "History, nature and culture ({lang})"
   d_founded: 'Founded'
   d_inhabitants: 'Inhabitants'
   d_circa: 'c.'
@@ -2727,12 +2732,47 @@ map:
 # signed in (PlaceTextController, moderation-and-contribution.md §3.1b).
 place_text:
   kicker_town: 'Town text'
-  kicker_region: 'Region text'
+  kicker_region: "Geography"
   lead_town: "Anyone signed in can suggest an edit to the text on this town's card. A curator of the region it lies in approves it before it shows."
-  lead_region: "Anyone signed in can suggest an edit to this region's about text. A curator of this region approves it before it shows."
+  lead_region: "Anyone signed in can suggest an edit to this region's geography text: where it lies, its landscape, size and neighbours. A curator of this region approves it before it shows."
+  kicker_story: "History, nature and culture"
+  lead_story: "Anyone signed in can write, edit or translate this region's history, nature and culture text. A curator of this region approves it before it shows."
+  purpose_region: "This is the geography text: where the region lies, its landscape, size and neighbours. History, nature and culture have their own text."
+  purpose_story: "This is the history, nature and culture text. Where the region lies and what its land looks like belong in the geography text."
+  purpose_go_story: "Write about its history, nature and culture"
+  purpose_go_region: "Write about its geography"
+  purpose_region_correct: "This is the geography text. Before you approve, check it sticks to where the region lies, its landscape, size and neighbours: history, nature and culture belong in the other text."
+  purpose_story_correct: "This is the history, nature and culture text. Before you approve, check it is not a description of where the region lies: that belongs in the geography text."
+  geography_change_label: "Geography (%lang%)"
   field_lang: 'Language'
   field_text: 'Text'
   field_text_hint: 'Write the whole text as readers should see it, not only the change.'
+  howto_h: "How to write it"
+  howto_whole: "Write the whole text as readers should see it, at most %max% characters. Link addresses do not count."
+  howto_paragraph: "Start each paragraph on a new line."
+  howto_cite: "Cite a source where you use it. Select the words and press \"Link the selected words\", or type the words in square brackets and the address right after:"
+  howto_reads: "On the page this reads:"
+  howto_ex_words: "Defence Line of Amsterdam"
+  howto_ex_url: "https://whc.unesco.org/en/list/759"
+  howto_words: "Link the words that say what the page is about, never \"source\" or \"here\"."
+  howto_sites: "Link only to the source itself: a government body, an archive, or a heritage or nature organisation. No blogs, shops or pages full of ads."
+  link_add: "Link the selected words"
+  link_url: "Web address"
+  link_insert: "Add link"
+  link_select_first: "Select the words to link in the text first, then press the button."
+  link_bad_url: "Write the full web address, starting with https://"
+  link_for: "Link for: %words%"
+  links_h: "Links in this text (%count%)"
+  links_generic: "Name what the page is about, not \"source\" or \"here\"."
+  links_confirm: "I opened the links that are not marked \"Checked: OK\" myself, and they lead to the right pages."
+  link_st_checking: "Checking…"
+  link_st_ok: "Checked: OK"
+  link_st_dead: "No website answers"
+  link_st_parked: "Domain for sale or unused"
+  link_st_unsafe: "Google warns about it"
+  link_st_unknown: "Could not check"
+  link_st_limit: "Check limit reached, the send checks it"
+  translate_h: "To translate from (%lang%)"
   current_h: 'Current text'
   current_none: 'There is no text in this language yet.'
   count: '%count% of %max%'
@@ -2751,8 +2791,10 @@ place_text:
   sent_ref: 'Your reference: %ref%'
   back_town: 'Back to the map'
   back_region: 'Back to the region'
+  back_story: "Back to the region"
   follow: 'Follow it on your profile'
   change_label: 'Text (%lang%)'
+  story_change_label: "History, nature and culture (%lang%)"
   correct:
     lead: "Fix typos and small mistakes in this suggestion, then approve it here, or save the correction and decide later. It stays the rider's text: once approved it is credited to the rider, and the suggestion records that you corrected it."
     note_h: "The rider's note"
@@ -2779,6 +2821,8 @@ place_text:
     correct_unchanged: 'This is the text as the rider sent it. Change something, or go back to the queue.'
     credit_required: 'Choose whether the Wikipedia credit stays, then approve.'
     source_required: 'Say where your text comes from: adapted from the Wikipedia article, or your own text.'
+    generic_anchor: "A link says only \"source\", \"link\" or \"here\". Link the words that say what the page is about instead."
+    links_unconfirmed: "Some links are not marked \"Checked: OK\": %urls%. Open them yourself and tick the box under the links, or change them."
 
 moderate:
   lang_title: "Written in %lang%"
@@ -2934,6 +2978,7 @@ moderate:
     no_recipient: 'Could not identify who to message.'
     osm_unanswered: 'Link this place to OSM, or record that it has no OSM counterpart, before approving it.'
     text_credit_undecided: 'Approve this text on its form (✎): you choose there whether the Wikipedia credit stays.'
+    text_links_unconfirmed: "Approve this text on its form (✎): confirm there that you opened the links that are not marked OK."
   osm:
     question: 'Which OSM object is this place?'
     none: 'Not in OSM'
@@ -4938,9 +4983,9 @@ moderate_regions:
   flash_not_ready: 'That region has not reached the Best of threshold yet.'
   about:
     kicker: "Region settings"
-    title: "The text on the region page"
-    lead: "The short lead a reader meets at the top of the region page, in each language. Leave a language empty and the page keeps the Wikipedia text we harvested. What you write here replaces it, and it survives the next Wikipedia import."
-    link: "About text"
+    title: "The geography text on the region page"
+    lead: "The geography text a reader meets at the top of the region page, in each language: where the region lies, its landscape, size and neighbours. History, nature and culture have their own text. Leave a language empty and the page keeps the Wikipedia text we harvested. What you write here replaces it, and it survives the next Wikipedia import."
+    link: "Geography text"
     no_article: "Wikipedia has no article for this region in this language, so the page shows nothing here until you write something."
     placeholder: "Leave empty to keep the Wikipedia text."
     derived_label: "I edited the Wikipedia text above instead of writing my own. The page then keeps the Wikipedia credit and says the text was changed."

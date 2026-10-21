@@ -119,9 +119,9 @@ final class RegionsPagesTest extends WebTestCase
         $client->request('GET', '/regions/ctx-less-region');
         self::assertResponseIsSuccessful();
         $html = (string) $client->getResponse()->getContent();
-        self::assertStringContainsString('Write a text for this region', $html);
+        self::assertStringContainsString('Write about the geography of this region', $html);
         self::assertStringContainsString('/regions/ctx-less-region/text', $html);
-        self::assertStringContainsString('<p class="rg-about-write"><a href="/regions/ctx-less-region/text">Write a text for this region</a></p>', $html);
+        self::assertStringContainsString('<p class="rg-about-write"><a href="/regions/ctx-less-region/text">Write about the geography of this region</a></p>', $html);
         self::assertStringNotContainsString('A curator of this region approves it.', $html);
         self::assertStringNotContainsString('class="rg-about-text"', $html);
         self::assertStringNotContainsString('rg-about-attrib', $html);

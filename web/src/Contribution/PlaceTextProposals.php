@@ -9,6 +9,7 @@ namespace App\Contribution;
 use App\Catalog\Entity\Submission;
 use App\Catalog\OperationalRegions;
 use App\Catalog\RegionLead;
+use App\Catalog\RegionStory;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
@@ -53,7 +54,11 @@ use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
  * generic decision refuses a text that has none
  * ({@see PlaceTextWriter::creditUndecided()}).
  *
- * @see docs/specs/moderation-and-contribution.md §3.1b
+ * A region's "History, nature and culture" text (target `story`) runs the
+ * same way: one proposal per language, written fresh or translated, its
+ * sources linked in the text, and no Wikipedia question.
+ *
+ * @see docs/specs/moderation-and-contribution.md §3.1b and §3.1c
  *
  * @api
  */
@@ -72,6 +77,7 @@ final readonly class PlaceTextProposals
         private RoleHierarchyInterface $roleHierarchy,
         private ModerationScopeProvider $scopes,
         private Languages $languages,
+        private StoryLinkCheck $links,
     ) {
     }
 
@@ -128,7 +134,7 @@ final readonly class PlaceTextProposals
     /**
      * An operational region by slug, as the region page shows it.
      *
-     * @return array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>}|null
+     * @return array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>}|null
      */
     public function region(string $slug): ?array
     {
@@ -138,7 +144,7 @@ final readonly class PlaceTextProposals
     /**
      * An operational region by id, as a region text's payload names it.
      *
-     * @return array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>}|null
+     * @return array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>}|null
      */
     public function regionById(int $id): ?array
     {
@@ -164,15 +170,29 @@ final readonly class PlaceTextProposals
         if (null === $region) {
             throw new PlaceTextRefused('place_text.error.unknown');
         }
+        if (PlaceText::STORY === $proposal['target']) {
+            return ['text' => $this->currentStory($region, $proposal['lang']), 'derived' => false, 'canDerive' => false];
+        }
 
         return $this->currentRegionText($region, $proposal['lang']) + ['canDerive' => RegionLead::hasSource($region['wiki'], $proposal['lang'])];
+    }
+
+    /**
+     * A region's history text in exactly one locale, or '' when that locale
+     * has none.
+     *
+     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>} $region
+     */
+    public function currentStory(array $region, string $locale): string
+    {
+        return RegionStory::entry($region['story'], $locale)['text'] ?? '';
     }
 
     /**
      * A region's current lead in exactly one locale: the local one, else the
      * article in that language, else ''.
      *
-     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>} $region
+     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>} $region
      *
      * @return array{text: string, derived: bool}
      */
@@ -232,14 +252,14 @@ final readonly class PlaceTextProposals
             'text' => $text,
             'derived' => $derived,
             'details' => ['note' => $note],
-        ], $was, $this->townTitle($osmRef, $name), $point, $where['countryCode'], $where['regionId']);
+        ], [PlaceText::changeKey($lang) => self::pair($was, $text)], $this->townTitle($osmRef, $name), $point, $where['countryCode'], $where['regionId']);
     }
 
     /**
      * `$derived` is the writer's answer to where the text comes from, as for
      * a town ({@see self::proposeTown()}).
      *
-     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>} $region
+     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>} $region
      *
      * @return array{submission: Submission, applied: bool}
      *
@@ -270,7 +290,51 @@ final readonly class PlaceTextProposals
             'text' => $text,
             'derived' => $derived,
             'details' => ['note' => $note],
-        ], $current['text'], mb_substr($region['name'], 0, 200), $point, $region['countryCode'], $region['id']);
+        ], [PlaceText::changeKey($lang) => self::pair($current['text'], $text)], mb_substr($region['name'], 0, 200), $point, $region['countryCode'], $region['id']);
+    }
+
+    /**
+     * A region's "History, nature and culture" text in one language: a new
+     * text, an edit, or a translation of another language's text. There is
+     * no Wikipedia question: the text is the writer's own, and it links the
+     * sources of its facts in place.
+     *
+     * A link that is not plainly fine needs the writer's confirmation that
+     * they opened it and it is right (`$linksConfirmed`, the form's tick);
+     * it is kept on the payload (`_links.writer`).
+     *
+     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>} $region
+     *
+     * @return array{submission: Submission, applied: bool}
+     *
+     * @throws PlaceTextRefused             on text the form must send back
+     * @throws TooManyRequestsHttpException past the contribution rate limit
+     */
+    public function proposeStory(User $by, array $region, string $lang, string $text, string $note, bool $linksConfirmed = false): array
+    {
+        $this->assertServed($lang);
+        [$lang, $text, $note] = $this->checked($lang, $text, $note, PlaceText::STORY);
+        $current = $this->currentStory($region, $lang);
+        if ($current === $text) {
+            throw new PlaceTextRefused('place_text.error.unchanged');
+        }
+        $problems = $this->linkProblems($text, $linksConfirmed);
+        $this->consumeRateLimit($by);
+
+        $point = $this->db->fetchOne('SELECT ST_AsGeoJSON(ST_PointOnSurface(geom)) FROM region WHERE id = :id', ['id' => $region['id']]);
+        if (!\is_string($point)) {
+            throw new PlaceTextRefused('place_text.error.unknown');
+        }
+
+        return $this->file($by, [
+            'target' => PlaceText::STORY,
+            'ref' => (string) $region['id'],
+            'slug' => $region['slug'],
+            'lang' => $lang,
+            'text' => $text,
+            'derived' => false,
+            'details' => ['note' => $note],
+        ] + ([] === $problems ? [] : ['_links' => ['writer' => StoryLinkCheck::confirmation($by, $problems)]]), [PlaceText::changeKey($lang, PlaceText::STORY) => self::pair($current, $text)], mb_substr($region['name'], 0, 200), $point, $region['countryCode'], $region['id']);
     }
 
     /**
@@ -298,12 +362,12 @@ final readonly class PlaceTextProposals
         if (null === $proposal) {
             throw new PlaceTextRefused('place_text.error.unknown');
         }
-        [, $text] = $this->checked($proposal['lang'], $text, '');
+        [, $text] = $this->checked($proposal['lang'], $text, '', $proposal['target']);
         if ($text === $proposal['text']) {
             throw new PlaceTextRefused('place_text.error.correct_unchanged');
         }
         $live = $this->liveText($proposal);
-        if ($text === $live['text'] && (PlaceText::TOWN === $proposal['target'] || $proposal['derived'] === $live['derived'])) {
+        if ($text === $live['text'] && (PlaceText::REGION !== $proposal['target'] || $proposal['derived'] === $live['derived'])) {
             throw new PlaceTextRefused('place_text.error.unchanged');
         }
 
@@ -321,7 +385,7 @@ final readonly class PlaceTextProposals
             ];
             $payload['text'] = $text;
             $changes = $submission->getChanges();
-            $key = PlaceText::changeKey($proposal['lang']);
+            $key = PlaceText::changeKey($proposal['lang'], $proposal['target']);
             $was = \is_array($changes[$key] ?? null) ? ($changes[$key]['was'] ?? null) : null;
             $changes[$key] = ['was' => $was, 'now' => $text];
 
@@ -352,14 +416,14 @@ final readonly class PlaceTextProposals
      * @throws OutOfScopeException     outside the curator's areas
      * @throws AlreadyDecidedException once it is decided, withdrawn or held
      */
-    public function approve(Submission $submission, User $curator, string $text, ?bool $credit, string $note): Submission
+    public function approve(Submission $submission, User $curator, string $text, ?bool $credit, string $note, bool $linksConfirmed = false): Submission
     {
         $this->assertCorrectable($submission, $curator);
         $proposal = PlaceText::fromPayload($submission->getPayload());
         if (null === $proposal) {
             throw new PlaceTextRefused('place_text.error.unknown');
         }
-        [, $text] = $this->checked($proposal['lang'], $text, '');
+        [, $text] = $this->checked($proposal['lang'], $text, '', $proposal['target']);
         $note = trim($note);
         if (mb_strlen($note) > self::REPLY_MAX) {
             throw new PlaceTextRefused('moderate.error.note_too_long');
@@ -369,12 +433,17 @@ final readonly class PlaceTextProposals
             throw new PlaceTextRefused('place_text.error.credit_required');
         }
         $derived = $canDerive && true === $credit;
+        // A history text's links that are not plainly fine need the curator's own tick too.
+        $problems = PlaceText::STORY === $proposal['target'] ? $this->linkProblems($text, $linksConfirmed) : [];
 
-        return $this->em->wrapInTransaction(function () use ($submission, $curator, $proposal, $text, $derived, $note): Submission {
+        return $this->em->wrapInTransaction(function () use ($submission, $curator, $proposal, $text, $derived, $note, $problems): Submission {
             if ($text !== $proposal['text']) {
                 $this->correct($submission, $curator, $text);
             }
             $this->recordCredit($submission, $curator, $derived);
+            if (PlaceText::STORY === $proposal['target']) {
+                $this->recordLinks($submission, $curator, $problems);
+            }
 
             return $this->moderation->decide((int) $submission->getId(), 'approve', $curator, '' === $note ? null : $note);
         });
@@ -417,12 +486,12 @@ final readonly class PlaceTextProposals
     }
 
     /**
-     * @return array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>}|null
+     * @return array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>}|null
      */
     private function regionWhere(string $predicate, int|string $key): ?array
     {
         $row = $this->db->fetchAssociative(
-            'SELECT r.id, r.slug, r.name, r.country_code, r.context, r.context_curated FROM region r
+            'SELECT r.id, r.slug, r.name, r.country_code, r.context, r.context_curated, r.story FROM region r
               WHERE '.$predicate.' AND r.geom IS NOT NULL AND r.country_code <> \'\' AND '.OperationalRegions::predicate('r'),
             ['key' => $key],
         );
@@ -437,6 +506,7 @@ final readonly class PlaceTextProposals
             'countryCode' => (string) $row['country_code'],
             'wiki' => PlaceText::decode($row['context']),
             'curated' => PlaceText::decode($row['context_curated']),
+            'story' => PlaceText::decode($row['story']),
         ];
     }
 
@@ -466,16 +536,23 @@ final readonly class PlaceTextProposals
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * One was/now pair for `changes`; an empty `was` is null.
+     *
+     * @return array{was: ?string, now: string}
+     */
+    private static function pair(string $was, string $now): array
+    {
+        return ['was' => '' === $was ? null : $was, 'now' => $now];
+    }
+
+    /**
+     * @param array<string, mixed>                            $payload
+     * @param array<string, array{was: ?string, now: string}> $changes
      *
      * @return array{submission: Submission, applied: bool}
      */
-    private function file(User $by, array $payload, string $was, string $title, string $point, string $countryCode, ?int $regionId): array
+    private function file(User $by, array $payload, array $changes, string $title, string $point, string $countryCode, ?int $regionId): array
     {
-        /** @var string $lang */
-        $lang = $payload['lang'];
-        $changes = [PlaceText::changeKey($lang) => ['was' => '' === $was ? null : $was, 'now' => $payload['text']]];
-
         $submission = $this->em->wrapInTransaction(function () use ($by, $payload, $changes, $title, $point, $countryCode, $regionId): Submission {
             $open = $this->openFor($by, $payload);
             $submission = $open ?? (new Submission())
@@ -519,9 +596,15 @@ final readonly class PlaceTextProposals
             return false;
         }
         $derived = true === ($submission->getPayload()['derived'] ?? null);
+        // Their tick when they sent it is the approval's confirmation of the links.
+        $writer = $submission->getPayload()['_links']['writer']['problems'] ?? [];
+        $problems = \is_array($writer) ? array_filter($writer, 'is_string') : [];
         try {
-            $this->em->wrapInTransaction(function () use ($submission, $by, $derived): void {
+            $this->em->wrapInTransaction(function () use ($submission, $by, $derived, $problems): void {
                 $this->recordCredit($submission, $by, $derived);
+                if ([] !== $problems) {
+                    $this->recordLinks($submission, $by, $problems);
+                }
                 $this->moderation->decide((int) $submission->getId(), 'approve', $by, null);
             });
         } catch (OutOfScopeException) {
@@ -588,21 +671,31 @@ final readonly class PlaceTextProposals
     }
 
     /**
+     * A history text keeps its paragraphs and has its own cap; the other
+     * texts are one paragraph.
+     *
      * @return array{0: string, 1: string, 2: string} language, text, note
      *
      * @throws PlaceTextRefused
      */
-    private function checked(string $lang, string $text, string $note): array
+    private function checked(string $lang, string $text, string $note, string $target = PlaceText::TOWN): array
     {
         if (!\in_array($lang, PlaceText::LANGS, true)) {
             throw new PlaceTextRefused('place_text.error.lang');
         }
-        $text = PlaceText::normalise($text);
+        $story = PlaceText::STORY === $target;
+        $text = $story ? RegionStory::normaliseText($text) : PlaceText::normalise($text);
         if ('' === $text) {
             throw new PlaceTextRefused('place_text.error.empty');
         }
-        if (mb_strlen($text) > PlaceText::MAX) {
-            throw new PlaceTextRefused('place_text.error.too_long');
+        $tooLong = $story
+            ? RegionStory::readableLength($text) > RegionStory::MAX || mb_strlen($text) > RegionStory::RAW_MAX
+            : mb_strlen($text) > PlaceText::MAX;
+        if ($tooLong) {
+            throw new PlaceTextRefused('place_text.error.too_long', ['%max%' => (string) ($story ? RegionStory::MAX : PlaceText::MAX)]);
+        }
+        if ($story && null !== RegionStory::genericAnchor($text)) {
+            throw new PlaceTextRefused('place_text.error.generic_anchor');
         }
         $note = trim($note);
         if (mb_strlen($note) > PlaceText::NOTE_MAX) {
@@ -610,6 +703,51 @@ final readonly class PlaceTextProposals
         }
 
         return [$lang, $text, $note];
+    }
+
+    /**
+     * The links of a history text that are not plainly fine, and whether the
+     * one sending or approving it confirmed them by hand
+     * (moderation-and-contribution.md §3.1c). Asked before any transaction,
+     * so a refusal leaves the request's entity manager open.
+     *
+     * @return array<string, string> url => problem, empty when every link checked out
+     *
+     * @throws PlaceTextRefused when there are problems and no confirmation
+     */
+    private function linkProblems(string $text, bool $confirmed): array
+    {
+        $problems = $this->links->problems($text);
+        if ([] !== $problems && !$confirmed) {
+            throw new PlaceTextRefused('place_text.error.links_unconfirmed', ['%urls%' => implode(', ', array_keys($problems))]);
+        }
+
+        return $problems;
+    }
+
+    /**
+     * The approving curator's confirmation of a history text's problem links,
+     * on the payload (`_links.approved`), inside the approval's transaction;
+     * none when every link checked out.
+     *
+     * @param array<string, string> $problems
+     */
+    private function recordLinks(Submission $submission, User $curator, array $problems): void
+    {
+        $this->em->lock($submission, LockMode::PESSIMISTIC_WRITE);
+        $this->em->refresh($submission);
+        $payload = $submission->getPayload();
+        $links = \is_array($payload['_links'] ?? null) ? $payload['_links'] : [];
+        unset($links['approved']);
+        if ([] !== $problems) {
+            $links['approved'] = StoryLinkCheck::confirmation($curator, $problems);
+        }
+        $payload['_links'] = $links;
+        if ([] === $links) {
+            unset($payload['_links']);
+        }
+        $submission->setPayload($payload);
+        $this->em->flush();
     }
 
     private function consumeRateLimit(User $by): void

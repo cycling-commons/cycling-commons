@@ -8,13 +8,17 @@ namespace App\Moderation;
 
 use App\Catalog\Entity\Submission;
 use App\Catalog\RegionLead;
+use App\Catalog\RegionStory;
 use App\Contribution\PlaceText;
+use App\Contribution\StoryLinkCheck;
 use App\Town\TownSummaryRepository;
 use Doctrine\DBAL\Connection;
 
 /**
  * Puts an approved town or region text where readers see it: the town card's
- * local text for that language, or the region page's lead for that locale.
+ * local text for that language, the region page's lead for that locale, or
+ * the region's "History, nature and culture" text
+ * (moderation-and-contribution.md §3.1c).
  *
  * The same stores the curators' direct pens write (the town page and the
  * Regions desk), with who wrote the text, who approved it, which proposal it
@@ -32,7 +36,7 @@ use Doctrine\DBAL\Connection;
  */
 final readonly class PlaceTextWriter
 {
-    public function __construct(private Connection $db, private TownSummaryRepository $towns)
+    public function __construct(private Connection $db, private TownSummaryRepository $towns, private StoryLinkCheck $links)
     {
     }
 
@@ -46,7 +50,16 @@ final readonly class PlaceTextWriter
         if (null === $proposal) {
             throw new \InvalidArgumentException(sprintf('Submission %d names no text target', (int) $submission->getId()));
         }
+        $this->write($submission, $proposal, $approvedBy);
+    }
 
+    /**
+     * The approved text into its store.
+     *
+     * @param array{target: string, ref: string, lang: string, text: string, derived: bool} $proposal
+     */
+    private function write(Submission $submission, array $proposal, int $approvedBy): void
+    {
         if (PlaceText::TOWN === $proposal['target']) {
             $this->towns->overrideText(
                 $proposal['ref'],
@@ -62,13 +75,20 @@ final readonly class PlaceTextWriter
             return;
         }
 
+        if (PlaceText::STORY === $proposal['target']) {
+            $this->setRegionStory((int) $proposal['ref'], $proposal['lang'], $proposal['text'], $submission->getUserId(), $approvedBy, $submission->getId());
+
+            return;
+        }
+
         $this->setRegionLead((int) $proposal['ref'], $proposal['lang'], $proposal['text'], $proposal['derived'], $submission->getUserId(), $approvedBy, $submission->getId());
     }
 
     /**
      * Whether the text a proposal names has a Wikipedia article to credit in
      * its language: the town card's fetched article, or the region's article
-     * (own locale, then English, as the region page cites it).
+     * (own locale, then English, as the region page cites it). A region's
+     * history text has none: it is its writers' own and links its sources.
      *
      * @param array{target: string, ref: string, lang: string, text: string, derived: bool} $proposal
      */
@@ -76,6 +96,9 @@ final readonly class PlaceTextWriter
     {
         if (PlaceText::TOWN === $proposal['target']) {
             return $this->towns->hasArticle($proposal['ref'], $proposal['lang']);
+        }
+        if (PlaceText::STORY === $proposal['target']) {
+            return false;
         }
         $wiki = $this->db->fetchOne('SELECT context FROM region WHERE id = :id', ['id' => (int) $proposal['ref']]);
 
@@ -93,6 +116,23 @@ final readonly class PlaceTextWriter
         $proposal = PlaceText::fromPayload($payload);
 
         return null !== $proposal && !\is_array($payload['_credit'] ?? null) && $this->hasSource($proposal);
+    }
+
+    /**
+     * True when approving this history text still needs the curator's tick:
+     * a link in it is not plainly fine (StoryLinkCheck) and the approval's
+     * confirmation (`_links.approved`) does not cover it.
+     */
+    public function linksUnconfirmed(Submission $submission): bool
+    {
+        $payload = $submission->getPayload();
+        $proposal = PlaceText::fromPayload($payload);
+        if (null === $proposal || PlaceText::STORY !== $proposal['target']) {
+            return false;
+        }
+        $problems = $this->links->problems($proposal['text']);
+
+        return [] !== $problems && !StoryLinkCheck::covers($payload, 'approved', $problems);
     }
 
     /**
@@ -119,6 +159,20 @@ final readonly class PlaceTextWriter
         $this->db->executeStatement(
             'UPDATE region SET context_curated = :ctx, updated_at = NOW() WHERE id = :id',
             ['ctx' => json_encode($curated, \JSON_THROW_ON_ERROR), 'id' => $regionId],
+        );
+    }
+
+    /** One locale's history text, the others untouched. */
+    public function setRegionStory(int $regionId, string $locale, string $text, ?int $by, int $approvedBy, ?int $submissionId): void
+    {
+        $row = $this->db->fetchAssociative('SELECT story FROM region WHERE id = :id FOR UPDATE', ['id' => $regionId]);
+        if (false === $row) {
+            throw new \InvalidArgumentException(sprintf('Unknown region %d', $regionId));
+        }
+        $story = RegionStory::withEntry(PlaceText::decode($row['story']), $locale, $text, $by, $approvedBy, $submissionId, new \DateTimeImmutable());
+        $this->db->executeStatement(
+            'UPDATE region SET story = :story, updated_at = NOW() WHERE id = :id',
+            ['story' => json_encode($story, \JSON_THROW_ON_ERROR), 'id' => $regionId],
         );
     }
 }

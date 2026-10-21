@@ -9,6 +9,7 @@ namespace App\Catalog;
 use App\Moderation\DeskRider;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Intl\Countries;
+use Symfony\Component\Intl\Languages;
 
 /**
  * Region pages: operational regions grouped by country. Maturity and stewardship are independent facts, not one ladder.
@@ -171,7 +172,7 @@ final class RegionDirectoryProvider
         /* Wikipedia lead for this locale only — the list page never renders it. Attribution must travel with the extract. */
         /* Curator override beats harvest for that locale; RegionLead owns credit. */
         $ctx = $this->db->fetchAssociative(
-            'SELECT context, context_curated FROM region WHERE id = :id',
+            'SELECT context, context_curated, story FROM region WHERE id = :id',
             ['id' => (int) $row['id']],
         );
         $context = RegionLead::resolve(
@@ -182,9 +183,16 @@ final class RegionDirectoryProvider
         if (null !== $context) {
             $context += $this->leadAuthor($context['by'], $context['approvedBy']);
         }
+        /* "History, nature and culture": the reader's language, else English, else any (RegionStory). */
+        $story = RegionStory::resolve(self::decodeJson(\is_array($ctx) ? $ctx['story'] : null), $locale);
+        if (null !== $story) {
+            $story += $this->leadAuthor($story['by'], $story['approvedBy'])
+                + ['langName' => self::languageName($story['lang'], $locale)];
+        }
 
         return $this->shape($row) + [
             'context' => $context,
+            'story' => $story,
             // The silhouette needs the row id to read `region.outline`.
             'id' => (int) $row['id'],
             'curators' => $this->curators((int) $row['id'], $cc),
@@ -195,6 +203,16 @@ final class RegionDirectoryProvider
             /* Hero coverage total, same three figures as /coverage. Zero when the pipeline table is absent. */
             'coveragePois' => array_sum(array_map('intval', $coverageRows)),
         ];
+    }
+
+    /** A language's name in the reader's language ("English", "Engels"), or null. */
+    private static function languageName(?string $lang, string $locale): ?string
+    {
+        if (null === $lang) {
+            return null;
+        }
+
+        return Languages::exists($lang) ? Languages::getName($lang, $locale) : $lang;
     }
 
     /**

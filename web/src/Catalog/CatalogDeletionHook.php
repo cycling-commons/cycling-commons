@@ -86,18 +86,22 @@ final class CatalogDeletionHook implements UserDeletionHookInterface
             );
         }
 
-        foreach (['userId', 'approvedBy'] as $key) {
-            $this->db->executeStatement(
-                \sprintf(
-                    "UPDATE region r SET context_curated = (
-                            SELECT jsonb_object_agg(e.key, CASE WHEN e.value->>'%1\$s' = :u THEN jsonb_set(e.value, '{%1\$s}', 'null'::jsonb) ELSE e.value END)
-                              FROM jsonb_each(r.context_curated) e)
-                      WHERE jsonb_typeof(r.context_curated) = 'object'
-                        AND EXISTS (SELECT 1 FROM jsonb_each(r.context_curated) e WHERE e.value->>'%1\$s' = :u)",
-                    $key,
-                ),
-                ['u' => $text],
-            );
+        // A region's lead and its history text keep their words; the writer and approver go.
+        foreach (['context_curated', 'story'] as $column) {
+            foreach (['userId', 'approvedBy'] as $key) {
+                $this->db->executeStatement(
+                    \sprintf(
+                        "UPDATE region r SET %2\$s = (
+                                SELECT jsonb_object_agg(e.key, CASE WHEN e.value->>'%1\$s' = :u THEN jsonb_set(e.value, '{%1\$s}', 'null'::jsonb) ELSE e.value END)
+                                  FROM jsonb_each(r.%2\$s) e)
+                          WHERE jsonb_typeof(r.%2\$s) = 'object'
+                            AND EXISTS (SELECT 1 FROM jsonb_each(r.%2\$s) e WHERE e.value->>'%1\$s' = :u)",
+                        $key,
+                        $column,
+                    ),
+                    ['u' => $text],
+                );
+            }
         }
     }
 }

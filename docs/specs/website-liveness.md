@@ -73,6 +73,12 @@ rule; `App\Links\WebsiteChecker` fetches and applies it.
    in the run's summary ("websites dropped"), never stored to be hidden
    later. The place itself is never refused.
 
+- **A region's history text** asks the same gate for every link it adds or
+  changes ([moderation-and-contribution.md](moderation-and-contribution.md)
+  §3.1c): `dead` and `parked` refuse the text, naming the address;
+  `unknown` is accepted. Its form also asks the gate live, as links appear
+  in the box (`story_link_check`, rate-limited per writer).
+
 ## 3. What a rider sees
 
 - A coverage point whose website is `dead` or `parked` shows no website row

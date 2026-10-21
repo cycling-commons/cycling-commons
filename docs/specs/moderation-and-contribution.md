@@ -947,6 +947,140 @@ Pinned by `PlaceTextProposalTest`, `TownControllerTest`,
 `DeskSeenTest::testTheTextCardsEditLinkOpensTheSubmission`,
 `tests/js/town-text.test.mjs` and `tests/js/text-credit-actions.test.mjs`.
 
+### 3.1c A region's history, nature and culture text (2026-10-20)
+
+A region page has a second text beside the geographic lead of §3.1b: what
+the region is about in its historical, natural and cultural context, citing
+the sources of its facts in place ([map-and-search.md](map-and-search.md)
+§4.5, "History, nature and culture"). Anyone signed in writes, edits or
+translates it; a curator of the region approves it. It is the third target
+of the same `text` submission (`payload.target = story`), so everything in
+§3.1b holds: the one queue, filed in the region, the same decision, thread,
+withdraw, History desk and retention, a curator's own text applied at once
+inside their area, a rider's second send amending their open one, the
+curator's correction form (`moderate_text`) and the rate limit. Its row icon
+on the desk is an open book (`PlaceText::ICONS`).
+
+**Which text is which.** The lead of §3.1b is the region's geography text
+(where it lies, its landscape, size and neighbours); this one is its
+history, nature and culture. The form says which one it is in a note at
+its top, "This is the geography text: ..." or "This is the history, nature
+and culture text: ...", with a link to the other text's form; on the
+curator's correction form the note asks them to check, before approving,
+that the text keeps to its purpose (`place_text.purpose_*`). The desk labels
+a lead's change "Geography (NL)", a history text's "History, nature and
+culture (NL)", a town card's "Text (NL)".
+
+**What differs from the lead.**
+
+- **Storage.** `region.story` (JSONB), one entry per locale: `{text,
+  userId, approvedBy, submissionId, at}` (`App\Catalog\RegionStory`).
+- **Paragraphs.** The text keeps its paragraphs: each line break starts one,
+  whitespace inside a paragraph folds to one space, stored joined by a blank
+  line. At most 2,500 characters a reader sees (`RegionStory::MAX`,
+  `readableLength()`): a link counts its words, not its brackets or its
+  address, and the blank line between paragraphs counts as two. What is
+  stored, addresses included, is capped at 6,000 (`RAW_MAX`, the box's
+  `maxlength`). The form's live count is of what a reader sees. Over the
+  limit: `place_text.error.too_long` with `%max%` 2,500.
+- **Citations in place, no list of sources.** The text cites a source where
+  it uses it: `[the words that describe it](https://address)` links those
+  words, so a reader and a search engine see what the link is about. There
+  is no separate list of sources under the text. Only `http` and `https`
+  addresses link, and only words link; a bare address stays plain text.
+  A translation carries the citations along with the words.
+- **Link words say what the source is.** A link whose words are only
+  "source", "link", "here", "click here" and the like, in any of the five
+  languages (`RegionStory::GENERIC_ANCHORS`), is refused
+  (`place_text.error.generic_anchor`, "A link says only "source", "link" or
+  "here". Link the words that say what the page is about instead.", 422,
+  nothing filed).
+- **Which sites.** The form hint asks writers to link only the source
+  itself: a government body, an archive, or a heritage or nature
+  organisation, and no blogs, shops or pages full of ads. The approving
+  curator holds that line; the server does not judge a domain's standing.
+- **Every link is checked, and an unclear one is confirmed by hand, never
+  refused** (owner 2026-10-20: an outage must not block a text).
+  `App\Contribution\StoryLinkCheck` asks two things of each address in the
+  text: the website gate of [website-liveness.md](website-liveness.md) §2
+  (a site there, not `dead`, not `parked` for sale) and Google Safe Browsing
+  ([catalog-data-model.md](catalog-data-model.md) §7) through `LinkSafety`:
+  an answer is kept in `link_verdict` by url, shared with every text and
+  place linking the same page, and reused while the terms allow (a match at
+  most 30 minutes, a clean answer 10). A link is plainly fine when the site
+  is `live` and Safe Browsing says `safe`; anything else (`dead`, `parked`,
+  `unsafe`, or a check that could not answer) is a problem link.
+  - The writer: a send with problem links and no tick is sent back
+    (`place_text.error.links_unconfirmed`, naming the addresses, 422,
+    nothing filed). With the tick, "I opened the links that are not marked
+    "Checked: OK" myself, and they lead to the right pages." (`links_confirmed`),
+    it is filed, and the tick is kept: `payload._links.writer = {by, at,
+    problems: {url: dead|parked|unsafe|unknown}}`.
+  - The curator: approving needs a tick of their own on the text's form
+    (`_links.approved`, same shape). The drawer's Approve on such a text is
+    refused (`TextLinksUnconfirmedException`, `text_links_unconfirmed`, "Approve
+    this text on its form (✎): confirm there that you opened the links that
+    are not marked OK."), as for an undecided Wikipedia credit. A link that
+    became a problem after the tick is not covered. A curator's own text
+    applied at once counts their send's tick as the approval's.
+  - The desk card and drawer still show Safe Browsing's "unsafe" or "could
+    not check" flag on the links.
+- **The same check, live in the form.** As links appear in the box, pasted
+  or typed, the editor posts the addresses it has not asked about to
+  `story_link_check` (`POST /regions/links/check`, signed in, the form's
+  own token `story-link-check`, at most 20 http(s) addresses a time, the
+  `link_check` limit of 60 an hour per writer) and gets
+  `PlaceTextProposals::checkLinks()`'s verdicts: `{site, safety, refused}`
+  per address. "Links in this text" shows each link's state: "Checking...",
+  "Checked: OK", "No website answers", "Domain for sale or unused", "Google
+  warns about it", "Could not check", or "Check limit reached, the send
+  checks it"; a refused address is also tinted red in the box. When a link
+  is not "Checked: OK", the tick appears under the list (and the server
+  shows it after a send came back for it). The send checks again either way.
+- **The links on the page** open in a new tab (`target="_blank"
+  rel="noopener noreferrer"`) and carry no `nofollow` or `ugc`: a curator
+  approved every one as an editorial citation, so search engines may follow
+  them.
+- **No Wikipedia question.** The text is its writers' own; there is no
+  article to adapt or credit, so neither the writer's "Where your text comes
+  from" nor the curator's "Wikipedia credit" is asked, and Approve on the
+  drawer needs no form.
+- **The form** (route `region_story`, `/regions/{slug}/story`, ROLE_USER).
+  The box starts from the current text in the chosen language, because the
+  text is several paragraphs long and an edit changes what is there. For a
+  language without a text, the box is empty and the text of another
+  language (English first, then the others in order) shows above it,
+  captioned "To translate from ({language})". Switching the language swaps
+  the box only while the rider has not changed it
+  (`assets/contribute/place-text.js`). A send equal to the current text is
+  refused (`place_text.error.unchanged`).
+- **The link editor** (the same script, on the form and on the curator's
+  correction form; hidden without script, where the box is a plain box).
+  "Link the selected words" above the box: select words, press it, give a
+  full `http(s)` address, and the words become `[words](address)`. In the
+  box, a tint behind each link's words and a quieter one behind its
+  address, red behind words the server refuses (the page gets
+  `RegionStory::GENERIC_ANCHORS` as `data-generic`). The tints are drawn on
+  a layer under the transparent textarea; the text itself stays the
+  textarea's own. Under the box, "Links in this text (n)": each link's words
+  and where they go, with a warning on a refused one.
+- **How to write it.** In place of the one-line hint, numbered steps
+  (`aside.pt-howto`): the whole text and its limit, a paragraph per line,
+  cite in place (an example in the page's language, in the box's own tints,
+  then how the page reads it: `place_text.howto_ex_words` and
+  `howto_ex_url`, the Defence Line of Amsterdam, UNESCO list 759, and in
+  Dutch the Stelling van Amsterdam's own documentation centre), link words
+  that name the subject, and which sites. A column right of the form from 1,140 px,
+  its top level with the language select, outside the form's 760 px so the
+  box keeps its width; under the box below that.
+- **`changes`.** `story:<lang>`, labelled on the desk "History, nature and
+  culture (NL)".
+- **Account deletion** nulls `userId` and `approvedBy` in `region.story` as
+  in `context_curated`; the words stay.
+
+Pinned by `RegionStoryProposalTest`, `tests/Catalog/RegionStoryTest.php` and
+`AccountErasureTest`.
+
 ### 3.1d The language a contribution is written in (2026-10-20)
 
 Every submission carries the language it is written in, `submission.lang`
@@ -966,7 +1100,7 @@ English (owner 2026-10-20).
 
 The queue card, the History desk and the map drawer show it as a small tag
 beside the type ("NL", title "Written in NL"), English included. A town or
-region text's change line no longer starts with its `text:nl:` key: the tag
+region text's change line no longer starts with its `story:nl:` key: the tag
 says the language.
 
 ### 3.2 The `changes` contract

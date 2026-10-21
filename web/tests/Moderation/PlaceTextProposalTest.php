@@ -488,16 +488,16 @@ final class PlaceTextProposalTest extends WebTestCase
         self::assertSame('/regions/ptext-a/text', $pen->attr('href'));
         self::assertSame('Edit this text', $pen->attr('aria-label'));
         self::assertSame('Edit this text', $pen->attr('title'));
-        self::assertCount(0, $crawler->filter('.rg-about-write'), 'a region with a text has no plain link');
+        self::assertCount(0, $crawler->filter('.rg-about:not(.rg-story) .rg-about-write'), 'a region with a text has no plain link');
 
         // A region with no text has no credit line, so one plain link stands instead.
         $crawler = $client->request('GET', '/regions/ptext-b');
         self::assertResponseIsSuccessful();
         self::assertCount(0, $crawler->filter('.tc-acts'));
-        $write = $crawler->filter('.rg-about-write a');
-        self::assertSame('Write a text for this region', $write->text());
+        $write = $crawler->filter('.rg-about:not(.rg-story) .rg-about-write a');
+        self::assertSame('Write about the geography of this region', $write->text());
         self::assertSame('/regions/ptext-b/text', $write->attr('href'));
-        self::assertSame('Write a text for this region', trim($crawler->filter('.rg-about-write')->text()), 'the link alone, no sentence');
+        self::assertSame('Write about the geography of this region', trim($crawler->filter('.rg-about:not(.rg-story) .rg-about-write')->text()), 'the link alone, no sentence');
 
         $client->loginUser($rider);
         $crawler = $client->request('GET', '/regions/ptext-a/text?lang=en');

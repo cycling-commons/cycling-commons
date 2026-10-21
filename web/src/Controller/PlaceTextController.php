@@ -9,10 +9,12 @@ namespace App\Controller;
 use App\Catalog\Entity\Submission;
 use App\Catalog\RegionLabels;
 use App\Catalog\RegionLead;
+use App\Catalog\RegionStory;
 use App\Catalog\SubmissionType;
 use App\Contribution\PlaceText;
 use App\Contribution\PlaceTextProposals;
 use App\Contribution\PlaceTextRefused;
+use App\Contribution\StoryLinkCheck;
 use App\Entity\User;
 use App\EventSubscriber\StatelessLoginRedirectSubscriber;
 use App\Moderation\AlreadyDecidedException;
@@ -21,15 +23,18 @@ use App\Routing\Languages;
 use App\Routing\LocalePrefix;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * "Edit this text": one small form per town card text and per region lead,
- * for anyone signed in (owner 2026-09-30).
+ * for anyone signed in (owner 2026-09-30), and the same form for a region's
+ * "History, nature and culture" text (§3.1c).
  *
  * What it sends is a Text submission in the one queue; a curator of the
  * region approves it there, or it applies at once when a curator writes it
@@ -39,7 +44,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * area corrects a waiting proposal before deciding it: the queue card's ✎
  * (`moderate_text`).
  *
- * @see docs/specs/moderation-and-contribution.md §3.1b
+ * @see docs/specs/moderation-and-contribution.md §3.1b and §3.1c
  *
  * @api
  */
@@ -50,6 +55,11 @@ final class PlaceTextController extends AbstractController
     private const string CSRF_ID = 'place-text';
 
     private const string CORRECT_CSRF_ID = 'moderate-text';
+
+    private const string LINK_CHECK_CSRF_ID = 'story-link-check';
+
+    /** Addresses one live link check may ask about: a long text's links, not a list to crawl. */
+    private const int LINK_CHECK_MAX = 20;
 
     /** The two answers to "Where your text comes from", as the form sends them. */
     private const string SOURCE_ADAPTED = 'adapted';
@@ -119,6 +129,8 @@ final class PlaceTextController extends AbstractController
             'action' => $this->generateUrl('region_text', ['slug' => $slug]),
             'hidden' => [],
             'back' => $this->generateUrl('region_detail', ['slug' => $slug]),
+            // The region's other text, for a writer whose words belong there.
+            'other' => $this->generateUrl('region_story', ['slug' => $slug]),
             'texts' => $texts,
             'articles' => $articles,
         ];
@@ -130,6 +142,95 @@ final class PlaceTextController extends AbstractController
         }
 
         return $this->form($context, $lang, '', null);
+    }
+
+    /**
+     * A region's "History, nature and culture" text, written, edited or
+     * translated one language at a time. The box starts from that
+     * language's current text, so an edit changes what is there; for a
+     * language without one, the text of another language shows above the
+     * empty box to translate from.
+     */
+    #[Route('/regions/{slug}/story', name: 'region_story', requirements: ['slug' => '[a-z0-9-]+'], methods: ['GET', 'POST'])]
+    public function story(string $slug, Request $request, PlaceTextProposals $proposals, RegionLabels $regionLabels): Response
+    {
+        $region = $proposals->region($slug);
+        if (null === $region) {
+            throw $this->createNotFoundException(sprintf('No region "%s".', $slug));
+        }
+        $source = 'POST' === $request->getMethod() ? $request->request : $request->query;
+        $lang = $this->lang($source->getString('lang'), $request);
+
+        $texts = [];
+        foreach (array_keys($this->languages->options()) as $l) {
+            $texts[$l] = $proposals->currentStory($region, $l);
+        }
+        $context = [
+            'target' => PlaceText::STORY,
+            'title' => $regionLabels->label($slug),
+            'action' => $this->generateUrl('region_story', ['slug' => $slug]),
+            'hidden' => [],
+            'back' => $this->generateUrl('region_detail', ['slug' => $slug]).'#story',
+            'other' => $this->generateUrl('region_text', ['slug' => $slug]),
+            'texts' => $texts,
+            'articles' => null,
+        ];
+
+        // A language without a text is translated from another: English first.
+        $from = null;
+        if ('' === ($texts[$lang] ?? '')) {
+            foreach (array_unique(['en', ...array_keys($texts)]) as $l) {
+                if ($l !== $lang && '' !== ($texts[$l] ?? '')) {
+                    $from = $l;
+                    break;
+                }
+            }
+        }
+        $context['translate_from'] = $from;
+
+        if ('POST' === $request->getMethod()) {
+            return $this->submit($request, $context, $lang, fn (User $user, string $text, string $note): array => $proposals->proposeStory($user, $region, $lang, $text, $note, $request->request->getBoolean('links_confirmed')));
+        }
+
+        return $this->form($context, $lang, $texts[$lang] ?? '', null);
+    }
+
+    /**
+     * The history text's live link check (§3.1c): the form posts the links
+     * that appear in its box, `{"token": ..., "urls": [...]}`, and gets the
+     * same verdicts a send would meet, so a dead, parked or unsafe link shows
+     * before the writer sends. Signed-in writers only, with the form's own
+     * token, at most 20 http(s) addresses, under the `link_check` limit.
+     */
+    #[Route('/regions/links/check', name: 'story_link_check', methods: ['POST'])]
+    public function checkLinks(Request $request, StoryLinkCheck $links, RateLimiterFactoryInterface $linkCheckLimiter): JsonResponse
+    {
+        try {
+            $body = json_decode($request->getContent(), true, 4, \JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            $body = null;
+        }
+        if (!\is_array($body) || !$this->isCsrfTokenValid(self::LINK_CHECK_CSRF_ID, \is_string($body['token'] ?? null) ? $body['token'] : '')) {
+            return new JsonResponse(['error' => 'token'], Response::HTTP_FORBIDDEN);
+        }
+        $urls = $body['urls'] ?? null;
+        if (!\is_array($urls) || [] === $urls || \count($urls) > self::LINK_CHECK_MAX) {
+            return new JsonResponse(['error' => 'urls'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        $clean = [];
+        foreach ($urls as $url) {
+            if (!\is_string($url) || mb_strlen($url) > 2000 || 1 !== preg_match('~^https?://[^\s()<>"]+$~i', $url)) {
+                return new JsonResponse(['error' => 'urls'], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+            $clean[] = $url;
+        }
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$linkCheckLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
+            return new JsonResponse(['error' => 'rate'], Response::HTTP_TOO_MANY_REQUESTS);
+        }
+
+        return new JsonResponse(['links' => $links->checkLinks($clean)]);
     }
 
     /**
@@ -180,7 +281,7 @@ final class PlaceTextController extends AbstractController
             };
             try {
                 if ($approve) {
-                    $proposals->approve($submission, $curator, $text, $credit, $reply);
+                    $proposals->approve($submission, $curator, $text, $credit, $reply, $request->request->getBoolean('links_confirmed'));
                 } else {
                     $proposals->correct($submission, $curator, $text);
                 }
@@ -189,7 +290,7 @@ final class PlaceTextController extends AbstractController
                     $context['credit']['choice'] = null === $credit ? null : $choice;
                 }
 
-                return $this->form(['reply' => $reply] + $context, $proposal['lang'], $text, $e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
+                return $this->form(['reply' => $reply, 'error_params' => $e->params] + $context, $proposal['lang'], $text, $e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
             }
         } catch (OutOfScopeException) {
             throw $this->createAccessDeniedException('Out of moderation scope.');
@@ -274,7 +375,7 @@ final class PlaceTextController extends AbstractController
         try {
             $result = $propose($user, $text, $request->request->getString('note'));
         } catch (PlaceTextRefused $e) {
-            return $this->form($context, $lang, $text, $e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
+            return $this->form(['error_params' => $e->params] + $context, $lang, $text, $e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
         } catch (TooManyRequestsHttpException) {
             return $this->form($context, $lang, $text, 'contribute.error.rate_limited', Response::HTTP_TOO_MANY_REQUESTS);
         }
@@ -289,24 +390,35 @@ final class PlaceTextController extends AbstractController
      * The box holds only what the rider wrote: empty on a first visit, their
      * own words when a send comes back refused, the proposal itself when a
      * curator corrects it. The current text is shown above it, read-only,
-     * from `texts`. The context's own keys win (a correction names its
-     * single language and its own token).
+     * from `texts`. A history text is the exception: its box starts from
+     * the current text, which is several paragraphs long. The context's own
+     * keys win (a correction
+     * names its single language and its own token).
      *
      * @param array<string, mixed> $context
      */
     private function form(array $context, string $lang, string $text, ?string $error, int $status = Response::HTTP_OK): Response
     {
+        $story = PlaceText::STORY === ($context['target'] ?? null);
+
         return $this->render('contribute/place_text.html.twig', $context + [
             'correcting' => null,
+            'other' => null,
             'credit' => null,
             'source' => null,
             'sent' => null,
             'lang' => $lang,
             'text' => $text,
             'error' => $error,
+            'error_params' => [],
             'langs' => $this->languages->options(),
-            'max' => PlaceText::MAX,
+            'max' => $story ? RegionStory::MAX : PlaceText::MAX,
+            // What the box may hold: a history text's addresses do not count towards `max`.
+            'raw_max' => $story ? RegionStory::RAW_MAX : PlaceText::MAX,
+            // The link words the server refuses, for the editor to mark before a send.
+            'generic_anchors' => RegionStory::GENERIC_ANCHORS,
             'note_max' => PlaceText::NOTE_MAX,
+            'link_check_csrf_id' => self::LINK_CHECK_CSRF_ID,
             'csrf_id' => self::CSRF_ID,
         ], new Response(status: $status));
     }

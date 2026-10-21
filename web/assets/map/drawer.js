@@ -144,6 +144,9 @@ export function fieldLabelFor(letter, name){
   // A town or region text in one language: `text:nl` (moderation-and-contribution.md §3.1b).
   const textLang = /^text:([a-z]{2})$/.exec(String(name));
   if(textLang) return (D.placeTextLabel || 'Text ({lang})').replace('{lang}', textLang[1].toUpperCase());
+  // A region's history text in one language: `story:nl` (§3.1c).
+  const storyLang = /^story:([a-z]{2})$/.exec(String(name));
+  if(storyLang) return (D.placeStoryLabel || 'History, nature and culture ({lang})').replace('{lang}', storyLang[1].toUpperCase());
   const off = OFF_SCHEMA_LABELS[name];
   return off ? off() : name;
 }

@@ -347,7 +347,7 @@ home:
   what_free_p: 'Gebruik het, vul het aan, exporteer het, bouw erop. Dat is wat het een commons maakt.'
   cur_kicker: 'CURATIE, GEEN OVERLOAD'
   cur_h2: 'Het beste van een regio, gekozen door fietsers.'
-  cur_lead: 'Op vakantie of ergens nieuw? Wie er woont, kent de mooiste ritten. Zie waar zij dit seizoen voor stemden. Water, eten en andere praktische punten brengen we zo volledig mogelijk in kaart.'
+  cur_lead: 'Op vakantie of ergens nieuw? Wie er woont, kent de mooiste ritten. Zie waar zij dit seizoen voor stemden. Watertappunten, eten en andere praktische punten brengen we zo volledig mogelijk in kaart.'
   cur_votable_k: 'Waar fietsers op stemmen'
   cur_panel_pin: 'WALLONIË · <b>BESTE KLIMMEN</b> · ZOMER 2026'
   cur_voted: '— GESTEMD · NIET GEDUMPT —'
@@ -636,7 +636,7 @@ region:
     label: 'Mijn gebied'
   everywhere:
     label: 'Overal'
-  about_h: 'Over deze regio'
+  about_h: "Geografie"
   about_source: 'Tekst van Wikipedia:'
   about_source_adapted: "Door de regiobeheerders van deze regio bewerkt uit Wikipedia:"
   about_source_curator: "Geschreven door de regiobeheerders van deze regio,"
@@ -645,7 +645,11 @@ region:
   about_removed_rider: 'een fietser met verwijderd account'
   about_edit: 'Deze tekst bewerken'
   about_report: 'Deze tekst melden'
-  about_write: 'Een tekst voor deze regio schrijven'
+  about_write: "Schrijf over de geografie van deze regio"
+  story_h: "Geschiedenis, natuur en cultuur"
+  story_write: "Schrijf over de geschiedenis, natuur en cultuur van deze regio"
+  story_other_lang: "Deze tekst is in het %lang%. Niemand heeft hem nog vertaald."
+  story_translate: "Vertaal hem"
   cta_map: 'Open deze regio op de kaart'
   cta_apply: 'Word vrijwillig regiobeheerder'
   # Still used by contribute/index.html.twig's Vote card ("go" link text) —
@@ -657,7 +661,7 @@ region:
   by_kind_h: 'Wat fietsers hier vinden'
   kind_verified: 'in de Commons'
   kind_coverage: 'op de kaart'
-  by_kind_note: '<code>In de Commons</code> betekent een plek die fietsers hier hebben toegevoegd en een regiobeheerder heeft goedgekeurd. <code>Op de kaart</code> is wat OpenStreetMap kent, eronder getekend. Beide kun je berijden; het eerste houden wij bij.'
+  by_kind_note: "<code>In de Commons</code> betekent een plek die wij bijhouden en die fietsers of een regiobeheerder hebben gecontroleerd: door een fietser hier toegevoegd, of een plek uit OpenStreetMap die iemand heeft verbeterd. <code>Op de kaart</code> is wat OpenStreetMap kent, eronder getekend. Beide kun je berijden; het eerste houden wij bij."
   empty_h: 'Net aangesloten'
   empty_p: 'Deze regio staat op de kaart, maar haar commons is nog leeg. Fiets je hier? Bevestig wat er is, vul aan wat ontbreekt — of word haar regiobeheerder.'
   back: '← Alle regio''s'
@@ -2057,6 +2061,7 @@ map:
   d_text_add_signin: 'Log in om een tekst voor deze plaats te schrijven'
   d_place_text_label: 'Tekst ({lang})'
   d_lang_title: "Geschreven in het %lang%"
+  d_place_story_label: "Geschiedenis, natuur en cultuur ({lang})"
   d_founded: 'Gesticht'
   d_inhabitants: 'Inwoners'
   d_circa: 'ca.'
@@ -2712,12 +2717,47 @@ propose_route:
 # signed in (PlaceTextController, moderation-and-contribution.md §3.1b).
 place_text:
   kicker_town: 'Tekst van een plaats'
-  kicker_region: 'Tekst van een regio'
+  kicker_region: "Geografie"
   lead_town: 'Iedereen die is aangemeld kan een wijziging voorstellen van de tekst op het kaartje van deze plaats. Een regiobeheerder van de regio waarin ze ligt keurt hem goed voordat hij verschijnt.'
-  lead_region: 'Iedereen die is aangemeld kan een wijziging voorstellen van de introductietekst van deze regio. Een regiobeheerder van deze regio keurt hem goed voordat hij verschijnt.'
+  lead_region: "Iedereen die is aangemeld kan een wijziging voorstellen van de geografietekst van deze regio: waar hij ligt, het landschap, de grootte en de buren. Een regiobeheerder van deze regio keurt hem goed voordat hij verschijnt."
+  kicker_story: "Geschiedenis, natuur en cultuur"
+  lead_story: "Iedereen die is aangemeld kan de tekst over de geschiedenis, natuur en cultuur van deze regio schrijven, wijzigen of vertalen. Een regiobeheerder van deze regio keurt hem goed voordat hij verschijnt."
+  purpose_region: "Dit is de geografietekst: waar de regio ligt, het landschap, de grootte en de buren. Geschiedenis, natuur en cultuur hebben een eigen tekst."
+  purpose_story: "Dit is de tekst over geschiedenis, natuur en cultuur. Waar de regio ligt en hoe het land eruitziet, hoort in de geografietekst."
+  purpose_go_story: "Schrijf over de geschiedenis, natuur en cultuur"
+  purpose_go_region: "Schrijf over de geografie"
+  purpose_region_correct: "Dit is de geografietekst. Controleer voor je goedkeurt dat hij gaat over waar de regio ligt, het landschap, de grootte en de buren: geschiedenis, natuur en cultuur horen in de andere tekst."
+  purpose_story_correct: "Dit is de tekst over geschiedenis, natuur en cultuur. Controleer voor je goedkeurt dat hij niet beschrijft waar de regio ligt: dat hoort in de geografietekst."
+  geography_change_label: "Geografie (%lang%)"
   field_lang: 'Taal'
   field_text: 'Tekst'
   field_text_hint: 'Schrijf de hele tekst zoals lezers hem moeten zien, niet alleen de wijziging.'
+  howto_h: "Zo schrijf je hem"
+  howto_whole: "Schrijf de hele tekst zoals lezers hem moeten zien, hoogstens %max% tekens. Webadressen van links tellen niet mee."
+  howto_paragraph: "Begin elke alinea op een nieuwe regel."
+  howto_cite: "Noem een bron waar je hem gebruikt. Selecteer de woorden en druk op \"Link de geselecteerde woorden\", of zet de woorden tussen vierkante haken met het adres er direct achter:"
+  howto_reads: "Op de pagina staat dan:"
+  howto_ex_words: "Stelling van Amsterdam"
+  howto_ex_url: "https://www.stelling-amsterdam.nl"
+  howto_words: "Link de woorden die zeggen waar de pagina over gaat, nooit \"bron\" of \"hier\"."
+  howto_sites: "Link alleen naar de bron zelf: een overheid, een archief, of een erfgoed- of natuurorganisatie. Geen blogs, winkels of pagina's vol advertenties."
+  link_add: "Link de geselecteerde woorden"
+  link_url: "Webadres"
+  link_insert: "Link toevoegen"
+  link_select_first: "Selecteer eerst de woorden die je wilt linken in de tekst, en druk dan op de knop."
+  link_bad_url: "Schrijf het volledige webadres, beginnend met https://"
+  link_for: "Link voor: %words%"
+  links_h: "Links in deze tekst (%count%)"
+  links_generic: "Noem waar de pagina over gaat, niet \"bron\" of \"hier\"."
+  links_confirm: "Ik heb de links die niet \"Gecontroleerd: OK\" zijn zelf geopend, en ze leiden naar de juiste pagina's."
+  link_st_checking: "Controleren…"
+  link_st_ok: "Gecontroleerd: OK"
+  link_st_dead: "Geen website antwoordt"
+  link_st_parked: "Domein te koop of ongebruikt"
+  link_st_unsafe: "Google waarschuwt ervoor"
+  link_st_unknown: "Kon niet controleren"
+  link_st_limit: "Limiet bereikt, bij versturen wordt het gecontroleerd"
+  translate_h: "Om uit te vertalen (%lang%)"
   current_h: 'Huidige tekst'
   current_none: 'Er is nog geen tekst in deze taal.'
   count: '%count% van %max%'
@@ -2736,8 +2776,10 @@ place_text:
   sent_ref: 'Je referentie: %ref%'
   back_town: 'Terug naar de kaart'
   back_region: 'Terug naar de regio'
+  back_story: "Terug naar de regio"
   follow: 'Volg het op je profiel'
   change_label: 'Tekst (%lang%)'
+  story_change_label: "Geschiedenis, natuur en cultuur (%lang%)"
   correct:
     lead: "Verbeter tikfouten en kleine vergissingen in deze suggestie, en keur ze dan hier goed, of sla de verbetering op en beslis later. Het blijft de tekst van de fietser: na goedkeuring staat hij op naam van de fietser, en de suggestie houdt bij dat jij hem verbeterd hebt."
     note_h: 'Notitie van de fietser'
@@ -2764,6 +2806,8 @@ place_text:
     correct_unchanged: 'Dit is de tekst zoals de fietser hem stuurde. Verander iets, of ga terug naar de wachtrij.'
     credit_required: 'Kies of de Wikipedia-vermelding blijft, en keur dan goed.'
     source_required: 'Zeg waar je tekst vandaan komt: bewerkt uit het Wikipedia-artikel, of je eigen tekst.'
+    generic_anchor: "Een link zegt alleen \"bron\", \"link\" of \"hier\". Link liever de woorden die zeggen waar de pagina over gaat."
+    links_unconfirmed: "Sommige links zijn niet \"Gecontroleerd: OK\": %urls%. Open ze zelf en vink het vakje onder de links aan, of pas ze aan."
 
 moderate:
   lang_title: "Geschreven in het %lang%"
@@ -2919,6 +2963,7 @@ moderate:
     no_recipient: 'Kon niet bepalen aan wie het bericht moet worden gestuurd.'
     osm_unanswered: 'Koppel deze plek aan OSM, of leg vast dat er geen OSM-tegenhanger is, voordat je goedkeurt.'
     text_credit_undecided: 'Keur deze tekst goed op zijn formulier (✎): daar kies je of de Wikipedia-vermelding blijft.'
+    text_links_unconfirmed: "Keur deze tekst goed op zijn formulier (✎): bevestig daar dat je de links die niet OK zijn hebt geopend."
   osm:
     question: 'Welk OSM-object is deze plek?'
     none: 'Niet in OSM'
@@ -4920,9 +4965,9 @@ moderate_regions:
   flash_not_ready: 'Die regio heeft de Best-of-drempel nog niet bereikt.'
   about:
     kicker: "Regio-instellingen"
-    title: "De tekst op de regiopagina"
-    lead: "De korte inleiding die een lezer boven aan de regiopagina ziet, per taal. Laat een taal leeg en de pagina houdt de Wikipedia-tekst die wij hebben opgehaald. Wat je hier schrijft vervangt die tekst, en blijft staan na de volgende Wikipedia-import."
-    link: "Regiotekst"
+    title: "De geografietekst op de regiopagina"
+    lead: "De geografietekst die een lezer boven aan de regiopagina ziet, per taal: waar de regio ligt, het landschap, de grootte en de buren. Geschiedenis, natuur en cultuur hebben een eigen tekst. Laat een taal leeg en de pagina houdt de Wikipedia-tekst die wij hebben opgehaald. Wat je hier schrijft vervangt die tekst, en blijft staan na de volgende Wikipedia-import."
+    link: "Geografietekst"
     no_article: "Wikipedia heeft in deze taal geen artikel over deze regio, dus de pagina laat hier niets zien tot je iets schrijft."
     placeholder: "Laat leeg om de Wikipedia-tekst te houden."
     derived_label: "Ik heb de Wikipedia-tekst hierboven bewerkt in plaats van zelf te schrijven. De pagina houdt dan de Wikipedia-vermelding en meldt dat de tekst is gewijzigd."

@@ -42,10 +42,14 @@ final readonly class SubmissionChangeSummary
             $now = $pair['now'] ?? null;
 
             $textLang = PlaceText::langOfKey((string) $field);
+            $storyLang = PlaceText::storyLangOfKey((string) $field);
             $rows[] = [
-                'label' => $labels[$field] ?? (null !== $textLang
-                    ? $this->translator->trans('place_text.change_label', ['%lang%' => strtoupper($textLang)])
-                    : $field),
+                'label' => $labels[$field] ?? match (true) {
+                    // A region's lead is its geography text (§3.1b); a town card's is just its text.
+                    null !== $textLang => $this->translator->trans(PlaceText::REGION === ($submission->getPayload()['target'] ?? null) ? 'place_text.geography_change_label' : 'place_text.change_label', ['%lang%' => strtoupper($textLang)]),
+                    null !== $storyLang => $this->translator->trans('place_text.story_change_label', ['%lang%' => strtoupper($storyLang)]),
+                    default => (string) $field,
+                },
                 'was' => null === $was || '' === $was ? null : ChangeValue::format((string) $field, $was),
                 'now' => ChangeValue::format((string) $field, $now),
             ];

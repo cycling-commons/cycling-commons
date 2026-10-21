@@ -33,6 +33,14 @@
   two radios and no default, required for Approve only (Save correction
   carries `formnovalidate`), with the writer's own claim as the hint. The
   server refuses an approval without the choice either way.
+
+  A region's "History, nature and culture" text (`target` story, §3.1c) is
+  several paragraphs long, so its box starts from the current text of the
+  chosen language instead of beside it. It links its sources in place
+  (`[words](address)`, explained in the hint). For a language without a
+  text, the text of another language (`translate_from`, English first)
+  shows above the empty box to translate from. There is no Wikipedia
+  question.
 #}
 {% extends 'base.html.twig' %}
 
@@ -63,14 +71,26 @@
            <a href="{{ path('profile') }}">{{ 'place_text.follow'|trans }}</a></p>
       </div>
     {% else %}
+      {# A region has two texts with two purposes (§3.1b, §3.1c): geography,
+         and history, nature and culture. The form says which one this is,
+         links the writer to the other, and reminds a curator before they
+         approve. A town card has one text, so no note. #}
+      {% if target in ['region', 'story'] %}
+        <div class="cnote pt-purpose" role="note"><p>
+          {{- (correcting ? 'place_text.purpose_' ~ target ~ '_correct' : 'place_text.purpose_' ~ target)|trans -}}
+          {%- if other and not correcting %} <a href="{{ other }}">{{ ('place_text.purpose_go_' ~ (target == 'region' ? 'story' : 'region'))|trans }}</a>{% endif -%}
+        </p></div>
+      {% endif %}
       {# Why a curator's own pen sent them here: the town lies outside their areas. #}
       {% for m in app.flashes('notice') %}<div class="cnote" role="status"><p>{{ m|trans }}</p></div>{% endfor %}
       {% if error %}
-        <div class="cerr" role="alert">{{ error|trans({'%max%': max}) }}</div>
+        <div class="cerr" role="alert">{{ error|trans({'%max%': max}|merge(error_params)) }}</div>
       {% endif %}
 
-      <form method="post" action="{{ action }}" id="place-text-form"
+      {% set story = target == 'story' %}
+      <form method="post" action="{{ action }}" id="place-text-form"{% if story %} class="pt-story-form"{% endif %}
             data-texts="{{ texts|json_encode }}"
+            {% if story and not correcting %}data-story data-langs="{{ langs|json_encode }}"{% endif %}
             {% if articles is not null %}data-articles="{{ articles|json_encode }}"{% endif %}>
         <input type="hidden" name="_token" value="{{ csrf_token(csrf_id) }}">
         {% for k, v in hidden %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
@@ -85,18 +105,98 @@
         </div>
 
         {% set current = texts[lang] ?? '' %}
+        {% if story and not correcting %}
+          {% set from = translate_from|default(null) %}
+          <figure class="pt-current pt-translate" id="pt-translate"{{ from is null ? ' hidden' }}>
+            <figcaption id="pt-translate-h" data-words="{{ 'place_text.translate_h'|trans({'%lang%': '%lang%'}) }}">{{ from ? 'place_text.translate_h'|trans({'%lang%': langs[from] ?? from}) }}</figcaption>
+            <blockquote id="pt-translate-text">{{ from ? texts[from] }}</blockquote>
+          </figure>
+        {% else %}
         <figure class="pt-current" id="pt-current">
           <figcaption>{{ 'place_text.current_h'|trans }}</figcaption>
           <blockquote id="pt-current-text"{{ current is empty ? ' hidden' }}>{{ current }}</blockquote>
           <p class="chint" id="pt-current-none"{{ current is not empty ? ' hidden' }}>{{ 'place_text.current_none'|trans }}</p>
         </figure>
+        {% endif %}
 
-        <div class="cfield">
+        <div class="cfield{{ story ? ' pt-editor' }}">
           <label for="pt-text">{{ 'place_text.field_text'|trans }} <span class="req" aria-hidden="true">*</span></label>
-          <textarea id="pt-text" name="text" required maxlength="{{ max }}" aria-describedby="pt-text-hint pt-text-count">{{ text }}</textarea>
+          {# A history text's links, made easy to place and to see (§3.1c):
+             a button that wraps the selected words in a link, colours behind
+             the link words and the address in the box, and a list of the
+             links under it. All drawn by place-text.js; hidden until it
+             runs, so without script the box is a plain box. #}
+          {% if story %}
+            <div class="pt-linkbar" id="pt-linkbar" hidden>
+              <button type="button" class="btn btn-g pt-link-open" id="pt-link-open" aria-controls="pt-link-form" aria-expanded="false">{{ 'place_text.link_add'|trans }}</button>
+              <div class="pt-link-form" id="pt-link-form" hidden>
+                <label for="pt-link-url">{{ 'place_text.link_url'|trans }}</label>
+                <input type="url" id="pt-link-url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://">
+                <button type="button" class="btn btn-p" id="pt-link-insert">{{ 'place_text.link_insert'|trans }}</button>
+                <button type="button" class="btn btn-g" id="pt-link-cancel">{{ 'place_text.cancel'|trans }}</button>
+              </div>
+              <p class="chint pt-link-msg" id="pt-link-msg" role="status" aria-live="polite"
+                 data-select="{{ 'place_text.link_select_first'|trans }}"
+                 data-bad-url="{{ 'place_text.link_bad_url'|trans }}"
+                 data-for="{{ 'place_text.link_for'|trans({'%words%': '%words%'}) }}"></p>
+            </div>
+          {% endif %}
+          <div class="{{ story ? 'pt-hl-wrap' }}">
+            <textarea id="pt-text" name="text" required maxlength="{{ raw_max }}"{% if story %} rows="16" data-links data-generic="{{ generic_anchors|json_encode }}"{% endif %} aria-describedby="pt-text-hint pt-text-count">{{ text }}</textarea>
+          </div>
+          {% if story %}
+            {# Each link's check (website gate + Safe Browsing) as it appears,
+               from `story_link_check`: the same verdicts a send meets. #}
+            <div class="pt-links" id="pt-links" hidden
+                 data-h="{{ 'place_text.links_h'|trans({'%count%': '%count%'}) }}"
+                 data-generic-note="{{ 'place_text.links_generic'|trans }}"
+                 data-check-url="{{ path('story_link_check') }}"
+                 data-check-token="{{ csrf_token(link_check_csrf_id) }}"
+                 data-st-checking="{{ 'place_text.link_st_checking'|trans }}"
+                 data-st-ok="{{ 'place_text.link_st_ok'|trans }}"
+                 data-st-dead="{{ 'place_text.link_st_dead'|trans }}"
+                 data-st-parked="{{ 'place_text.link_st_parked'|trans }}"
+                 data-st-unsafe="{{ 'place_text.link_st_unsafe'|trans }}"
+                 data-st-unknown="{{ 'place_text.link_st_unknown'|trans }}"
+                 data-st-limit="{{ 'place_text.link_st_limit'|trans }}">
+              <p class="pt-links-h" id="pt-links-h"></p>
+              <ol id="pt-links-list"></ol>
+            </div>
+            {# A link that is not plainly fine never blocks the text: the writer,
+               and the curator approving it, confirm by hand that they opened it
+               (StoryLinkCheck, §3.1c). Shown by place-text.js when a link is
+               not "Checked: OK"; shown by the server when a send came back
+               for want of it. #}
+            {% set links_refused = error == 'place_text.error.links_unconfirmed' %}
+            <label class="cinline pt-links-ok{{ links_refused ? ' is-asked' }}" id="pt-links-ok" for="pt-links-confirm"{{ not links_refused ? ' hidden' }}>
+              <input type="checkbox" id="pt-links-confirm" name="links_confirmed" value="1">
+              <span>{{ 'place_text.links_confirm'|trans }}</span>
+            </label>
+          {% endif %}
           <p class="chint pt-count" id="pt-text-count" aria-live="polite" data-max="{{ max }}"
              data-words="{{ 'place_text.count'|trans({'%count%': '%count%', '%max%': max}) }}">{{ 'place_text.count'|trans({'%count%': text|length, '%max%': max}) }}</p>
-          <p class="chint" id="pt-text-hint">{{ 'place_text.field_text_hint'|trans }}</p>
+          {# How to write a history text, as steps beside the box on a wide
+             screen and under it on a narrow one (place-text.css). The link
+             example wears the box's own tints, then shows how the page
+             reads it, so the markup is learned by sight. #}
+          {% if story %}
+            <aside class="pt-howto" id="pt-text-hint">
+              <p class="pt-howto-h">{{ 'place_text.howto_h'|trans }}</p>
+              <ol>
+                <li>{{ 'place_text.howto_whole'|trans({'%max%': max|number_format(0, '.', ',')}) }}</li>
+                <li>{{ 'place_text.howto_paragraph'|trans }}</li>
+                <li>{{ 'place_text.howto_cite'|trans }}
+                  {# The example in the page's own language: its words and address are messages too. #}
+                  {% set ex_words = 'place_text.howto_ex_words'|trans %}
+                  <code class="pt-howto-ex"><mark class="w">[{{ ex_words }}]</mark><mark class="u">({{ 'place_text.howto_ex_url'|trans }})</mark></code>
+                  {{ 'place_text.howto_reads'|trans }} <span class="pt-howto-link">{{ ex_words }}</span></li>
+                <li>{{ 'place_text.howto_words'|trans }}</li>
+                <li>{{ 'place_text.howto_sites'|trans }}</li>
+              </ol>
+            </aside>
+          {% else %}
+            <p class="chint" id="pt-text-hint">{{ 'place_text.field_text_hint'|trans }}</p>
+          {% endif %}
         </div>
 
         {# Where the writer's text comes from: a required choice of two, with no

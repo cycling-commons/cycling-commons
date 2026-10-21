@@ -124,6 +124,11 @@ final class ModerationService
                     if (SubmissionType::Text === $submission->getType() && $this->placeTexts->creditUndecided($submission)) {
                         throw new TextCreditUndecidedException('Decide whether the Wikipedia credit stays, on the text\'s own form, before approving it.');
                     }
+                    // §3.1c: a history text's links that are not plainly fine
+                    // are confirmed by the approving curator, on the same form.
+                    if (SubmissionType::Text === $submission->getType() && $this->placeTexts->linksUnconfirmed($submission)) {
+                        throw new TextLinksUnconfirmedException('Confirm the links that are not plainly fine, on the text\'s own form, before approving it.');
+                    }
                     $submission->setStatus(SubmissionStatus::Approved);
                     if (null !== $item) {
                         match ($submission->getType()) {
