@@ -1,0 +1,63 @@
+docs/specs/moderation-and-contribution.md
+  s_4a9259c4225e4b::t_da961f82b02182 1025-1026,1132-1133,2544-2600
+web/assets/map/drawer.js
+  s_4a9259c4225e4b::t_085eb6809fb23f 691-694,745
+web/assets/styles/page/moderate/_card_styles.css
+  s_4a9259c4225e4b::t_7b8e9bef507bdd 223-229
+web/src/Catalog/CatalogDeletionHook.php
+  s_4a9259c4225e4b::t_2c45e3a150a726 89-111
+web/src/Controller/MapController.php
+  s_4a9259c4225e4b::t_3ad2af74c364c8 597
+web/src/Controller/ModerateController.php
+  s_4a9259c4225e4b::t_295af4a0cbe313 26,33,453-480
+web/src/Media/Entity/MediaUpload.php
+  s_4a9259c4225e4b::t_5d4b334ff2d96d 515-528
+web/src/Media/MediaAction.php
+  s_4a9259c4225e4b::t_9e86178cb6e5d3 28-29
+web/src/Messaging/MessageCategory.php
+  s_4a9259c4225e4b::t_519e3d2fb88d6f 34
+web/src/Messaging/UserMessageKind.php
+  s_4a9259c4225e4b::t_0b4bbe4dd5dfaf 21-22
+web/src/Moderation/ApprovalRevoker.php
+  s_4a9259c4225e4b::t_2dc2abd1f3bbae 1-410
+web/src/Moderation/PlaceTextWriter.php
+  s_4a9259c4225e4b::t_76f1a452f3cd19 54-55,57-58,207-322
+web/src/Moderation/RevokeRefused.php
+  s_4a9259c4225e4b::t_263b629a8ab7b3 1-25
+web/src/Moderation/SubmissionQueue.php
+  s_4a9259c4225e4b::t_07058cf519d90a 54,176,537,553,642-643,843-863
+web/src/Town/TownSummaryRepository.php
+  s_4a9259c4225e4b::t_00cbdb4f8c04e1 137-167,182-217
+web/templates/moderate/_queue_item.html.twig
+  s_4a9259c4225e4b::t_2a9d7df6829201 293-300
+web/templates/moderate/history.html.twig
+  s_4a9259c4225e4b::t_a414b91ab24490 32-34,154-171
+web/tests/Moderation/ApprovalRevokeTest.php
+  s_4a9259c4225e4b::t_73fe36a3ff99b8 1-360
+web/translations/messages.de.yaml
+  s_4a9259c4225e4b::t_77954208c01dae 1939,2838-2850,3374,3413
+web/translations/messages.en.yaml
+  s_4a9259c4225e4b::t_852794fc82e5ff 2554,2852-2864,3388,3427
+web/translations/messages.es.yaml
+  s_4a9259c4225e4b::t_6f1faeffa47a8c 2561,2859-2871,3396,3435
+web/translations/messages.fr.yaml
+  s_4a9259c4225e4b::t_162446f2d14156 1934,2833-2845,3369,3408
+web/translations/messages.nl.yaml
+  s_4a9259c4225e4b::t_8f64d952fb87c8 1936,2837-2849,3373,3412
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8b85863fa34f3432a2c3e83baa79fc74bd379052",
+  "prompts": {},
+  "sessions": {
+    "s_4a9259c4225e4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aa072c1e-46c1-4bc8-a73b-4327426f865a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
