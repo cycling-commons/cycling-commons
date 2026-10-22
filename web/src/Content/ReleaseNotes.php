@@ -66,11 +66,17 @@ final class ReleaseNotes
             'sections' => [
                 'public' => [
                     'changelog.v098_ireland',
+                    'changelog.v098_wallonia_stays',
+                    'changelog.v098_bike_friendly',
+                    'changelog.v098_scale_bar',
                     'changelog.v098_cycling_history',
                     'changelog.v098_roadmap_done',
                     'changelog.v098_region_story',
                     'changelog.v098_translations',
                     'changelog.v098_region_page',
+                    'changelog.v098_presets',
+                    'changelog.v098_bike_types',
+                    'changelog.v098_map_look',
                     'changelog.v098_fixes',
                 ],
                 'rider' => [
@@ -84,7 +90,13 @@ final class ReleaseNotes
             ],
             'kinds' => [
                 'changelog.v098_ireland' => 'new',
+                'changelog.v098_wallonia_stays' => 'new',
+                'changelog.v098_bike_friendly' => 'new',
                 'changelog.v098_cycling_history' => 'new',
+                'changelog.v098_scale_bar' => 'new',
+                'changelog.v098_presets' => 'improved',
+                'changelog.v098_bike_types' => 'improved',
+                'changelog.v098_map_look' => 'improved',
                 'changelog.v098_roadmap_done' => 'new',
                 'changelog.v098_region_story' => 'new',
                 'changelog.v098_translations' => 'new',
