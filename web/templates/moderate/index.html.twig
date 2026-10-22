@@ -88,6 +88,8 @@
   <div class="empty-state">
     <h3>{{ 'moderate.empty.heading'|trans }}</h3>
     <p>{{ 'moderate.empty.body'|trans }}</p>
+    {# A code or number this desk does not hold, when History does. #}
+    {% if elsewhere %}<p class="q-elsewhere">{{ 'moderate.empty.on_history'|trans({'%ref%': elsewhere.ref}) }} <a href="{{ elsewhere.href }}">{{ 'moderate.empty.open_there'|trans }}</a></p>{% endif %}
   </div>
   {% else %}
   <div class="q-list" id="qList">

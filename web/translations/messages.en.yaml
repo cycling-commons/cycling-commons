@@ -2989,6 +2989,9 @@ moderate:
   empty:
     heading: 'Queue clear'
     body: 'Nothing left to review. Nice.'
+    on_history: '%ref% has been decided, so it is on History.'
+    on_queue: '%ref% is still open, so it is on the submissions desk.'
+    open_there: 'Open it there'
   filter:
     country: 'Country'
     region: 'Region'
@@ -2999,7 +3002,7 @@ moderate:
     public: 'Public list'
     apply: 'Apply'
     search: 'Search'
-    search_ph: 'Title, contributor or SUB-12…'
+    search_ph: 'Title, contributor or #k7m2x9qa…'
     by_user: 'Showing one contributor''s submissions only.'
     by_user_clear: 'Show everyone'
   msg:
@@ -5082,8 +5085,8 @@ room:
   edited_on: 'Edited %date%'
   to_person: 'to %name%'
   to_you: 'to you'
-  about_submission: 'About submission #%id%'
-  about_submission_titled: 'About SUB-%id% · %title%'
+  about_submission: 'About submission %ref%'
+  about_submission_titled: 'About %ref% · %title%'
   image_alt: 'Picture %n% on this post'
   image_pending: 'Picture being checked'
   image_refused: 'Picture not kept: %reason%'

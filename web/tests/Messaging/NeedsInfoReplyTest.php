@@ -287,7 +287,7 @@ final class NeedsInfoReplyTest extends WebTestCase
         self::assertSame((int) $rider->getId(), $reply->getSenderId());
         self::assertSame('submission', $reply->getChannel());
         self::assertSame($sub->getId(), $reply->getRefId());
-        self::assertSame('SUB-'.$sub->getId(), $reply->getRefLabel());
+        self::assertSame('#'.$sub->getCode(), $reply->getRefLabel());
         self::assertSame('Confirmed — loose gravel for the last 200m.', $reply->getBodyText());
 
         // Every curator sees the reply on the queue row — not only the

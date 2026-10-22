@@ -2970,6 +2970,9 @@ moderate:
   empty:
     heading: 'File vide'
     body: 'Plus rien à examiner. Parfait.'
+    on_history: '%ref% a été décidée : elle se trouve dans l''Historique.'
+    on_queue: '%ref% est encore ouverte : elle se trouve parmi les contributions.'
+    open_there: 'L''ouvrir là'
   filter:
     country: 'Pays'
     region: 'Région'
@@ -2980,7 +2983,7 @@ moderate:
     public: 'Liste publique'
     apply: 'Appliquer'
     search: 'Rechercher'
-    search_ph: 'Titre, contributeur ou SUB-12…'
+    search_ph: 'Titre, contributeur ou #k7m2x9qa…'
     by_user: 'Contributions d''une seule personne.'
     by_user_clear: 'Afficher tout le monde'
   msg:
@@ -5060,8 +5063,8 @@ room:
   edited_on: 'Modifié le %date%'
   to_person: 'à %name%'
   to_you: 'pour vous'
-  about_submission: 'À propos de la contribution n° %id%'
-  about_submission_titled: 'À propos de SUB-%id% · %title%'
+  about_submission: 'À propos de la contribution %ref%'
+  about_submission_titled: 'À propos de %ref% · %title%'
   image_alt: 'Image %n% de ce message'
   image_pending: 'Image en cours de vérification'
   image_refused: 'Image non conservée : %reason%'

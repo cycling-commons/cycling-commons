@@ -42,6 +42,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
  *     title: string,
  *     body: string,
  *     about_submission_id: int|null,
+ *     about_code: string|null,
  *     about_title: string|null,
  *     about_desk: 'queue'|'history'|null,
  *     images: list<array{id: int, width: int, height: int}>,
@@ -63,6 +64,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
  *     title: string,
  *     body: string,
  *     about_submission_id: int|null,
+ *     about_code: string|null,
  *     about_title: string|null,
  *     about_desk: 'queue'|'history'|null,
  *     images: list<array{id: int, width: int, height: int}>,
@@ -354,12 +356,12 @@ final class CuratorRoom
     }
 
     /**
-     * Submissions matching what a curator typed into the composer: an id, a
-     * word of the title, or a region name. Narrowed by `$scope` like the
+     * Submissions matching what a curator typed into the composer: an id, the
+     * start of a code (`#k7m`, SubmissionRef), a word of the title, or a region name. Narrowed by `$scope` like the
      * queue, and never a submission under legal hold. A card outside the
      * reader's areas can still be linked by typing its number.
      *
-     * @return list<array{id: int, title: string, type: string, status: string, region: string|null, country: string}>
+     * @return list<array{id: int, code: string, title: string, type: string, status: string, region: string|null, country: string}>
      */
     public function searchSubmissions(string $q, ModerationScope $scope): array
     {
@@ -369,23 +371,27 @@ final class CuratorRoom
         }
         // A number matches every id that starts with it: "11" lists 11, 118, 1103.
         $idPrefix = preg_match('/^(?:SUB-?)?(\d{1,12})$/i', $q, $m) ? $m[1] : null;
+        // Three characters of a code on: "#k7m" lists every code that starts so.
+        $codePrefix = preg_match('/^#?([0-9a-hjkmnp-tv-z]{3,8})$/', strtolower($q), $c) ? $c[1] : null;
         $frag = $scope->sqlFragment('s');
         $rows = $this->db->fetchAllAssociative(
-            'SELECT s.id, s.title, s.type, s.status, s.country_code, r.name AS region
+            'SELECT s.id, s.code, s.title, s.type, s.status, s.country_code, r.name AS region
                FROM submission s
                LEFT JOIN region r ON r.id = s.region_id
               WHERE s.escalated_at IS NULL'.('' !== $frag['sql'] ? ' AND '.$frag['sql'] : '')."
                 AND s.status <> 'trashed'
                 AND ((:idp::text IS NOT NULL AND s.id::text LIKE :idp || '%')
+                     OR (:cp::text IS NOT NULL AND s.code LIKE :cp || '%')
                      OR s.title ILIKE :like OR r.name ILIKE :like)
               ORDER BY (s.id::text = :idp) DESC, (s.status = 'pending') DESC, s.id DESC
               LIMIT :lim",
-            ['idp' => $idPrefix, 'like' => '%'.addcslashes($q, '%_\\').'%', 'lim' => self::SEARCH_LIMIT] + $frag['params'],
+            ['idp' => $idPrefix, 'cp' => $codePrefix, 'like' => '%'.addcslashes($q, '%_\\').'%', 'lim' => self::SEARCH_LIMIT] + $frag['params'],
             ['lim' => \Doctrine\DBAL\ParameterType::INTEGER] + $frag['types'],
         );
 
         return array_map(static fn (array $r): array => [
             'id' => (int) $r['id'],
+            'code' => (string) $r['code'],
             'title' => (string) $r['title'],
             'type' => (string) $r['type'],
             'status' => (string) $r['status'],
@@ -569,7 +575,7 @@ final class CuratorRoom
     {
         return 'SELECT p.id, p.author_id, a.display_name AS author_name, a.public_profile AS author_public, a.uuid AS author_uuid, p.category,
                        p.recipient_id, r.display_name AS recipient_name, r.public_profile AS recipient_public, r.uuid AS recipient_uuid, p.pin, p.title, p.body,
-                       p.about_submission_id, s.title AS about_title, s.status AS about_status, p.created_at, p.edited_at,
+                       p.about_submission_id, (SELECT sc.code FROM submission sc WHERE sc.id = p.about_submission_id) AS about_code, s.title AS about_title, s.status AS about_status, p.created_at, p.edited_at,
                        EXISTS (SELECT 1 FROM curator_post_read pr WHERE pr.user_id = :me AND pr.post_id = p.id) AS read_by_me
                 FROM curator_post p
                 LEFT JOIN users a ON a.id = p.author_id
@@ -643,6 +649,7 @@ final class CuratorRoom
             'title' => (string) $row['title'],
             'body' => (string) $row['body'],
             'about_submission_id' => null !== $row['about_submission_id'] ? (int) $row['about_submission_id'] : null,
+            'about_code' => null !== $row['about_code'] ? (string) $row['about_code'] : null,
             'about_title' => null !== $row['about_title'] ? (string) $row['about_title'] : null,
             'about_desk' => self::aboutDesk($row['about_status'] ?? null),
             'images' => [],

@@ -202,7 +202,7 @@ final class ApprovalRevokeTest extends WebTestCase
         $client->submit($form->form(['reason' => 'Wrong place.']));
         self::assertResponseRedirects('/moderate/submissions/history');
         $client->followRedirect();
-        self::assertStringContainsString('Approval revoked. SUB-'.$sub->getId().' is back in the queue.', (string) $client->getResponse()->getContent());
+        self::assertStringContainsString('Approval revoked. #'.$sub->getCode().' is back in the queue.', (string) $client->getResponse()->getContent());
         self::assertSame('a', $this->fresh($item)->getAttributes()['hours']);
 
         // A curator of another area may not.

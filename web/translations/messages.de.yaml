@@ -2975,6 +2975,9 @@ moderate:
   empty:
     heading: 'Warteschlange leer'
     body: 'Nichts mehr zu prüfen. Super.'
+    on_history: '%ref% ist bereits entschieden und steht daher im Verlauf.'
+    on_queue: '%ref% ist noch offen und steht daher bei den Beiträgen.'
+    open_there: 'Dort öffnen'
   filter:
     country: 'Land'
     region: 'Region'
@@ -2985,7 +2988,7 @@ moderate:
     public: 'Öffentliche Liste'
     apply: 'Anwenden'
     search: 'Suchen'
-    search_ph: 'Titel, Beitragende oder SUB-12…'
+    search_ph: 'Titel, Beitragende oder #k7m2x9qa…'
     by_user: 'Nur die Einreichungen einer Person.'
     by_user_clear: 'Alle anzeigen'
   msg:
@@ -5065,8 +5068,8 @@ room:
   edited_on: 'Bearbeitet %date%'
   to_person: 'an %name%'
   to_you: 'an dich'
-  about_submission: 'Zu Beitrag #%id%'
-  about_submission_titled: 'Zu SUB-%id% · %title%'
+  about_submission: 'Zu Beitrag %ref%'
+  about_submission_titled: 'Zu %ref% · %title%'
   image_alt: 'Bild %n% zu diesem Beitrag'
   image_pending: 'Bild wird geprüft'
   image_refused: 'Bild nicht behalten: %reason%'

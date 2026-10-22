@@ -395,7 +395,7 @@ final class ImproveTest extends WebTestCase
         $client->submit($form);
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('.receipt .ref', 'SUB-');
+        self::assertMatchesRegularExpression('/#[0-9a-hjkmnp-tv-z]{8}/', $client->getCrawler()->filter('.receipt .ref')->text(), 'the receipt names the submission by its code');
 
         /** @var Submission $submission */
         $submission = static::getContainer()
@@ -582,7 +582,7 @@ final class ImproveTest extends WebTestCase
         // pending curator review — never live instantly.
         self::assertSelectorTextContains('.receipt h2', 'Suggestion submitted.');
         self::assertSelectorTextContains('.receipt p', 'curator queue');
-        self::assertSelectorTextContains('.receipt .ref', 'SUB-');
+        self::assertMatchesRegularExpression('/#[0-9a-hjkmnp-tv-z]{8}/', $client->getCrawler()->filter('.receipt .ref')->text(), 'the receipt names the submission by its code');
         // The old amber note said suggestions were "not yet persisted" while
         // this very assertion reads the persisted row's id off the page.
         self::assertSelectorNotExists('.receipt .stub-note');
@@ -652,7 +652,7 @@ final class ImproveTest extends WebTestCase
         $client->submit($form);
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('.receipt .ref', 'SUB-');
+        self::assertMatchesRegularExpression('/#[0-9a-hjkmnp-tv-z]{8}/', $client->getCrawler()->filter('.receipt .ref')->text(), 'the receipt names the submission by its code');
     }
 
     /**

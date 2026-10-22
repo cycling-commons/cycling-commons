@@ -62,13 +62,14 @@
        submission is on no desk, so its label is not a link. The reader's own
        area still decides whether the card shows, so a link out of scope finds
        nothing at the target rather than here (§9.3). #}
+    {% set about_ref = post.about_code ? '#' ~ post.about_code : 'SUB-' ~ post.about_submission_id %}
     {%- set about_label -%}
-      {%- if post.about_title -%}{{ 'room.about_submission_titled'|trans({'%id%': post.about_submission_id, '%title%': post.about_title}) }}{%- else -%}{{ 'room.about_submission'|trans({'%id%': post.about_submission_id}) }}{%- endif -%}
+      {%- if post.about_title -%}{{ 'room.about_submission_titled'|trans({'%ref%': about_ref, '%title%': post.about_title}) }}{%- else -%}{{ 'room.about_submission'|trans({'%ref%': about_ref}) }}{%- endif -%}
     {%- endset -%}
     {% if post.about_desk == 'queue' %}
-      <p class="rm-about"><a href="{{ path('moderate_submissions', {q: 'SUB-' ~ post.about_submission_id, post: post.id}) }}">{{ about_label }}</a></p>
+      <p class="rm-about"><a href="{{ path('moderate_submissions', {q: about_ref, post: post.id}) }}">{{ about_label }}</a></p>
     {% elseif post.about_desk == 'history' %}
-      <p class="rm-about"><a href="{{ path('moderate_history', {q: 'SUB-' ~ post.about_submission_id, post: post.id}) }}">{{ about_label }}</a></p>
+      <p class="rm-about"><a href="{{ path('moderate_history', {q: about_ref, post: post.id}) }}">{{ about_label }}</a></p>
     {% else %}
       <p class="rm-about">{{ about_label }}</p>
     {% endif %}

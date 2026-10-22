@@ -26,6 +26,7 @@ use App\Moderation\AlreadyDecidedException;
 use App\Moderation\ApprovalRevoker;
 use App\Moderation\MissingQuestionException;
 use App\Moderation\MissingReasonException;
+use App\Moderation\ModerationScope;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
 use App\Moderation\OsmUnansweredException;
@@ -33,6 +34,7 @@ use App\Moderation\OutOfScopeException;
 use App\Moderation\RevokeRefused;
 use App\Moderation\StatementGround;
 use App\Moderation\SubmissionQueue;
+use App\Moderation\SubmissionRef;
 use App\Moderation\TextCreditUndecidedException;
 use App\Moderation\TextLinksUnconfirmedException;
 use App\Moderation\TrashBin;
@@ -122,6 +124,8 @@ final class ModerateController extends AbstractController
             'nav_active' => 'moderate',
             'history' => $this->queue->history($scope, $me, $status ?: null, $q ?: null, $page, $perPage, $country ?: null, $region ?: null, $type ?: null, $byUser, $letter ?: null),
             'history_filters' => ['mine' => $mine, 'status' => $status, 'q' => $q, 'country' => $country, 'region' => $region, 'type' => $type, 'letter' => $letter, 'by' => $byUser],
+            // A reference that waits on the open desk says so, instead of an empty list.
+            'elsewhere' => 0 === $total && '' !== $q ? $this->elsewhere($scope, $q, 'queue') : null,
             'countries' => $this->queue->countries($scope, settled: true),
             'regions' => $this->queue->regions($scope, settled: true),
             'types' => SubmissionType::values(),
@@ -203,6 +207,8 @@ final class ModerateController extends AbstractController
             'filters' => ['country' => $country, 'region' => $region, 'type' => $type, 'letter' => $letter, 'q' => $q, 'by' => $byUser],
             'pager' => Pager::of($page, $matching, $perPage),
             'matching' => $matching,
+            // A reference already decided says it is on History, instead of an empty list.
+            'elsewhere' => 0 === $matching && '' !== $q ? $this->elsewhere($scope, $q, 'history') : null,
             'countries' => $this->queue->countries($scope),
             'regions' => $this->queue->regions($scope),
             'types' => SubmissionType::values(),
@@ -371,7 +377,7 @@ final class ModerateController extends AbstractController
 
             if ($wantsJson) {
                 return $this->json([
-                    'reference' => 'SUB-'.(string) $submission->getId(),
+                    'reference' => SubmissionRef::of($submission),
                     'kind' => 'moderation_decision',
                     'persisted' => true,
                     'decision' => $data['decision'],
@@ -468,7 +474,8 @@ final class ModerateController extends AbstractController
 
         try {
             $revoker->revoke($id, $curator, $request->request->getString('reason'));
-            $this->addFlash('success', $this->translator->trans('moderate.revoke.done', ['%ref%' => 'SUB-'.$id]));
+            $code = $this->em->find(Submission::class, $id)?->getCode();
+            $this->addFlash('success', $this->translator->trans('moderate.revoke.done', ['%ref%' => null !== $code ? SubmissionRef::label($code) : 'SUB-'.$id]));
         } catch (OutOfScopeException) {
             throw $this->createAccessDeniedException('Out of moderation scope.');
         } catch (RevokeRefused $e) {
@@ -601,6 +608,24 @@ final class ModerateController extends AbstractController
         }
 
         return $this->em->find(Submission::class, $submissionId)?->getRegionId();
+    }
+
+    /**
+     * The other desk's link for a reference this desk did not find, when
+     * that desk holds it (SubmissionQueue::locate()).
+     *
+     * @param 'queue'|'history' $desk the other desk
+     *
+     * @return array{ref: string, desk: 'queue'|'history', href: string}|null
+     */
+    private function elsewhere(ModerationScope $scope, string $q, string $desk): ?array
+    {
+        $found = $this->queue->locate($scope, $q);
+        if (null === $found || $desk !== $found['desk']) {
+            return null;
+        }
+
+        return $found + ['href' => $this->generateUrl('queue' === $desk ? 'moderate_submissions' : 'moderate_history', ['q' => $found['ref']])];
     }
 
     /**

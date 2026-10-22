@@ -291,10 +291,17 @@ and a **search** by title, submitter or submission number.
   real name would tell a curator which pseudonym the name belongs to. On
   History the deciding curator is matched by display name too, as the card
   names them (`DeskRider::colleague()`).
-- **`SUB-12`, `sub12` or `#12` is submission 12** and matches nothing else;
+- **`#k7m2x9qa` or `k7m2x9qa`, in any case, is the submission with that code**
+  (`submission.code`, below); an all-digit code also matches that running id.
+  **`SUB-12`, `sub12` or `#12` is submission 12**. Both match nothing else;
   the desk's own scope and status still apply. An open one is on
   `/moderate/submissions`, a decided one on History, and a held, withdrawn or
   out-of-area one on neither. A bare number stays a title search ("Route 66").
+  A code or number the desk does not hold, when the other desk does, gets one
+  line under the empty list instead of nothing: "#k7m2x9qa has been decided, so
+  it is on History. Open it there", or the same for an open one typed on
+  History (`SubmissionQueue::locate()`). A held, withdrawn or out-of-area one
+  still gets no line.
 - Trash audit rows are merged into the history only on **page one of an
   unfiltered, unsearched** view. They come from a different table with no shared
   cursor, so interleaving them across pages would drop or repeat rows as the
@@ -685,7 +692,8 @@ LATERAL join the submissions desk uses (route-domain.md §7.1).
 
 | column | type | notes |
 |---|---|---|
-| `id` | bigint identity | receipt ref is `SUB-<id>` |
+| `id` | bigint identity | the running number: links, the admin log and the command line name it `SUB-<id>`, the public API `submission_id` |
+| `code` | varchar(8) UNIQUE NOT NULL | what people read and quote, shown `#k7m2x9qa` (`App\Moderation\SubmissionRef`): eight random Crockford base32 characters in the rider handle's alphabet (no i, l, o, u), so it says nothing about how many came before. The `submission_code` BEFORE INSERT trigger draws it through `submission_new_code()`, so a raw SQL insert gets one too and a clash draws again (`Version20261022040000`). Receipts, messages, statements of reasons, the rider's list and the curator room use it |
 | `type` | varchar(8), enum `SubmissionType` | `new` \| `edit` \| `hazard` \| `photo` \| `text`; queue renders all five, intake produces `new`/`edit` and `text` (§3.1b) |
 | `letter` | varchar(1) | effective range A–G, N–Q (R bypasses this table: a rider asks for a route change through `route_suggestion`, route-domain.md §7.1); `''` for `text`, which has no catalog kind |
 | `item_id` | bigint NULL | set for `edit` at submit; set for `new` when the item row is created in the same transaction; NULL for `text` |
@@ -2061,7 +2069,8 @@ Columns: `user_id` (recipient), `kind` (enum `UserMessageKind`), `sender`
 (`submission`, `route`, `correction`, and the other senders' own: `curator_app`,
 `areas`, `media`, `translation`, `bug`, and `statement` for a statement of
 reasons sent on its own), `ref_id`, `ref_label` (the human
-receipt, e.g. `SUB-42` or a route name), `body_key` + `body_params`
+receipt, e.g. `#k7m2x9qa` or a route name; a message sent before
+2026-10-22 keeps the `SUB-42` it was sent with), `body_key` + `body_params`
 (translation key + params for system messages), `body_text` (curator note or
 free-form body, verbatim), `media_id`, `trashed_at` (§6), `created_at`,
 `read_at`.
@@ -2434,7 +2443,7 @@ Messages link to their subject only when it is public. A
 `submission_approved` message links to where the submission landed, read from
 the submission row (`App\Messaging\ApprovedSubmissionLinks`, only the
 reader's own approved submissions), never from the message's `ref_label`,
-which is the `SUB-<id>` receipt and names nothing the map can find:
+which is the `#code` receipt and names nothing the map can find:
 
 - a submission with an item behind it: that item, "View it on the map"
   (`/map?item=<itemId>`);
@@ -4229,7 +4238,7 @@ curator opens it:
   off and lower the Room tab by one.
   A link to `/moderate/room#post-<id>` opens that post on arrival.
 - **through its submission link**: the link carries `post=<id>`
-  (`/moderate/submissions?q=SUB-…&post=<id>`, or History), and arriving there
+  (`/moderate/submissions?q=%23k7m2x9qa&post=<id>`, or History), and arriving there
   marks that post read (`App\EventSubscriber\OpenedByLinkSubscriber`), only
   when the curator may see it.
 Each post opened lowers the count by exactly one; opening it again, or opening
@@ -4270,9 +4279,9 @@ nothing to allow and a curator whose script tag never loaded can still ask
 their question; `assets/js/room.js` (a file, never inline) adds two things on
 top (owner 2026-09-19):
 
-- **About submission is a search**, not a number box. Type a number, a word of
-  the title or a region name; the list under the box shows `SUB-id · title ·
-  region · type · status`, arrows and Enter pick, the pick shows as a chip
+- **About submission is a search**, not a number box. Type a number, the start
+  of a code (`#k7m`), a word of the title or a region name; the list under the
+  box shows `#code · title · region · type · status`, arrows and Enter pick, the pick shows as a chip
   with an ×. The picked id travels in a hidden `about`; without the script, a
   number typed into the same box (`about_q`, `123` or `SUB-123`) is read as
   the id. Owner: "linking a number by hand will go wrong".
@@ -4306,8 +4315,8 @@ picture large, prev/next and arrow keys when the post has more, Esc or the
 backdrop closes, focus returns to the thumbnail); without the script each
 thumbnail is a plain link to the picture. The search's number match is a
 prefix: "11" lists 11, 118 and 1103, the exact id first. The post shows
-`about_submission_id` reading `SUB-id · title`, as a link to the desk that
-lists the card, searched by `SUB-id` (`CuratorRoom` `about_desk`): the open
+`about_submission_id` reading `#code · title`, as a link to the desk that
+lists the card, searched by `#code` (`CuratorRoom` `about_desk`): the open
 queue while it is pending or needs info, History once approved or rejected.
 A held, withdrawn or removed submission is on no desk, so its label is plain
 text. The reader's own scope still decides whether that card shows, so a link

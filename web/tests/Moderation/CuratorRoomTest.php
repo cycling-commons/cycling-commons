@@ -501,8 +501,8 @@ final class CuratorRoomTest extends WebTestCase
         $crawler = $client->followRedirect();
 
         $about = $crawler->filter('.rm-post .rm-about a');
-        self::assertStringContainsString('SUB-'.$sub->getId().' · Col du Rosier water point', $about->text());
-        self::assertStringContainsString('q=SUB-'.$sub->getId(), (string) $about->attr('href'));
+        self::assertStringContainsString('#'.$sub->getCode().' · Col du Rosier water point', $about->text());
+        self::assertStringContainsString('q='.rawurlencode('#'.$sub->getCode()), (string) $about->attr('href'));
     }
 
     public function testAnUnknownSubmissionNumberIsRefusedAndTheWordsSurvive(): void
@@ -619,7 +619,7 @@ final class CuratorRoomTest extends WebTestCase
 
         $crawler = $client->request('GET', '/moderate/room');
         $about = $crawler->filter('.rm-post .rm-about')->text();
-        self::assertStringContainsString((string) $sub->getId(), $about);
+        self::assertStringContainsString('#'.$sub->getCode(), $about);
         self::assertStringNotContainsString('Words under hold', $about);
         self::assertCount(0, $crawler->filter('.rm-post .rm-about a'));
 
@@ -839,7 +839,7 @@ final class CuratorRoomTest extends WebTestCase
         self::assertStringContainsString('Edited', $post->filter('.rm-meta')->text());
         self::assertStringContainsString('Tools', $post->filter('.rm-meta')->text());
         self::assertSame(0, $crawler->filter('.rm-post.rm-pinned')->count());
-        self::assertStringContainsString('SUB-'.$sub->getId().' · The gate at Les Croisettes', $post->filter('.rm-about')->text());
+        self::assertStringContainsString('#'.$sub->getCode().' · The gate at Les Croisettes', $post->filter('.rm-about')->text());
 
         // Now direct: the colleague reads it, a third curator does not.
         $client->loginUser($colleague);

@@ -183,7 +183,7 @@ final class MaterializeFlowTest extends WebTestCase
         $client->submit($form);
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('.receipt .ref', 'SUB-');
+        self::assertMatchesRegularExpression('/#[0-9a-hjkmnp-tv-z]{8}/', $client->getCrawler()->filter('.receipt .ref')->text(), 'the receipt names the submission by its code');
 
         $em = static::getContainer()->get(EntityManagerInterface::class);
         /** @var Item $item */

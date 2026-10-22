@@ -251,7 +251,7 @@ final class MediaModerationTest extends KernelTestCase
         self::assertNotNull($statement);
         self::assertSame(StatementDecision::PhotosNotPublished, $statement->decision);
         self::assertSame('The second one is not yours.', $statement->facts);
-        self::assertSame('SUB-'.$submission->getId(), $statement->reference);
+        self::assertSame('#'.$submission->getCode(), $statement->reference);
     }
 
     public function testARejectedSubmissionRejectsEveryPhotoAndTouchesNoItem(): void

@@ -15,6 +15,7 @@ use App\Messaging\MessageService;
 use App\Moderation\StatementDecision;
 use App\Moderation\StatementGround;
 use App\Moderation\StatementOfReasons;
+use App\Moderation\SubmissionRef;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -73,7 +74,7 @@ final class MediaDecisionService
         // A whole rejection carries its own statement; photos left out of an
         // approval get theirs here.
         if ('approve' === $decision) {
-            $this->tellLeftOut($left, $curator, StatementDecision::PhotosNotPublished, $note, 'SUB-'.(int) $submission->getId(), $submission->getTitle(), (int) $submission->getId());
+            $this->tellLeftOut($left, $curator, StatementDecision::PhotosNotPublished, $note, SubmissionRef::of($submission), $submission->getTitle(), (int) $submission->getId());
         }
 
         return null === $item ? null : $this->attach($item, $attached);

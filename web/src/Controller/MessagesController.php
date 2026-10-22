@@ -17,6 +17,7 @@ use App\Messaging\Entity\UserMessage;
 use App\Messaging\MessageCategory;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
+use App\Moderation\SubmissionRef;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
@@ -351,7 +352,7 @@ final class MessagesController extends AbstractController
 
         try {
             $em->wrapInTransaction(function () use ($messages, $decidingCuratorId, $userId, $submissionId, $submission, $request): void {
-                $messages->sendRiderReply($decidingCuratorId, $userId, 'submission', $submissionId, 'SUB-'.$submissionId, (string) $request->request->get('body', ''));
+                $messages->sendRiderReply($decidingCuratorId, $userId, 'submission', $submissionId, SubmissionRef::of($submission), (string) $request->request->get('body', ''));
                 $submission->setStatus(SubmissionStatus::Pending);
             });
         } catch (\InvalidArgumentException $e) {

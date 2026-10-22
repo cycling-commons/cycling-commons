@@ -103,7 +103,7 @@ final class ModerateDecideAjaxTest extends WebTestCase
         /** @var array{persisted:bool,reference:string,kind:string,decision:string,submission_id:int} $data */
         $data = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
         self::assertTrue($data['persisted']);
-        self::assertSame('SUB-'.$sub->getId(), $data['reference']);
+        self::assertSame('#'.$sub->getCode(), $data['reference']);
         self::assertSame('moderation_decision', $data['kind']);
         self::assertSame('approve', $data['decision']);
         self::assertSame($sub->getId(), $data['submission_id']);

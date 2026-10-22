@@ -13,6 +13,7 @@ use App\Entity\User;
 use App\Media\Entity\MediaUpload;
 use App\Messaging\MessageService;
 use App\Moderation\ModerationScopeProvider;
+use App\Moderation\SubmissionRef;
 use App\Routing\LocalePrefix;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -112,7 +113,7 @@ final class ModerateMessageController extends AbstractController
             return null;
         }
 
-        return [$riderId, 'SUB-'.$id, $submission->getRegionId()];
+        return [$riderId, SubmissionRef::of($submission), $submission->getRegionId()];
     }
 
     /** @return array{0: int, 1: string, 2: ?int}|null */

@@ -117,7 +117,7 @@ final class OsmConfirmTest extends WebTestCase
         /** @var array{ok: bool, reference: string, stance: string} $body */
         $body = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
         self::assertTrue($body['ok']);
-        self::assertStringStartsWith('SUB-', $body['reference']);
+        self::assertMatchesRegularExpression('/^#[0-9a-hjkmnp-tv-z]{8}$/', $body['reference']);
 
         $em = static::getContainer()->get(EntityManagerInterface::class);
         /** @var Item $item */

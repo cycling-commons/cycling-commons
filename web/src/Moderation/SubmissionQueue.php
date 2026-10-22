@@ -51,7 +51,7 @@ final class SubmissionQueue
     ) {
     }
 
-    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,corrected:bool,textTarget:?string,revoked:?array{when:string,reason:string},lang:string,basedOn:?string}> */
+    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,corrected:bool,textTarget:?string,revoked:?array{when:string,reason:string},lang:string,basedOn:?string,code:?string}> */
     public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?int $byUser = null, ?string $letter = null): array
     {
         [$where, $params] = $this->openFilters($country, $region, $type, $q, $byUser, $letter);
@@ -112,8 +112,55 @@ final class SubmissionQueue
     }
 
     /**
+     * Which desk holds the submission an exact reference names (`#k7m2x9qa`,
+     * `SUB-12`), for a search that found nothing on the desk it was typed on:
+     * the open queue while it waits, History once decided. Null for a search
+     * that is no reference, and for a submission outside the reader's scope,
+     * held, withdrawn or in Trash, which is on no desk.
+     *
+     * @return array{ref: string, desk: 'queue'|'history'}|null
+     */
+    public function locate(ModerationScope $scope, string $q): ?array
+    {
+        if (!self::isReference($q)) {
+            return null;
+        }
+        $where = ['s.escalated_at IS NULL'];
+        $params = [];
+        self::searchFilter($q, false, $where, $params);
+        $frag = $scope->sqlFragment('s');
+        if ('' !== $frag['sql']) {
+            $where[] = $frag['sql'];
+            $params += $frag['params'];
+        }
+        $row = $this->db->fetchAssociative(
+            'SELECT s.code, s.status FROM submission s WHERE '.implode(' AND ', $where).' LIMIT 1',
+            $params,
+            $frag['types'],
+        );
+        if (false === $row) {
+            return null;
+        }
+        $desk = match ((string) $row['status']) {
+            'pending', 'needs_info' => 'queue',
+            'approved', 'rejected' => 'history',
+            default => null,
+        };
+
+        return null === $desk ? null : ['ref' => SubmissionRef::label((string) $row['code']), 'desk' => $desk];
+    }
+
+    /** A search that names one submission: its code, or `SUB-12` / `#12`. */
+    private static function isReference(string $q): bool
+    {
+        return null !== SubmissionRef::codeIn($q) || 1 === preg_match('/^(?:SUB-?|#)\s*\d{1,18}$/i', trim($q));
+    }
+
+    /**
      * The search box (docs/specs/moderation-and-contribution.md §5.2).
      *
+     * `#k7m2x9qa` or `k7m2x9qa` is the submission with that code
+     * (SubmissionRef), and an all-digit code also that running id.
      * `SUB-12`, `sub12` or `#12` is submission 12 and nothing else; the
      * caller's scope and status filters still apply, so a number outside
      * them finds nothing. Anything else matches the title, or the submitter
@@ -128,6 +175,17 @@ final class SubmissionQueue
     private static function searchFilter(string $q, bool $settled, array &$where, array &$params): void
     {
         $q = trim($q);
+        // `#k7m2x9qa` is a submission's code (SubmissionRef); eight digits may also be a running id.
+        $code = SubmissionRef::codeIn($q);
+        if (null !== $code) {
+            $where[] = ctype_digit($code) ? '(s.code = :qcode OR s.id = :qid)' : 's.code = :qcode';
+            $params['qcode'] = $code;
+            if (ctype_digit($code)) {
+                $params['qid'] = (int) $code;
+            }
+
+            return;
+        }
         if (1 === preg_match('/^(?:SUB-?|#)\s*(\d+)$/i', $q, $m)) {
             // Longer than any bigint id: no submission has the number.
             if (\strlen(ltrim($m[1], '0')) > 18) {
@@ -173,7 +231,7 @@ final class SubmissionQueue
     /**
      * Map pending layer: pending only, plus optional `$focusId` for a needs-info pin.
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,corrected:bool,textTarget:?string,revoked:?array{when:string,reason:string},lang:string,basedOn:?string}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,corrected:bool,textTarget:?string,revoked:?array{when:string,reason:string},lang:string,basedOn:?string,code:?string}>
      */
     public function pendingForMap(ModerationScope $scope, ?int $focusId = null): array
     {
@@ -251,7 +309,7 @@ final class SubmissionQueue
      * @param ?int    $decidedBy scope to one moderator's own decisions
      * @param ?string $status    'approved' | 'rejected'; null = both
      *
-     * @return list<array{id:int,itemId:?int,title:string,type:string,was:string,now:string,who:?string,whoUuid:string,when:string,status:string,decidedBy:?string,decidedByUuid:?string,note:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,thread:list<array{who:string,body:string,when:string}>,sortAt:int,textTarget:?string,lang:string,basedOn:?string}>
+     * @return list<array{id:int,itemId:?int,title:string,type:string,was:string,now:string,who:?string,whoUuid:string,when:string,status:string,decidedBy:?string,decidedByUuid:?string,note:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,thread:list<array{who:string,body:string,when:string}>,sortAt:int,textTarget:?string,lang:string,basedOn:?string,code:?string}>
      */
     public function history(ModerationScope $scope, ?int $decidedBy = null, ?string $status = null, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?string $country = null, ?string $region = null, ?string $type = null, ?int $byUser = null, ?string $letter = null): array
     {
@@ -260,7 +318,7 @@ final class SubmissionQueue
         $params['off'] = self::offset($page, $perPage);
 
         $rows = $this->db->fetchAllAssociative(
-            'SELECT s.id, s.item_id, s.title, s.type, s.letter, s.status, s.user_id, s.decided_at, s.decision_note, s.lang, s.payload->\'_basedOn\'->>\'lang\' AS based_on,
+            'SELECT s.id, s.code, s.item_id, s.title, s.type, s.letter, s.status, s.user_id, s.decided_at, s.decision_note, s.lang, s.payload->\'_basedOn\'->>\'lang\' AS based_on,
                     CASE WHEN s.type = \'text\' THEN s.payload->>\'target\' END AS text_target,
                     s.changes, u.display_name AS decided_by_name, u.public_profile AS decided_by_public, u.uuid AS decided_by_uuid,
                     su.public_profile, su.display_name, su.uuid AS user_uuid, su.pseudonym,
@@ -295,6 +353,8 @@ final class SubmissionQueue
 
             return [
                 'id' => (int) $r['id'],
+                /* What the card names it by (SubmissionRef). */
+                'code' => (string) $r['code'],
                 'itemId' => null !== $r['item_id'] ? (int) $r['item_id'] : null,
                 'title' => (string) $r['title'],
                 'type' => (string) $r['type'],
@@ -442,7 +502,7 @@ final class SubmissionQueue
     /**
      * Trash entries, rebuilt from the content-free audit log.
      *
-     * @return list<array{id:int,itemId:?int,title:string,type:string,was:string,now:string,who:?string,whoUuid:string,when:string,status:string,decidedBy:?string,decidedByUuid:?string,note:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,thread:list<array{who:string,body:string,when:string}>,sortAt:int}>
+     * @return list<array{id:int,code:null,itemId:?int,title:string,type:string,was:string,now:string,who:?string,whoUuid:string,when:string,status:string,decidedBy:?string,decidedByUuid:?string,note:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,thread:list<array{who:string,body:string,when:string}>,sortAt:int}>
      */
     private function trashed(?int $decidedBy, int $limit, \DateTimeImmutable $now): array
     {
@@ -469,6 +529,8 @@ final class SubmissionQueue
 
             return [
                 'id' => isset($m[1]) ? (int) $m[1] : 0,
+                // Purged with its row: no code left to show.
+                'code' => null,
                 'itemId' => null,
                 'title' => isset($m[1]) ? 'SUB-'.$m[1] : $note,
                 'type' => $m[2] ?? '',
@@ -534,7 +596,7 @@ final class SubmissionQueue
      *                                     via $params, never interpolated
      * @param array<string, mixed> $params bound query parameters
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,corrected:bool,textTarget:?string,revoked:?array{when:string,reason:string},lang:string,basedOn:?string}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,corrected:bool,textTarget:?string,revoked:?array{when:string,reason:string},lang:string,basedOn:?string,code:?string}>
      */
     private function rows(ModerationScope $scope, string $where, array $params, ?int $limit = null, int $offset = 0): array
     {
@@ -544,7 +606,7 @@ final class SubmissionQueue
             $params += $frag['params'];
         }
         $rows = $this->db->fetchAllAssociative(
-            'SELECT s.id, s.item_id, s.type, s.letter, s.country_code, COALESCE(r.name, \'\') AS region, s.title, s.status, s.decision_note, s.lang, s.payload->\'_basedOn\'->>\'lang\' AS based_on,
+            'SELECT s.id, s.code, s.item_id, s.type, s.letter, s.country_code, COALESCE(r.name, \'\') AS region, s.title, s.status, s.decision_note, s.lang, s.payload->\'_basedOn\'->>\'lang\' AS based_on,
                     ST_Y(s.geom) AS lat, ST_X(s.geom) AS lng, s.user_id, s.created_at, s.changes,
                     COALESCE(s.payload->\'details\'->>\'note\', \'\') AS body,
                     s.payload->\'_bikeway\' AS bikeway,
@@ -592,6 +654,8 @@ final class SubmissionQueue
 
             return [
                 'id' => (int) $r['id'],
+                /* What the card names it by (SubmissionRef). */
+                'code' => (string) $r['code'],
                 'itemId' => null !== $r['item_id'] ? (int) $r['item_id'] : null,
                 'type' => (string) $r['type'],
                 'letter' => (string) $r['letter'],

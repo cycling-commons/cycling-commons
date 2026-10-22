@@ -24,6 +24,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'idx_submission_region', columns: ['region_id'])]
 #[ORM\Index(name: 'idx_submission_item', columns: ['item_id'])]
 #[ORM\Index(name: 'idx_submission_user', columns: ['user_id'])]
+#[ORM\UniqueConstraint(name: 'uniq_submission_code', columns: ['code'])]
 class Submission
 {
     /** The language a contribution is taken to be in when it names none. */
@@ -33,6 +34,16 @@ class Submission
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'bigint')]
     private ?int $id = null;
+
+    /**
+     * The submission's code for people to read and quote: eight random
+     * characters in the alphabet of the rider handle ({@see \App\Catalog\RiderPseudonym}),
+     * drawn by the database on insert (`submission_code()`), so a raw SQL
+     * insert gets one too and the code says nothing about how many came
+     * before. Shown as `#k7m2x9qa` ({@see \App\Moderation\SubmissionRef}).
+     */
+    #[ORM\Column(type: 'string', length: 8, insertable: false, updatable: false, generated: 'INSERT')]
+    private ?string $code = null;
 
     #[ORM\Column(type: 'string', length: 8, enumType: SubmissionType::class)]
     private SubmissionType $type = SubmissionType::NewItem;
@@ -171,6 +182,12 @@ class Submission
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    /** Null only before the row is inserted. */
+    public function getCode(): ?string
+    {
+        return $this->code;
     }
 
     public function getType(): SubmissionType

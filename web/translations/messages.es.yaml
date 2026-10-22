@@ -2996,6 +2996,9 @@ moderate:
   empty:
     heading: 'Cola vacía'
     body: 'No queda nada por revisar. Bien.'
+    on_history: '%ref% ya está decidida, así que está en el Historial.'
+    on_queue: '%ref% sigue abierta, así que está entre las contribuciones.'
+    open_there: 'Abrirla allí'
   filter:
     country: 'País'
     region: 'Región'
@@ -3006,7 +3009,7 @@ moderate:
     public: 'Lista pública'
     apply: 'Aplicar'
     search: 'Buscar'
-    search_ph: 'Título, colaborador o SUB-12…'
+    search_ph: 'Título, colaborador o #k7m2x9qa…'
     by_user: 'Solo las propuestas de una persona.'
     by_user_clear: 'Mostrar a todos'
   msg:
@@ -5092,8 +5095,8 @@ room:
   edited_on: 'Editado %date%'
   to_person: 'para %name%'
   to_you: 'para ti'
-  about_submission: 'Sobre la contribución n.º %id%'
-  about_submission_titled: 'Sobre SUB-%id% · %title%'
+  about_submission: 'Sobre la contribución %ref%'
+  about_submission_titled: 'Sobre %ref% · %title%'
   image_alt: 'Imagen %n% de esta entrada'
   image_pending: 'Imagen en revisión'
   image_refused: 'Imagen no guardada: %reason%'

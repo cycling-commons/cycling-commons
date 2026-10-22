@@ -157,7 +157,7 @@ final class CuratorMessageTest extends WebTestCase
         self::assertSame((int) $curator->getId(), $m->getSenderId());
         self::assertSame('submission', $m->getChannel());
         self::assertSame((int) $sub->getId(), $m->getRefId());
-        self::assertSame('SUB-'.$sub->getId(), $m->getRefLabel());
+        self::assertSame('#'.$sub->getCode(), $m->getRefLabel());
         self::assertSame('Could you share a photo of the gate?', $m->getBodyText());
     }
 

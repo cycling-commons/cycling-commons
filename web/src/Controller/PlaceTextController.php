@@ -20,6 +20,7 @@ use App\Entity\User;
 use App\EventSubscriber\StatelessLoginRedirectSubscriber;
 use App\Moderation\AlreadyDecidedException;
 use App\Moderation\OutOfScopeException;
+use App\Moderation\SubmissionRef;
 use App\Routing\Languages;
 use App\Routing\LocalePrefix;
 use Doctrine\ORM\EntityManagerInterface;
@@ -385,7 +386,7 @@ final class PlaceTextController extends AbstractController
 
         return $this->render('contribute/place_text.html.twig', $context + [
             'sent' => $result['applied'] ? 'applied' : 'queued',
-            'reference' => 'SUB-'.(int) $result['submission']->getId(),
+            'reference' => SubmissionRef::of($result['submission']),
         ]);
     }
 

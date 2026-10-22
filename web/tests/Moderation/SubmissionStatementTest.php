@@ -77,7 +77,7 @@ final class SubmissionStatementTest extends KernelTestCase
         self::assertSame(StatementDecision::NotPublished, $statement->decision);
         self::assertSame(StatementGround::NotAccepted, $statement->ground);
         self::assertSame('The tap is 200 m further on.', $statement->facts);
-        self::assertSame('SUB-'.$sub->getId(), $statement->reference);
+        self::assertSame('#'.$sub->getCode(), $statement->reference);
         self::assertSame('Col du Refus', $statement->subject);
         self::assertFalse($statement->fromReport);
         self::assertFalse($statement->automated);
@@ -88,7 +88,7 @@ final class SubmissionStatementTest extends KernelTestCase
         self::assertSame($rider->getEmail(), $mail->getTo()[0]->getAddress());
         self::assertNotEmpty($mail->getReplyTo(), 'a reply reaches us');
         $html = (string) $mail->getHtmlBody();
-        foreach (['Col du Refus', 'The tap is 200 m further on.', 'A curator made this decision.', 'not a law', 'reply to this email', 'SUB-'.$sub->getId(), 'Article 17'] as $needle) {
+        foreach (['Col du Refus', 'The tap is 200 m further on.', 'A curator made this decision.', 'not a law', 'reply to this email', '#'.$sub->getCode(), 'Article 17'] as $needle) {
             self::assertStringContainsString($needle, $html);
         }
     }

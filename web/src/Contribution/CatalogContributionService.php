@@ -32,6 +32,7 @@ use App\Media\PhotoAltSuggestion;
 use App\Moderation\ModerationService;
 use App\Moderation\OsmUnansweredException;
 use App\Moderation\OutOfScopeException;
+use App\Moderation\SubmissionRef;
 use App\Service\ContributionReceipt;
 use App\Service\ContributionStubInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -277,7 +278,7 @@ final class CatalogContributionService implements ContributionStubInterface
         $confirmNow = (bool) ($payload['confirmNow'] ?? false);
 
         return new ContributionReceipt(
-            'SUB-'.(string) $submission->getId(), 'add', true, $submission->getCreatedAt(), $submission->getId(),
+            SubmissionRef::of($submission), 'add', true, $submission->getCreatedAt(), $submission->getId(),
             applied: $applied,
             confirmed: null !== $item && $confirmNow && $this->confirmNow($item, $by),
         );
@@ -608,7 +609,7 @@ final class CatalogContributionService implements ContributionStubInterface
             $applied = $this->applyIfCurator($open, $by);
 
             return new ContributionReceipt(
-                'SUB-'.(string) $open->getId(), 'improve', true, $open->getCreatedAt(), $open->getId(),
+                SubmissionRef::of($open), 'improve', true, $open->getCreatedAt(), $open->getId(),
                 applied: $applied,
                 confirmed: $applied && $confirmNow && $this->confirmNow($item, $by),
             );
@@ -618,7 +619,7 @@ final class CatalogContributionService implements ContributionStubInterface
         $applied = $this->applyIfCurator($submission, $by);
 
         return new ContributionReceipt(
-            'SUB-'.(string) $submission->getId(), 'improve', true, $submission->getCreatedAt(), $submission->getId(),
+            SubmissionRef::of($submission), 'improve', true, $submission->getCreatedAt(), $submission->getId(),
             applied: $applied,
             confirmed: $applied && $confirmNow && $this->confirmNow($item, $by),
         );

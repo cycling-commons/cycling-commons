@@ -176,14 +176,14 @@ final class ModerationService
             if (null !== $riderId) {
                 $this->messages->sendSystem(
                     $riderId, $kind,
-                    'submission', $submissionId, 'SUB-'.$submissionId,
+                    'submission', $submissionId, SubmissionRef::of($submission),
                     'messages.body.'.$kind->value, ['%title%' => $submission->getTitle()],
                     $note,
                     'reject' === $decision && $riderId !== $curator->getId() ? new StatementOfReasons(
                         StatementDecision::NotPublished,
                         StatementGround::NotAccepted,
                         trim((string) $note),
-                        'SUB-'.$submissionId,
+                        SubmissionRef::of($submission),
                         $submission->getTitle(),
                         fromReport: $this->followsReport($submission),
                     ) : null,
@@ -282,7 +282,7 @@ final class ModerationService
                     StatementDecision::Removed,
                     $ground,
                     $facts,
-                    'SUB-'.$id,
+                    SubmissionRef::of($submission),
                     $submission->getTitle(),
                     fromReport: $this->followsReport($submission),
                     factsKey: 'dsa_statement.facts.trashed',

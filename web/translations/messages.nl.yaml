@@ -2974,6 +2974,9 @@ moderate:
   empty:
     heading: 'Wachtrij leeg'
     body: 'Niets meer te beoordelen. Goed gedaan.'
+    on_history: '%ref% is al beslist en staat dus bij Geschiedenis.'
+    on_queue: '%ref% is nog open en staat dus bij de inzendingen.'
+    open_there: 'Daar openen'
   filter:
     country: 'Land'
     region: 'Regio'
@@ -2984,7 +2987,7 @@ moderate:
     public: 'Openbare lijst'
     apply: 'Toepassen'
     search: 'Zoeken'
-    search_ph: 'Titel, bijdrager of SUB-12…'
+    search_ph: 'Titel, bijdrager of #k7m2x9qa…'
     by_user: 'Alleen de inzendingen van één bijdrager.'
     by_user_clear: 'Toon iedereen'
   msg:
@@ -5064,8 +5067,8 @@ room:
   edited_on: 'Bewerkt %date%'
   to_person: 'aan %name%'
   to_you: 'aan jou'
-  about_submission: 'Over inzending #%id%'
-  about_submission_titled: 'Over SUB-%id% · %title%'
+  about_submission: 'Over inzending %ref%'
+  about_submission_titled: 'Over %ref% · %title%'
   image_alt: 'Afbeelding %n% bij dit bericht'
   image_pending: 'Afbeelding wordt gecontroleerd'
   image_refused: 'Afbeelding niet bewaard: %reason%'

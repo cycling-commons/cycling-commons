@@ -100,7 +100,7 @@ final class DecisionMessagesTest extends WebTestCase
         self::assertNull($m->getSenderId());
         self::assertSame('submission', $m->getChannel());
         self::assertSame($sub->getId(), $m->getRefId());
-        self::assertSame('SUB-'.$sub->getId(), $m->getRefLabel());
+        self::assertSame('#'.$sub->getCode(), $m->getRefLabel());
         self::assertSame('messages.body.submission_approved', $m->getBodyKey());
         self::assertSame(['%title%' => 'Côte du Message · Approve'], $m->getBodyParams());
         self::assertSame('Looks great, thanks!', $m->getBodyText());
@@ -118,7 +118,7 @@ final class DecisionMessagesTest extends WebTestCase
         $m = $rows[0];
         self::assertSame(UserMessageKind::SubmissionRejected, $m->getKind());
         self::assertSame($sub->getId(), $m->getRefId());
-        self::assertSame('SUB-'.$sub->getId(), $m->getRefLabel());
+        self::assertSame('#'.$sub->getCode(), $m->getRefLabel());
         self::assertSame('messages.body.submission_rejected', $m->getBodyKey());
         self::assertSame('Duplicate of an existing climb.', $m->getBodyText());
     }
@@ -135,7 +135,7 @@ final class DecisionMessagesTest extends WebTestCase
         $m = $rows[0];
         self::assertSame(UserMessageKind::SubmissionNeedsInfo, $m->getKind());
         self::assertSame($sub->getId(), $m->getRefId());
-        self::assertSame('SUB-'.$sub->getId(), $m->getRefLabel());
+        self::assertSame('#'.$sub->getCode(), $m->getRefLabel());
         self::assertSame('messages.body.submission_needs_info', $m->getBodyKey());
         self::assertSame('Can you add a photo of the gate?', $m->getBodyText());
     }

@@ -38,7 +38,7 @@
   }
 
   function line(s) {
-    return 'SUB-' + s.id + ' · ' + s.title + (s.region ? ' · ' + s.region : '') + ' · ' + s.type + ' · ' + s.status;
+    return '#' + s.code + ' · ' + s.title + (s.region ? ' · ' + s.region : '') + ' · ' + s.type + ' · ' + s.status;
   }
 
   function choose(s) {

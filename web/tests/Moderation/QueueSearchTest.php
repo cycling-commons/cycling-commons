@@ -166,6 +166,33 @@ final class QueueSearchTest extends WebTestCase
         self::assertSame(['Settled fountain'], $this->titles($client, '/moderate/submissions/history', 'SUB-'.$sub->getId()));
     }
 
+    public function testACodeOnTheWrongDeskSaysWhereTheSubmissionIs(): void
+    {
+        $client = static::createClient();
+        $this->curator($client);
+        $settled = $this->submission($this->user('Coded Rider'), 'Coded settled fountain', SubmissionStatus::Approved);
+        $open = $this->submission($this->user('Coded Rider 2'), 'Coded open fountain');
+
+        foreach (['#'.$settled->getCode(), strtoupper((string) $settled->getCode())] as $q) {
+            self::assertSame(['Coded settled fountain'], $this->titles($client, '/moderate/submissions/history', $q), $q);
+        }
+
+        $crawler = $client->request('GET', '/moderate/submissions?q='.rawurlencode('#'.$settled->getCode()));
+        $hint = $crawler->filter('.q-elsewhere');
+        self::assertStringContainsString('#'.$settled->getCode(), $hint->text());
+        self::assertSame('/moderate/submissions/history?q='.rawurlencode('#'.$settled->getCode()), $hint->filter('a')->attr('href'));
+
+        $crawler = $client->request('GET', '/moderate/submissions/history?q='.rawurlencode('#'.$open->getCode()));
+        self::assertSame('/moderate/submissions?q='.rawurlencode('#'.$open->getCode()), $crawler->filter('.q-elsewhere a')->attr('href'));
+
+        $crawler = $client->request('GET', '/moderate/submissions?q='.rawurlencode('#'.$open->getCode()));
+        self::assertSame(0, $crawler->filter('.q-elsewhere')->count(), 'found here: no pointer');
+        self::assertStringContainsString('#'.$open->getCode(), $crawler->filter('.q-list .q-item .q-submitter')->text(), 'the card names its code');
+
+        $crawler = $client->request('GET', '/moderate/submissions/history?q='.rawurlencode('#'.$settled->getCode()));
+        self::assertStringContainsString('#'.$settled->getCode(), $crawler->filter('.q-list .q-item .q-submitter')->text(), 'on History too');
+    }
+
     public function testTheNumberStaysInsideTheCuratorsArea(): void
     {
         $client = static::createClient();
@@ -212,11 +239,11 @@ final class QueueSearchTest extends WebTestCase
             $hrefs[trim($post->filter('.rm-about')->text())] = $link->count() > 0 ? (string) $link->attr('href') : null;
         });
 
-        $openHref = $this->hrefFor($hrefs, (int) $open->getId());
-        $settledHref = $this->hrefFor($hrefs, (int) $settled->getId());
+        $openHref = $this->hrefFor($hrefs, (string) $open->getCode());
+        $settledHref = $this->hrefFor($hrefs, (string) $settled->getCode());
         self::assertNotNull($openHref);
         self::assertNotNull($settledHref);
-        self::assertNull($this->hrefFor($hrefs, (int) $held->getId()), 'a held submission is on no desk');
+        self::assertNull($this->hrefFor($hrefs, (string) $held->getCode()), 'a held submission is on no desk');
 
         self::assertSame(['Room open fountain'], $this->titles($client, (string) parse_url($openHref, \PHP_URL_PATH), $this->qOf($openHref)));
         self::assertStringContainsString('/moderate/submissions/history', $settledHref);
@@ -224,14 +251,14 @@ final class QueueSearchTest extends WebTestCase
     }
 
     /** @param array<string, ?string> $hrefs the post's "About ..." label => its link */
-    private function hrefFor(array $hrefs, int $id): ?string
+    private function hrefFor(array $hrefs, string $code): ?string
     {
         foreach ($hrefs as $label => $href) {
-            if (1 === preg_match('/(?:SUB-|#)'.$id.'\b/', $label)) {
+            if (str_contains($label, '#'.$code)) {
                 return $href;
             }
         }
-        self::fail('no post about SUB-'.$id);
+        self::fail('no post about #'.$code);
     }
 
     private function qOf(string $href): string

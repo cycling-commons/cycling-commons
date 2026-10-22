@@ -165,7 +165,7 @@ final readonly class ApprovalRevoker
             if (null !== $riderId && $riderId !== $curator->getId()) {
                 $this->messages->sendSystem(
                     $riderId, UserMessageKind::SubmissionRevoked,
-                    'submission', $submissionId, 'SUB-'.$submissionId,
+                    'submission', $submissionId, SubmissionRef::of($submission),
                     'messages.body.'.UserMessageKind::SubmissionRevoked->value, ['%title%' => $submission->getTitle()],
                     $reason,
                 );

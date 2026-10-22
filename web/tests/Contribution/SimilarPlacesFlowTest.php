@@ -72,7 +72,7 @@ final class SimilarPlacesFlowTest extends WebTestCase
             'improve[place]' => 'Medemblik',
             'improve[replaces]' => 'item:'.$provider.',bogus,item:x',
         ]));
-        self::assertSelectorTextContains('.receipt .ref', 'SUB-');
+        self::assertMatchesRegularExpression('/#[0-9a-hjkmnp-tv-z]{8}/', $client->getCrawler()->filter('.receipt .ref')->text(), 'the receipt names the submission by its code');
 
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $new = $em->getRepository(Item::class)->findOneBy(['sourceRef' => self::TAP]);
@@ -129,7 +129,7 @@ final class SimilarPlacesFlowTest extends WebTestCase
 
         // Only the ticks change: that is a revision, not "nothing changed".
         $client->submit($crawler->selectButton('Next →')->form(['improve[replaces]' => '']));
-        self::assertSelectorTextContains('.receipt .ref', 'SUB-');
+        self::assertMatchesRegularExpression('/#[0-9a-hjkmnp-tv-z]{8}/', $client->getCrawler()->filter('.receipt .ref')->text(), 'the receipt names the submission by its code');
 
         $em->clear();
         $submission = $em->getRepository(Submission::class)->findOneBy(['itemId' => $new->getId()]);
