@@ -3292,6 +3292,8 @@ account:
   sub_status_pending: 'Wacht op beoordeling'
   sub_status_approved: 'Goedgekeurd'
   sub_status_rejected: 'Afgewezen'
+  sub_decided_approved: 'Goedgekeurd op %when%'
+  sub_decided_rejected: 'Afgewezen op %when%'
   sub_status_needs_info: 'Info nodig'
   sub_status_withdrawn: 'Ingetrokken'
   sub_status_trashed: 'Verwijderd'

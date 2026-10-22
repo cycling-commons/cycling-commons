@@ -3288,6 +3288,8 @@ account:
   sub_status_pending: 'En attente de relecture'
   sub_status_approved: 'Approuvée'
   sub_status_rejected: 'Rejetée'
+  sub_decided_approved: 'Approuvée le %when%'
+  sub_decided_rejected: 'Rejetée le %when%'
   sub_status_needs_info: 'Infos demandées'
   sub_status_withdrawn: 'Retirée'
   sub_status_trashed: 'Retiré'

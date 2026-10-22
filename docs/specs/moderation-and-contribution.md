@@ -2180,6 +2180,18 @@ to a town or region text shows "… heuvels midden in een zee van
 compares only the words between the shared start and the shared end, so a
 long text with one change costs little.
 
+**Each row names its submission and leads back to its form.** The row's place
+line ends with the submission's code (`Flevoland · NL · #rvqfgyx1`), so a
+rider can name it when they write to us. The row's date carries the time too,
+in the rider's own time format, and a decided row adds a line with when it
+was approved or rejected ("Approved on 22 Oct 2026, 15:17"). Both are short
+(`cc_datetime(short: true)`): a Long date preference writes the month short
+on these rows; a numeric preference stays as set. The curators' cards end
+their rider line with the same code (`rider#53w25a9f · by Admin · #jh4pr1ky`). A text contribution has no item, so
+instead of Map and Edit it has one Edit link to the form it was written on
+(`PlaceText::formRoute()`): the town text with the town's name, or the
+region's geography or history text, in the text's language.
+
 **The messages lookup is scoped by `user_id`.** A message is addressed to its
 recipient, so its `refId` should already be theirs — but this reads
 contribution content out of the database on the strength of an id carried by a

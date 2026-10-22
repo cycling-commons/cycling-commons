@@ -57,6 +57,36 @@ final class PlaceText
      */
     public const array LANGS = RegionLead::LOCALES;
 
+    /**
+     * The form a Text submission was written on, as a route and its
+     * parameters, so its rider can open it again from their list: the town
+     * text with the town's name, or the region's geography or history text
+     * by the region's slug. Null for a payload without what the route needs.
+     *
+     * @param array<string, mixed> $payload
+     *
+     * @return array{0: string, 1: array<string, string>}|null
+     */
+    public static function formRoute(array $payload, string $title): ?array
+    {
+        $lang = $payload['lang'] ?? null;
+        $ref = $payload['ref'] ?? null;
+        $slug = $payload['slug'] ?? null;
+        if (!\is_string($lang)) {
+            return null;
+        }
+
+        return match ($payload['target'] ?? null) {
+            self::TOWN => \is_string($ref) && 1 === preg_match('~^(node|way|relation)/(\d{1,16})$~', $ref, $m)
+                ? ['town_text', ['osmType' => $m[1], 'osmId' => $m[2], 'lang' => $lang, 'name' => $title]]
+                : null,
+            self::REGION, self::STORY => \is_string($slug) && '' !== $slug
+                ? [self::STORY === $payload['target'] ? 'region_story' : 'region_text', ['slug' => $slug, 'lang' => $lang]]
+                : null,
+            default => null,
+        };
+    }
+
     /** The `changes` key for one language's text: `text:nl`, or `story:nl` for a region's history text. */
     public static function changeKey(string $lang, string $target = self::TOWN): string
     {

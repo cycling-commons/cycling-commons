@@ -3307,6 +3307,8 @@ account:
   sub_status_pending: 'Awaiting review'
   sub_status_approved: 'Approved'
   sub_status_rejected: 'Rejected'
+  sub_decided_approved: 'Approved on %when%'
+  sub_decided_rejected: 'Rejected on %when%'
   sub_status_needs_info: 'Needs info'
   sub_status_withdrawn: 'Withdrawn'
   sub_status_trashed: 'Removed'

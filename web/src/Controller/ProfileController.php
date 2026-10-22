@@ -11,6 +11,7 @@ use App\Catalog\Entity\Submission;
 use App\Catalog\ItemType;
 use App\Catalog\Season;
 use App\Catalog\SubmissionStatus;
+use App\Contribution\PlaceText;
 use App\Contribution\SubmissionChangeSummary;
 use App\Entity\User;
 use App\Moderation\AlreadyDecidedException;
@@ -155,6 +156,19 @@ final class ProfileController extends AbstractController
             'status_filter' => $statusFilter,
             'region_names' => $regionNames,
             'submission_threads' => $this->threadsFor((int) $user->getId(), $contributions, $db),
+            // A text has no item to edit: its row links the form it was written on.
+            'text_forms' => array_reduce(
+                $contributions,
+                function (array $carry, Submission $s): array {
+                    $form = PlaceText::formRoute($s->getPayload(), $s->getTitle());
+                    if (null !== $form) {
+                        $carry[$s->getId()] = $this->generateUrl($form[0], $form[1]);
+                    }
+
+                    return $carry;
+                },
+                [],
+            ),
             'submission_changes' => array_reduce(
                 $contributions,
                 static function (array $carry, Submission $s) use ($changes): array {

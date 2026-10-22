@@ -87,7 +87,7 @@
               {% if rname %}<div class="q-submitter">{{ rname }}</div>{% endif %}
             </div>
             <div class="q-acts">
-              <time class="q-when" datetime="{{ p.createdAt|date('c') }}">{{ p.createdAt|cc_date }}</time>
+              <time class="q-when" datetime="{{ p.createdAt|date('c') }}">{{ p.createdAt|cc_datetime(short: true) }}</time>
               {% if p.state.value in ['submitted', 'verified', 'unverified'] %}
                 <span class="q-links">
                   <a class="q-link" href="{{ path('map') }}?route={{ p.id }}"
@@ -139,14 +139,18 @@
                  the row's own stamps; town-level needs the gazetteer
                  (docs/TODO.md "Nearby town on a queue row"). #}
               {% set rname = sub.regionId ? region_names[sub.regionId] ?? null : null %}
-              {% if rname or sub.countryCode %}
-                <div class="q-submitter">{{ [rname, sub.countryCode]|filter(v => v)|join(' · ') }}</div>
+              {# The submission's number last, so a rider can name it when
+                 they write to us or a curator. #}
+              <div class="q-submitter">{{ [rname, sub.countryCode, '#' ~ sub.code]|filter(v => v)|join(' · ') }}</div>
+              {# When a curator decided it, so a rider sees when their work went live. #}
+              {% if sub.decidedAt and sub.status.value in ['approved', 'rejected'] %}
+                <div class="q-submitter q-decided"><time datetime="{{ sub.decidedAt|date('c') }}">{{ ('account.sub_decided_' ~ sub.status.value)|trans({'%when%': sub.decidedAt|cc_datetime(short: true)}) }}</time></div>
               {% endif %}
             </div>
             {# One line: date · Map · Edit · status · Withdraw · Show details
                (owner 2026-08-25). #}
             <div class="q-acts">
-              <time class="q-when" datetime="{{ sub.createdAt|date('c') }}">{{ sub.createdAt|cc_date }}</time>
+              <time class="q-when" datetime="{{ sub.createdAt|date('c') }}">{{ sub.createdAt|cc_datetime(short: true) }}</time>
               {% if sub_live %}
                 <span class="q-links">
                   {# The map opens in its own tab: this list is a work queue, and a
@@ -160,6 +164,10 @@
                        target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a>
                   {% endif %}
                   <a class="q-link" href="{{ path('improve') }}?item={{ sub.itemId }}&amp;type={{ sub.letter }}">{{ 'account.link_edit'|trans }}</a>
+                </span>
+              {% elseif text_forms[sub.id] is defined and not sub_removed %}
+                <span class="q-links">
+                  <a class="q-link q-link--text-edit" href="{{ text_forms[sub.id] }}">{{ 'account.link_edit'|trans }}</a>
                 </span>
               {% endif %}
               <span class="q-pill q-pill--{{ sub_pill[sub.status.value] ?? 'pend' }}">{{ ('account.sub_status_' ~ sub.status.value)|trans }}</span>

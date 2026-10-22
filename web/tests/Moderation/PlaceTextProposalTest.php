@@ -375,6 +375,41 @@ final class PlaceTextProposalTest extends WebTestCase
         self::assertFalse($this->latestText((int) $rider->getId())->getPayload()['derived'] ?? null);
     }
 
+    public function testAContributedTextShowsItsCodeAndLeadsBackToItsForm(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        [$a] = $this->twoRegions();
+        $this->fetchedTown('nl', 'Testdorp is een dorp.');
+        $rider = $this->user('ptext-rider42@example.com', []);
+        $client->loginUser($rider);
+        $this->propose($client, 'Testdorp heeft een dorpsronde.', 'nl');
+        $town = $this->latestText((int) $rider->getId());
+        $crawler = $client->request('GET', '/regions/ptext-a/text?lang=en');
+        $client->submit($crawler->filter('#place-text-form')->form(['lang' => 'en', 'text' => 'Ptext A is hilly.', 'derived' => 'own']));
+        $region = $this->latestText((int) $rider->getId());
+
+        $router = static::getContainer()->get('router');
+        $crawler = $client->request('GET', $router->generate('profile'));
+        self::assertResponseIsSuccessful();
+
+        $row = $crawler->filter('#sub-'.$region->getId());
+        self::assertStringContainsString('#'.$region->getCode(), $row->filter('.q-submitter')->text());
+        self::assertSame(
+            $router->generate('region_text', ['slug' => 'ptext-a', 'lang' => 'en']),
+            $row->filter('a.q-link--text-edit')->attr('href'),
+        );
+        self::assertSame(
+            $router->generate('town_text', ['osmType' => 'node', 'osmId' => '999990301', 'lang' => 'nl', 'name' => $town->getTitle()]),
+            $crawler->filter('#sub-'.$town->getId().' a.q-link--text-edit')->attr('href'),
+        );
+        self::assertSame(0, $crawler->filter('#sub-'.$town->getId().' .q-decided')->count(), 'waiting: no decision time yet');
+
+        $this->approve($town, $this->user('ptext-cur-a42@example.com', ['ROLE_CURATOR'], $a), true);
+        $crawler = $client->request('GET', $router->generate('profile'));
+        self::assertStringStartsWith('Approved on ', $crawler->filter('#sub-'.$town->getId().' .q-decided')->text());
+    }
+
     public function testARegionTextNeedsTheSameAnswer(): void
     {
         $client = static::createClient();

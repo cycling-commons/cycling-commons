@@ -3315,6 +3315,8 @@ account:
   sub_status_pending: 'Esperando revisión'
   sub_status_approved: 'Aprobado'
   sub_status_rejected: 'Rechazado'
+  sub_decided_approved: 'Aprobado el %when%'
+  sub_decided_rejected: 'Rechazado el %when%'
   sub_status_needs_info: 'Faltan datos'
   sub_status_withdrawn: 'Retirada'
   sub_status_trashed: 'Retirado'

@@ -47,7 +47,8 @@ final class DateDisplayExtension extends AbstractExtension
         ];
     }
 
-    public function date(\DateTimeInterface|string|int|null $value): string
+    /** `$short` (a row in a list) writes a Long preference with the short month name: 22 Oct 2026. */
+    public function date(\DateTimeInterface|string|int|null $value, bool $short = false): string
     {
         $when = self::coerce($value);
         if (null === $when) {
@@ -57,11 +58,12 @@ final class DateDisplayExtension extends AbstractExtension
         $format = $this->preference();
         $pattern = $format->pattern();
 
-        return $this->formatter($format->localeDateStyle(), \IntlDateFormatter::NONE, $pattern)
+        return $this->formatter(self::dateStyle($format, $short), \IntlDateFormatter::NONE, $pattern)
             ->format($when) ?: '';
     }
 
-    public function dateTime(\DateTimeInterface|string|int|null $value): string
+    /** `$short` as for {@see self::date()}. */
+    public function dateTime(\DateTimeInterface|string|int|null $value, bool $short = false): string
     {
         $when = self::coerce($value);
         if (null === $when) {
@@ -77,12 +79,12 @@ final class DateDisplayExtension extends AbstractExtension
         $timePattern = $time->pattern();
 
         if (null === $datePattern && null === $timePattern) {
-            return $this->formatter($date->localeDateStyle(), \IntlDateFormatter::SHORT, null, $zone)->format($when) ?: '';
+            return $this->formatter(self::dateStyle($date, $short), \IntlDateFormatter::SHORT, null, $zone)->format($when) ?: '';
         }
 
         $datePart = null !== $datePattern
             ? $this->formatter(\IntlDateFormatter::NONE, \IntlDateFormatter::NONE, $datePattern, $zone)->format($when)
-            : $this->formatter($date->localeDateStyle(), \IntlDateFormatter::NONE, null, $zone)->format($when);
+            : $this->formatter(self::dateStyle($date, $short), \IntlDateFormatter::NONE, null, $zone)->format($when);
 
         $timePart = null !== $timePattern
             ? $this->formatter(\IntlDateFormatter::NONE, \IntlDateFormatter::NONE, $timePattern, $zone)->format($when)
@@ -99,6 +101,12 @@ final class DateDisplayExtension extends AbstractExtension
         return null === $when
             ? ''
             : ($this->formatter(\IntlDateFormatter::NONE, \IntlDateFormatter::NONE, 'LLLL yyyy')->format($when) ?: '');
+    }
+
+    /** The locale style for a format; a short row never spells the month out. */
+    private static function dateStyle(DateFormat $format, bool $short): int
+    {
+        return $short ? \IntlDateFormatter::MEDIUM : $format->localeDateStyle();
     }
 
     private function preference(): DateFormat

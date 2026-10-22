@@ -3293,6 +3293,8 @@ account:
   sub_status_pending: 'Wartet auf Prüfung'
   sub_status_approved: 'Angenommen'
   sub_status_rejected: 'Abgelehnt'
+  sub_decided_approved: 'Angenommen am %when%'
+  sub_decided_rejected: 'Abgelehnt am %when%'
   sub_status_needs_info: 'Info benötigt'
   sub_status_withdrawn: 'Zurückgezogen'
   sub_status_trashed: 'Entfernt'
