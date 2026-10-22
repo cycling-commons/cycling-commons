@@ -71,7 +71,13 @@ rule; `App\Links\WebsiteChecker` fetches and applies it.
    `ProviderHarvest`): the run's websites go through the same gate, one fetch
    per host, and a `dead` or `parked` one is left out of the row and counted
    in the run's summary ("websites dropped"), never stored to be hidden
-   later. The place itself is never refused.
+   later. The place itself is never refused. An email address in a website
+   field, anything with an `@` before the path (PIVOT lists
+   `http://someone@hotmail.com` for three stays), is dropped the same way and
+   never fetched. When the record's website is dropped, the same site goes
+   from the row as well, unless a person put it there, so a site an earlier
+   import stored does not outlive its verdict. A stay left with no website
+   shows its tourist office (data-provider-hierarchy.md §10).
 
 - **A region's history text** asks the same gate for every link it adds or
   changes ([moderation-and-contribution.md](moderation-and-contribution.md)

@@ -4725,6 +4725,8 @@ item_type:
 'Cycling-friendliness (1–5)': 'Fahrradfreundlichkeit (1–5)'
 'Difficulty': 'Schwierigkeit'
 'Dominant surface': 'Vorherrschender Belag'
+'Tourist office': 'Tourismusbüro'
+'https://… (its tourist office, when the stay has no site)': 'https://… (das Tourismusbüro, wenn die Unterkunft keine eigene Seite hat)'
 'Drying / washing for kit': 'Trocknen / Waschen der Ausrüstung'
 'Cyclist label': 'Fahrradsiegel'
 'Bett+Bike': 'Bett+Bike'

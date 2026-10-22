@@ -83,6 +83,9 @@ final class ProviderHarvest
      */
     public const int MOVE_RADIUS_M = 100;
 
+    /** @var array<string, string> ref => the website the gate left out of that record, this run */
+    private array $droppedWebs = [];
+
     public function __construct(
         private readonly Connection $db,
         private readonly ProviderCitations $citations,
@@ -99,7 +102,9 @@ final class ProviderHarvest
     public function apply(DataProvider $provider, array $features, \DateTimeImmutable $now = new \DateTimeImmutable()): array
     {
         $counts = ['attached' => 0, 'inserted' => 0, 'updated' => 0, 'moved' => 0, 'skipped_rider' => 0, 'retired_beside_ours' => 0, 'stale' => 0, 'contested' => 0, 'reclaimed' => 0, 'websites_dropped' => 0];
+        $this->droppedWebs = [];
         $features = $this->withoutDeadWebsites($features, $counts['websites_dropped']);
+        $features = self::officeOnlyWithoutWebsite($features);
         // Every ref this run carries, known up front: a row whose ref is not
         // among them and that sits near a ref nobody has is a point that MOVED.
         $refs = array_map(static fn (array $f): string => $f['ref'], $features);
@@ -395,19 +400,58 @@ final class ProviderHarvest
         $urls = [];
         foreach ($features as $feature) {
             $web = $feature['attributes']['web'] ?? null;
-            if (\is_string($web) && '' !== trim($web)) {
+            if (\is_string($web) && '' !== trim($web) && !self::isAddress($web)) {
                 $urls[] = trim($web);
             }
         }
-        if ([] === $urls) {
-            return $features;
-        }
-        $verdicts = $this->websites->verdictsOf(array_values(array_unique($urls)));
+        $verdicts = [] === $urls ? [] : $this->websites->verdictsOf(array_values(array_unique($urls)));
         foreach ($features as $i => $feature) {
             $web = $feature['attributes']['web'] ?? null;
-            if (\is_string($web) && WebsiteVerdict::hides($verdicts[trim($web)] ?? null)) {
+            if (\is_string($web) && '' !== trim($web) && (self::isAddress($web) || WebsiteVerdict::hides($verdicts[trim($web)] ?? null))) {
+                $this->droppedWebs[$feature['ref']] = trim($web);
                 unset($features[$i]['attributes']['web']);
                 ++$dropped;
+            }
+        }
+
+        return $features;
+    }
+
+    /**
+     * An email address in a website field, such as PIVOT's
+     * `http://someone@hotmail.com`: anything with an `@` before the path. It
+     * is never fetched and never stored, because a mailbox is a person's
+     * (data-provider-hierarchy.md §10).
+     */
+    private static function isAddress(string $web): bool
+    {
+        return 1 === preg_match('~^(?:[a-z][a-z0-9+.-]*:)?(?://)?[^/?#]*@~i', trim($web));
+    }
+
+    /** Two spellings of one website: scheme, `www.`, case and a trailing slash aside. */
+    private static function sameSite(mixed $a, string $b): bool
+    {
+        $key = static fn (string $u): string => rtrim((string) preg_replace('~^(?:[a-z][a-z0-9+.-]*://)?(?:www\.)?~i', '', mb_strtolower(trim($u))), '/');
+
+        return \is_string($a) && $key($a) === $key($b);
+    }
+
+    /**
+     * A record's tourist office (`officeWeb`) is how a rider reaches a stay
+     * without a site of its own (data-provider-hierarchy.md §10), so it stays
+     * only beside no website: one the publisher never gave, or one the gate
+     * above left out as dead or parked. Beside a website that answers it goes.
+     *
+     * @param list<array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code?: string|null}> $features
+     *
+     * @return list<array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code?: string|null}>
+     */
+    private static function officeOnlyWithoutWebsite(array $features): array
+    {
+        foreach ($features as $i => $feature) {
+            $web = $feature['attributes']['web'] ?? null;
+            if (\is_string($web) && '' !== trim($web)) {
+                unset($features[$i]['attributes']['officeWeb']);
             }
         }
 
@@ -526,6 +570,16 @@ final class ProviderHarvest
             if (!\array_key_exists($key, $attrs) || \in_array($key, $touched, true)) {
                 $attrs[$key] = $value;
             }
+        }
+        // The website the gate left out of this record goes from the row too,
+        // unless a person put it there; then the tourist office stands in only
+        // where the row is left with no website (§10).
+        $dropped = $this->droppedWebs[$feature['ref']] ?? null;
+        if (null !== $dropped && !\in_array('web', $touched, true) && self::sameSite($attrs['web'] ?? null, $dropped)) {
+            unset($attrs['web']);
+        }
+        if (\is_string($attrs['web'] ?? null) && '' !== trim($attrs['web']) && !\in_array('officeWeb', $touched, true)) {
+            unset($attrs['officeWeb']);
         }
         // Last, so a default only lands where upstream, the row and every
         // person were all silent; a field a person emptied stays empty.

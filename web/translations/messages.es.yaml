@@ -4751,6 +4751,8 @@ item_type:
 'Cycling-friendliness (1–5)': 'Trato al ciclista (1–5)'
 'Difficulty': 'Dificultad'
 'Dominant surface': 'Firme predominante'
+'Tourist office': 'Oficina de turismo'
+'https://… (its tourist office, when the stay has no site)': 'https://… (su oficina de turismo, si el alojamiento no tiene web propia)'
 'Drying / washing for kit': 'Secado / lavado de la ropa'
 'Cyclist label': 'Distintivo ciclista'
 'Bett+Bike': 'Bett+Bike'

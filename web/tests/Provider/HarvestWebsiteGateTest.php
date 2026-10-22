@@ -85,7 +85,68 @@ final class HarvestWebsiteGateTest extends KernelTestCase
         self::assertCount(1, $this->fetched, 'a verdict is about a host, and two places with the same site share it');
     }
 
+    /**
+     * The tourist office (`officeWeb`) is how a rider reaches a stay without a
+     * site of its own (data-provider-hierarchy.md §10): kept beside no website
+     * or a dead one, left out beside a website that answers.
+     */
+    public function testTheTouristOfficeStandsInOnlyForAMissingOrDeadWebsite(): void
+    {
+        $office = ['officeWeb' => 'https://www.visitgaume.be/'];
+        $this->harvest()->apply($this->provider(), [
+            $this->feature('web-gate-test:office-live', 'https://camping.test/', $office),
+            $this->feature('web-gate-test:office-dead', 'https://dead.test/', $office),
+            $this->feature('web-gate-test:office-none', null, $office),
+        ]);
+
+        self::assertNull($this->attr('web-gate-test:office-live', 'officeWeb'), 'a stay with a live website is reached there');
+        self::assertSame('https://camping.test/', $this->attr('web-gate-test:office-live', 'web'));
+        self::assertSame('https://www.visitgaume.be/', $this->attr('web-gate-test:office-dead', 'officeWeb'), 'a dead website leaves the office');
+        self::assertNull($this->attr('web-gate-test:office-dead', 'web'));
+        self::assertSame('https://www.visitgaume.be/', $this->attr('web-gate-test:office-none', 'officeWeb'));
+    }
+
+    /** PIVOT lists `http://someone@hotmail.com` as a website: an email address, never shown. */
+    public function testAnAddressWithAnAtSignIsNoWebsite(): void
+    {
+        $counts = $this->harvest()->apply($this->provider(), [
+            $this->feature('web-gate-test:mailbox', 'http://somebody@mailbox.test', ['officeWeb' => 'https://www.visitgaume.be/']),
+        ]);
+
+        self::assertSame(1, $counts['websites_dropped']);
+        self::assertNull($this->attr('web-gate-test:mailbox', 'web'));
+        self::assertSame('https://www.visitgaume.be/', $this->attr('web-gate-test:mailbox', 'officeWeb'));
+        self::assertSame([], array_filter($this->fetched, static fn (string $u): bool => str_contains($u, 'mailbox')), 'an address is never fetched');
+    }
+
+    /**
+     * A row an earlier import gave a website keeps it only while it answers:
+     * when the gate drops the record's dead site, the row's copy of it goes
+     * too, and the tourist office takes its place.
+     */
+    public function testADeadWebsiteTheRowAlreadyHeldGoesAndTheOfficeComes(): void
+    {
+        $this->harvest()->apply($this->provider(), [$this->feature('web-gate-test:held', null)]);
+        $this->db()->executeStatement(
+            "UPDATE item SET attributes = attributes || '{\"web\": \"https://dead.test/\"}'::jsonb WHERE source_ref = 'web-gate-test:held'",
+        );
+
+        $this->harvest()->apply($this->provider(), [
+            $this->feature('web-gate-test:held', 'https://dead.test/', ['officeWeb' => 'https://www.visitgaume.be/']),
+        ]);
+
+        self::assertNull($this->attr('web-gate-test:held', 'web'));
+        self::assertSame('https://www.visitgaume.be/', $this->attr('web-gate-test:held', 'officeWeb'));
+    }
+
     // --- helpers ----------------------------------------------------------
+
+    private function attr(string $ref, string $key): ?string
+    {
+        $value = $this->db()->fetchOne('SELECT attributes->>:key FROM item WHERE source_ref = :ref', ['key' => $key, 'ref' => $ref]);
+
+        return \is_string($value) ? $value : null;
+    }
 
     private function web(string $ref): ?string
     {
@@ -94,12 +155,16 @@ final class HarvestWebsiteGateTest extends KernelTestCase
         return \is_string($web) ? $web : null;
     }
 
-    /** @return array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code: string} */
-    private function feature(string $ref, ?string $web): array
+    /**
+     * @param array<string, string> $more
+     *
+     * @return array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code: string}
+     */
+    private function feature(string $ref, ?string $web, array $more = []): array
     {
         return [
             'ref' => $ref, 'letter' => 'O', 'name' => 'Camping', 'lat' => self::LAT, 'lng' => self::LNG,
-            'attributes' => null === $web ? ['type' => 'Campsite'] : ['type' => 'Campsite', 'web' => $web],
+            'attributes' => (null === $web ? ['type' => 'Campsite'] : ['type' => 'Campsite', 'web' => $web]) + $more,
             'country_code' => 'BE',
         ];
     }

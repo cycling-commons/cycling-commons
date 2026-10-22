@@ -209,14 +209,13 @@ click floods a catalogue), an empty result (an empty fetch is not an empty
 publisher), and a paused provider (paused means keep the rows, stop
 refreshing).
 
-**`wallonie-pivot` does not run on it, and moving it is not a refactor.**
-Its rows come from a committed fixture export (`tools/wallonia/export.py`),
-not from a live service, so pointing it at the Géoportail WFS would change
-which upstream we ingest from. That is a policy question for
-[data-source-register.md](data-source-register.md), not a code move. What the
-harvester's genericity rests on instead is that it holds no provider-specific
-code at all: the endpoint, the layer, the field map, the letters, the match
-radius and the id field all come from the row.
+**`wallonie-pivot` runs on it too**, from the live Géoportail Wallonie service
+(§10). The harvester holds no provider-specific code: the endpoint, its kind,
+the layers, the field map, the letters, the match radius and the id field all
+come from the row. Two kinds of service exist: `wfs` (one layer in
+`field_map._layer`, asked for in EPSG:4326) and `arcgis` (an ArcGIS MapServer,
+its layers in `field_map._layers`, each read page by page in EPSG:4326 and
+joined into one file).
 
 For each upstream feature:
 
@@ -1101,9 +1100,64 @@ the pipe rather than the person.
 `Version20260904110000` seeded `data_provider` with `osm`, `wikidata` (both
 `system`) and `wallonie-pivot`, and pointed the Wallonia rows at
 `wallonie-pivot` as `source = 'authority'` (`item.source` is `varchar(10)`).
-Their `source_ref` values, such as `fx:pivot:hotel-koru|ramillies`, are left
-alone: they are upsert keys, not display strings, and rewriting them would
-break the one thing they are for.
+
+**Where PIVOT comes from.** The register row reads Tourisme Wallonie's PIVOT
+register from the Géoportail Wallonie ArcGIS service
+`TOURISME/OFFRES_TOURISTIQUES/MapServer` (`endpoint_kind = arcgis`), the copy
+published under CC BY 4.0; the same data on ODWB carries no licence and is
+never read. Six layers hold stays: 1 hotels, 3 gîtes, 13 B&Bs, 4 furnished
+rentals, 5 campsites, 6 budget stays (7, holiday villages, is empty). On
+2026-10-22 they held 4,152 stays. The id is PIVOT's own `CODE`
+(`HBG-A0-00ZN-02G0`), so a record that moves is an update, and `source_ref` is
+`wallonie-pivot:<CODE>`. The 150 stays the June fixture export
+(`tools/wallonia/export.py`) put in, refs such as
+`fx:pivot:hotel-koru|ramillies`, meet their PIVOT records within the match
+radius on the first harvest and take the new ref (§5, a moved row), so their
+edits, confirmations and photos stay with them.
+
+**What a stay takes from PIVOT.** Its name (`NOM`), its type (`TYPE_OFFRE`,
+mapped to the stay form's `type`), its town (`COMMUNE`), its website
+(`SITE_WEB`) and its location. Nothing else: never the email (`MAIL`), the
+phone (`PHONE1`), the Facebook page, the street address or the managing
+organisation's contact details.
+
+**How a rider reaches a stay.** By its website. A stay without one (about
+1,240 of 4,152) shows its regional tourist office instead: PIVOT names, for
+every stay, the Maison du Tourisme it belongs to (`ORGANISME`, 26 of them),
+and the field map turns that name into the office's own website
+(`Version20261022020000` holds the 26, each checked on 2026-10-22), stored as
+the stay's `officeWeb` and shown in the drawer as "Tourist office". The
+ingest keeps it only beside no live website: one PIVOT never gave, or one the
+website gate drops as dead, parked or an email address
+(`ProviderHarvest::officeOnlyWithoutWebsite()`, website-liveness.md §2). An
+office is an organisation, not a person, and its site lists and books the
+stays of its area. The stay form's Tourist office field lets a rider correct
+it. On the first dev harvest (2026-10-22): 2,655 stays show a website, 1,501
+their tourist office, and 4 neither, the stays whose office PIVOT gives as
+`N.C.`.
+
+**Why no email and no phone.** Many PIVOT emails are private mailboxes of the
+people who rent out a gîte or a room, and a phone number is no different.
+The Commons dataset is non-personal, the line coverage-provider.md §2.1 draws
+for OpenStreetMap's `email` and `contact:email`, and a register's contact
+fields fall on the same side of it. Showing them would make the map a
+directory of private people.
+
+**Cyclist labels.** PIVOT has no field for Wallonia's "Bienvenue Vélo" label,
+so no PIVOT stay passes the Bike-friendly chip until a rider sets its Cyclist
+label.
+
+**Refresh.** PIVOT changes as the tourist offices edit it: the newest
+`DATE_MODIFICATION` on 2026-10-22 was 2026-10-19. The row's
+`refresh_cadence` is monthly. `refresh_cadence` is a label the desk and the
+credits show; nothing in this repository schedules a run. The refresh runs
+from a monthly systemd timer on the worker host, kept with the other worker
+timers outside this repository: a template service `cc-provider@.service`
+whose instance is the provider key runs
+`tools/provider-run.sh --worker-dir <worker env dir> --write <key>`, and
+`cc-provider@wallonie-pivot.timer` starts it on the 3rd of each month at
+04:30 Europe/Brussels. The same template serves any other register row by
+its own timer.
 
 ## 11. First real-world test: the Dutch drinking-water taps
 

@@ -41,6 +41,12 @@ from .normalise import NormaliseError, normalise
 # than hold a weekly timer open all night.
 TIMEOUT_S = 120
 
+# An ArcGIS layer is read in pages of this many features (PIVOT's limit is
+# 2000), and a layer that still says "more" after this many pages is a service
+# that never stops paging, refused rather than read forever.
+ARCGIS_PAGE = 1000
+ARCGIS_MAX_PAGES = 200
+
 USER_AGENT = "CyclingCommons provider harvester (+https://cyclingcommons.org)"
 
 
@@ -108,12 +114,59 @@ def fetch(url: str) -> dict:
         return json.load(response)
 
 
+def fetch_arcgis(provider: dict) -> dict:
+    """Every feature of an ArcGIS MapServer's layers, in EPSG:4326, as one collection.
+
+    The layers are `field_map._layers` (PIVOT splits its stays over six, one
+    per type). Each is read page by page until a page no longer says it was
+    cut short.
+    """
+    layers = (provider["field_map"] or {}).get("_layers")
+    if not layers:
+        raise SystemExit(
+            f"Provider {provider['key']!r} is an ArcGIS service but its field map has no _layers."
+        )
+
+    base = provider["endpoint"].rstrip("/")
+    features: list[dict] = []
+    for layer in layers:
+        offset = 0
+        for _ in range(ARCGIS_MAX_PAGES):
+            query = {
+                "where": "1=1",
+                "outFields": "*",
+                "outSR": "4326",
+                "f": "geojson",
+                "resultOffset": offset,
+                "resultRecordCount": ARCGIS_PAGE,
+            }
+            page = fetch(f"{base}/{layer}/query?" + urllib.parse.urlencode(query))
+            batch = page.get("features") or []
+            features.extend(batch)
+            cut_short = page.get("exceededTransferLimit") or (page.get("properties") or {}).get("exceededTransferLimit")
+            if not batch or not cut_short:
+                break
+            offset += len(batch)
+        else:
+            raise SystemExit(f"Layer {layer} of {provider['key']!r} was still paging after {ARCGIS_MAX_PAGES} pages.")
+
+    return {"type": "FeatureCollection", "features": features}
+
+
+def fetch_document(provider: dict) -> dict:
+    """The provider's features: one request for a WFS or a file, paged layers for ArcGIS."""
+    if (provider["endpoint_kind"] or "").lower() == "arcgis":
+        return fetch_arcgis(provider)
+    return fetch(service_url(provider))
+
+
 def convert(provider: dict, document: dict) -> tuple[list[dict], list[str]]:
     """(features we vouch for, one line per refusal)."""
     field_map = dict(provider["field_map"] or {})
     # Underscore keys configure the fetch rather than name an attribute.
     id_field = field_map.pop("_id", None)
     field_map.pop("_layer", None)
+    field_map.pop("_layers", None)
 
     letter = provider["letters"][0]
     out: list[dict] = []
@@ -147,7 +200,7 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("No database DSN: pass --dsn or set DATABASE_DSN.")
 
     provider = load_provider(args.dsn, args.key)
-    document = fetch(service_url(provider))
+    document = fetch_document(provider)
     features, refusals = convert(provider, document)
 
     for line in refusals[:20]:

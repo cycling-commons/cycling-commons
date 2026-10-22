@@ -87,9 +87,11 @@ def apply_field_map(props: dict[str, Any],
     or ``{"from": <field>, "values": {<theirs>: <ours>, ...}}`` when the
     upstream values must land in one of our form vocabularies. A value the
     map does not name is dropped, never carried: an attribute has to be one
-    a rider can pick in the form, or it is not editable and not ours. Two of
-    our fields may read the same upstream column: RIVM's ``type`` feeds both
-    ``availability`` (24-7 / daytime) and ``condition`` (Storing).
+    a rider can pick in the form, or it is not editable and not ours. A value
+    is looked up without its stray spaces. Without ``values`` the value is
+    carried as is. Two of our fields may read the same upstream column:
+    RIVM's ``type`` feeds both ``availability`` (24-7 / daytime) and
+    ``condition`` (Storing).
 
     Unmapped fields are dropped rather than carried: an upstream column nobody
     asked for becomes an attribute nobody renders, and a schema change
@@ -101,7 +103,10 @@ def apply_field_map(props: dict[str, Any],
             value = props.get(spec.get("from", ""))
             if value in (None, ""):
                 continue
-            translated = (spec.get("values") or {}).get(str(value))
+            if "values" not in spec:
+                out[ours] = value
+                continue
+            translated = (spec.get("values") or {}).get(str(value).strip())
             if translated not in (None, ""):
                 out[ours] = translated
             continue

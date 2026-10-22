@@ -143,6 +143,9 @@ final class CatalogFormRegistry
                     CatalogField::text('town', 'Town / commune'),
                     // Keyed `web`, not `website` — same slot the drawer and harvest already use.
                     CatalogField::url('web', 'Website', placeholder: 'https://… (the place’s own site)'),
+                    // A stay without a site of its own is reached through its tourist office: PIVOT fills it from
+                    // the stay's Maison du Tourisme (data-provider-hierarchy.md §10). An organisation, never a person.
+                    CatalogField::url('officeWeb', 'Tourist office', placeholder: 'https://… (its tourist office, when the stay has no site)'),
                     CatalogField::select('bikeStorage', 'Secure bike storage', ['Yes — locked room', 'Yes — garage/shed', 'On request', 'No']),
                     CatalogField::select('dryingWashing', 'Drying / washing for kit', self::UNKNOWN_YES_NO),
                     // Multi: the OSM harvest fills it from bettundbike, award:accueilvelo and bike_friend (coverage-provider.md §5).

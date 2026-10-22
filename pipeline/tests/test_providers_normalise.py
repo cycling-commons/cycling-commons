@@ -115,3 +115,13 @@ def test_a_feature_with_no_name_still_normalises():
     )
     assert out["properties"]["name"] == ""
     assert "country_code" not in out["properties"]
+
+
+def test_a_value_is_looked_up_without_its_stray_spaces():
+    """PIVOT writes "Wallonie Picarde (Antenne Tournai) " with a trailing space."""
+    spec = {"officeWeb": {"from": "ORGANISME", "values": {"Wallonie Picarde (Antenne Tournai)": "https://www.visitwapi.be/"}}}
+    assert apply_field_map({"ORGANISME": "Wallonie Picarde (Antenne Tournai) "}, spec) == {"officeWeb": "https://www.visitwapi.be/"}
+
+
+def test_a_from_without_values_carries_the_value_as_it_is():
+    assert apply_field_map({"SITE_WEB": "https://gite.example"}, {"web": {"from": "SITE_WEB"}}) == {"web": "https://gite.example"}

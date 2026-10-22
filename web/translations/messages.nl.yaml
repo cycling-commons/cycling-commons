@@ -4724,6 +4724,8 @@ item_type:
 'Cycling-friendliness (1–5)': 'Fietsvriendelijkheid (1–5)'
 'Difficulty': 'Moeilijkheidsgraad'
 'Dominant surface': 'Overheersend wegdek'
+'Tourist office': 'Toeristische dienst'
+'https://… (its tourist office, when the stay has no site)': 'https://… (de toeristische dienst, als het verblijf geen eigen site heeft)'
 'Drying / washing for kit': 'Drogen / wassen van uitrusting'
 'Cyclist label': 'Fietserslabel'
 'Bett+Bike': 'Bett+Bike'
