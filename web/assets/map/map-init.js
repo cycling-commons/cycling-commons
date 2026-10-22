@@ -4,6 +4,7 @@
    `map` is adopted from catalog-load.js (built before the catalog fetch). */
 import { pinOffset, locateOffset, locateErrorMessage, offsetAsPadding } from './util.js';
 import { hopIsNear } from './camera-hop.js';
+import { uDistUnit } from './units.js';
 
 export const map = (function(){
   if(window.__ccMapInstance) return window.__ccMapInstance;
@@ -166,6 +167,9 @@ export function initMapControls({toast}={}){
     + '© DLR e.V. 2010-2014 · © Airbus Defence and Space GmbH 2014-2018 '
     + `(<a href="${creditsUrl}">credits</a>)`
   }),'bottom-right');
+  /* A scale bar above the attribution, in the rider's distance unit. Bottom-right, not in the zoom
+     column: that column ends just under the filter pill's mark (map-and-search.md section 4.3). */
+  map.addControl(new maplibregl.ScaleControl({maxWidth:100, unit: uDistUnit()==='mi' ? 'imperial' : 'metric'}),'bottom-right');
   /* The compass with the zoom buttons (owner 2026-10-19: "can we add a compass when you click it the map always
      rotates North up"): its needle shows where north is; a click turns the map north up and keeps the tilt. */
   map.addControl(new maplibregl.NavigationControl({showCompass:true, visualizePitch:false}),'bottom-left');

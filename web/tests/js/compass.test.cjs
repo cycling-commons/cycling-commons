@@ -37,3 +37,10 @@ test('a figure\'s info bubble is as wide as the panel, never cut at its edge, in
   assert.match(css, /\.cc-plan-fig \.cc-info-wrap\{position:static;/);
   assert.match(css, /\.cc-plan-fig \.cc-info-pop\{left:0;right:0;width:auto;[^}]*text-transform:none/);
 });
+
+test('a scale bar sits above the attribution, in the rider\'s distance unit', () => {
+  const init = read('assets/map/map-init.js');
+  assert.match(init, /new maplibregl\.ScaleControl\(\{maxWidth:100, unit: uDistUnit\(\)==='mi' \? 'imperial' : 'metric'\}\),'bottom-right'\)/);
+  assert.ok(init.indexOf('ScaleControl') > init.indexOf('AttributionControl'), 'added before the attribution, the scale would sit under it');
+  assert.match(read('assets/styles/map.css'), /\.maplibregl-ctrl-scale\{background:rgb\(var\(--chrome-glass\) \/ \.9\)/);
+});

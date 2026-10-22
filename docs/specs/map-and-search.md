@@ -394,7 +394,12 @@ map module opens `#drawer` behind its back.
   `showCompass:true, visualizePitch:false`): its needle shows where north is,
   and a click turns the map north up and keeps the tilt, so the 3D relief keeps
   its view; its label is "North up" in the page language
-  (`NavigationControl.ResetBearing`). The attribution box at
+  (`NavigationControl.ResetBearing`). A **scale bar** (MapLibre's
+  `ScaleControl`, at most 100 px wide) sits at bottom-right just above the
+  attribution, in the rider's distance unit (`imperial` when the account
+  shows miles, else `metric`), in the zoom badge's glass so it reads on every
+  base map; it stays out of the zoom column, which ends just under the filter
+  pill's mark. The attribution box at
   bottom-right is capped at the map width minus 4.5rem
   (`.maplibregl-ctrl-bottom-right{max-width}`, map.css), so the long notice
   (OSM, DEM, imagery provider) wraps inside its own box and its last line, the
