@@ -2161,6 +2161,16 @@ The struck-out half appears only when there was a previous value — adding a
 missing field is the commonest contribution there is and has nothing to strike
 out. That is the same gate the desk's card uses (§5.4).
 
+**A long text shows only what changed.** When the old and the new value both
+have 12 words or more, the row (`diff`) shows the changed words, struck and
+new, with up to 6 unchanged words on each side and "…" where the rest is
+left out (`TranslationDiff::words()` then `around()`, rendered by
+`partials/_change_row.html.twig` on both surfaces). Adding a second full stop
+to a town or region text shows "… heuvels midden in een zee van
+~~landbouwgrond.~~ landbouwgrond..", not the whole text twice. The diff
+compares only the words between the shared start and the shared end, so a
+long text with one change costs little.
+
 **The messages lookup is scoped by `user_id`.** A message is addressed to its
 recipient, so its `refId` should already be theirs — but this reads
 contribution content out of the database on the strength of an id carried by a

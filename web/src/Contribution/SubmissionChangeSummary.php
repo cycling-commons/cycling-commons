@@ -9,6 +9,7 @@ namespace App\Contribution;
 use App\Catalog\CatalogFormRegistry;
 use App\Catalog\Entity\Submission;
 use App\Catalog\ItemType;
+use App\Translation\TranslationDiff;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -22,10 +23,16 @@ final readonly class SubmissionChangeSummary
     {
     }
 
+    /** From this many words on both sides a value is prose, and its row shows only what changed. */
+    private const int PROSE_WORDS = 12;
+
     /**
      * One row per changed field. `was` is null when the field had no previous value.
+     * A prose value that had one also gets `diff`: the changed words with a
+     * few unchanged ones around them (TranslationDiff::around()), so one
+     * changed word in a long text is not two whole texts to compare.
      *
-     * @return list<array{label: string, was: ?string, now: string}>
+     * @return list<array{label: string, was: ?string, now: string, diff?: list<array{type: 'eq'|'del'|'ins', text: string}>}>
      */
     public function rows(Submission $submission): array
     {
@@ -43,7 +50,7 @@ final readonly class SubmissionChangeSummary
 
             $textLang = PlaceText::langOfKey((string) $field);
             $storyLang = PlaceText::storyLangOfKey((string) $field);
-            $rows[] = [
+            $row = [
                 'label' => $labels[$field] ?? match (true) {
                     // A region's lead is its geography text (§3.1b); a town card's is just its text.
                     null !== $textLang => $this->translator->trans(PlaceText::REGION === ($submission->getPayload()['target'] ?? null) ? 'place_text.geography_change_label' : 'place_text.change_label', ['%lang%' => strtoupper($textLang)]),
@@ -53,9 +60,18 @@ final readonly class SubmissionChangeSummary
                 'was' => null === $was || '' === $was ? null : ChangeValue::format((string) $field, $was),
                 'now' => ChangeValue::format((string) $field, $now),
             ];
+            if (null !== $row['was'] && self::isProse($row['was']) && self::isProse($row['now'])) {
+                $row['diff'] = TranslationDiff::around(TranslationDiff::words($row['was'], $row['now']));
+            }
+            $rows[] = $row;
         }
 
         return $rows;
+    }
+
+    private static function isProse(string $value): bool
+    {
+        return \count(preg_split('/\s+/u', trim($value), -1, \PREG_SPLIT_NO_EMPTY) ?: []) >= self::PROSE_WORDS;
     }
 
     /**

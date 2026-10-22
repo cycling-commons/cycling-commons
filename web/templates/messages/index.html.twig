@@ -180,14 +180,7 @@
                 <span class="q-diff-h">{{ 'messages.what_you_changed'|trans }}</span>
                 <dl>
                   {% for row in diff %}
-                    <dt>{{ row.label }}</dt>
-                    {# Long values (a drawn segment's geometry) clamp to one
-                       line, click to expand — partials/_vclip.html.twig. #}
-                    {% set mlong = (row.now ~ (row.was ?? ''))|length > 110 %}
-                    <dd{% if mlong %} class="vclip" tabindex="0" role="button" aria-expanded="false"{% endif %}>
-                      {%- if row.was is not null %}<span class="was">{{ row.was }}</span>{% endif -%}
-                      <span class="now">{{ row.now }}</span>
-                    </dd>
+                    {% include 'partials/_change_row.html.twig' with {row: row} only %}
                   {% endfor %}
                 </dl>
                 </div>

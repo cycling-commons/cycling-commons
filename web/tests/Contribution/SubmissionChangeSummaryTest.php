@@ -45,6 +45,27 @@ final class SubmissionChangeSummaryTest extends TestCase
         self::assertSame('Nieuw.', $rows[0]['now']);
     }
 
+    public function testALongTextShowsOnlyWhatChangedWithAFewWordsAround(): void
+    {
+        $was = 'Waar andere provincies eeuwenlang streden om bestaand land te behouden, werd Flevoland vanuit het niets geschapen op de zeebodem. Voormalige eilanden veranderden in heuvels midden in een zee van landbouwgrond.';
+        $now = str_replace('landbouwgrond.', 'landbouwgrond..', $was);
+
+        $rows = $this->summary()->rows($this->submission('', ['story:nl' => ['was' => $was, 'now' => $now]]));
+
+        self::assertSame([
+            ['type' => 'eq', 'text' => '… heuvels midden in een zee van'],
+            ['type' => 'del', 'text' => 'landbouwgrond.'],
+            ['type' => 'ins', 'text' => 'landbouwgrond..'],
+        ], $rows[0]['diff'] ?? null);
+    }
+
+    public function testAShortValueHasNoWordDiff(): void
+    {
+        $rows = $this->summary()->rows($this->submission('', ['text:nl' => ['was' => 'Oud.', 'now' => 'Nieuw.']]));
+
+        self::assertArrayNotHasKey('diff', $rows[0], 'two short values read best side by side');
+    }
+
     public function testAFieldIsNamedTheWayTheFormAskedForIt(): void
     {
         $rows = $this->summary()->rows($this->submission('N', [

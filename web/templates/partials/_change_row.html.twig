@@ -1,0 +1,23 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# One row of "What you changed", on the rider's contributions and messages.
+   A prose value shows only the changed words, struck and new, with a few
+   words around them (SubmissionChangeSummary `diff`); any other value shows
+   was and now whole. Long values without a diff (a drawn segment's
+   geometry) clamp to one line, click to expand: partials/_vclip.html.twig. #}
+<dt>{{ row.label }}</dt>
+{% if row.diff is defined %}
+  <dd>
+    {%- for s in row.diff -%}
+      {%- if s.type == 'del' %}<span class="was">{{ s.text }}</span>
+      {%- elseif s.type == 'ins' %}<span class="now">{{ s.text }}</span>
+      {%- else %}{{ s.text }}{% endif -%}
+      {%- if not loop.last %} {% endif -%}
+    {%- endfor -%}
+  </dd>
+{% else %}
+  {% set long = (row.now ~ (row.was ?? ''))|length > 110 %}
+  <dd{% if long %} class="vclip" tabindex="0" role="button" aria-expanded="false"{% endif %}>
+    {%- if row.was is not null %}<span class="was">{{ row.was }}</span>{% endif -%}
+    <span class="now">{{ row.now }}</span>
+  </dd>
+{% endif %}

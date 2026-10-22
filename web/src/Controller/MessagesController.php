@@ -202,7 +202,7 @@ final class MessagesController extends AbstractController
      *
      * @param list<UserMessage> $list
      *
-     * @return array<int, list<array{label: string, was: ?string, now: string}>>
+     * @return array<int, list<array{label: string, was: ?string, now: string, diff?: list<array{type: 'eq'|'del'|'ins', text: string}>}>>
      */
     private function submissionChanges(array $list, int $userId, SubmissionChangeSummary $changes): array
     {
