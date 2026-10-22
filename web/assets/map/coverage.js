@@ -29,6 +29,8 @@ export const COVERAGE_MIN_ZOOM = 6;
    every zoom. Each haze holds until its own icons start and fades under them
    over HEAT_FADE, so the map is never empty. */
 const HEAT_FADE=0.75;
+/* The haze's opacity where a category's icons start: still there, so the map is never empty, but thin. */
+const HEAT_AT_ICONS=0.15;
 export const COV_SRC={
   services:'OpenStreetMap (shop=bicycle / amenity=bicycle_repair_station / compressed_air)',
   scenic:'OpenStreetMap (tourism=viewpoint / waterway=waterfall, rapids / natural=cliff, cave_entrance, arch, rock, stone)',
@@ -202,9 +204,12 @@ function addCoverageLayers(cc, src){
       layout:{visibility:'none'},
       paint:{
         'heatmap-weight':0.6,
-        'heatmap-intensity':['interpolate',['linear'],['zoom'],6,0.9,9,1.3,12,1.8],
-        'heatmap-radius':['interpolate',['linear'],['zoom'],6,16,9,28,12,36],
-        'heatmap-opacity':['interpolate',['linear'],['zoom'],6,0.5,iconMinZoom(key),0.5,iconMinZoom(key)+HEAT_FADE,0],   // full until the icons start, then fades under them
+        // The z9 look is the reference. Zooming out packs four times the places into each spot of
+        // the screen per step, so below z9 intensity and radius shrink to keep the haze as light;
+        // above z9 it thins to a trace as the icons start (owner 2026-10-21).
+        'heatmap-intensity':['interpolate',['linear'],['zoom'],6,0.3,8,0.6,9,1],
+        'heatmap-radius':['interpolate',['linear'],['zoom'],6,12,8,18,9,22,12,24],
+        'heatmap-opacity':['interpolate',['linear'],['zoom'],6,0.38,9,0.38,iconMinZoom(key),HEAT_AT_ICONS,iconMinZoom(key)+HEAT_FADE,0],   // thins to a trace as the icons start, then fades under them
         // A light lavender ramp (owner 2026-09-30: the deep purple hid the base map).
         'heatmap-color':['interpolate',['linear'],['heatmap-density'],
           0,'rgba(0,0,0,0)',

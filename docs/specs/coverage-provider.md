@@ -455,9 +455,9 @@ After all regions, once per run:
    filtered to the same scope tokens as the icons, plus the rail's exact
    `/map/coverage/counts` alongside it as the precise "how much"; individual icons render from z11 for water and z12 for every other category
    (`COV_ICON_MIN_ZOOM`, `iconMinZoom()`), where the tiles are complete;
-   each category's heatmap holds full until its own icons start and fades
-   under them over 0.75 of a zoom step. The heatmap is a
-   light lavender ramp at 0.5 opacity, so the base map stays readable under it
+   each category's heatmap thins as the rider zooms in, is a trace where its
+   own icons start and fades under them over 0.75 of a zoom step (§6). The
+   heatmap is a light lavender ramp at 0.38 opacity at most, so the base map stays readable under it
    (`coverage.js`, owner 2026-09-30). Clustering is ruled out on purpose: a
    cluster is drawn at the *centroid* of its members, which can sit outside
    the scoped region and mixes members across a border. The heatmap bins the
@@ -742,9 +742,14 @@ water and z12 for every other category** (`COV_ICON_MIN_ZOOM`,
 `iconMinZoom()` in `icons.js`), where `-r1` keeps every point, so a
 category's icons arrive complete. At z9 every category popped in at once and
 buried the map, and between the fading haze and the icons the map showed
-nothing (owner 2026-10-08). Each category's heatmap now holds at full
-strength until its own icons start and fades under them (heat layer `maxzoom`
-= icon `minzoom` + 0.75), so the map is never empty. Our own places are DOM
+nothing (owner 2026-10-08). The z9 haze is the reference look. Zooming out
+packs four times the places into each spot of the screen per step, so below
+z9 the intensity (0.3 at z6, 0.6 at z8, 1 at z9) and radius (12, 18, 22 px)
+shrink while the opacity stays 0.38, and the haze is never thicker zoomed out
+than at z9. Above z9 it thins and is still a trace where a category's own
+icons start, then fades under them (heat layer `maxzoom` = icon `minzoom` +
+0.75), so the map is never empty: opacity 0.15 where the icons start
+(`HEAT_AT_ICONS`), 0 at 0.75 past that, radius 24 px at z12. Our own places are DOM
 pins and show at every zoom: below z12 they are the individual spots, and the
 haze says how much more OpenStreetMap holds.
 

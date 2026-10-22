@@ -34,9 +34,15 @@ test('water icons start at z11, every other category at z12', () => {
   assert.equal(at('stays'), 12);
 });
 
-test('each icon layer starts where its own haze is still full', () => {
+test('each icon layer starts where its own haze is still there, but thin', () => {
   assert.match(src, /minzoom: iconMinZoom\(key\),/);
   assert.match(src, /maxzoom: iconMinZoom\(key\)\+HEAT_FADE,/);
-  assert.match(src, /'heatmap-opacity':\['interpolate',\['linear'\],\['zoom'\],6,0\.5,iconMinZoom\(key\),0\.5,iconMinZoom\(key\)\+HEAT_FADE,0\]/);
+  assert.match(src, /'heatmap-opacity':\['interpolate',\['linear'\],\['zoom'\],6,0\.38,9,0\.38,iconMinZoom\(key\),HEAT_AT_ICONS,iconMinZoom\(key\)\+HEAT_FADE,0\]/);
   assert.match(src, /const HEAT_FADE=0\.75;/);
+  assert.match(src, /const HEAT_AT_ICONS=0\.15;/);
+});
+
+test('the haze keeps the z9 look: lighter blobs zoomed out, no denser or wider ones zoomed in', () => {
+  assert.match(src, /'heatmap-intensity':\['interpolate',\['linear'\],\['zoom'\],6,0\.3,8,0\.6,9,1\]/);
+  assert.match(src, /'heatmap-radius':\['interpolate',\['linear'\],\['zoom'\],6,12,8,18,9,22,12,24\]/);
 });
