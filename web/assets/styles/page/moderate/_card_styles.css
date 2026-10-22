@@ -229,3 +229,5 @@
   .q-revoke-btn:hover,.q-act[open] > .q-revoke-btn{color:var(--ink);border-color:rgba(20,22,14,.45);background:rgba(20,22,14,.05)}
   /* The language a contribution is written in, beside its type: quiet mono caps. */
   .q-tag--lang{font-family:var(--mono);letter-spacing:.08em}
+  /* The mono arrow draws at half the height of the caps; this brings it up to them. */
+  .q-tag--lang .q-tag-arrow{font-size:1.5em;line-height:0;vertical-align:-.06em;letter-spacing:0}
