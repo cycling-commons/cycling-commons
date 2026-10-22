@@ -1056,7 +1056,9 @@ nothing is a promise the map cannot keep.
   Coverage stays match on `has cyl` (`applyStaysAccessFilter()` in
   `assets/map/render.js`); pool stays match their stored `cyclistLabel`, or the
   `cyl` of their tile. Like the preference chip, it counts in the pill while it
-  is on and Show all turns it off. A map preset stores it as `bikeFriendly`
+  is on and Show all turns it off. The stays row in the layer list counts what
+  the chip leaves: the coverage part comes from the kept stays numbers
+  (coverage-provider.md §11), the pool part from the pins themselves. A map preset stores it as `bikeFriendly`
   ([map-presets.md](map-presets.md) section 1). The filter asks one question,
   but the details keep the scheme's own name: the drawer's Cyclist label row
   and the stay form always say Bett+Bike or Accueil Vélo, never only

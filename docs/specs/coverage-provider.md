@@ -1028,7 +1028,7 @@ a water stop by them (route-planner.md section 4.4, owner 2026-10-16).
 |---|---|---|
 | `GET /map/coverage/search?q=` | in-memory `ITEM_INDEX` sidebar search (coverage part) | `{"results": entry[], "attribution"}` — ranked curated first, then community; trgm-backed; default limit `CoverageRepository::SEARCH_LIMIT` (value `12`); ETag + `max-age=300` |
 | `GET /map/coverage/nearby?lat=&lng=&km=` | town-card 5 km client-side haversine scan | `{"groups": [{letter, total, items: entry[]}], "attribution"}` — `ST_DWithin`, grouped by letter, community capped per group (`CoverageRepository::NEARBY_COMMUNITY_CAP`, value `3`) behind a "show all" expander; 422 on bad coords; `max-age=300` |
-| `GET /map/coverage/counts` | rail totals | `{"counts": {"B": n, …}, "attribution"}`; **scope-aware**; summed from `coverage_count` (§11); `max-age=3600` |
+| `GET /map/coverage/counts` | rail totals | `{"counts": {"B": n, …}, "stays": {"cyl": n, "acc": n, "cyl_acc": n}, "attribution"}`; **scope-aware**; summed from `coverage_count` (§11); `stays` is what the stays chips narrow the stays count to; `max-age=3600` |
 | `GET /map/coverage/poi/{osmType}/{osmId}` | new: drawer detail for tile POIs | `{ref, letter, name, kind, ll, tags, photo, ferryRoute, curated, attribution}`: `tags` filtered to `CoverageRepository::TAG_WHITELIST` (store rich, serve trimmed); `ferryRoute` = `{ref, name, tags}` for the one ferry route a dock links, else `null` (§5); `curated` = `{itemId, state, fields, confirmations}` or `null`; `osmType ∈ {node, way}`; 404 when the ref is not cached; ETag + `max-age=300` |
 
 - **A gone row lists nowhere (catalog-data-model.md §7).** The
@@ -1504,7 +1504,18 @@ switch that cannot move.
 
 `/map/coverage/counts` is a sum over `coverage_count`, one row per
 (country_code, region_id, letter) with the number of coverage rows still
-shown. A live count walks every coverage row and asks whether one of our items
+shown (`n`). Stay rows (letter O) carry three more numbers, so the rail's
+stays count narrows with the stays chips the way the tiles do: `n_cyl`, shown
+stays with a cyclist label (`coverage_poi_cyclist(tags)`, the tile's `cyl`
+rule in SQL, §2.1); `n_acc`, shown stays with `wheelchair=yes` (the `acc`
+rule); `n_cyl_acc`, both (`Version20261022010000`). The client
+(`stayCoverageShown()` in `assets/map/filters.js`) takes `n_cyl` while
+Bike-friendly is on and subtracts the wheelchair stays while
+Wheelchair-accessible is switched off. Example: 18,955 stays in scope, 412
+labelled, so Bike-friendly reads 412/18955. An Accueil Vélo range is judged by
+the year at the time its bucket was last recounted; the weekly harvest
+recounts every bucket it touches. `CoverageStayFacetCountTest` pins the SQL
+rule to the pipeline test's cases. A live count walks every coverage row and asks whether one of our items
 claims it: unscoped that measured **26.6 s** on dev (2.06 M rows), against
 0.06 s for the sum. The database keeps the table right on its own, because the
 coverage rows are written by the Python pipeline and the claims by PHP, and

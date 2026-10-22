@@ -129,3 +129,13 @@ test('the remembered bike chips: the saved bikes at first, any bike type after, 
   assert.deepEqual(readPrefBikes('[]', mine, all), []);
   assert.deepEqual(readPrefBikes('{oops', mine, all), mine, 'an unreadable value reads as the first visit');
 });
+
+test('the stays count narrows with the stays chips, from the server\'s kept numbers', async () => {
+  const { stayCoverageShown } = await load();
+  const facets = {cyl: 412, acc: 900, cyl_acc: 37};
+  assert.equal(stayCoverageShown(18955, facets, {bikeFriendly: false, wheelchairOut: false}), 18955, 'no chip narrows: every stay');
+  assert.equal(stayCoverageShown(18955, facets, {bikeFriendly: true, wheelchairOut: false}), 412, 'Bike-friendly: the labelled stays');
+  assert.equal(stayCoverageShown(18955, facets, {bikeFriendly: false, wheelchairOut: true}), 18055, 'Wheelchair-accessible off: those stays go');
+  assert.equal(stayCoverageShown(18955, facets, {bikeFriendly: true, wheelchairOut: true}), 375, 'both: labelled, minus the labelled wheelchair ones');
+  assert.equal(stayCoverageShown(18955, null, {bikeFriendly: true, wheelchairOut: true}), 18955, 'no numbers from the server: the total, never a guess');
+});

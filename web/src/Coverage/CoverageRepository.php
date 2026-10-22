@@ -543,6 +543,36 @@ final class CoverageRepository
     }
 
     /**
+     * How many shown stays (letter O) carry a cyclist label, wheelchair=yes,
+     * or both, in the scope: what the stays chips narrow the rail's count to
+     * (coverage-provider.md §11). Kept in coverage_count beside `n` by the
+     * same triggers (Version20261022010000).
+     *
+     * @param list<int> $rids
+     *
+     * @return array{cyl: int, acc: int, cyl_acc: int}
+     */
+    public function stayFacetCounts(array $rids = [], ?string $cc = null): array
+    {
+        $params = [];
+        $types = [];
+        $this->scopeBind($params, $types, $rids, $cc);
+        /** @var array{cyl: int|string|null, acc: int|string|null, cyl_acc: int|string|null}|false $row */
+        $row = $this->db->fetchAssociative(
+            "SELECT SUM(cc.n_cyl) AS cyl, SUM(cc.n_acc) AS acc, SUM(cc.n_cyl_acc) AS cyl_acc FROM coverage_count cc
+             WHERE cc.letter = 'O'".$this->scopeArm('cc', $rids, $cc),
+            $params,
+            $types,
+        );
+
+        return [
+            'cyl' => (int) ($row['cyl'] ?? 0),
+            'acc' => (int) ($row['acc'] ?? 0),
+            'cyl_acc' => (int) ($row['cyl_acc'] ?? 0),
+        ];
+    }
+
+    /**
      * The same counts, computed from the coverage rows themselves. Slow by
      * design; exists so a test can prove the kept table tells the truth.
      *

@@ -19,6 +19,17 @@ export function bikeFriendlyMatch(labels, on){
   return !on || (Array.isArray(labels) && labels.length > 0);
 }
 
+/* How many coverage stays the stays chips leave, from the server's kept numbers
+   (coverage-provider.md §11, /map/coverage/counts `stays`): Bike-friendly keeps
+   the labelled ones, Wheelchair-accessible switched off drops the wheelchair=yes
+   ones, the tile filter's two rules. No numbers: the total, never a guess. */
+export function stayCoverageShown(total, facets, chips){
+  if(!facets) return total;
+  const base = chips.bikeFriendly ? facets.cyl : total;
+  const out = chips.wheelchairOut ? (chips.bikeFriendly ? facets.cyl_acc : facets.acc) : 0;
+  return Math.max(0, base - out);
+}
+
 /** A tile's `cyl` prop ("Bett+Bike;Accueil Vélo") as the label list. */
 export function tileLabels(cyl){
   return String(cyl ?? '').split(';').filter(Boolean);

@@ -104,7 +104,12 @@ final class CoverageController extends AbstractController
 
         [$rids, $cc] = $this->scopeParams($request);
 
-        return $this->cacheable($request, ['counts' => (object) $coverage->counts($rids, $cc), 'attribution' => CoverageRepository::ATTRIBUTION], 3600);
+        return $this->cacheable($request, [
+            'counts' => (object) $coverage->counts($rids, $cc),
+            // What the stays chips narrow the stays count to (coverage-provider.md §11).
+            'stays' => $coverage->stayFacetCounts($rids, $cc),
+            'attribution' => CoverageRepository::ATTRIBUTION,
+        ], 3600);
     }
 
     /** Drawer detail; 404 unknown refs. */

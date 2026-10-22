@@ -66,7 +66,8 @@ test('a surface toggle set to off mounts nothing', () => {
 
 test('the rail count falls back to the scoped /counts total while nothing is mounted', () => {
   const f = body(coverage, 'export function covShownCount(key){');
-  assert.match(f, /if\(!mounted\) return covKeyShown\(key\) \? coverageTotal\(KEY_LETTER\[key\]\) : 0;/);
+  assert.match(f, /if\(!mounted\) return covKeyShown\(key\) \? scopedTotal\(key\) : 0;/);
+  assert.match(coverage, /function scopedTotal\(key\)\{ return key==='stays' \? staysShown\(\) : coverageTotal\(KEY_LETTER\[key\]\); \}/, 'the stays chips narrow the stays total');
   const sync = body(coverage, 'export function syncCoverageLayers(){');
   assert.match(sync, /covKeyShown\(key\)/, 'one rule decides both');
 });

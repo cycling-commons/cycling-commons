@@ -7,7 +7,8 @@ import { showTip, hideTip } from './sheet.js';
 import { layerByKey, active, mode, LETTER_KEY, KEY_LETTER } from './catalog.js';
 import { liftScopeForHit } from './scope-ui.js';
 import { mintKindIcons, miniIcon, iconMinZoom, SERVICE_GLYPH, serviceIconId, coverageIconId, kindImageId, covIconSizes, DISC_SIZES, DROP_SIZES, witnessCutoff, KIND_ICONS, PLACE_LETTER, PLACE_KIND_LABELS, kindOfLabel } from './icons.js';
-import { updateCounts, applyStaysAccessFilter, liftInfoLayersAboveRoutes } from './render.js';
+import { updateCounts, applyStaysAccessFilter, liftInfoLayersAboveRoutes, bikeFriendlyOn, activeAccess, ALL_ACCESS } from './render.js';
+import { stayCoverageShown } from './filters.js';
 import { openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt, planPlace } from './drawer.js';
 import { offerToRide } from './util.js';
 import { isPicking } from './picking.js';
@@ -512,19 +513,19 @@ export function openCoverageFeatureByName(name){
 }
 
 // Rail totals (docs/specs/coverage-provider.md §5): scoped /map/coverage/counts.
-let _covCounts=null, _covCountReq=0;
+let _covCounts=null, _covStays=null, _covCountReq=0;
 export function coverageTotal(letter){ return (_covCounts && _covCounts[letter]) || 0; }
 export function fetchCoverageCounts(){
   if(!COVERAGE_ON) return;
   ++_covCountReq;
   if(covScopeIsZero()){
-    _covCounts=null; updateCounts(); return;
+    _covCounts=null; _covStays=null; updateCounts(); return;
   }
   const q=covScopeQuery(), myReq=_covCountReq;
   fetch('/map/coverage/counts'+(q?('?'+q):''), {headers:{'Accept':'application/json'}})
     .then(r=>r.ok?r.json():null)
     .catch(()=>null)
-    .then(d=>{ if(myReq===_covCountReq){ _covCounts=(d && d.counts) || null; updateCounts(); } });  // null on fail: blank beats a wrong-scope total
+    .then(d=>{ if(myReq===_covCountReq){ _covCounts=(d && d.counts) || null; _covStays=(d && d.stays) || null; updateCounts(); } });  // null on fail: blank beats a wrong-scope total
 }
 /* "Shown" = in-scope /counts, not viewport tiles (docs/specs/coverage-provider.md §5).
    Countries mount as the view reaches them, so while none of a key's layers
@@ -533,10 +534,18 @@ export function covShownCount(key){
   if(!COVERAGE_ON) return 0;
   const ids = COVERAGE_CCS.map(cc=>cc ? key+'-'+cc+'-cov' : key+'-cov').filter(id=>map.getLayer(id));
   const mounted = ids.length > 0;
-  if(!mounted) return covKeyShown(key) ? coverageTotal(KEY_LETTER[key]) : 0;
+  if(!mounted) return covKeyShown(key) ? scopedTotal(key) : 0;
   const drawn = ids.some(id=>map.getLayoutProperty(id,'visibility')==='visible');
   if(!drawn) return 0;
-  return coverageTotal(KEY_LETTER[key]);
+  return scopedTotal(key);
+}
+/* A key's scoped /counts total, which the stays chips narrow for stays. */
+function scopedTotal(key){ return key==='stays' ? staysShown() : coverageTotal(KEY_LETTER[key]); }
+/* The stays count the stays chips leave (coverage-provider.md §11): Bike-friendly on, or
+   Wheelchair-accessible switched off in Stay accessibility, narrow it as they narrow the tiles. */
+function staysShown(){
+  const wheelchairOut = !!activeAccess && activeAccess.size < ALL_ACCESS.size && !activeAccess.has('Wheelchair-accessible');
+  return stayCoverageShown(coverageTotal('O'), _covStays, {bikeFriendly: bikeFriendlyOn, wheelchairOut});
 }
 
 export function showSelectedCoverageIcon(key, tp, ll){
