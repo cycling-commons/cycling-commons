@@ -88,16 +88,12 @@ by `web/assets/map/presets.js`:
   row's click, `applyMode()`, the chip's click), so the map reacts exactly
   as to a rider's taps. The mode is applied without persisting it to the
   profile (`applyMode(m, {persist: false})`): a preset is a view, not a
-  change of the rider's default mode. A tap on the chip applies it again,
-  as Reset does.
+  change of the rider's default mode. A tap on the chip applies it again.
+  Presets are set up only in Settings: a switch the rider flips on the map
+  changes the map, never the preset, and the map shows no changed bar, no
+  Save changes and no Reset.
 - **No preset on**: a hint, "No preset is on. Make one, or pick your
   default, in Settings.", linking to the Map presets tab (`#presetsNone`).
-- **Edited**: after any change in the panel while a preset is active, the
-  chip shows a dot and a bar under it says "Changed since you picked
-  {name}" with **Save changes** (writes the current switches into that
-  preset) and **Reset** (applies it again). `presets.js` compares the
-  current switches (`readState()`, from the panel's controls) with the
-  preset's settings (`same()` in `presets-model.js`).
 - **A pencil beside the heading** (tooltip "Edit your presets in Settings")
   links to the Map presets tab of Settings (`/account/settings?tab=presets`,
   section 4).

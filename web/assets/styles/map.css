@@ -123,12 +123,6 @@
   #planLineToggle{margin-left:.45rem;padding:.2rem .35rem;display:inline-flex;align-items:center;vertical-align:middle}
   #planLineToggle.off{opacity:.55;background:linear-gradient(to top right,transparent calc(50% - 1px),currentColor calc(50% - 1px) calc(50% + 1px),transparent calc(50% + 1px))}
   #presets .dl-all.ico{margin-left:.45rem;padding:.2rem .35rem;display:inline-flex;align-items:center;text-decoration:none}
-  #presets .chip .ed{width:6px;height:6px;border-radius:50%;background:var(--ink);display:none;margin-left:.3rem}
-  #presets .chip.on.edited .ed{display:inline-block}
-  .preset-edited{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin-top:.6rem;background:rgb(var(--chrome-fg) / .08);border-radius:6px;padding:.45rem .6rem;font-size:.8rem}
-  .preset-edited[hidden]{display:none}
-  .preset-edited button{background:transparent;border:1px solid rgb(var(--chrome-fg) / .35);color:var(--chrome-fg-solid);font-family:var(--mono);font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;padding:.25rem .5rem;border-radius:4px;cursor:pointer}
-  .preset-edited button.pri{background:var(--trail);border-color:var(--trail);color:var(--ink)}
   /* Site nav + language + account: one flyout, opening RIGHT of the rail and
      anchored to its bottom, because the button sits at the bottom of a 48px
      column. `.nav-open` is the same class initRailChrome() already toggles. */

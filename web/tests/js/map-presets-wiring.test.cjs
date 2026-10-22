@@ -24,7 +24,8 @@ test('the Presets group is the first group of the Layers panel, with the pencil 
   assert.ok(panel.includes('id="presetsEdit"') && panel.includes("path('settings', {tab: 'presets'})"), 'the pencil does not link to Settings');
   assert.ok(panel.includes('id="presetsSignIn"') && panel.includes("path('login')"), 'no sign-in line for a visitor');
   assert.ok(twig.includes('window.CC_PRESETS ='), 'no CC_PRESETS blob');
-  assert.ok(/CC_PRESETS[\s\S]*path\('map_presets_save'\)[\s\S]*csrf_token\('map-preset'\)/.test(twig), 'the blob lacks the save endpoint or its token id');
+  const blob = twig.slice(twig.indexOf('window.CC_PRESETS ='), twig.indexOf('window.CC_PLAN ='));
+  assert.ok(!blob.includes("path('map_presets_save')") && !blob.includes("csrf_token('map-preset')"), 'the map saves no preset: presets are set up in Settings');
 });
 
 test('presets.js applies through the controls own handlers, and the mode without persisting', () => {
@@ -80,4 +81,10 @@ test('the map shows the active preset only: no Save as preset, a hint to Setting
   assert.ok(!/presetSaveAs|saveAs\(/.test(presets), 'presets.js still offers Save as preset');
   assert.match(presets, /presets\.find\(x => x\.id === active\)/, 'the chip is not the active preset alone');
   assert.match(presets, /none\.hidden = !!p/, 'the Settings hint does not show when no preset is on');
+});
+
+test('the map never edits a preset: no changed bar, no Save changes, no Reset', () => {
+  const panel = twig.slice(twig.indexOf('id="presets"'), twig.indexOf('id="presetsTool"'));
+  assert.ok(!panel.includes('presetEdited') && !panel.includes('presetSaveChanges') && !panel.includes('presetReset'), 'the map still offers to change a preset');
+  assert.ok(!/saveChanges|presetEdited|baseline/.test(presets), 'presets.js still tracks or saves changes');
 });

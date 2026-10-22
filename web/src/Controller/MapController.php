@@ -826,8 +826,6 @@ final class MapController extends AbstractController
             // to catch and something to say.
             // Map presets (map-presets.md section 3).
             'presets' => [
-                'saved' => $t->trans('map.presets_saved'),
-                'failed' => $t->trans('map.presets_failed'),
                 'toolLine' => $t->trans('map.presets_tool_line'),
                 'tools' => ['plan' => $t->trans('settings.presets_use_plan'), 'ride' => $t->trans('settings.presets_use_ride')],
             ],
