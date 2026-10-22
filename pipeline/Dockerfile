@@ -42,7 +42,9 @@ COPY --from=tippecanoe-builder /usr/local/bin/tippecanoe /usr/local/bin/tippecan
 WORKDIR /app
 
 COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+# The python:3.12 image ships pip 25.0.1, which has known CVEs.
+RUN pip install --no-cache-dir pip==26.2.2 \
+    && pip install --no-cache-dir -r requirements.txt
 
 # Run as non-root; uid 1000 matches the typical host user so the bind-mounted
 # source (see compose) keeps sane permissions both ways. /data/work is the
