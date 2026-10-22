@@ -1,0 +1,30 @@
+web/tests/js/compass.test.cjs
+  s_040e7dfac18e31::t_9ca832064294f9 40-46
+docs/specs/map-and-search.md
+  s_040e7dfac18e31::t_921dfe278d496c 397-402
+web/assets/map/map-init.js
+  s_040e7dfac18e31::t_921dfe278d496c 7,170-172
+web/assets/styles/map.css
+  s_040e7dfac18e31::t_921dfe278d496c 778-779
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "470f8c9aa0cc1fe1e8fd66ba0752d867a8c31dee",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_040e7dfac18e31": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "14984811-ef34-4cff-9ec4-54c041744da9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
