@@ -3125,6 +3125,8 @@ moderate:
     trashed: 'En la papelera'
   answered: 'Respondido'
   corrected: 'Corregido'
+  diff_more: "Mostrar %count% más"
+  diff_less: "Mostrar menos"
   rider_reply: 'El ciclista respondió'
   prior_rejection: 'Rechazado anteriormente'
   links:
@@ -3311,7 +3313,6 @@ account:
   sub_type_edit: 'Edición'
   sub_type_hazard: 'Peligro'
   sub_type_photo: 'Foto'
-  sub_type_text: 'Texto'
   sub_status_pending: 'Esperando revisión'
   sub_status_approved: 'Aprobado'
   sub_status_rejected: 'Rechazado'

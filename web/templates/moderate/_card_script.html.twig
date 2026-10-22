@@ -47,6 +47,26 @@ document.addEventListener('click', function (e) {
   }
 });
 
+/* A long change folds after its first rows (moderate/_change_list). The
+   fold is applied here, so a page without JS shows every row; the button
+   then opens and closes the rest. Delegated, like Cancel above. */
+document.querySelectorAll('.q-diff--fold').forEach(function (d) {
+  d.classList.add('is-folded');
+  var b = d.querySelector('.q-diff-more');
+  if (!b) return;
+  b.dataset.labelMore = b.textContent;
+  b.hidden = false;
+});
+document.addEventListener('click', function (e) {
+  var b = e.target.closest && e.target.closest('.q-diff-more');
+  if (!b) return;
+  var d = b.closest('.q-diff');
+  if (!d) return;
+  var folded = d.classList.toggle('is-folded');
+  b.setAttribute('aria-expanded', folded ? 'false' : 'true');
+  b.textContent = folded ? b.dataset.labelMore : b.dataset.labelLess;
+});
+
 /* A decision taken on the map removes its row here, live.
 
    The desk and the map are two views of one queue, and a curator moves between

@@ -3103,6 +3103,8 @@ moderate:
     trashed: 'Verwijderd'
   answered: 'Beantwoord'
   corrected: 'Verbeterd'
+  diff_more: "Toon nog %count%"
+  diff_less: "Toon minder"
   rider_reply: 'De fietser heeft geantwoord'
   prior_rejection: 'Eerder afgewezen'
   links:
@@ -3288,7 +3290,6 @@ account:
   sub_type_edit: 'Bewerking'
   sub_type_hazard: 'Gevaar'
   sub_type_photo: 'Foto'
-  sub_type_text: 'Tekst'
   sub_status_pending: 'Wacht op beoordeling'
   sub_status_approved: 'Goedgekeurd'
   sub_status_rejected: 'Afgewezen'

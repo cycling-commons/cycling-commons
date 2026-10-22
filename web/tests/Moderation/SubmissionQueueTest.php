@@ -102,14 +102,33 @@ final class SubmissionQueueTest extends KernelTestCase
         $this->seed('edit', 'BE');
         $item = $this->queue->filtered(ModerationScope::global(), null, null, null)[0];
 
-        foreach (['id', 'itemId', 'type', 'letter', 'country', 'region', 'title', 'lat', 'lng', 'who', 'when', 'body', 'was', 'now'] as $key) {
+        foreach (['id', 'itemId', 'type', 'letter', 'country', 'region', 'title', 'lat', 'lng', 'who', 'when', 'body', 'rows'] as $key) {
             self::assertArrayHasKey($key, $item);
         }
-        self::assertSame('hours: 24/7', $item['was']);
-        self::assertSame('hours: closed Sundays', $item['now']);
+        // A field the form does not carry keeps its key as the label (SubmissionChangeSummary).
+        self::assertSame([['label' => 'hours', 'was' => '24/7', 'now' => 'closed Sundays']], $item['rows']);
         // The seeded submitter id names no account: no handle, the view writes the removed label.
         self::assertNull($item['who']);
         self::assertIsFloat($item['lat']);
+    }
+
+    /** A drawn shape is reviewed on the map: the card's rows never print its coordinates. */
+    public function testTheCardRowsLeaveTheShapeToTheMap(): void
+    {
+        $sub = $this->seed('edit', 'BE');
+        $sub->setChanges([
+            'segment' => ['was' => null, 'now' => ['a' => [5.5, 50.5], 'b' => [5.6, 50.6]]],
+            'lineGrad' => ['was' => [10, 10, 11], 'now' => [13, 14, 13]],
+            'hours' => ['was' => '24/7', 'now' => 'closed Sundays'],
+        ]);
+        $this->em->flush();
+
+        $item = $this->queue->filtered(ModerationScope::global(), null, null, null)[0];
+        self::assertSame(['hours'], array_column($item['rows'], 'label'));
+
+        $sub->setChanges(['segment' => ['was' => null, 'now' => ['a' => [5.5, 50.5], 'b' => [5.6, 50.6]]]]);
+        $this->em->flush();
+        self::assertSame([], $this->queue->filtered(ModerationScope::global(), null, null, null)[0]['rows'], 'a shape-only edit has no text rows');
     }
 
     /**

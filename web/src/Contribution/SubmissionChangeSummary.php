@@ -36,10 +36,24 @@ final readonly class SubmissionChangeSummary
      */
     public function rows(Submission $submission): array
     {
-        $labels = $this->labels($submission->getLetter());
+        $target = $submission->getPayload()['target'] ?? null;
+
+        return $this->rowsFor($submission->getLetter(), $submission->getChanges(), \is_string($target) ? $target : null);
+    }
+
+    /**
+     * The same rows from a stored changes blob, for a desk row that carries
+     * no entity. `$target` is a Text submission's town or region.
+     *
+     * @param array<array-key, mixed> $changes
+     *
+     * @return list<array{label: string, was: ?string, now: string, diff?: list<array{type: 'eq'|'del'|'ins', text: string}>}>
+     */
+    public function rowsFor(string $letter, array $changes, ?string $target): array
+    {
+        $labels = $this->labels($letter);
         $rows = [];
 
-        $changes = $submission->getChanges();
         foreach ($changes as $field => $pair) {
             if (!\is_array($pair)) {
                 // Skip a payload that is not {was, now}.
@@ -53,7 +67,7 @@ final readonly class SubmissionChangeSummary
             $row = [
                 'label' => $labels[$field] ?? match (true) {
                     // A region's lead is its geography text (§3.1b); a town card's is just its text.
-                    null !== $textLang => $this->translator->trans(PlaceText::REGION === ($submission->getPayload()['target'] ?? null) ? 'place_text.geography_change_label' : 'place_text.change_label', ['%lang%' => strtoupper($textLang)]),
+                    null !== $textLang => $this->translator->trans(PlaceText::REGION === $target ? 'place_text.geography_change_label' : 'place_text.change_label', ['%lang%' => strtoupper($textLang)]),
                     null !== $storyLang => $this->translator->trans('place_text.story_change_label', ['%lang%' => strtoupper($storyLang)]),
                     default => (string) $field,
                 },
@@ -75,7 +89,7 @@ final readonly class SubmissionChangeSummary
     }
 
     /**
-     * Field name → contribute-form label.
+     * Field name → contribute-form label, in the reader's language.
      *
      * @return array<string, string>
      */
@@ -88,7 +102,7 @@ final readonly class SubmissionChangeSummary
 
         $labels = [];
         foreach ($this->registry->for($type)->all() as $field) {
-            $labels[$field->name] = $field->label;
+            $labels[$field->name] = $this->translator->trans($field->label);
         }
 
         return $labels;

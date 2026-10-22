@@ -3118,6 +3118,8 @@ moderate:
     trashed: 'Trashed'
   answered: 'Answered'
   corrected: 'Corrected'
+  diff_more: "Show %count% more"
+  diff_less: "Show less"
   rider_reply: 'Rider replied'
   prior_rejection: 'Previously rejected'
   links:
@@ -3303,7 +3305,6 @@ account:
   sub_type_edit: 'Edit'
   sub_type_hazard: 'Hazard'
   sub_type_photo: 'Photo'
-  sub_type_text: 'Text'
   sub_status_pending: 'Awaiting review'
   sub_status_approved: 'Approved'
   sub_status_rejected: 'Rejected'

@@ -1,12 +1,15 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
-{# One row of "What you changed", on the rider's contributions and messages.
+{# One row of "What you changed", on the rider's contributions and messages,
+   and of the change a curator reads on the desk and in History.
    A prose value shows only the changed words, struck and new, with a few
    words around them (SubmissionChangeSummary `diff`); any other value shows
    was and now whole. Long values without a diff (a drawn segment's
-   geometry) clamp to one line, click to expand: partials/_vclip.html.twig. #}
-<dt>{{ row.label }}</dt>
+   geometry) clamp to one line, click to expand: partials/_vclip.html.twig.
+   `more` marks a row a desk card folds away (moderate/_change_list). #}
+{% set more = more|default(false) %}
+<dt{% if more %} class="q-more"{% endif %}>{{ row.label }}</dt>
 {% if row.diff is defined %}
-  <dd>
+  <dd{% if more %} class="q-more"{% endif %}>
     {%- for s in row.diff -%}
       {%- if s.type == 'del' %}<span class="was">{{ s.text }}</span>
       {%- elseif s.type == 'ins' %}<span class="now">{{ s.text }}</span>
@@ -16,7 +19,7 @@
   </dd>
 {% else %}
   {% set long = (row.now ~ (row.was ?? ''))|length > 110 %}
-  <dd{% if long %} class="vclip" tabindex="0" role="button" aria-expanded="false"{% endif %}>
+  <dd{% if long or more %} class="{{ [long ? 'vclip', more ? 'q-more']|filter(c => c)|join(' ') }}"{% endif %}{% if long %} tabindex="0" role="button" aria-expanded="false"{% endif %}>
     {%- if row.was is not null %}<span class="was">{{ row.was }}</span>{% endif -%}
     <span class="now">{{ row.now }}</span>
   </dd>

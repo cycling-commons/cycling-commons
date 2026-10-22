@@ -3099,6 +3099,8 @@ moderate:
     trashed: 'Supprimé'
   answered: 'Répondu'
   corrected: 'Corrigé'
+  diff_more: "Afficher %count% de plus"
+  diff_less: "Afficher moins"
   rider_reply: 'Le cycliste a répondu'
   prior_rejection: 'Précédemment rejeté'
   links:
@@ -3284,7 +3286,6 @@ account:
   sub_type_edit: 'Modification'
   sub_type_hazard: 'Danger'
   sub_type_photo: 'Photo'
-  sub_type_text: 'Texte'
   sub_status_pending: 'En attente de relecture'
   sub_status_approved: 'Approuvée'
   sub_status_rejected: 'Rejetée'

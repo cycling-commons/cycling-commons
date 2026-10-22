@@ -157,10 +157,20 @@
   .q-link{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);white-space:nowrap;text-decoration:none}
   .q-link:hover{color:var(--trail)}
   .q-link--act{color:var(--trail)!important;font-weight:700}
-  /* A link-styled trigger: the "Show details" button in an action row. */
-  button.q-link,summary.q-link{border:0;background:none;padding:0;cursor:pointer;font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--trail);text-decoration:underline;text-underline-offset:2px;list-style:none;display:inline-flex;align-items:center}
-  summary.q-link::-webkit-details-marker{display:none}
-  button.q-link[aria-expanded="true"],summary.q-link:hover,button.q-link:hover{background:none;color:var(--ink)}
+  /* A small button in a row's action line: Edit and Show details on a
+     rider's contribution. The same size as Withdraw beside it, squarish,
+     the orange outline of the desk's buttons. */
+  .q-btn{display:inline-flex;align-items:center;gap:.4em;box-sizing:border-box;min-height:26px;padding:.2rem .6rem;
+    border:1px solid rgba(255,90,31,.55);border-radius:4px;background:transparent;color:var(--clay);
+    font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;line-height:1.2;
+    text-decoration:none;white-space:nowrap;cursor:pointer;list-style:none}
+  .q-btn::-webkit-details-marker{display:none}
+  .q-btn:hover{background:var(--trail);border-color:var(--trail);color:var(--ink)}
+  .q-btn[aria-expanded="true"],details[open] > summary.q-btn{background:rgba(255,90,31,.14);border-color:var(--trail);color:var(--ink)}
+  .q-btn:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
+  /* A fold trigger carries a chevron that turns while its rows are open. */
+  .q-btn--fold::after,.q-diff-more::after{content:"";width:.38em;height:.38em;border:solid currentColor;border-width:0 1.5px 1.5px 0;transform:translateY(-.15em) rotate(45deg)}
+  .q-btn--fold[aria-expanded="true"]::after,details[open] > .q-btn--fold::after,.q-diff-more[aria-expanded="true"]::after{transform:translateY(.1em) rotate(-135deg)}
   /* The date sits in the action row on a rider's card, on one line with the
      links and the pill (owner 2026-08-25): no auto margin there. */
   .q-acts .q-when{margin-left:0}
@@ -169,10 +179,37 @@
   .q-top > .q-panels{flex:1 0 100%}
   /* An empty host must not cost the row its flex gap: hidden until a panel opens. */
   .q-panels[hidden]{display:none}
-  /* The action column is right-aligned, and a break inside it starts a
-     second line (the rider's Show details under Map · Edit · status). */
+  /* The action column is right-aligned. */
   .q-acts{justify-content:flex-end}
-  .q-acts-break{flex:1 0 100%;height:0}
+  /* A record row: a rider's own contribution, vote or confirmation, and its
+     twin on the History desk. The status pill holds the top-right corner
+     beside the heading; the links sit under it, level with the last meta
+     line; the date closes the meta line. A panel the card script opens
+     drops under the whole row. */
+  .q-rec .q-top{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:.9rem;row-gap:.2rem}
+  .q-rec .q-headwrap{grid-column:1;grid-row:1 / span 2}
+  .q-rec .q-top > .q-pill{grid-column:2;grid-row:1;justify-self:end;align-self:start;margin-top:.1rem}
+  .q-rec .q-top > .q-acts{grid-column:2;grid-row:2;align-self:end;gap:.35rem .9rem;padding-bottom:.15rem}
+  .q-rec .q-top > .q-panels{grid-column:1 / -1;grid-row:3}
+  .q-rec .q-submitter{margin:.15rem 0 0}
+  .q-rec .q-decided{margin-top:.05rem}
+  /* The date after the meta line: never cut, never split from its separator. */
+  .q-age{white-space:nowrap;margin-left:.3em}
+  .q-age:first-child{margin-left:0}
+  @media(max-width:560px){
+    .q-rec .q-headwrap{grid-row:1}
+    .q-rec .q-top > .q-acts{grid-column:1 / -1;justify-content:flex-start}
+  }
+  /* List density, wide screens: one line, links before the pill. */
+  .q-list.is-list .q-rec .q-decided{display:none}
+  @media(min-width:900px){
+    .q-list.is-list .q-rec .q-top{grid-template-columns:minmax(0,1fr) auto auto;align-items:center}
+    .q-list.is-list .q-rec .q-headwrap{grid-row:1}
+    .q-list.is-list .q-rec .q-top > .q-acts{grid-row:1;align-self:center;padding-bottom:0}
+    .q-list.is-list .q-rec .q-top > .q-pill{grid-column:3;align-self:center;margin-top:0}
+    .q-list.is-list .q-rec .q-submitter{margin:0}
+    .q-list.is-list .q-submitter .q-age{flex:none}
+  }
   /* A diff that opens as an action panel under the card. */
   .q-act-panel.q-diff{background:rgba(20,22,14,.05);border:0}
   /* A quoted line under a row: a curator's note, a rider's reply, the previous
@@ -256,11 +293,11 @@
      2026-08-09). */
   /* The pager now lives in assets/styles/atlas.css, so every page that
      includes partials/_pager.html.twig gets it, not only this shell. */
-  /* Withdraw: the rider's own exit on an undecided contribution row. Styled
-     as a quiet bordered chip beside the status pill, never a primary action. */
-  .withdraw-form{display:inline;margin-left:.4rem}
-  .withdraw-btn{background:none;border:1px solid rgba(20,22,14,.3);border-radius:30px;
-    padding:.25rem .65rem;min-height:26px;font-family:var(--mono);font-size:.7rem;
+  /* Withdraw: the rider's own exit on an undecided contribution row. A quiet
+     bordered button at the end of the links, never a primary action. */
+  .withdraw-form{display:inline-flex}
+  .withdraw-btn{background:none;border:1px solid rgba(20,22,14,.3);border-radius:4px;box-sizing:border-box;
+    padding:.2rem .6rem;min-height:26px;font-family:var(--mono);font-size:.7rem;line-height:1.2;
     letter-spacing:.08em;text-transform:uppercase;color:#595c4d;cursor:pointer}
   .withdraw-btn:hover{border-color:var(--clay);color:var(--clay)}
 

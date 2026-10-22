@@ -75,7 +75,7 @@
            the proposal form until a curator decides (route-domain.md §4). #}
         {# A route a curator moved to Trash stays here greyed, tagged Removed,
            with no links, until the purge deletes it 30 days later. #}
-        <div class="q-item{{ p.state.value == 'trashed' ? ' is-removed' }}" id="route-{{ p.id }}">
+        <div class="q-item q-rec{{ p.state.value == 'trashed' ? ' is-removed' }}" id="route-{{ p.id }}">
           <div class="q-top">
             <div class="q-headwrap">
               <div class="q-head">
@@ -84,20 +84,19 @@
                 <h3 class="q-title">{{ p.name }}</h3>
               </div>
               {% set rname = p.regionId ? region_names[p.regionId] ?? null : null %}
-              {% if rname %}<div class="q-submitter">{{ rname }}</div>{% endif %}
+              <div class="q-submitter">{% if rname %}<span class="q-who">{{ rname }}</span>{% endif %}<span class="q-age">{% if rname %}&middot; {% endif %}<time datetime="{{ p.createdAt|date('c') }}">{{ p.createdAt|cc_datetime(short: true) }}</time></span></div>
             </div>
+            <span class="q-pill q-pill--{{ route_pill[p.state.value] ?? 'pend' }}">{{ ('account.route_state_' ~ p.state.value)|trans }}</span>
             <div class="q-acts">
-              <time class="q-when" datetime="{{ p.createdAt|date('c') }}">{{ p.createdAt|cc_datetime(short: true) }}</time>
               {% if p.state.value in ['submitted', 'verified', 'unverified'] %}
                 <span class="q-links">
                   <a class="q-link" href="{{ path('map') }}?route={{ p.id }}"
                      target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a>
                   {% if p.state.value == 'submitted' %}
-                    <a class="q-link" href="{{ path('propose_route_edit', {id: p.id}) }}">{{ 'account.link_edit'|trans }}</a>
+                    <a class="q-btn" href="{{ path('propose_route_edit', {id: p.id}) }}">{{ 'account.link_edit'|trans }}</a>
                   {% endif %}
                 </span>
               {% endif %}
-              <span class="q-pill q-pill--{{ route_pill[p.state.value] ?? 'pend' }}">{{ ('account.route_state_' ~ p.state.value)|trans }}</span>
             </div>
           </div>
         </div>
@@ -120,14 +119,18 @@
            contribution they are about. No data-item-id: that attribute is the
            desk's live-removal hook for a decided submission, and this row is
            the rider's own record of it. #}
-        <div class="q-item{{ sub_removed ? ' is-removed' }}" id="sub-{{ sub.id }}">
+        <div class="q-item q-rec{{ sub_removed ? ' is-removed' }}" id="sub-{{ sub.id }}">
           <div class="q-top">
             <div class="q-headwrap">
               <div class="q-head">
                 {# The type's own icon first (owner 2026-08-25), drawn, never an
-                   emoji: partials/_type_icon.html.twig. #}
-                {% include 'partials/_type_icon.html.twig' with {letter: sub.letter} %}
-                <span class="q-tag q-tag--{{ sub.type.value }}">{{ ('account.sub_type_' ~ sub.type.value)|trans }}</span>
+                   emoji: partials/_type_icon.html.twig. A town or region text
+                   gets the town or region icon and the Edit tag, as on the desk:
+                   it replaces a text readers already see. #}
+                {% set sub_text = sub.type.value == 'text' %}
+                {% include 'partials/_type_icon.html.twig' with {letter: sub.letter, target: sub_text ? (sub.payload.target ?? null) : null} %}
+                {% set tag_type = sub_text ? 'edit' : sub.type.value %}
+                <span class="q-tag q-tag--{{ tag_type }}">{{ ('account.sub_type_' ~ tag_type)|trans }}</span>
                 <h3 class="q-title">{{ sub.title }}
                   {# WHAT KIND of place: "New item · Thier Antoine" said nothing
                      about climbs (owner 2026-08-25). Same small kind label the
@@ -139,18 +142,18 @@
                  the row's own stamps; town-level needs the gazetteer
                  (docs/TODO.md "Nearby town on a queue row"). #}
               {% set rname = sub.regionId ? region_names[sub.regionId] ?? null : null %}
-              {# The submission's number last, so a rider can name it when
-                 they write to us or a curator. #}
-              <div class="q-submitter">{{ [rname, sub.countryCode, '#' ~ sub.code]|filter(v => v)|join(' · ') }}</div>
+              {# The submission's code, so a rider can name it when they write
+                 to us or a curator, then when they sent it. #}
+              <div class="q-submitter"><span class="q-who">{{ [rname, sub.countryCode, '#' ~ sub.code]|filter(v => v)|join(' · ') }}</span><span class="q-age">&middot; <time datetime="{{ sub.createdAt|date('c') }}">{{ sub.createdAt|cc_datetime(short: true) }}</time></span></div>
               {# When a curator decided it, so a rider sees when their work went live. #}
               {% if sub.decidedAt and sub.status.value in ['approved', 'rejected'] %}
                 <div class="q-submitter q-decided"><time datetime="{{ sub.decidedAt|date('c') }}">{{ ('account.sub_decided_' ~ sub.status.value)|trans({'%when%': sub.decidedAt|cc_datetime(short: true)}) }}</time></div>
               {% endif %}
             </div>
-            {# One line: date · Map · Edit · status · Withdraw · Show details
-               (owner 2026-08-25). #}
+            {# The status holds the top-right corner; the links sit under it,
+               level with the last meta line (.q-rec). #}
+            <span class="q-pill q-pill--{{ sub_pill[sub.status.value] ?? 'pend' }}">{{ ('account.sub_status_' ~ sub.status.value)|trans }}</span>
             <div class="q-acts">
-              <time class="q-when" datetime="{{ sub.createdAt|date('c') }}">{{ sub.createdAt|cc_datetime(short: true) }}</time>
               {% if sub_live %}
                 <span class="q-links">
                   {# The map opens in its own tab: this list is a work queue, and a
@@ -163,14 +166,33 @@
                     <a class="q-link" href="{{ path('map') }}?item={{ sub.itemId }}"
                        target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a>
                   {% endif %}
-                  <a class="q-link" href="{{ path('improve') }}?item={{ sub.itemId }}&amp;type={{ sub.letter }}">{{ 'account.link_edit'|trans }}</a>
+                  <a class="q-btn" href="{{ path('improve') }}?item={{ sub.itemId }}&amp;type={{ sub.letter }}">{{ 'account.link_edit'|trans }}</a>
                 </span>
               {% elseif text_forms[sub.id] is defined and not sub_removed %}
                 <span class="q-links">
-                  <a class="q-link q-link--text-edit" href="{{ text_forms[sub.id] }}">{{ 'account.link_edit'|trans }}</a>
+                  <a class="q-btn q-link--text-edit" href="{{ text_forms[sub.id] }}">{{ 'account.link_edit'|trans }}</a>
                 </span>
               {% endif %}
-              <span class="q-pill q-pill--{{ sub_pill[sub.status.value] ?? 'pend' }}">{{ ('account.sub_status_' ~ sub.status.value)|trans }}</span>
+              {# WHAT was contributed: the was → now list, folded behind a link
+                 in this row (owner 2026-08-25: no extra line, no extra
+                 space). With JS the script turns the <details> into a button
+                 whose panel drops under the whole card. Field names come from
+                 the registry, so they read as the form asked them: "Road
+                 quality", not `sq` (owner-reported 2026-08-03). #}
+              {% set diff = submission_changes[sub.id] ?? [] %}
+              {% if diff is not empty %}
+                <details class="q-act q-act--diff">
+                  <summary class="q-btn q-btn--fold" data-label-open="{{ 'messages.hide_details'|trans }}">{{ 'messages.show_details'|trans }}</summary>
+                  <div class="q-act-panel q-diff">
+                    <span class="q-diff-h">{{ 'messages.what_you_changed'|trans }}</span>
+                    <dl>
+                      {% for row in diff %}
+                        {% include 'partials/_change_row.html.twig' with {row: row} only %}
+                      {% endfor %}
+                    </dl>
+                  </div>
+                </details>
+              {% endif %}
               {# The rider's own exit, only while nobody has decided (owner
                  2026-08-16), and never on a submission under legal hold. The
                  service re-checks both under a row lock, so a race with a
@@ -185,28 +207,6 @@
                   {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
                   <button type="submit" class="withdraw-btn">{{ 'account.withdraw'|trans }}</button>
                 </form>
-              {% endif %}
-              {# WHAT was contributed: the was → now list, folded behind a link
-                 that sits UNDER Map · Edit · status in this same column (owner
-                 2026-08-25: no extra line, no extra space). The break forces
-                 the wrap; with JS the script turns the <details> into a button
-                 whose panel drops under the whole card. Field names come from
-                 the registry, so they read as the form asked them: "Road
-                 quality", not `sq` (owner-reported 2026-08-03). #}
-              {% set diff = submission_changes[sub.id] ?? [] %}
-              {% if diff is not empty %}
-                <span class="q-acts-break"></span>
-                <details class="q-act q-act--diff">
-                  <summary class="q-link" data-label-open="{{ 'messages.hide_details'|trans }}">{{ 'messages.show_details'|trans }}</summary>
-                  <div class="q-act-panel q-diff">
-                    <span class="q-diff-h">{{ 'messages.what_you_changed'|trans }}</span>
-                    <dl>
-                      {% for row in diff %}
-                        {% include 'partials/_change_row.html.twig' with {row: row} only %}
-                      {% endfor %}
-                    </dl>
-                  </div>
-                </details>
               {% endif %}
             </div>
           </div>
@@ -267,18 +267,16 @@
       {% set app_pill = {'pending': 'pend', 'approved': 'ok', 'declined': 'rej', 'withdrawn': 'ret'} %}
       <div class="q-list">
       {% for app in curator_applications %}
-        <div class="q-item">
+        <div class="q-item q-rec">
           <div class="q-top">
             <div class="q-headwrap">
               <div class="q-head">
                 <span class="q-tag q-tag--kind">{{ app.country_code }}</span>
                 <h3 class="q-title">{% if app.region_slug %}{{ cc_region_label(app.region_slug) }}{% else %}{{ 'account.curating_whole_country'|trans }}{% endif %}</h3>
               </div>
+              <div class="q-submitter"><time datetime="{{ app.created_at|date('c') }}">{{ app.created_at|cc_date }}</time></div>
             </div>
-            <div class="q-acts">
-                <time class="q-when" datetime="{{ app.created_at|date('c') }}">{{ app.created_at|cc_date }}</time>
-              <span class="q-pill q-pill--{{ app_pill[app.status] ?? 'pend' }}">{{ ('account.app_status_' ~ app.status)|trans }}</span>
-            </div>
+            <span class="q-pill q-pill--{{ app_pill[app.status] ?? 'pend' }}">{{ ('account.app_status_' ~ app.status)|trans }}</span>
           </div>
           {% if app.decision_note %}<p class="q-note">{{ app.decision_note }}</p>{% endif %}
         </div>
@@ -306,7 +304,7 @@
         <h2 class="sec-band">{{ 'account.votes_season_h'|trans }} <span class="sec-count">{{ votes|length }}</span></h2>
         <div class="q-list">
         {% for v in votes %}
-          <div class="q-item">
+          <div class="q-item q-rec">
             <div class="q-top">
               <div class="q-headwrap">
                 <div class="q-head">
@@ -314,10 +312,9 @@
                   <span class="q-tag q-tag--kind">{{ v.label_key|trans }}</span>
                   <h3 class="q-title">{{ v.name }}</h3>
                 </div>
-                <div class="q-submitter">{% include 'vote/_hemisphere.html.twig' with {hemisphere: v.hemisphere} only %} {{ 'vote.round_label'|trans({'%season%': v.season_label_key|trans, '%year%': v.year_label}) }} · {{ 'account.votes_choice'|trans({'%n%': v.slot}) }}{% if v.submitted_at is null %} · <b>{{ 'account.votes_draft'|trans }}</b>{% endif %}{% if v.bike_label_key %} · {{ v.bike_label_key|trans }}{% endif %}</div>
+                <div class="q-submitter"><span class="q-who">{% include 'vote/_hemisphere.html.twig' with {hemisphere: v.hemisphere} only %} {{ 'vote.round_label'|trans({'%season%': v.season_label_key|trans, '%year%': v.year_label}) }} · {{ 'account.votes_choice'|trans({'%n%': v.slot}) }}{% if v.submitted_at is null %} · <b>{{ 'account.votes_draft'|trans }}</b>{% endif %}{% if v.bike_label_key %} · {{ v.bike_label_key|trans }}{% endif %}</span><span class="q-age">&middot; <time datetime="{{ v.created_at|date('c') }}">{{ v.created_at|cc_date }}</time></span></div>
               </div>
               <div class="q-acts">
-                <time class="q-when" datetime="{{ v.created_at|date('c') }}">{{ v.created_at|cc_date }}</time>
                 <span class="q-links"><a class="q-link" href="{{ path('map') }}?{{ v.letter == 'R' ? 'route' : 'item' }}={{ v.subject_id }}"
                   target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
               </div>
@@ -356,7 +353,7 @@
       <p class="note">{{ 'account.stale_nearby_body'|trans }}</p>
       <div class="q-list">
       {% for s in stale_nearby %}
-        <div class="q-item">
+        <div class="q-item q-rec">
           <div class="q-top">
             <div class="q-headwrap">
               <div class="q-head">
@@ -364,10 +361,9 @@
                 <span class="q-tag q-tag--kind">{{ s.typeLabelKey|trans }}</span>
                 <h3 class="q-title">{{ s.name }}</h3>
               </div>
-              <div class="q-submitter">{{ 'account.stale_nearby_km'|trans({'%km%': s.km}) }}</div>
+              <div class="q-submitter"><span class="q-who">{{ 'account.stale_nearby_km'|trans({'%km%': s.km}) }}</span><span class="q-age">&middot; <time datetime="{{ s.last_confirmed|date('c') }}">{{ 'account.stale_nearby_last'|trans }} {{ s.last_confirmed|cc_date }}</time></span></div>
             </div>
             <div class="q-acts">
-              <time class="q-when" datetime="{{ s.last_confirmed|date('c') }}">{{ 'account.stale_nearby_last'|trans }} {{ s.last_confirmed|cc_date }}</time>
               <span class="q-links"><a class="q-link" href="{{ path('map') }}?item={{ s.id }}"
                 target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
             </div>
@@ -380,7 +376,7 @@
       <h2 class="sec-band">{{ 'account.votes_places_h'|trans }} <span class="sec-count">{{ confirmations_pager.total }}</span></h2>
       <div class="q-list">
       {% for c in confirmations %}
-        <div class="q-item">
+        <div class="q-item q-rec">
           <div class="q-top">
             <div class="q-headwrap">
               <div class="q-head">
@@ -388,12 +384,12 @@
                 <span class="q-tag q-tag--kind">{{ c.typeLabelKey|trans }}</span>
                 <h3 class="q-title">{{ c.name }}</h3>
               </div>
+              <div class="q-submitter"><time datetime="{{ c.created_at|date('c') }}">{{ c.created_at|cc_date }}</time></div>
             </div>
+            <span class="q-pill q-pill--{{ c.stance == 'not_potable' ? 'rej' : 'ok' }}">{{ ('account.stance_' ~ c.stance)|trans }}</span>
             <div class="q-acts">
-              <time class="q-when" datetime="{{ c.created_at|date('c') }}">{{ c.created_at|cc_date }}</time>
               <span class="q-links"><a class="q-link" href="{{ path('map') }}?item={{ c.item_id }}"
                 target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
-              <span class="q-pill q-pill--{{ c.stance == 'not_potable' ? 'rej' : 'ok' }}">{{ ('account.stance_' ~ c.stance)|trans }}</span>
             </div>
           </div>
         </div>

@@ -347,7 +347,7 @@ final class TrashBinTest extends WebTestCase
         self::assertCount(1, $row);
         self::assertStringContainsString('is-removed', (string) $row->attr('class'));
         self::assertSame('Removed', $row->filter('.q-pill')->text());
-        self::assertCount(0, $row->filter('a.q-link'), 'no map, edit or conversation link');
+        self::assertCount(0, $row->filter('a.q-link, a.q-btn'), 'no map, edit or conversation link');
         self::assertStringNotContainsString(self::QUESTION, $row->text());
 
         foreach (['/account', '/account/messages'] as $page) {

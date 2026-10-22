@@ -3104,6 +3104,8 @@ moderate:
     trashed: 'Gelöscht'
   answered: 'Beantwortet'
   corrected: 'Korrigiert'
+  diff_more: "%count% weitere zeigen"
+  diff_less: "Weniger zeigen"
   rider_reply: 'Der Fahrer hat geantwortet'
   prior_rejection: 'Zuvor abgelehnt'
   links:
@@ -3289,7 +3291,6 @@ account:
   sub_type_edit: 'Bearbeitung'
   sub_type_hazard: 'Gefahrenstelle'
   sub_type_photo: 'Foto'
-  sub_type_text: 'Text'
   sub_status_pending: 'Wartet auf Prüfung'
   sub_status_approved: 'Angenommen'
   sub_status_rejected: 'Abgelehnt'

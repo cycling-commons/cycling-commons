@@ -11,6 +11,7 @@ use App\Catalog\Entity\Submission;
 use App\Contribution\SubmissionChangeSummary;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Translation\IdentityTranslator;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * What a rider is shown about their own contribution.
@@ -75,6 +76,39 @@ final class SubmissionChangeSummaryTest extends TestCase
         self::assertSame([
             ['label' => 'Road quality', 'was' => 'Smooth', 'now' => 'Rough'],
         ], $rows, 'a rider reads "Road quality", never the sq key');
+    }
+
+    /** The label reads in the reader's language: the form's own words are catalog keys. */
+    public function testAFieldLabelIsTranslated(): void
+    {
+        $nl = new class implements TranslatorInterface {
+            /** @param array<string, mixed> $parameters */
+            public function trans(string $id, array $parameters = [], ?string $domain = null, ?string $locale = null): string
+            {
+                return 'Road quality' === $id ? 'Wegkwaliteit' : $id;
+            }
+
+            public function getLocale(): string
+            {
+                return 'nl';
+            }
+        };
+        $rows = (new SubmissionChangeSummary(new CatalogFormRegistry(), $nl))->rows($this->submission('N', [
+            'sq' => ['was' => 'Smooth', 'now' => 'Rough'],
+        ]));
+
+        self::assertSame('Wegkwaliteit', $rows[0]['label']);
+    }
+
+    /** A desk row carries the stored blob, not the entity: the same rows come out. */
+    public function testRowsFromAStoredBlobMatchTheEntity(): void
+    {
+        $changes = ['text:nl' => ['was' => 'Oud.', 'now' => 'Nieuw.'], 'sq' => ['was' => null, 'now' => 'Rough']];
+        $sub = $this->submission('N', $changes);
+        $sub->setPayload(['target' => 'region']);
+
+        self::assertSame($this->summary()->rows($sub), $this->summary()->rowsFor('N', $changes, 'region'));
+        self::assertSame('place_text.geography_change_label', $this->summary()->rowsFor('N', $changes, 'region')[0]['label'], 'a region text is its geography');
     }
 
     public function testAddingAMissingFieldHasNothingToStrikeOut(): void

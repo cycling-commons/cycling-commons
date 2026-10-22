@@ -395,6 +395,12 @@ final class PlaceTextProposalTest extends WebTestCase
 
         $row = $crawler->filter('#sub-'.$region->getId());
         self::assertStringContainsString('#'.$region->getCode(), $row->filter('.q-submitter')->text());
+        // Tagged Edit with the region's icon, as on the desk: it replaces a text readers see.
+        self::assertSame('Edit', $row->filter('.q-tag--edit')->text());
+        self::assertSame(1, $row->filter('.q-head .q-icon svg')->count(), 'the region icon, not a blank');
+        // The status holds the corner; the date closes the meta line.
+        self::assertSame(1, $row->filter('.q-top > .q-pill')->count());
+        self::assertSame(1, $row->filter('.q-submitter .q-age time')->count());
         self::assertSame(
             $router->generate('region_text', ['slug' => 'ptext-a', 'lang' => 'en']),
             $row->filter('a.q-link--text-edit')->attr('href'),
@@ -697,7 +703,7 @@ final class PlaceTextProposalTest extends WebTestCase
         $crawler = $client->followRedirect();
         self::assertStringContainsString('Correction saved', (string) $client->getResponse()->getContent());
         $card = $crawler->filter('.q-item[data-item-id="'.$sub->getId().'"]');
-        self::assertStringContainsString('Testdorp heeft een kerk en een molen.', $card->filter('.q-now')->text());
+        self::assertStringContainsString('Testdorp heeft een kerk en een molen.', $card->filter('.q-diff .now')->text());
         self::assertSame('Corrected', $card->filter('.q-tag--corrected')->text());
 
         // A second correction keeps the rider's first words as the source.

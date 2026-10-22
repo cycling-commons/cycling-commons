@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Moderation;
 
 use App\Catalog\Entity\Submission;
+use App\Catalog\ItemType;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
@@ -193,6 +194,78 @@ final class ModerateTest extends WebTestCase
         self::assertSame(1, $link->count());
         self::assertSame('Queue Rider', trim($link->text()));
         self::assertStringEndsWith('/riders/'.$submitter->getUuid(), (string) $link->attr('href'));
+    }
+
+    /**
+     * The change on a queue card reads the way the rider's own list reads it:
+     * under the form's label, the old value struck beside the new one, never
+     * as `seasonal: Year-round`.
+     */
+    public function testQueueCardNamesAChangeByItsFormLabel(): void
+    {
+        $client = static::createClient();
+        $sub = $this->seedSubmission('Water & food');
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $sub->setType(SubmissionType::Edit)->setLetter(ItemType::WaterFood->letter())
+            ->setChanges(['seasonal' => ['was' => 'Frost-shut in winter', 'now' => 'Year-round']]);
+        $em->flush();
+
+        $curator = $this->createUser('moderate-label-curator@example.com', 'hunter2secure!', roles: ['ROLE_CURATOR'], totpSecret: 'JBSWY3DPEHPK3PXP', twoFaEnabled: true);
+        $client->loginUser($curator);
+
+        $crawler = $client->request('GET', '/moderate/submissions');
+        self::assertResponseIsSuccessful();
+        $diff = $crawler->filter('.q-item[data-item-id="'.$sub->getId().'"] .q-diff');
+        self::assertSame('Seasonal availability', $diff->filter('dt')->text());
+        self::assertSame('Frost-shut in winter', $diff->filter('dd .was')->text());
+        self::assertSame('Year-round', $diff->filter('dd .now')->text());
+        self::assertStringNotContainsString('seasonal:', $diff->text(), 'never the raw field key');
+    }
+
+    /**
+     * A long change shows three rows and folds the rest under "Show N more";
+     * four rows stay open, since folding one row saves nothing.
+     */
+    public function testALongChangeFoldsAfterThreeRows(): void
+    {
+        $client = static::createClient();
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $long = $this->seedSubmission('Long change');
+        $long->setType(SubmissionType::Edit)->setLetter(ItemType::WaterFood->letter())->setChanges([
+            'type' => ['was' => null, 'now' => 'Drinking tap'],
+            'potable' => ['was' => 'Unknown', 'now' => 'Yes (public supply)'],
+            'seasonal' => ['was' => null, 'now' => 'Year-round'],
+            'availability' => ['was' => null, 'now' => 'Always'],
+            'note' => ['was' => null, 'now' => 'Behind the church'],
+            'name' => ['was' => null, 'now' => 'Kerkkraan'],
+        ]);
+        $short = $this->seedSubmission('Short change');
+        $short->setType(SubmissionType::Edit)->setLetter(ItemType::WaterFood->letter())->setChanges([
+            'type' => ['was' => null, 'now' => 'Drinking tap'],
+            'potable' => ['was' => 'Unknown', 'now' => 'Yes (public supply)'],
+            'seasonal' => ['was' => null, 'now' => 'Year-round'],
+            'availability' => ['was' => null, 'now' => 'Always'],
+        ]);
+        $em->flush();
+
+        $curator = $this->createUser('moderate-fold-curator@example.com', 'hunter2secure!', roles: ['ROLE_CURATOR'], totpSecret: 'JBSWY3DPEHPK3PXP', twoFaEnabled: true);
+        $client->loginUser($curator);
+        $crawler = $client->request('GET', '/moderate/submissions');
+        self::assertResponseIsSuccessful();
+
+        $diff = $crawler->filter('.q-item[data-item-id="'.$long->getId().'"] .q-diff');
+        self::assertStringContainsString('q-diff--fold', (string) $diff->attr('class'));
+        self::assertSame(6, $diff->filter('dt')->count(), 'every row is in the page, for no-JS and search');
+        self::assertSame(3, $diff->filter('dt.q-more')->count(), 'rows four to six fold away');
+        $more = $diff->filter('button.q-diff-more');
+        self::assertSame('Show 3 more', trim($more->text()));
+        self::assertNotNull($more->attr('hidden'), 'the card script reveals it, so without JS nothing hides');
+
+        $open = $crawler->filter('.q-item[data-item-id="'.$short->getId().'"] .q-diff');
+        self::assertStringNotContainsString('q-diff--fold', (string) $open->attr('class'));
+        self::assertSame(0, $open->filter('.q-more, .q-diff-more')->count());
     }
 
     public function testQueueAndHistoryAreDeskChipsNotATopTab(): void

@@ -225,7 +225,7 @@ final class ProfileDashboardTest extends WebTestCase
         $crawler = $client->request('GET', '/account/contributions');
         $card = $crawler->filter('#route-'.$routeId);
         self::assertSame('/map?route='.$routeId, $card->filter('a.q-link')->eq(0)->attr('href'), 'Map opens the route');
-        self::assertSame('/propose-route/'.$routeId.'/edit', $card->filter('a.q-link')->eq(1)->attr('href'), 'Edit opens the proposal form');
+        self::assertSame('/propose-route/'.$routeId.'/edit', $card->filter('a.q-btn')->attr('href'), 'Edit, a button, opens the proposal form');
 
         // The map carries the waiting route for its proposer.
         $client->request('GET', '/map?route='.$routeId);
@@ -235,7 +235,7 @@ final class ProfileDashboardTest extends WebTestCase
         $db->executeStatement("UPDATE recommended_route SET state = 'unverified' WHERE id = ?", [$routeId]);
         $crawler = $client->request('GET', '/account/contributions');
         $card = $crawler->filter('#route-'.$routeId);
-        self::assertSame(1, $card->filter('a.q-link')->count(), 'after the decision only Map remains');
+        self::assertSame(1, $card->filter('a.q-link, a.q-btn')->count(), 'after the decision only Map remains');
         self::assertSame(0, $card->filter('a[href$="/edit"]')->count());
     }
 }

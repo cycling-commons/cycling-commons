@@ -1,0 +1,23 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# The change on a desk card (the open queue and History): one labelled row
+   per field (partials/_change_row.html.twig). A long change shows its first
+   three rows and folds the rest behind a "Show 9 more" button at the box's
+   top right, beside the first row, so the button costs no line. A fold that
+   would hide a single row saves nothing, so it starts at five.
+   The card script folds it and reveals the button, so without JS every row
+   shows (moderate/_card_script.html.twig).
+
+   Param: `rows`, SubmissionQueue's labelled rows. #}
+{% set shown = 3 %}
+{% set fold = rows|length > shown + 1 %}
+<div class="q-diff{{ fold ? ' q-diff--fold' }}">
+  <dl>
+    {% for row in rows %}
+      {% include 'partials/_change_row.html.twig' with {row: row, more: fold and loop.index > shown} only %}
+    {% endfor %}
+  </dl>
+  {% if fold %}
+    <button type="button" class="q-diff-more" hidden aria-expanded="false"
+            data-label-less="{{ 'moderate.diff_less'|trans }}">{{ 'moderate.diff_more'|trans({'%count%': rows|length - shown}) }}</button>
+  {% endif %}
+</div>

@@ -107,10 +107,11 @@
       {% set unseen_ids = cc_unseen('submission', history|map(h => h.id)) %}
       {% for h in history %}
         {% set row_unseen = unseen_ids[h.id] is defined %}
-        <div class="q-item {{ row_unseen ? 'is-unseen' }}" data-submission-id="{{ h.id }}">
+        <div class="q-item q-rec {{ row_unseen ? 'is-unseen' }}" data-submission-id="{{ h.id }}">
           <div class="q-top">
             {# The same row a rider sees on /profile (owner 2026-08-25): icon,
-               type tag, title + kind; date · Map · verdict on the right. #}
+               type tag, title + kind; who · code · when under it; the verdict
+               top right, Map and Revoke under it (.q-rec). #}
             <div class="q-headwrap">
               <div class="q-head">
                 {% include 'partials/_type_icon.html.twig' with {letter: h.letter|default(''), target: h.textTarget|default(null)} %}
@@ -143,10 +144,10 @@
                 {%- if h.who is not same as('') %}{% include 'moderate/_rider_name.html.twig' with {rider: {name: h.who, uuid: h.whoUuid ?: null}} only %}{% endif -%}
                 {%- if h.decidedBy %}{% if h.who is not same as('') %} · {% endif %}{% include 'moderate/_rider_in_text.html.twig' with {text: 'moderate.history.by'|trans({'%who%': '@@rider@@'}), rider: {name: h.decidedBy, uuid: h.decidedByUuid}} only %}{% endif -%}
                 {%- if h.code|default(null) %} · #{{ h.code }}{% endif -%}
-              </span></div>
+              </span>{% if h.when %}<span class="q-age">&middot; {{ h.when }}</span>{% endif %}</div>
             </div>
+            <span class="q-pill q-pill--{{ verdict_pill[h.status] ?? 'ret' }}">{{ ('moderate.status.' ~ h.status)|trans }}</span>
             <div class="q-acts">
-              <span class="q-when">{{ h.when }}</span>
               {# ?item=<id>, not ?pending=<id>: the submission is settled, so it is
                  no longer in the pending payload and that link resolved nothing.
                  Only APPROVED rows link: a rejected item is not on the map, and a
@@ -154,7 +155,6 @@
               {% if h.itemId and h.status == 'approved' %}
                 <span class="q-links"><a class="q-link" href="{{ path('map') }}?item={{ h.itemId }}" target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
               {% endif %}
-              <span class="q-pill q-pill--{{ verdict_pill[h.status] ?? 'ret' }}">{{ ('moderate.status.' ~ h.status)|trans }}</span>
               {# Take the approval back (moderation-and-contribution.md §5.6):
                  the change is undone and the card waits in the queue again.
                  A reason is required: the rider is told it. #}
@@ -177,14 +177,9 @@
           </div>
           {# WHAT was decided. A verdict with no subject ("Approved · Côte de la
              Redoute") tells a curator nothing they can check (owner-reported
-             2026-08-03). Same before/after the queue card shows. #}
-          {% if h.now %}
-            {# Long values (a drawn segment's geometry) clamp to one line,
-               click to expand — partials/_vclip.html.twig. #}
-            <div class="q-diff">
-              {% if h.was %}<div class="q-was{% if h.was|length > 110 %} vclip" tabindex="0" role="button" aria-expanded="false{% endif %}">{{ h.was }}</div>{% endif %}
-              <div class="q-now{% if h.now|length > 110 %} vclip" tabindex="0" role="button" aria-expanded="false{% endif %}">{{ h.now }}</div>
-            </div>
+             2026-08-03). Same labelled rows the queue card shows. #}
+          {% if h.rows is not empty %}
+            {% include 'moderate/_change_list.html.twig' with {rows: h.rows} only %}
           {% endif %}
           {# The curator's own note, then the rider's answer. Since a needs-info
              reply is desk work rather than personal mail (§5.4), this history is

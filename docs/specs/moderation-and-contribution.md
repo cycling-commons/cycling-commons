@@ -262,8 +262,8 @@ leaves the queue, so `history()` carries the same LATERAL join and the settled
 row renders the reply.
 
 **A settled row says what was decided, and opens it.** It renders the same
-before/after the queue card does, from a `diffStrings()` helper both share so
-the two cannot drift. The title links to **`/map?item=<id>`**, a deep link
+labelled change rows the queue card does, from one `labelledChanges()` helper
+both share so the two cannot drift. The title links to **`/map?item=<id>`**, a deep link
 resolved by DB id (`resolveLocalFeatureById`, covering CATALOG features and the
 OSM pools); a settled submission is not in the pending payload, so
 `?pending=<id>` cannot open it. Only **approved** rows link: a rejected item is
@@ -1415,8 +1415,9 @@ below, the page head (eyebrow · title · count or lead), the container
 (`.dbody`, 1120px, `id="main"`), the filter bar (`.mod-bar` holding
 `.mod-filters` selects + Apply and/or a `.lfilter` row of `.lchip` chips), the
 status pill (`.q-pill--ok|pend|conf|rej|ret|danger`), the quoted note
-(`.q-note`, `--answer`, `--prior`), the was → now diff (`.q-diff`, as two lines
-on the desk or as a `<dl>` on the rider pages, foldable as `details.q-diff`),
+(`.q-note`, `--answer`, `--prior`), the was → now diff (`.q-diff` holding a `<dl>` of labelled rows from
+`partials/_change_row.html.twig`, on the desk, in History and on the rider
+pages, foldable as `details.q-diff`),
 the density switch (`account/_density.html.twig`) and the pager are defined
 **once**, in `account/_shell_styles.html.twig`, which links
 `assets/styles/page/moderate/_card_styles.css` and the shell's own
@@ -1446,13 +1447,28 @@ town or the region icon instead (`PlaceText::ICONS`, through
 `cc_text_icons()` in the same partial, owner 2026-10-01), from the queue
 row's `textTarget`, and its tag reads Edit, not Text: a proposal always
 replaces a text readers already see, the Wikipedia text by default (owner
-2026-10-01). The Type filter keeps its Text option. A row shows: icon · photo (when the submission carries
-one) · type tag (new / edit) · title · kind, then date · Map · status on the
-right. The photo is a 26 px square after the icon, no taller than the
-heading line, so a photo never makes the row higher (owner 2026-10-01); it
-opens the full size; History is that same row with
-its everyone/mine and approved/rejected chips on top (trashed rows join the
-unfiltered first page only).
+2026-10-01). The rider's own contributions list follows the same rule: a
+text row carries the town or region icon and the Edit tag. The Type filter
+keeps its Text option. A record row (`.q-rec`: a rider's contribution,
+route proposal, curator application, vote or confirmation, and its twin on
+History) shows: icon · photo (when the submission carries one) · type tag
+(new / edit) · title · kind, with the status pill in the top-right corner.
+Under the heading sits the meta line (region · country · `#code`, or rider ·
+curator · `#code` on History), closed by the date (`.q-age`, never cut), and
+the decision time on its own line once a curator decided. The actions (Map ↗ ·
+Edit · Show details · Withdraw) sit at the bottom right, level with the last
+meta line: Map is a link, Edit, Show details and Withdraw are small squarish
+buttons of one size (`.q-btn`, `.withdraw-btn`); Show details carries a
+chevron that turns while its panel is open, and the panel drops under the
+whole row. On a
+phone the links move under the meta line, left-aligned. In list density on a
+wide screen the row folds to one line: heading, meta, links, pill. The photo
+is a 26 px square after the icon, no taller than the heading line, so a photo
+never makes the row higher (owner 2026-10-01); it opens the full size;
+History is that same row with its everyone/mine and approved/rejected chips
+on top (trashed rows join the unfiltered first page only). The words under a
+card (the change, the rider's note, a reply, a curator's note) take the
+card's full width.
 
 **Queue item layout (2026-08-02, owner).** The desk is a queue worked dozens
 at a time, so the row is sized for that:
@@ -1465,7 +1481,10 @@ at a time, so the row is sized for that:
   (◎ review on the map, ✎ edit the form (a place edit's wizard, or a town or
   region text's correction form, §3.1b), ✉ message the rider, ⚑ escalate, 🗑
   trash), the word kept as the tooltip and the accessible name: five worded
-  buttons repeated per row read as a wall on the list view (owner). A new place also carries the OSM
+  buttons repeated per row read as a wall on the list view (owner). Icon
+  buttons are 2rem squares with the glyph centred, and wear a lighter
+  outline than a worded button (1 px, 4 px corners, the orange at half
+  strength); the hover fill marks the one in use. A new place also carries the OSM
   identity chip in its meta line (open / linked / not in OSM,
   [catalog-data-model.md](catalog-data-model.md) §5b). On the map, a
   brand-new submission opens in its final form: `MapController` attaches the
@@ -1753,10 +1772,11 @@ the applied result, so the curator sees what they just applied without a reload:
 **A pending card must name the change and show what it changes** (owner
 2026-08-03):
 
-- The proposed-change block and the queue card's diff are gated on `now`, so
-  a field with **no previous value** (the whole "+ add a missing field"
-  funnel, the commonest contribution there is) still shows its change; the
-  struck-out line appears only when there is something to strike out.
+- The proposed-change block is gated on `now`, and the queue card's diff
+  lists every changed field, so a field with **no previous value** (the
+  whole "+ add a missing field" funnel, the commonest contribution there is)
+  still shows its change; the struck-out value appears only when there is
+  something to strike out.
 - Even with the change shown, `shade: Exposed` means nothing on its own. An
   edit's card carries **the target item's own rows** ("This item today"),
   read from the catalogue the map has already loaded and rendered with the
@@ -2157,10 +2177,21 @@ uses:
   **Not** on a needs-info card: there the curator's question is the point, and
   a diff above the reply box pushes it down the page.
 
-**Field names are the form's labels, not the storage keys**, which is the one
-place this deliberately differs from the desk.
+**Field names are the form's labels, not the storage keys**, for the rider
+and the curator alike.
 `App\Contribution\SubmissionChangeSummary` resolves them through
-`CatalogFormRegistry` — a rider reads "Road quality", never `sq`. A key the
+`CatalogFormRegistry` and translates them into the reader's language: a
+rider reads "Road quality" (NL "Wegkwaliteit"), never `sq`. The desk and
+History build the same rows from the stored changes (`rowsFor()`), without
+the shape fields the map shows (`route`, `grad`, `lineGrad`, `steep`,
+`steepPoint`, `segment`, `location`); one row per field, the old value struck
+and the new one beside it, where the desk once printed `seasonal: Year-round`.
+A desk card shows the first three rows and folds the rest behind a "Show 9
+more" button at the top right of the change box, beside the first row, so
+the button costs no line and stays on the right with the card's other
+controls (`moderate/_change_list.html.twig`); a fold starts at five rows,
+because hiding a single row saves nothing. The card script
+applies the fold, so without JS every row shows. A key the
 registry no longer carries keeps the key rather than vanishing: showing
 `hairpinsOld` is honest, showing nothing would hide part of what somebody
 submitted. Multi-selects join with commas, because
@@ -2174,7 +2205,7 @@ out. That is the same gate the desk's card uses (§5.4).
 have 12 words or more, the row (`diff`) shows the changed words, struck and
 new, with up to 6 unchanged words on each side and "…" where the rest is
 left out (`TranslationDiff::words()` then `around()`, rendered by
-`partials/_change_row.html.twig` on both surfaces). Adding a second full stop
+`partials/_change_row.html.twig` on every surface). Adding a second full stop
 to a town or region text shows "… heuvels midden in een zee van
 ~~landbouwgrond.~~ landbouwgrond..", not the whole text twice. The diff
 compares only the words between the shared start and the shared end, so a

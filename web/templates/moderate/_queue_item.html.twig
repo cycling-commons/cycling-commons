@@ -319,19 +319,15 @@
   {% if item.body %}
     <p class="q-body">{{ item.body }}</p>
   {% endif %}
-  {# Gated on `now`, not on `was`. Gating on `was` hid the change completely
-     whenever a field had no previous value — which is the ENTIRE "+ add a
-     missing field" funnel, the commonest contribution there is. The card then
-     showed a title and nothing else, and a curator was asked to approve a
-     change the page never named (owner-reported 2026-08-03). The struck-out
-     line only appears when there is something to strike out. #}
-  {# Long values (a drawn segment's geometry) clamp to one line, click to
-     expand — partials/_vclip.html.twig, included by moderate/index. #}
-  {% if item.now %}
-    <div class="q-diff">
-      {% if item.was %}<div class="q-was{% if item.was|length > 110 %} vclip" tabindex="0" role="button" aria-expanded="false{% endif %}">{{ item.was }}</div>{% endif %}
-      <div class="q-now{% if item.now|length > 110 %} vclip" tabindex="0" role="button" aria-expanded="false{% endif %}">{{ item.now }}</div>
-    </div>
+  {# What changed: the rider's own "What you changed" grid, one row per field
+     under the form's label, the old value struck and the new one beside it,
+     folded after three rows (moderate/_change_list.html.twig). A field with
+     no previous value shows the new value alone: that is the whole "+ add a
+     missing field" funnel, the commonest contribution there is. Long values
+     clamp to one line, click to expand: partials/_vclip.html.twig, included
+     by moderate/index. #}
+  {% if item.rows is not empty %}
+    {% include 'moderate/_change_list.html.twig' with {rows: item.rows} only %}
   {% endif %}
   {% if item.photos|length > 0 %}
     {# Pending photos with their harvested context (docs/specs/photo-uploads.md §5).
