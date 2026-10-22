@@ -1,0 +1,144 @@
+web/tests/Moderation/ApprovalRevokeTest.php
+  s_12716eef1541c9::t_60e688651bbaa8 205
+web/src/Catalog/Entity/Submission.php
+  s_12716eef1541c9::t_32fdf73f7e4c08 27
+  s_12716eef1541c9::t_31796bc1c2df04 38-47
+  s_12716eef1541c9::t_56792741ee98bd 187-190
+  s_2d39df76d606c6::t_c2d584e0a5d4a7 191-192
+web/tests/Contribution/AddPlaceFlowTest.php
+  s_12716eef1541c9::t_b3922e6371be54 125
+web/src/Moderation/ModerationService.php
+  s_12716eef1541c9::t_26ed85eb7b3f7b 179,186,285
+web/translations/messages.en.yaml
+  s_12716eef1541c9::t_bbb7f4bb7baad0 2992-2994
+  s_12716eef1541c9::t_df9810fe3ac3df 5088
+  s_12716eef1541c9::t_8e91b9ce845aca 3005
+  s_2d39df76d606c6::t_55e776c7058134 5089
+web/templates/moderate/_room_post.html.twig
+  s_12716eef1541c9::t_df9810fe3ac3df 65,67,70,72
+web/tests/Moderation/SubmissionStatementTest.php
+  s_12716eef1541c9::t_7e2ff58f325031 80
+  s_12716eef1541c9::t_67e20044527648 91
+web/templates/moderate/history.html.twig
+  s_12716eef1541c9::t_bbb7f4bb7baad0 99-102
+  s_2d39df76d606c6::t_adcc87e63ee47a 145
+web/tests/Media/MediaModerationTest.php
+  s_12716eef1541c9::t_b3922e6371be54 254
+web/tests/Moderation/DecisionMessagesTest.php
+  s_12716eef1541c9::t_7e2ff58f325031 103,121,138
+web/src/Controller/MessagesController.php
+  s_12716eef1541c9::t_978558b25e52ef 20,355
+web/src/Controller/ModerateController.php
+  s_12716eef1541c9::t_8e1c1e1a7ac533 29
+  s_12716eef1541c9::t_2d2341ea0e76ef 614-628
+  s_12716eef1541c9::t_1fd2a9f0fcb5d1 210-211
+  s_12716eef1541c9::t_be2e19d914c09b 127-128
+  s_12716eef1541c9::t_978558b25e52ef 37,380,477-478
+  s_2d39df76d606c6::t_bff6a71a78a778 613,629-630
+web/tests/Moderation/SubmissionCodeTest.php
+  s_12716eef1541c9::t_5c89eb847621db 1-72
+web/tests/Moderation/ModerateDecideAjaxTest.php
+  s_12716eef1541c9::t_7e2ff58f325031 106
+web/src/Messaging/CuratorRoom.php
+  s_12716eef1541c9::t_df9810fe3ac3df 45,67,359-360,364,374-375,378,384,388,394,578,652
+web/translations/messages.es.yaml
+  s_12716eef1541c9::t_bbb7f4bb7baad0 2999-3001
+  s_12716eef1541c9::t_df9810fe3ac3df 5098
+  s_12716eef1541c9::t_8e91b9ce845aca 3012
+  s_2d39df76d606c6::t_34c797059f0ae4 5099
+web/src/Media/MediaDecisionService.php
+  s_12716eef1541c9::t_26ed85eb7b3f7b 18,77
+web/tests/Contribution/OsmConfirmTest.php
+  s_12716eef1541c9::t_b3922e6371be54 120
+web/assets/styles/page/account/_shell_styles.css
+  s_12716eef1541c9::t_3f2df4e7900944 126-127
+web/translations/messages.de.yaml
+  s_12716eef1541c9::t_8e91b9ce845aca 2991
+  s_12716eef1541c9::t_df9810fe3ac3df 5071
+  s_12716eef1541c9::t_bbb7f4bb7baad0 2978-2980
+  s_2d39df76d606c6::t_55ab2bca99e5e8 5072
+web/migrations/Version20261022040000.php
+  s_12716eef1541c9::t_8eef6e7a5c37bf 1-15,19-32,34-51,62-66,68-73,75-89,91-95
+  s_12716eef1541c9::t_bedb832cb73936 16-18,33,52-61,67,74,90
+web/tests/Contribution/SimilarPlacesFlowTest.php
+  s_12716eef1541c9::t_b3922e6371be54 75,132
+web/tests/Moderation/CuratorRoomTest.php
+  s_12716eef1541c9::t_7e2ff58f325031 842
+  s_12716eef1541c9::t_60e688651bbaa8 504-505,622
+web/src/Controller/ModerateMessageController.php
+  s_12716eef1541c9::t_978558b25e52ef 16,116
+web/translations/messages.nl.yaml
+  s_12716eef1541c9::t_bbb7f4bb7baad0 2977-2979
+  s_12716eef1541c9::t_df9810fe3ac3df 5070
+  s_12716eef1541c9::t_8e91b9ce845aca 2990
+  s_2d39df76d606c6::t_e5ea851726c294 5071
+web/templates/moderate/index.html.twig
+  s_12716eef1541c9::t_bbb7f4bb7baad0 91-92
+web/tests/Messaging/NeedsInfoReplyTest.php
+  s_12716eef1541c9::t_60e688651bbaa8 290
+web/assets/js/room.js
+  s_12716eef1541c9::t_df9810fe3ac3df 41
+web/src/Moderation/SubmissionQueue.php
+  s_12716eef1541c9::t_a8d1e85735fda8 54,114-157,163,505
+  s_12716eef1541c9::t_34640020cc44da 178-186
+  s_2d39df76d606c6::t_f04e4dff28c500 158,162,187-188,234,312,321,356-357,532-533,599,609,657-658
+web/tests/Contribution/MaterializeFlowTest.php
+  s_12716eef1541c9::t_b3922e6371be54 186
+web/tests/Messaging/CuratorMessageTest.php
+  s_12716eef1541c9::t_b3922e6371be54 160
+docs/specs/moderation-and-contribution.md
+  s_12716eef1541c9::t_c68c6e0bf10f10 300-302
+  s_12716eef1541c9::t_1c331b5425e04b 294
+  s_2d39df76d606c6::t_4977e2d96dbc4e 295-296,303-304,695-696,2072-2073,2446,4241,4282-4284,4318-4319
+web/src/Moderation/SubmissionRef.php
+  s_12716eef1541c9::t_061a38a4f40e93 48
+  s_12716eef1541c9::t_3a4254b3c687fb 1-47,49-50
+web/translations/messages.fr.yaml
+  s_12716eef1541c9::t_bbb7f4bb7baad0 2973-2975
+  s_12716eef1541c9::t_8e91b9ce845aca 2986
+  s_12716eef1541c9::t_df9810fe3ac3df 5066
+  s_2d39df76d606c6::t_594f6bf1be11e5 5067
+web/src/Moderation/ApprovalRevoker.php
+  s_12716eef1541c9::t_26ed85eb7b3f7b 168
+web/tests/Moderation/QueueSearchTest.php
+  s_12716eef1541c9::t_26ae51b583d068 190-193
+  s_12716eef1541c9::t_cd0485cdfea69b 169-189,194-195
+  s_12716eef1541c9::t_7e2ff58f325031 242-243,246,254,257,261
+web/src/Controller/PlaceTextController.php
+  s_12716eef1541c9::t_978558b25e52ef 23,389
+web/tests/Contribution/ImproveTest.php
+  s_12716eef1541c9::t_b3922e6371be54 398,585,655
+web/src/Contribution/CatalogContributionService.php
+  s_12716eef1541c9::t_978558b25e52ef 35,281,612,622
+web/templates/moderate/_queue_item.html.twig
+  s_2d39df76d606c6::t_860880db5c43b1 82
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1c8c44defe1aa2593f8124aad4e5e8d79389374d",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_12716eef1541c9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1855f64b-d7ae-42ab-8461-aa11863cd75b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_2d39df76d606c6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "27dfa27c-d621-4eaa-8bff-2444730c849d",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
