@@ -477,8 +477,9 @@ export function layerCounts(layer){
   const covTotal=coverageTotal(layer.letter);
   // Both tiers' totals are scope-aware so an out-of-scope region reads 0/0, not 0/<global>.
   const curated=layer.pendingLayer ? layer.features.length : layer.features.filter(f=>inScope(f.rid)).length;
-  /* Three tiers count a layer: render() features, coverage tiles, curated pool pins. */
-  const shown=layer.features.filter(f=>featureVisible(layer,f)).length
+  /* Three tiers count a layer: render() features, coverage tiles, curated pool pins.
+     A layer that is off shows nothing, so it counts nothing: 0/<total>, greyed. */
+  const shown=!active.has(layer.key) ? 0 : layer.features.filter(f=>featureVisible(layer,f)).length
     + covShownCount(layer.key) + confShownCount(layer.key);
   return {shown, total:curated+covTotal+confTotalCount(layer.key)};
 }

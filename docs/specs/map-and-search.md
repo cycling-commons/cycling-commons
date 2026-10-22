@@ -520,7 +520,15 @@ to 4.4 saved under a name, [map-presets.md](map-presets.md).
   scope-aware:** `shown` applies mode/filters/scope, and `total` is scoped too —
   curated features gate on `inScope()` and coverage uses the server's per-scope
   count — so a region with no data for a letter reads `0/0`, never the global
-  total (a region's list never shows another region's counts). A
+  total (a region's list never shows another region's counts). `shown` is
+  what the rider sees: a switched-off layer reads `0/<total>`, greyed, and
+  our own pool pins count only when the chips let them through, the rule they
+  are drawn by (`confShownCount()`, osm-pools.js). The coverage part narrows
+  with the stays chips from the server's kept numbers (coverage-provider.md
+  §11). The counts request carries `shape=2`, the shape of its answer, so a
+  browser never reuses a cached answer (`max-age=3600`) without those numbers.
+  Example: 150 Tourisme Wallonie stays and 18,804 OpenStreetMap stays in
+  scope, Bike-friendly on, none labelled: `0/18955`. A
   select-all/deselect-all toggle sits above the list. **Default: all catalog
   layers on at load.** Layer labels come from the `item_type.*.label`
   translation keys via `CC_I18N.layers`, so the list can never drift from the

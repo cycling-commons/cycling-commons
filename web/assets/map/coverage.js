@@ -513,6 +513,9 @@ export function openCoverageFeatureByName(name){
 }
 
 // Rail totals (docs/specs/coverage-provider.md §5): scoped /map/coverage/counts.
+/* The answer's shape: a new value when it changes, so a browser never reuses a cached answer
+   (max-age 3600) that lacks what the page now reads. 2: the `stays` numbers. */
+const COUNTS_SHAPE=2;
 let _covCounts=null, _covStays=null, _covCountReq=0;
 export function coverageTotal(letter){ return (_covCounts && _covCounts[letter]) || 0; }
 export function fetchCoverageCounts(){
@@ -522,7 +525,7 @@ export function fetchCoverageCounts(){
     _covCounts=null; _covStays=null; updateCounts(); return;
   }
   const q=covScopeQuery(), myReq=_covCountReq;
-  fetch('/map/coverage/counts'+(q?('?'+q):''), {headers:{'Accept':'application/json'}})
+  fetch('/map/coverage/counts?shape='+COUNTS_SHAPE+(q?('&'+q):''), {headers:{'Accept':'application/json'}})
     .then(r=>r.ok?r.json():null)
     .catch(()=>null)
     .then(d=>{ if(myReq===_covCountReq){ _covCounts=(d && d.counts) || null; _covStays=(d && d.stays) || null; updateCounts(); } });  // null on fail: blank beats a wrong-scope total

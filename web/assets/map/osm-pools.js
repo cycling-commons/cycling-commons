@@ -29,11 +29,13 @@ export function poolVisible(f, layer){
   return modeShows(mode(), layer || {}, p);
 }
 
+/* The pins a rider sees: none while the layer is off, and only those the chips let through,
+   the rule the pins are drawn by (poolChipsPass). */
 export function confShownCount(key){
   const st = confState[key+'-conf'];
-  if(!st) return 0;
+  if(!st || !active.has(key)) return 0;
 
-  return st.confirmed.filter(f => poolVisible(f, st.layer)).length;
+  return st.confirmed.filter(f => poolVisible(f, st.layer) && poolChipsPass(st.layer, key, f.properties || {})).length;
 }
 
 // Scope only, never mode — a total that shrank with the filter would read n/n.
