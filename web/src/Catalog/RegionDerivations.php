@@ -35,20 +35,25 @@ final class RegionDerivations
     }
 
     /**
-     * The shape a region page draws (RegionSilhouette): the same rings as the
-     * ranking outline, simplified at 0.008 degrees (about 800 m) instead of
-     * 0.05, so a province has about four times the points and reads as
-     * itself (owner 2026-10-20: double the detail, then double it again). Its own column, so the map's
-     * region registry and the globe keep the lighter outline they download.
-     * Shared with Version20261020030000.
+     * The shape a region page draws (RegionSilhouette), as detailed as that
+     * drawing can show. A region is drawn in its country's frame, so the
+     * frame sets the scale: one drawing unit is the country's span over the
+     * drawing box. Each part is simplified at RegionSilhouette's own path
+     * step (0.1 unit), finer than any screen pixel at the largest size, and a
+     * part is kept from 1.5 units across, so an island a rider can see stays.
+     * The Netherlands keeps about 1,000 points and its Wadden islands,
+     * Germany about 1,800. Its own column, so the map's region registry and
+     * the globe keep the lighter outline they download.
      */
     public static function silhouetteSql(): string
     {
-        return str_replace(
-            ['UPDATE region r SET outline = ', 'ST_SimplifyPreserveTopology(d.geom, 0.05)'],
-            ['UPDATE region r SET silhouette = ', 'ST_SimplifyPreserveTopology(d.geom, 0.008)'],
-            self::OUTLINE_SQL,
-        );
+        return strtr(self::SILHOUETTE_SQL, [
+            '{step}' => (string) (10 ** -RegionSilhouette::DECIMALS),
+            '{min_part}' => '1.5',
+            '{box_w}' => (string) (RegionSilhouette::W - 2 * RegionSilhouette::PAD),
+            '{box_h}' => (string) (RegionSilhouette::H - 2 * RegionSilhouette::PAD),
+            '{min_k}' => (string) RegionSilhouette::MIN_K,
+        ]);
     }
 
     /**
@@ -148,6 +153,57 @@ final class RegionDerivations
             ) rings
         ), '[]'::json)::jsonb
         WHERE r.geom IS NOT NULL
+        SQL;
+
+    /**
+     * silhouetteSql() before its numbers: `f.unit` is the degrees one drawing
+     * unit spans in the region's frame (its country's level-2 row, else the
+     * region itself, as RegionSilhouette frames it), `f.k` the frame's
+     * longitude shrink. `f` is materialized from bounding boxes, so each
+     * frame is read once and not again for every row the update joins.
+     * Coordinates keep four decimals (about 10 m), finer than the
+     * simplification of the smallest country.
+     */
+    private const string SILHOUETTE_SQL = <<<'SQL'
+        WITH f AS MATERIALIZED (
+            SELECT q.id, q.k,
+                   GREATEST((ST_YMax(q.fb) - ST_YMin(q.fb)) / {box_h}, (ST_XMax(q.fb) - ST_XMin(q.fb)) * q.k / {box_w}) AS unit
+            FROM (
+                SELECT r2.id, fr.fb, GREATEST({min_k}, cos(radians((ST_YMax(fr.fb) + ST_YMin(fr.fb)) / 2))) AS k
+                FROM region r2
+                CROSS JOIN LATERAL (
+                    SELECT COALESCE(
+                        (SELECT Box2D(c.geom) FROM region c WHERE c.country_code = r2.country_code AND c.admin_level = 2 LIMIT 1),
+                        Box2D(r2.geom)
+                    ) AS fb
+                ) fr
+                WHERE r2.geom IS NOT NULL
+            ) q
+        )
+        UPDATE region r SET silhouette = COALESCE((
+            SELECT json_agg(ring)
+            FROM (
+                SELECT (
+                    SELECT json_agg(round(v::numeric, 4) ORDER BY o)
+                    FROM (
+                        SELECT unnest(ARRAY[ST_X(p.geom), ST_Y(p.geom)]) AS v,
+                               (p.path[1] * 2) + generate_series(0, 1) AS o
+                        FROM ST_DumpPoints(ST_ExteriorRing(z.g)) p
+                    ) pt
+                ) AS ring
+                FROM (
+                    SELECT ST_SimplifyPreserveTopology(d.geom, f.unit * {step}) AS g,
+                           GREATEST((ST_XMax(d.geom) - ST_XMin(d.geom)) * f.k, ST_YMax(d.geom) - ST_YMin(d.geom)) / f.unit AS drawn
+                    FROM ST_Dump(r.geom) d
+                ) z
+                WHERE z.g IS NOT NULL
+                  AND GeometryType(z.g) = 'POLYGON'
+                  AND z.drawn >= {min_part}
+            ) rings
+        ), '[]'::json)::jsonb
+        FROM f
+        WHERE f.id = r.id
+          AND f.unit > 0
         SQL;
 
     private function recomputeMembership(): int

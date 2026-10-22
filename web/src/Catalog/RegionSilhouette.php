@@ -10,7 +10,7 @@ use Doctrine\DBAL\Connection;
 
 /**
  * Inline SVG country outline, with a region filled or alone. Uses `region.silhouette`
- * (finer than the ranking `outline`, RegionDerivations::silhouetteSql()), else
+ * (as detailed as this drawing shows, RegionDerivations::silhouetteSql()), else
  * `region.outline` for a row not derived since; not a slippy map.
  *
  * @api
@@ -18,9 +18,15 @@ use Doctrine\DBAL\Connection;
 final class RegionSilhouette
 {
     /** Drawing box in SVG user units. The viewBox scales it to any rendered size. */
-    private const float W = 160.0;
-    private const float H = 120.0;
-    private const float PAD = 6.0;
+    public const float W = 160.0;
+    public const float H = 120.0;
+    public const float PAD = 6.0;
+
+    /** The path's decimals in user units; the silhouette is simplified at this step. */
+    public const int DECIMALS = 1;
+
+    /** The least longitude shrink, so a frame near a pole still has a width. */
+    public const float MIN_K = 0.15;
 
     public function __construct(private readonly Connection $db)
     {
@@ -130,7 +136,7 @@ final class RegionSilhouette
         // Longitude degrees shrink toward the poles; cos(mid-lat) keeps the silhouette recognizable.
         return [
             'minX' => $minX, 'maxX' => $maxX, 'minY' => $minY, 'maxY' => $maxY,
-            'k' => max(0.15, cos(deg2rad(($minY + $maxY) / 2))),
+            'k' => max(self::MIN_K, cos(deg2rad(($minY + $maxY) / 2))),
         ];
     }
 
@@ -157,7 +163,7 @@ final class RegionSilhouette
                 $x = $offX + ($ring[$i] - $box['minX']) * $box['k'] * $scale;
                 // SVG y grows downward; latitude grows upward.
                 $y = $offY + ($box['maxY'] - $ring[$i + 1]) * $scale;
-                $d .= ('' === $d ? 'M' : 'L').round($x, 1).' '.round($y, 1);
+                $d .= ('' === $d ? 'M' : 'L').round($x, self::DECIMALS).' '.round($y, self::DECIMALS);
             }
             if ('' !== $d) {
                 $out[] = $d.'Z';

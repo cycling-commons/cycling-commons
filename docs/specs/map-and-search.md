@@ -901,13 +901,18 @@ languages.
   kicker links to `/regions#country-XX`, which opens that country's regions
   on the list (`regions-map.js` reads the hash).
 
-  **Four times the detail in the shape (2026-10-20).** The country outline with
-  the region filled is drawn from `region.silhouette`, the same rings as the
-  ranking `outline` simplified at 0.008 degrees (about 800 m) instead of
-  0.05 (about four times the points in the main ring: Noord-Holland 16 to
-  68, the Netherlands 67 to 424), the region and the country alike, kept current by
-  `RegionDerivations::shapes()` and filled by `Version20261020030000`. The
-  map's region registry and the globe keep the lighter `outline`.
+  **The shape as detailed as its drawing (2026-10-22).** The country outline with
+  the region filled is drawn from `region.silhouette`. A region is drawn in
+  its country's frame, so the country sets the scale: one drawing unit is the
+  country's span over the 148 by 108 unit drawing box. Every part of the
+  country and of each of its regions is simplified at 0.1 unit, the step the
+  SVG path rounds to and finer than a pixel at the largest size (300 px wide),
+  and a part is kept from 1.5 units across. The Netherlands keeps 1,024
+  points and 9 rings, its Wadden islands among them, and Flevoland 73;
+  Germany keeps 1,771 and France 2,088. Coordinates keep four decimals. It is
+  kept current by `RegionDerivations::shapes()` and filled by
+  `Version20261022030000`. The map's region registry and the globe keep the
+  lighter `outline`.
 
   **Layout (2026-10-20).** From 760 px wide the hero has two columns: the
   title, figures, curators and buttons on the left, the country outline with
