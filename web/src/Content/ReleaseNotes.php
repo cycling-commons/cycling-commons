@@ -62,7 +62,7 @@ final class ReleaseNotes
     public const array RELEASES = [
         [
             'version' => '0.9.8-beta',
-            'date' => '2026-10-21',
+            'date' => '2026-10-22',
             'sections' => [
                 'public' => [
                     'changelog.v098_ireland',
@@ -81,11 +81,15 @@ final class ReleaseNotes
                 ],
                 'rider' => [
                     'changelog.v098_original_changed',
+                    'changelog.v098_codes',
+                    'changelog.v098_your_list',
                 ],
                 'curator' => [
                     'changelog.v098_curator_revoke',
                     'changelog.v098_curator_lang',
                     'changelog.v098_curator_links',
+                    'changelog.v098_curator_codes',
+                    'changelog.v098_curator_cards',
                 ],
             ],
             'kinds' => [
@@ -106,6 +110,10 @@ final class ReleaseNotes
                 'changelog.v098_curator_revoke' => 'new',
                 'changelog.v098_curator_lang' => 'new',
                 'changelog.v098_curator_links' => 'new',
+                'changelog.v098_codes' => 'new',
+                'changelog.v098_your_list' => 'improved',
+                'changelog.v098_curator_codes' => 'new',
+                'changelog.v098_curator_cards' => 'improved',
             ],
         ],
         [
