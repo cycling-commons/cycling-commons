@@ -1,0 +1,39 @@
+web/src/Catalog/RegionSilhouette.php
+  s_12716eef1541c9::t_69f849f69b3900 139
+  s_12716eef1541c9::t_6eef7c2f059bd6 13,21-29
+  s_12716eef1541c9::t_047c9f79889345 166
+web/src/Catalog/RegionDerivations.php
+  s_12716eef1541c9::t_2629069b3fdb9e 38-46,50-56
+  s_12716eef1541c9::t_fc109436177ff4 162-165
+  s_12716eef1541c9::t_fdf8d4f038488e 158-161,166-167,183-203,205-208
+  s_12716eef1541c9::t_918f497dfcc444 168-182
+  s_12716eef1541c9::t_9ca543d5658d56 204
+web/migrations/Version20261022030000.php
+  s_12716eef1541c9::t_7984fff35f6bdb 1-40
+docs/specs/map-and-search.md
+  s_12716eef1541c9::t_6aadf5c1e802f2 904-915
+web/tests/Catalog/RegionSilhouetteDetailTest.php
+  s_12716eef1541c9::t_d4b39dd2110dd7 1-32,34-96
+  s_12716eef1541c9::t_436500008fe74f 33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ba01eda232ebfaca5e3634fc465b3d1a96e0fae5",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_12716eef1541c9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1855f64b-d7ae-42ab-8461-aa11863cd75b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
