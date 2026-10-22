@@ -1,0 +1,26 @@
+pipeline/Dockerfile
+  s_d6508e28c8c377::t_d478c1522b4832 45-47
+pipeline/requirements.txt
+  s_d6508e28c8c377::t_3d381da6cbb998 3,9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "841075b931b765c5d67cb1075cda6a1a3de5f4a0",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_d6508e28c8c377": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8cc4ea63-07f9-4f7b-88f8-4c72d575396c",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
