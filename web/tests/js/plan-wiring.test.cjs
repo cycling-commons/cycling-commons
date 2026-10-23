@@ -119,7 +119,7 @@ test('the rail shows the Plan icon with the dot while a ride is on the map, as L
 test('the ride line lies over every other line layer and under the icons (owner 2026-10-15)', () => {
   const render = read('assets/map/render.js');
   const lift = (render.match(/export function liftInfoLayersAboveRoutes\(\)\{[\s\S]*?\n\}/) || [''])[0];
-  const planAt = lift.indexOf("['plan-gap','plan-alt','plan-casing','plan-line','plan-straight','plan-hl-casing','plan-hl','plan-rain','plan-wind','plan-arrows']");
+  const planAt = lift.indexOf("['plan-gap','plan-tough','plan-alt','plan-casing','plan-line','plan-straight','plan-hl-casing','plan-hl','plan-rain','plan-wind-rest','plan-wind','plan-arrows']");
   const iconsAt = lift.indexOf('coverageIconLayerIds(');
   assert.ok(planAt > 0, 'the stacking authority does not lift the ride layers');
   assert.ok(lift.indexOf("['mly-cov','mly-img']") < planAt && planAt < iconsAt, 'the ride layers go above the lines and below the coverage icons');
@@ -144,7 +144,7 @@ test('the ride line is thin, so the surface band under it stays readable (owner 
 test('an eye beside Your ride shows or hides the ride line, the stops stay, the choice is kept in the browser (owner 2026-10-15)', () => {
   assert.match(twig, /<h3>\{\{ 'map\.plan_ride_h'\|trans \}\} <button type="button" class="dl-all ico" id="planLineToggle" aria-pressed="true"/);
   assert.match(plan, /const LINE_KEY = 'cc-plan-line';/);
-  assert.match(plan, /\['plan-casing', 'plan-line', 'plan-straight', 'plan-arrows'\]\.forEach\(id => \{ if\(map\.getLayer\(id\)\) map\.setLayoutProperty\(id, 'visibility', lineShown \? 'visible' : 'none'\); \}\);/);
+  assert.match(plan, /\['plan-casing', 'plan-line', 'plan-straight', 'plan-tough', 'plan-wind-rest', 'plan-arrows'\]\.forEach\(id => \{ if\(map\.getLayer\(id\)\) map\.setLayoutProperty\(id, 'visibility', lineShown \? 'visible' : 'none'\); \}\);/);
   assert.match(controller, /'lineHide' => \$t->trans\('map\.plan_line_hide'\), 'lineShow' => \$t->trans\('map\.plan_line_show'\)/);
 });
 
@@ -401,7 +401,7 @@ test('a leg that goes round answers "Why this way?" on a click, asking once', ()
 /* The batch of 2026-10-15 late evening (owner): the water button an icon, the
    gap shown on the map on hover, the seven days said in the panel, "Why this
    way?" findable with the stops folded, and arrows along the ride. */
-test('the water-gap line: an icon button, and its stretch on the map on hover', () => {
+test('the water-gap line: an icon button, and its stretch on the map, stronger on hover', () => {
   const render = (plan.match(/function renderTougher\(day, f\)\{([\s\S]*?)\n\}/) || [])[1] || '';
   assert.match(render, /class="cc-info cc-plan-fillwater" data-plan-fill-water title="\$\{escPend\(label\)\}" aria-label="\$\{escPend\(label\)\}"><svg/, 'the button is not an icon with its words as title and name');
   assert.match(render, /<li class="cc-plan-gap" tabindex="0" data-part="water">/, 'the gap line cannot be hovered or focused');
@@ -409,7 +409,25 @@ test('the water-gap line: an icon button, and its stretch on the map on hover', 
   assert.match(plan, /map\.addLayer\(\{ id: 'plan-gap', type: 'line', source: 'plan-gap'/);
   assert.match(plan, /function showGap\(on\)\{/);
   assert.match(plan, /sliceAlong\(ride\.legs, span\.fromKm \* 1000, span\.toKm \* 1000\)/);
-  for (const ev of ['mouseover', 'focusin', 'mouseout', 'focusout']) assert.ok(plan.includes(`t.addEventListener('${ev}'`), `the gap line does not answer ${ev}`);
+  // Hovered or focused, the gap line lights through wirePartHover like every line: full strength, half at rest.
+  assert.match(plan, /set\('plan-gap', 'line-opacity', cls === 'water' \? GAP_OPACITY : cls \? 0 : lineShown \? GAP_OPACITY \* TOUGH_REST : 0\);/, 'the gap is not full on hover and half at rest');
+  assert.match(plan, /function lightPart\(cls\)\{\n {2}focusMap\(!!cls\);\n {2}restLook\(cls\);/, 'pointing at a stat does not set the gap\'s strength');
+});
+
+test('what makes it tough lies on the ride at half strength, full while its line is pointed at (owner 2026-10-23)', () => {
+  assert.match(plan, /const TOUGH_REST = 0\.5, GAP_OPACITY = 0\.55;/);
+  // A band under the ride, wider than the line with its edge (3 to 4.5 px): over the line, a dark orange read as the line.
+  assert.match(plan, /map\.addLayer\(\{ id: 'plan-tough', type: 'line', source: 'plan-tough', [^\n]*'line-color': \['get', 'c'\], 'line-opacity': TOUGH_REST, 'line-width': \['interpolate', \['linear'\], \['zoom'\], 10, 7, 18, 13\]/, 'the rest band is not half strength and wider than the line');
+  assert.ok(plan.indexOf("map.addLayer({ id: 'plan-tough'") < plan.indexOf("map.addLayer({ id: 'plan-casing'"), 'the rest band is drawn over the ride line');
+  const render = (plan.match(/function renderTougher\(day, f\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.ok(render.includes('drawTough(found);'), 'the list does not draw its stretches on the ride');
+  assert.ok(render.includes('drawTough(null);'), 'a ride without a day keeps old stretches');
+  const draw = (plan.match(/function drawTough\(found\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.ok(draw.includes("cls !== 'all' && cls !== 'water'"), 'a long day paints the whole ride, or the gap is drawn twice');
+  assert.ok(draw.includes('.sort((a, b) => b.m - a.m)'), 'a short stretch can lie under a long one');
+  assert.ok(!/FOCUS_LAYERS = \[[^\]]*'plan-tough'/.test(plan), 'the rest layer stays over the veil while one line is lit');
+  const sleep = (plan.match(/function sleepRide\(\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.ok(sleep.includes("'plan-tough'"), 'a sleeping ride keeps its tough stretches');
 });
 
 test('the panel says the ride is kept seven days in this browser, with its history', () => {
@@ -436,9 +454,9 @@ test('arrows along the ride line show the way it is ridden', () => {
   assert.match(plan, /'symbol-placement': 'line'/);
   assert.match(plan, /'icon-image': 'plan-arrow'/);
   assert.match(plan, /function addArrowImage\(\)\{/);
-  assert.match(plan, /\['plan-casing', 'plan-line', 'plan-straight', 'plan-arrows'\]\.forEach\(id => \{ if\(map\.getLayer\(id\)\) map\.setLayoutProperty\(id, 'visibility'/, 'the eye does not hide the arrows with the line');
+  assert.match(plan, /\['plan-casing', 'plan-line', 'plan-straight', 'plan-tough', 'plan-wind-rest', 'plan-arrows'\]\.forEach\(id => \{ if\(map\.getLayer\(id\)\) map\.setLayoutProperty\(id, 'visibility'/, 'the eye does not hide the arrows with the line');
   const render = read('assets/map/render.js');
-  assert.match(render, /\['plan-gap','plan-alt','plan-casing','plan-line','plan-straight','plan-hl-casing','plan-hl','plan-rain','plan-wind','plan-arrows'\]\.forEach/, 'the arrows, the gap and the shorter way do not keep their place over the other lines');
+  assert.match(render, /\['plan-gap','plan-tough','plan-alt','plan-casing','plan-line','plan-straight','plan-hl-casing','plan-hl','plan-rain','plan-wind-rest','plan-wind','plan-arrows'\]\.forEach/, 'the arrows, the gap and the shorter way do not keep their place over the other lines');
 });
 
 /* See the shorter way and choose it (owner 2026-10-15): hovering the answer
@@ -719,7 +737,8 @@ test('the map key drags into the ride details and snaps in, and back out (owner 
 });
 
 test('pointing at the wind draws its direction along the ride; cold, humidity and ice get their lines (owner 2026-10-17)', () => {
-  assert.match(plan, /map\.addLayer\(\{ id: 'plan-wind', type: 'symbol', source: 'plan-wind', layout: \{ 'icon-image': WIND_IMAGE,/);
+  assert.match(plan, /const windLayout = \{ 'icon-image': WIND_IMAGE,/);
+  assert.match(plan, /map\.addLayer\(\{ id: 'plan-wind', type: 'symbol', source: 'plan-wind', layout: \{ \.\.\.windLayout \} \}\);/);
   assert.match(plan, /windArrows\(h \? h\.fromDeg : null, h \? h\.windKmh : null\);/, 'the hour pointed at in the chart does not turn the arrows');
   assert.match(plan, /windArrows\(\.\.\.\(cls && cls\.startsWith\('wind-'\) \? ridingWind\(\) : \[null, null\]\)\);/, 'the wind bar does not draw the arrows');
   // The harder the wind, the longer and bigger its arrows (owner 2026-10-17, longer 2026-10-18).
@@ -988,4 +1007,18 @@ test('the ride details move left or right with a labelled button, and stay where
   assert.match(plan, /\$\('planSideX'\)\?\.addEventListener\('click', \(\) => \{ sideClosed = true; keepSide\(\); syncSide\(\); \}\);/);
   assert.doesNotMatch(plan, /e\.detail\.key === 'plan'\) sideClosed = false/, 'opening the planner puts the details back on the right');
   for (const l of ['en', 'fr', 'nl', 'de', 'es']) assert.match(read(`translations/messages.${l}.yaml`), /^ {2}plan_side_left: "/m, l);
+});
+
+test('the headwind shows its arrows at rest at half strength; pointed at, the arrows stand all along, half as many (owner 2026-10-23)', () => {
+  assert.match(plan, /const WIND_ARROW_M = 3000;/, 'the lit arrows are not half as many as every 1.5 km');
+  assert.match(plan, /const n = Math\.max\(3, Math\.min\(20, Math\.round\(total \/ WIND_ARROW_M\)\)\);/);
+  assert.match(plan, /map\.addLayer\(\{ id: 'plan-wind-rest', type: 'symbol', source: 'plan-wind-rest', layout: windLayout, paint: \{ 'icon-opacity': TOUGH_REST \} \}\);/, 'the rest arrows are not half strength');
+  const head = (plan.match(/function headArrows\(on\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.ok(head.includes("partSpans('wind-into')"), 'the rest arrows do not stand on the headwind only');
+  assert.ok(head.includes('a - last[1] < HEAD_GAP_M') && head.includes('b - a < HEAD_MIN_M'), 'a bend cuts the headwind into arrowless scraps');
+  const draw = (plan.match(/function drawTough\(found\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.ok(draw.includes("headArrows(live && found.some(x => x.kind === 'wind'));"), 'the wind line does not set its arrows at rest');
+  assert.match(plan, /set\('plan-wind-rest', 'icon-opacity', cls \? 0 : TOUGH_REST\);/, 'the rest arrows stay while other arrows are lit');
+  const sleep = (plan.match(/function sleepRide\(\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.ok(sleep.includes("'plan-wind-rest'"), 'a sleeping ride keeps its headwind arrows');
 });

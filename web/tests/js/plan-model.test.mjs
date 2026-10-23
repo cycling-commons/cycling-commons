@@ -1009,6 +1009,13 @@ test('the wind stretches add up to the wind shares: north into a north wind, sou
   assert.equal(windSpans([north, south], 0, 'side').length, 0);
 });
 
+test('headwind is a wind up to 70° off straight ahead, tailwind up to 70° off straight behind (owner 2026-10-23)', () => {
+  const north = { routed: true, distM: 1110, line: [[5.0, 52.00], [5.0, 52.01]] };   // ridden at 0°
+  const kind = from => ['into', 'side', 'with'].find(k => windSpans([north], from, k).length);
+  assert.deepEqual([65, 70, 75, 105, 110, 115].map(kind), ['into', 'into', 'side', 'side', 'with', 'with']);
+  assert.ok(sharesOf([north], 295).headM > 1000, 'a wind 65° off to the left is headwind too');
+});
+
 import { windChillC, heatIndexC, rideFeel, tougherLines as linesOf, TOUGHER as BASE } from '../../assets/map/plan-model.js';
 test('wind chill and heat index follow the published tables, only inside their reach', () => {
   assert.equal(Math.round(windChillC(0, 20)), -5, 'Environment Canada: 0 °C at 20 km/h feels like -5');

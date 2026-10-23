@@ -1127,6 +1127,9 @@ export function sunTimes(lat, lng, date){
   const at = min => new Date(Date.UTC(y, mo - 1, d, 0, 0, Math.round(min * 60)));
   return { sunrise: at(noon - 4 * ha), sunset: at(noon + 4 * ha), daylightS: Math.round(8 * ha * 60) };
 }
+/** How far from straight ahead a wind still counts as headwind, in degrees (owner 2026-10-23: 70, from 60; at 70° a
+    third of the wind's speed works against the rider); a tailwind is as far from straight behind. */
+export const HEAD_WIND_DEG = 70;
 /** The stretches ridden into the wind (`into`), with it (`with`) or across it (`side`), [fromM, toM] in metres along the
     ride, by windShares()'s rule; the drawn line's metres are scaled to the engine's length, as sliceAlong() reads them. */
 export function windSpans(legs, windFromDeg, kind){
@@ -1143,7 +1146,7 @@ export function windSpans(legs, windFromDeg, kind){
       const h = Math.sin((p2 - p1) / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dLng / 2) ** 2;
       const len = 2 * 6371000 * Math.asin(Math.sqrt(h));
       const diff = Math.abs(((bearing - windFromDeg) % 360 + 540) % 360 - 180);
-      steps.push([lineM, lineM + len, diff <= 60 ? 'into' : diff >= 120 ? 'with' : 'side']);
+      steps.push([lineM, lineM + len, diff <= HEAD_WIND_DEG ? 'into' : diff >= 180 - HEAD_WIND_DEG ? 'with' : 'side']);
       lineM += len;
     }
     const k = lineM > 0 ? (leg.distM || lineM) / lineM : 1;
@@ -1162,7 +1165,7 @@ export function hourSpan(startMin, rideS, totalM, hour){
   if(b <= a) return null;
   return [a / rideMin * totalM, b / rideMin * totalM];
 }
-/** Metres ridden into the wind and with it: a step whose bearing is within 60° of where the wind comes from is headwind, within 60° of where it goes is tailwind. */
+/** Metres ridden into the wind and with it: a step whose bearing is within HEAD_WIND_DEG (70°) of where the wind comes from is headwind, within as much of where it goes is tailwind. */
 export function windShares(legs, windFromDeg){
   const rad = x => x * Math.PI / 180;
   let headM = 0, tailM = 0, totalM = 0;
@@ -1177,7 +1180,7 @@ export function windShares(legs, windFromDeg){
       const len = 2 * 6371000 * Math.asin(Math.sqrt(h));
       totalM += len;
       const diff = Math.abs(((bearing - windFromDeg) % 360 + 540) % 360 - 180);   // the angle between the step and where the wind comes from: 0 is straight into it
-      if(diff <= 60) headM += len; else if(diff >= 120) tailM += len;
+      if(diff <= HEAD_WIND_DEG) headM += len; else if(diff >= 180 - HEAD_WIND_DEG) tailM += len;
     }
   }
   return { headM, tailM, totalM };

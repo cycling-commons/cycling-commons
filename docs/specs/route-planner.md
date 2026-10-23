@@ -769,9 +769,10 @@ no account data: the pace is general, and it stays general (section 1).
     2026-10-16). The ride's own place stops
     count at the distance the ride reaches them (`stopRows()`), so a water
     stop whose pin lies off the road its leg ends on still splits the gap. The button is a drop with a plus, its words in its
-    title and accessible name, and the line itself, hovered or focused,
-    paints that stretch on the map as a yellow highlighter band under the
-    ride (`sliceAlong()`, layer `plan-gap`; blue read as a river).
+    title and accessible name. The stretch lies on the map as a yellow
+    highlighter band under the ride (`sliceAlong()`, layer `plan-gap`; blue
+    read as a river): at half strength while the line is in the list, at
+    full strength while the line is hovered or focused.
   - **Main roads**: the kilometres on motorway, trunk, primary and secondary
     roads without a dedicated or separated cycle lane, from 5 km, read per
     edge from the engine (`LegSurfaces`: `road_class` and `cycle_lane`),
@@ -846,6 +847,19 @@ no account data: the pace is general, and it stays general (section 1).
     daylight the stretch ridden in the dark, or the last hour before sunset;
     heat, cold and ice the stretch of their hour (ice from its hour on), at
     the average pace.
+    **At rest** every line of what makes it tough lies on the ride at half
+    strength (`drawTough()`, layer `plan-tough`, `TOUGH_REST` 0.5): each
+    stretch a band of its line's colour under the ride line, 7 px at zoom 10
+    to 13 px at zoom 18, wider than the line with its edge, so the colour
+    shows on both sides of the orange (drawn over the line, the dark orange
+    of the wind and the main roads mixed into the line's own orange), the
+    longest first so a short stretch (the steepest kilometre) lies on top of
+    a long one (all the climbing). A long day draws nothing of its own, being the whole
+    ride; the water gap is its highlighter at half strength. Pointing at a
+    line draws it at full strength over the veil, and the others stay under
+    the veil; the gap, which lies over the veil, goes while another stat or
+    an hour of the chart is pointed at (`restLook()`). Hiding the ride line
+    hides them with it.
   - **What makes it tough** and **Weather** are headings of the same size
     as Your ride (owner 2026-10-17).
   - **Weather**, a list under what makes it tough, whenever a forecast
@@ -919,9 +933,17 @@ no account data: the pace is general, and it stays general (section 1).
     (`plan-rain`). The forecast is for one point, so the drops say when the
     rider meets the rain, not where the rain falls.
   - **The wind on the map** (owner 2026-10-17): pointing at an hour of the
-    chart, or at a part of the wind bar, draws arrows along the ride, about
-    every 1.5 km (6 to 40), pointing where the wind blows that hour or over
-    the hours ridden (`windArrows()`, layer `plan-wind`); the harder the wind,
+    chart, at a part of the wind bar or at the wind's line of what makes it
+    tough, draws arrows along the whole ride at full strength, about every
+    3 km (`WIND_ARROW_M`, 3 to 20), pointing where the wind blows that hour
+    or over the hours ridden (`windArrows()`, layer `plan-wind`). At rest,
+    while the wind is a line of what makes it tough, arrows stand on the
+    stretches ridden into the wind only, at half strength (`headArrows()`,
+    layer `plan-wind-rest`, `TOUGH_REST`): pieces of headwind closer than
+    300 m are one stretch (`HEAD_GAP_M`), and a stretch of 500 m or more
+    (`HEAD_MIN_M`) has one arrow per 3 km of it, at least one. They go while
+    anything is pointed at, since the lit arrows stand elsewhere, and hide
+    with the ride line. The harder the wind,
     the longer and the bigger the arrows (owner 2026-10-17; longer
     2026-10-18: "bigger/longer when there is more wind"). One arrow per band
     of the Beaufort scale, the same head on a longer shaft each band
@@ -939,8 +961,10 @@ no account data: the pace is general, and it stays general (section 1).
     for 09:00 to 12:00: Open-Meteo" (`map.plan_forecast_hours`). The lines:
     the dominant wind direction and the
     highest wind speed, the kilometres ridden into it and with it
-    (`windShares()`: the bearing of every profile step within 60° of the
-    wind's origin is headwind, within 60° of its destination tailwind),
+    (`windShares()`: the bearing of every profile step within 70° of the
+    wind's origin is headwind, within 70° of its destination tailwind,
+    `HEAD_WIND_DEG`; at 70° a third of the wind's speed works against the
+    rider, so a wind well off the nose still counts),
     with the gusts named when they pass theirs ("Wind 32 km/h from the
     south-west, gusts to 55 km/h: 42 km into it, 25 km with it",
     `map.plan_wind_gusts`); the day's highest temperature ("Up to 31 °C");
@@ -1513,7 +1537,12 @@ No rider's rows: nothing of a ride is stored, so there is no scope to leak.
   an out-and-back ask at their middle; a loop that passes home halfway asks in
   its middle third, never in the start's cell; laps near home ask nothing.
   The wiring pins `fetchWeather` to `forecastPoint()` and the panel to a ride
-  that asks.
+  that asks. The wind's edges: a wind 65° and 70° off straight ahead is
+  headwind, 75° and 105° side wind, 110° and 115° tailwind. What makes it
+  tough at rest: the band under the ride at half strength and wider than
+  the line, the longest stretch first, a long day and the water gap not in
+  it, the headwind's arrows at rest on its stretches only and gone while
+  anything is pointed at, the lit arrows every 3 km.
 - **PHP, the day.** `LegSurfaces` counts the busy metres from `road_class`
   and `cycle_lane`. `Forecast`: the point rounded to 0.1° before the request,
   one request for two asks of the same rounded point and date, the rounded

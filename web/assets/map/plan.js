@@ -222,7 +222,7 @@ function sleepRide(){
   asleep = true; everOpened = false; gen++; routing = false;
   clearTimeout(alongTimer); clearTimeout(weatherTimer); clearTimeout(tileTimer); weatherWaiting = false;
   const empty = { type: 'FeatureCollection', features: [] };
-  for(const id of ['plan', 'plan-straight', 'plan-alt', 'plan-gap', 'plan-hl', 'plan-rain', 'plan-wind']){ const s = map.getSource(id); if(s) s.setData(empty); }
+  for(const id of ['plan', 'plan-straight', 'plan-alt', 'plan-gap', 'plan-tough', 'plan-hl', 'plan-rain', 'plan-wind-rest', 'plan-wind']){ const s = map.getSource(id); if(s) s.setData(empty); }
   markers.forEach(m => m.remove()); markers = [];
   if(scrubMarker){ scrubMarker.remove(); scrubMarker = null; }
   focusMap(false);
@@ -613,7 +613,7 @@ function renderFigures(){
   const figs = $('planFigsGrp'), acts = $('planActs');
   if(figs) figs.hidden = !has;
   if(acts) acts.hidden = !has;
-  if(!has) return;
+  if(!has){ drawTough(null); return; }
   const f = figures(ride.legs);
   $('planDist').textContent = fmtKm(f.distM);
   $('planUp').textContent = uElev(f.upM);
@@ -720,6 +720,36 @@ const MAP_PART = { ...PART_COLOUR, all: '#FF5A1F', flat: '#8C8167', descend: '#5
   steep: '#7B4F9D', climbrun: '#7B4F9D', busy: '#B8501A', rain: '#3A6FC4', dark: '#1F2A44', 'hour-hot': '#C0561E', 'hour-cold': '#3A6FC4', 'hour-ice': '#3A6FC4' };
 /* What each line of what makes it tough lights on the map (owner 2026-10-18: "then also the veil trick"). */
 const TOUGH_PART = { long: 'all', steep: 'steep', climb: 'climbrun', climbed: 'climb', rough: 'rough', busy: 'busy', water: 'water', daylight: 'dark', wind: 'wind-into', rain: 'rain', heat: 'hour-hot', cold: 'hour-cold', ice: 'hour-ice' };
+/* What makes it tough lies on the ride at all times (owner 2026-10-23: "show it on the ride line even without hovering
+   but on 50% opacity"): each line's stretches a band of its colour at half strength (TOUGH_REST) under the ride, wider
+   than the line, so the colour shows on both sides of the orange (over it, the wind's and the main roads' dark orange
+   read as the line itself); the water gap's highlighter at half strength too. Pointing at a line draws it at full
+   strength over the veil, and the others step back under it. A long day is the whole ride, so it draws nothing. */
+const TOUGH_REST = 0.5, GAP_OPACITY = 0.55;
+let toughFound = null;
+function drawTough(found){
+  toughFound = found;
+  const src = map.getSource('plan-tough'); if(!src) return;
+  const live = !asleep && Array.isArray(found);
+  const parts = live ? [...new Set(found.map(x => TOUGH_PART[x.kind]))].filter(cls => cls && cls !== 'all' && cls !== 'water') : [];
+  // The longest first, so a short stretch (the steepest km) lies on top of a long one (all the climbing).
+  const sets = parts.map(cls => { const spans = partSpans(cls); return { cls, spans, m: spans.reduce((t, [a, b]) => t + b - a, 0) }; }).sort((a, b) => b.m - a.m);
+  const features = [];
+  for(const s of sets) for(const [a, b] of s.spans){ const c = sliceAlong(ride.legs, a, b); if(c.length >= 2) features.push({ type: 'Feature', properties: { c: MAP_PART[s.cls] || '#FF5A1F' }, geometry: { type: 'LineString', coordinates: c } }); }
+  src.setData({ type: 'FeatureCollection', features });
+  showGap(live && found.some(x => x.kind === 'water'));
+  headArrows(live && found.some(x => x.kind === 'wind'));
+  restLook(null);
+}
+/* The water gap's strength: full while its line is pointed at, none while another stat is (it lies over the veil),
+   half at rest, and none at rest while the ride line is hidden. The headwind's arrows at rest go while anything is
+   pointed at: the arrows lit then stand elsewhere. */
+function restLook(cls){
+  // The weather chart asks on every move of the pointer: the style changes only when a strength does.
+  const set = (id, prop, v) => { if(map.getLayer(id) && map.getPaintProperty(id, prop) !== v) map.setPaintProperty(id, prop, v); };
+  set('plan-gap', 'line-opacity', cls === 'water' ? GAP_OPACITY : cls ? 0 : lineShown ? GAP_OPACITY * TOUGH_REST : 0);
+  set('plan-wind-rest', 'icon-opacity', cls ? 0 : TOUGH_REST);
+}
 /* The day as the panel reads it now: riding time, total, the forecast of the hours ridden and how they feel. */
 function dayNow(){
   const day = rideTime(dayLegs(), ride.bike), total = figures(ride.legs).distM;
@@ -756,16 +786,39 @@ function partSpans(cls){
   if(SURF_PARTS.has(cls)) return surfaceSpans(ride.legs, cls, leg => leg.recorded ? null : tileSeen.get(leg.key), SAMPLE_M);
   return gradientSpans(ride.legs, cls);
 }
-/* The wind's direction drawn along the ride (owner 2026-10-17): arrows where the wind blows, about every 1.5 km, from
-   the hour pointed at in the chart or the hours ridden; null clears them. */
+/* The wind's direction drawn along the ride (owner 2026-10-17): arrows where the wind blows, about every WIND_ARROW_M
+   (owner 2026-10-23: half as many as the first 1.5 km), from the hour pointed at in the chart or the hours ridden, at
+   full strength; null clears them. */
+const WIND_ARROW_M = 3000;
+function windPoints(at, fromDeg, kmh){
+  return at.map(m => pointAt(ride.legs, m)).filter(Boolean).map(p => ({ type: 'Feature', properties: { rot: (fromDeg + 180) % 360, kmh: Number.isFinite(kmh) ? kmh : 15 }, geometry: { type: 'Point', coordinates: p } }));
+}
 function windArrows(fromDeg, kmh){
   const src = map.getSource('plan-wind'); if(!src) return;
-  const total = figures(ride.legs).distM, feats = [];
+  const total = figures(ride.legs).distM, at = [];
   if(Number.isFinite(fromDeg) && total > 0){
-    const n = Math.max(6, Math.min(40, Math.round(total / 1500)));
-    for(let i = 0; i < n; i++){ const p = pointAt(ride.legs, (i + 0.5) * total / n); if(p) feats.push({ type: 'Feature', properties: { rot: (fromDeg + 180) % 360, kmh: Number.isFinite(kmh) ? kmh : 15 }, geometry: { type: 'Point', coordinates: p } }); }
+    const n = Math.max(3, Math.min(20, Math.round(total / WIND_ARROW_M)));
+    for(let i = 0; i < n; i++) at.push((i + 0.5) * total / n);
   }
-  src.setData({ type: 'FeatureCollection', features: feats });
+  src.setData({ type: 'FeatureCollection', features: windPoints(at, fromDeg, kmh) });
+}
+/* At rest, arrows stand on the stretches ridden into the wind only, at half strength (owner 2026-10-23: "show the
+   arrows where there is head wind only"): a road's bends cut a headwind into short pieces, so pieces closer than
+   HEAD_GAP_M are one stretch; a stretch of HEAD_MIN_M or more has one arrow per WIND_ARROW_M, at least one. */
+const HEAD_GAP_M = 300, HEAD_MIN_M = 500;
+function headArrows(on){
+  const src = map.getSource('plan-wind-rest'); if(!src) return;
+  const [fromDeg, kmh] = on ? ridingWind() : [null, null], at = [];
+  if(Number.isFinite(fromDeg)){
+    const runs = [];
+    for(const [a, b] of partSpans('wind-into')){ const last = runs[runs.length - 1]; if(last && a - last[1] < HEAD_GAP_M) last[1] = b; else runs.push([a, b]); }
+    for(const [a, b] of runs){
+      if(b - a < HEAD_MIN_M) continue;
+      const k = Math.max(1, Math.round((b - a) / WIND_ARROW_M));
+      for(let i = 0; i < k; i++) at.push(a + (i + 0.5) * (b - a) / k);
+    }
+  }
+  src.setData({ type: 'FeatureCollection', features: windPoints(at, fromDeg, kmh) });
 }
 function ridingWind(){ const fc = forecast && rideHours(forecast, startMin(), (rideTime(dayLegs(), ride.bike) || {}).seconds); return fc ? [fc.windFromDeg, fc.windKmh] : [null, null]; }
 /* The map steps back while a stat or the weather is pointed at (owner 2026-10-18: "else it will be too much info"):
@@ -816,10 +869,12 @@ function lightHour(hr){
   if(span && map.getLayer('plan-hl')) map.setPaintProperty('plan-hl', 'line-color', '#FF5A1F');
   windArrows(h ? h.fromDeg : null, h ? h.windKmh : null);
   rainDrops(span ? [span] : null, h ? h.rainMm : 0);
+  restLook(h ? 'hour' : null);
   focusMap(!!h);
 }
 function lightPart(cls){
   focusMap(!!cls);
+  restLook(cls);
   windArrows(...(cls && cls.startsWith('wind-') ? ridingWind() : [null, null]));
   if(cls === 'rain'){ const n = dayNow(); rainDrops(partSpans('rain'), n.fc ? n.fc.rainMm : 0); } else rainDrops(null, 0);
   const src = map.getSource('plan-hl'); if(!src) return;
@@ -901,7 +956,7 @@ function dirWord(deg){ const k = DIRS[Math.round(((deg % 360) + 360) % 360 / 45)
    "Nothing out of the ordinary" when none is. */
 function renderTougher(day, f){
   const grp = $('planTougherGrp'), ul = $('planTougher'); if(!grp || !ul) return;
-  if(!day){ grp.hidden = true; renderWeather(null); return; }
+  if(!day){ grp.hidden = true; drawTough(null); renderWeather(null); return; }
   const start = ride.stops[0];
   const fc = forecast && forecast.date === rideDate() && forecastPoint(ride.legs) ? rideHours(forecast, startMin(), day.seconds) : null;
   // The rider's average pace: the wind chill on the bike counts the air the rider rides into (route-planner.md section 4.4).
@@ -939,6 +994,7 @@ function renderTougher(day, f){
     else if(x.kind === 'rain') lines.push(rainText(x.mm));
     for(let i = before; i < lines.length; i++) parts[i] = TOUGH_PART[x.kind] || null;
   }
+  drawTough(found);
   renderWeather(fc, new Set(found.map(x => x.kind)), feel);
   // The credit names Open-Meteo, a link to its own page for the same rounded point and day, then what CC BY 4.0
   // asks of the data (route-planner.md section 4.4): the licence, linked, and that we changed it (summarised for the
@@ -1113,7 +1169,8 @@ function wireWeatherHover(root){
 }
 /* The water stop nearest the middle of the longest stretch without water or food (route-planner.md section 4.4), from our
    own data through /map/coverage/nearby, in at its km along as Add to ride puts a place. */
-/* The longest stretch without water or food on the map while its line in the panel is hovered or focused (owner 2026-10-15). */
+/* The longest stretch without water or food on the map while its line is in the panel (owner 2026-10-15, at all times
+   2026-10-23); restLook() sets its strength. */
 function showGap(on){
   const src = map.getSource('plan-gap'); if(!src) return;
   const span = on && alongRows ? waterGapSpan(nearRows().concat(stopRows(ride.stops, ride.legs)), figures(ride.legs).distM) : null;
@@ -1435,7 +1492,8 @@ function joinEnds(){
   if(s0 && s1) ea.title = (join ? s0.name + ' · ' + s1.name : s0.name) + '\n' + (P().removeHint || '');
 }
 function applyLineShown(){
-  ['plan-casing', 'plan-line', 'plan-straight', 'plan-arrows'].forEach(id => { if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', lineShown ? 'visible' : 'none'); });
+  ['plan-casing', 'plan-line', 'plan-straight', 'plan-tough', 'plan-wind-rest', 'plan-arrows'].forEach(id => { if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', lineShown ? 'visible' : 'none'); });
+  restLook(null);
   const b = $('planLineToggle'); if(!b) return;
   const label = lineShown ? (P().lineHide || 'Hide the ride line') : (P().lineShow || 'Show the ride line');
   b.setAttribute('aria-pressed', lineShown ? 'true' : 'false'); b.title = label; b.setAttribute('aria-label', label);
@@ -1486,15 +1544,19 @@ function addLayers(){
   if(map.getSource('plan')) return;
   map.addSource('plan', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   map.addSource('plan-straight', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-  // The longest stretch without water or food, while its line in the panel is hovered (owner 2026-10-15), under the ride;
-  // a yellow highlighter, because blue next to a river read as the river.
+  // The longest stretch without water or food, while its line is in the panel (owner 2026-10-15), under the ride; a
+  // yellow highlighter, because blue next to a river read as the river; half strength until its line is pointed at.
   map.addSource('plan-gap', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   // The shortest way of a leg, from "Why this way?" (owner 2026-10-15): dark and dashed, so it reads as a choice, not the ride.
   map.addSource('plan-alt', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   map.addLayer({ id: 'plan-alt', type: 'line', source: 'plan-alt', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#1F2A44', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 2.5, 18, 5], 'line-dasharray': [1.6, 1.4] } });
   // The stretches of the stat the rider points at (owner 2026-10-17), over the ride: a dark edge, the part's colour.
   map.addSource('plan-hl', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-  map.addLayer({ id: 'plan-gap', type: 'line', source: 'plan-gap', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#F5C518', 'line-opacity': 0.55, 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 9, 18, 18] } });
+  map.addLayer({ id: 'plan-gap', type: 'line', source: 'plan-gap', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#F5C518', 'line-opacity': GAP_OPACITY * TOUGH_REST, 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 9, 18, 18] } });
+  // What makes it tough at rest: each line's stretches a band of its own colour (`c`) at half strength, under the ride
+  // and over the water gap, narrower than the gap and wider than the line with its edge.
+  map.addSource('plan-tough', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  map.addLayer({ id: 'plan-tough', type: 'line', source: 'plan-tough', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['get', 'c'], 'line-opacity': TOUGH_REST, 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 7, 18, 13] } });
   // Thin, so the surface band under the ride stays readable on both sides of it (owner 2026-10-15).
   map.addLayer({ id: 'plan-casing', type: 'line', source: 'plan', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#F3EBD8', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 18, 4.5], 'line-opacity': .7 } });
   map.addLayer({ id: 'plan-line', type: 'line', source: 'plan', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#FF5A1F', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1.8, 18, 3] } });
@@ -1510,13 +1572,18 @@ function addLayers(){
   map.addLayer({ id: 'plan-veil', type: 'background', paint: { 'background-color': '#F3EBD8', 'background-opacity': 0, 'background-opacity-transition': { duration: still ? VEIL_FADE_STILL_MS : VEIL_FADE_MS, delay: 0 } } });
   map.addSource('plan-rain', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   map.addLayer({ id: 'plan-rain', type: 'symbol', source: 'plan-rain', layout: { 'icon-image': 'plan-rain-drop', 'icon-size': ['interpolate', ['linear'], ['get', 'mm'], 0.1, 0.6, 1, 0.85, 4, 1.25], 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
+  const windLayout = { 'icon-image': WIND_IMAGE, 'icon-size': ['interpolate', ['linear'], ['zoom'], 8, ['*', 0.85, WIND_SCALE], 14, ['*', 1.25, WIND_SCALE]], 'icon-rotate': ['get', 'rot'], 'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true };
+  // The headwind's arrows at rest, at half strength (headArrows()); the lit ones over them (windArrows()).
+  map.addSource('plan-wind-rest', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  map.addLayer({ id: 'plan-wind-rest', type: 'symbol', source: 'plan-wind-rest', layout: windLayout, paint: { 'icon-opacity': TOUGH_REST } });
   map.addSource('plan-wind', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-  map.addLayer({ id: 'plan-wind', type: 'symbol', source: 'plan-wind', layout: { 'icon-image': WIND_IMAGE, 'icon-size': ['interpolate', ['linear'], ['zoom'], 8, ['*', 0.85, WIND_SCALE], 14, ['*', 1.25, WIND_SCALE]], 'icon-rotate': ['get', 'rot'], 'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
+  map.addLayer({ id: 'plan-wind', type: 'symbol', source: 'plan-wind', layout: { ...windLayout } });
   map.addLayer({ id: 'plan-arrows', type: 'symbol', source: 'plan', minzoom: 11, layout: { 'symbol-placement': 'line', 'symbol-spacing': 90, 'icon-image': 'plan-arrow', 'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.75, 16, 1], 'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
   // Into the one stacking order (map-and-search.md section 4.1): over every other line, under the icons.
   liftInfoLayersAboveRoutes();
   applyLineShown();
   drawRide();
+  drawTough(toughFound);
 }
 /* A click on the map is a stop, also on a line or an area of ours (a route, a surface stretch, traffic; owner
    2026-10-17: the road under a surface line took no stop), whose own drawer stands aside (plannerTakesLineClick).
@@ -1787,12 +1854,8 @@ export function initPlan(){
   { const u = $('planDayUnit'); if(u) u.addEventListener('click', e => { const b = e.target.closest('button[data-u]'); if(!b) return; dayUnit = b.dataset.u; u.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderFigures(); }); }
   $('planGpx').addEventListener('click', downloadGpx);
   { const t = $('planTougher'); if(t){
+    // The gap line lights its stretch through wirePartHover, as every line does (data-part="water").
     t.addEventListener('click', e => { if(e.target.closest('[data-plan-fill-water]')) fillWater(); });
-    const leave = e => { const g = e.target.closest('.cc-plan-gap'); if(g && !g.contains(e.relatedTarget)) showGap(false); };
-    t.addEventListener('mouseover', e => { if(e.target.closest('.cc-plan-gap')) showGap(true); });
-    t.addEventListener('focusin', e => { if(e.target.closest('.cc-plan-gap')) showGap(true); });
-    t.addEventListener('mouseout', leave);
-    t.addEventListener('focusout', leave);
   } }
   { const o = $('planOpen'), f = $('planOpenFile'); if(o && f){ o.addEventListener('click', () => f.click()); f.addEventListener('change', () => { openRideFile(f.files && f.files[0]); f.value = ''; }); } }
   { const g = $('planReplaceGpx'); if(g) g.addEventListener('click', downloadGpx); }
