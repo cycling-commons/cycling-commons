@@ -2387,7 +2387,10 @@ contribute:
     invalid_year: 'Schrijf een jaartal in cijfers, bijvoorbeeld 1903.'
     suspicious_characters: 'Deze tekst bevat niet-ondersteunde tekens of gemengde schriften.'
     invalid_url: 'Voer een volledig webadres in dat begint met http:// of https://'
-    rate_limited: 'Je hebt de bijdragelimiet voorlopig bereikt — probeer het straks opnieuw.'
+    rate_limited: "Je hebt de bijdragelimiet voorlopig bereikt. Probeer het straks opnieuw."
+    rate_limited_minute: "Je vroeg in de afgelopen minuut %limit% routeberekeningen aan, het meeste dat we in een minuut maken. Je kunt het weer proberen vanaf %time%."
+    rate_limited_hour: "Je hebt in het afgelopen uur %limit% bijdragen ingestuurd, het meeste dat we in een uur aannemen. Je kunt weer insturen vanaf %time%."
+    rate_limited_day: "Je hebt in de afgelopen 24 uur %limit% bijdragen ingestuurd, het meeste dat we op een dag aannemen. Je kunt weer insturen vanaf %time%."
     route_too_complex: 'Deze track heeft te veel scherpe bochten om te verwerken — vereenvoudig hem in je GPS-app en probeer het opnieuw.'
     invalid_location: 'Stel de locatie op de kaart in voordat je verzendt.'
     name_required: 'Geef de plek een naam.'

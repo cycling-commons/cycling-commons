@@ -13,12 +13,12 @@ use App\Catalog\Entity\RouteRide;
 use App\Catalog\Entity\RouteSuggestion;
 use App\Catalog\ItemState;
 use App\Catalog\RouteSuggestionReason;
+use App\Contribution\LimitReached;
 use App\Entity\User;
 use App\Settings\SettingsProviderInterface;
 use App\Settings\SettingsRegistry;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
@@ -125,8 +125,8 @@ final class RouteCommunityService
      * @param list<array{start: float, end: float}>|null        $segments located stretches (docs/specs/route-domain.md §7)
      * @param array<string, array{was: mixed, now: mixed}>|null $changes  what a detail correction asks for (§7.1)
      *
-     * @throws TooManyRequestsHttpException over the daily suggestion limit
-     * @throws \InvalidArgumentException    if the trimmed note exceeds 2000 characters
+     * @throws LimitReached              over the daily suggestion limit
+     * @throws \InvalidArgumentException if the trimmed note exceeds 2000 characters
      */
     public function recordSuggestion(RecommendedRoute $route, User $user, RouteSuggestionReason $reason, ?string $note, ?array $segments = null, ?array $changes = null): void
     {
@@ -135,8 +135,9 @@ final class RouteCommunityService
             throw new \InvalidArgumentException('route.error.note_too_long');
         }
 
-        if (!$this->routeSuggestLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
-            throw new TooManyRequestsHttpException(null, 'contribute.error.rate_limited');
+        $rate = $this->routeSuggestLimiter->create('user-'.(string) $user->getId())->consume();
+        if (!$rate->isAccepted()) {
+            throw LimitReached::of($rate, 'day');
         }
         $this->em->persist(new RouteSuggestion((int) $route->getId(), $user->getId(), $reason, '' !== $trimmed ? $trimmed : null, $segments, $changes));
         $this->em->flush();

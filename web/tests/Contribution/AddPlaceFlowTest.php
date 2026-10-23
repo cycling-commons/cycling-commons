@@ -7,10 +7,13 @@ declare(strict_types=1);
 namespace App\Tests\Contribution;
 
 use App\Catalog\Entity\Item;
+use App\Catalog\Entity\Region;
 use App\Catalog\Entity\Submission;
 use App\Catalog\ItemState;
+use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
+use App\Moderation\Entity\ModeratorArea;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -138,6 +141,49 @@ final class AddPlaceFlowTest extends WebTestCase
         self::assertSame('Fontaine du marché', $item->getName());
         self::assertSame('Public fountain', $item->getAttributes()['type'] ?? null);
         self::assertArrayNotHasKey('name', $item->getAttributes(), 'name lives on Item::name, never in attributes');
+    }
+
+    /**
+     * A curator's own new place outside their areas cannot go live at once,
+     * so it waits like a rider's. The refusal rolls back inside
+     * ModerationService::decide() and leaves the database session open: the
+     * receipt renders and the same request can still write.
+     */
+    public function testACuratorsAddOutsideTheirAreaWaitsAndTheRequestGoesOn(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $far = (new Region())->setSlug('add-far-away')->setName('Far away')->setCountryCode('PN')->setAreaKm2(1.0)
+            ->setGeom('{"type":"MultiPolygon","coordinates":[[[[-141,-41],[-140,-41],[-140,-40],[-141,-40],[-141,-41]]]]}');
+        $em->persist($far);
+        $curator = (new User())->setEmail('addplace-curator@example.com')->setDisplayName('Far Curator')
+            ->setEmailVerified(true)->setEmailVerifiedAt(new \DateTimeImmutable())->setRoles(['ROLE_CURATOR'])
+            ->setTotpSecret('JBSWY3DPEHPK3PXP')->setTwoFaEnabled(true)->setPassword('x');
+        $em->persist($curator);
+        $em->flush();
+        $em->persist(new ModeratorArea((int) $curator->getId(), (int) $far->getId(), null));
+        $em->flush();
+        $client->loginUser($curator);
+
+        $crawler = $client->request('GET', '/improve?type=water-food&mode=add');
+        $client->submit($crawler->selectButton('Next →')->form([
+            'improve[details][name]' => 'Fontaine hors zone',
+            'improve[details][type]' => 'Public fountain',
+            'improve[details][potable]' => 'Yes (public supply)',
+            'improve[lat]' => '50.426',
+            'improve[lng]' => '6.027',
+            'improve[place]' => 'Malmedy, Wallonia',
+            'improve[mode]' => 'add',
+        ]));
+
+        self::assertResponseIsSuccessful();
+        self::assertMatchesRegularExpression('/#[0-9a-hjkmnp-tv-z]{8}/', $client->getCrawler()->filter('.receipt .ref')->text());
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        self::assertTrue($em->isOpen(), 'a refused auto-approval leaves the database session open');
+        $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Fontaine hors zone']);
+        self::assertNotNull($submission);
+        self::assertSame(SubmissionStatus::Pending, $submission->getStatus(), 'outside the curator\'s areas it waits for a curator there');
     }
 
     public function testMissingNameIsRejectedAndNothingPersists(): void

@@ -19,7 +19,6 @@ use App\Moderation\AlreadyDecidedException;
 use App\Moderation\NotTheSubmitterException;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
@@ -51,13 +50,14 @@ final class RouteProposalService
      * @param array<string, mixed> $meta form data ({@see RouteMetadata::NAME_FIELD} +
      *                                   {@see RouteMetadata::ATTRIBUTE_FIELDS}, and the photos' mediaIds/mediaAlts)
      *
-     * @throws TooManyRequestsHttpException over the daily proposal limit
-     * @throws \InvalidArgumentException    validation failure (message = translation key)
+     * @throws LimitReached              over the daily proposal limit
+     * @throws \InvalidArgumentException validation failure (message = translation key)
      */
     public function propose(string $gpxContent, array $meta, User $user): RecommendedRoute
     {
-        if (!$this->routeProposeLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
-            throw new TooManyRequestsHttpException(null, 'contribute.error.rate_limited');
+        $rate = $this->routeProposeLimiter->create('user-'.(string) $user->getId())->consume();
+        if (!$rate->isAccepted()) {
+            throw LimitReached::of($rate, 'day');
         }
 
         $name = self::nameOf($meta);
@@ -121,16 +121,17 @@ final class RouteProposalService
      *
      * @see docs/specs/route-domain.md §4.6
      *
-     * @throws NotTheSubmitterException     the route is not this rider's proposal
-     * @throws AlreadyDecidedException      a curator has decided the proposal
-     * @throws TooManyRequestsHttpException over the daily edit limit
-     * @throws \InvalidArgumentException    validation failure (message = translation key)
+     * @throws NotTheSubmitterException  the route is not this rider's proposal
+     * @throws AlreadyDecidedException   a curator has decided the proposal
+     * @throws LimitReached              over the daily edit limit
+     * @throws \InvalidArgumentException validation failure (message = translation key)
      */
     public function revise(int $routeId, ?string $gpxContent, array $meta, User $user): RouteRevision
     {
         $name = self::nameOf($meta);
-        if (!$this->routeReviseLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
-            throw new TooManyRequestsHttpException(null, 'contribute.error.rate_limited');
+        $rate = $this->routeReviseLimiter->create('user-'.(string) $user->getId())->consume();
+        if (!$rate->isAccepted()) {
+            throw LimitReached::of($rate, 'day');
         }
         $track = null === $gpxContent ? null : $this->track($gpxContent);
 

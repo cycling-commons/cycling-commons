@@ -11,6 +11,8 @@ use App\Catalog\RegionLabels;
 use App\Catalog\RegionLead;
 use App\Catalog\RegionStory;
 use App\Catalog\SubmissionType;
+use App\Contribution\LimitMessage;
+use App\Contribution\LimitReached;
 use App\Contribution\PlaceText;
 use App\Contribution\PlaceTextProposals;
 use App\Contribution\PlaceTextRefused;
@@ -28,7 +30,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -71,6 +72,7 @@ final class PlaceTextController extends AbstractController
     public function __construct(
         private readonly Languages $languages,
         private readonly TextLineage $lineage,
+        private readonly LimitMessage $limitMessage,
     ) {
     }
 
@@ -380,8 +382,9 @@ final class PlaceTextController extends AbstractController
             $result = $propose($user, $text, $request->request->getString('note'));
         } catch (PlaceTextRefused $e) {
             return $this->form(['error_params' => $e->params] + $context, $lang, $text, $e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
-        } catch (TooManyRequestsHttpException) {
-            return $this->form($context, $lang, $text, 'contribute.error.rate_limited', Response::HTTP_TOO_MANY_REQUESTS);
+        } catch (LimitReached $e) {
+            // How many the hour holds and when the next one is taken.
+            return $this->form(['error_params' => $this->limitMessage->params($e)] + $context, $lang, $text, $e->key(), Response::HTTP_TOO_MANY_REQUESTS);
         }
 
         return $this->render('contribute/place_text.html.twig', $context + [

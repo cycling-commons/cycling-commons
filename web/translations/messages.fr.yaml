@@ -2385,7 +2385,10 @@ contribute:
     invalid_year: 'Écrivez une année en chiffres, par exemple 1903.'
     suspicious_characters: 'Ce texte contient des caractères non pris en charge ou d''écritures mélangées.'
     invalid_url: 'Saisissez une adresse web complète commençant par http:// ou https://'
-    rate_limited: 'Vous avez atteint la limite de contributions pour le moment — réessayez un peu plus tard.'
+    rate_limited: "Vous avez atteint la limite de contributions pour le moment. Réessayez un peu plus tard."
+    rate_limited_minute: "Vous avez demandé %limit% calculs d'itinéraire au cours de la dernière minute, le maximum que nous faisons en une minute. Vous pourrez réessayer à partir de %time%."
+    rate_limited_hour: "Vous avez envoyé %limit% contributions au cours de la dernière heure, le maximum que nous acceptons en une heure. Vous pourrez envoyer à nouveau à partir de %time%."
+    rate_limited_day: "Vous avez envoyé %limit% contributions au cours des dernières 24 heures, le maximum que nous acceptons en un jour. Vous pourrez envoyer à nouveau à partir de %time%."
     route_too_complex: 'Cette trace comporte trop de virages serrés pour être traitée — simplifiez-la dans votre application GPS et réessayez.'
     invalid_location: 'Indiquez l’emplacement sur la carte avant d’envoyer.'
     name_required: 'Donnez un nom à ce lieu.'

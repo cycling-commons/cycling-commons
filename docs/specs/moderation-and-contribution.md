@@ -649,9 +649,12 @@ these keys):
 | Limiter | Policy | Current value | Where |
 |---|---|---|---|
 | `contribution_submit` | sliding window, per user | 20 / hour | `web/config/packages/rate_limiter.yaml` |
+| `contribution_submit_curator` | sliding window, per curator or admin, instead of the above | 300 / hour | same file |
 | `route_propose` / `route_suggest` / `ride_check` | own limiters | full inventory: [security-architecture.md](security-architecture.md) | same file; contract owned by [route-domain.md](route-domain.md) |
 
-A 429 surfaces as a translated message (`contribute.error.rate_limited`). Note
+A 429 surfaces as a translated message that names the limit and the time to
+try again (`contribute.error.rate_limited_hour`, `LimitReached`,
+[security-architecture.md](security-architecture.md) §7). Note
 an ordering asymmetry that is deliberate per channel: item intake consumes a
 limiter token **before** validating the draft
 (`CatalogContributionService::submitDraft()`), while the route-suggest channel

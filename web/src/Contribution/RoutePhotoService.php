@@ -16,7 +16,6 @@ use App\Media\MediaClaimService;
 use App\Moderation\OutOfScopeException;
 use App\Moderation\RouteModerationService;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
 
@@ -51,8 +50,8 @@ final class RoutePhotoService
     /**
      * @return array{suggestion: RouteSuggestion, applied: bool}
      *
-     * @throws TooManyRequestsHttpException over the daily suggestion limit
-     * @throws \InvalidArgumentException    validation failure (message = translation key)
+     * @throws LimitReached              over the daily suggestion limit
+     * @throws \InvalidArgumentException validation failure (message = translation key)
      */
     public function submit(RecommendedRoute $route, User $by, mixed $rawMediaIds, mixed $rawAlts, ?string $note): array
     {
@@ -66,8 +65,9 @@ final class RoutePhotoService
         if (null !== $note && mb_strlen($note) > self::NOTE_MAX_LENGTH) {
             throw new \InvalidArgumentException('propose_route.error.note_too_long');
         }
-        if (!$this->routeSuggestLimiter->create('user-'.(string) $by->getId())->consume()->isAccepted()) {
-            throw new TooManyRequestsHttpException(null, 'contribute.error.rate_limited');
+        $rate = $this->routeSuggestLimiter->create('user-'.(string) $by->getId())->consume();
+        if (!$rate->isAccepted()) {
+            throw LimitReached::of($rate, 'day');
         }
 
         $suggestion = $this->em->wrapInTransaction(function () use ($route, $by, $rawMediaIds, $rawAlts, $note): RouteSuggestion {

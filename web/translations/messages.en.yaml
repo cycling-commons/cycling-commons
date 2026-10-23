@@ -1421,7 +1421,10 @@ contribute:
     invalid_year: 'Write a year with digits only, like 1903.'
     suspicious_characters: 'This text contains unsupported or mixed-script characters.'
     invalid_url: 'Enter a full web address starting with http:// or https://'
-    rate_limited: 'You have reached the contribution limit for now — please try again in a little while.'
+    rate_limited: "You have reached the contribution limit for now. Please try again in a little while."
+    rate_limited_minute: "You asked for %limit% route calculations in the last minute, the most we make in a minute. You can try again from %time%."
+    rate_limited_hour: "You have sent %limit% contributions in the last hour, the most we take in an hour. You can send again from %time%."
+    rate_limited_day: "You have sent %limit% contributions in the last 24 hours, the most we take in a day. You can send again from %time%."
     route_too_complex: 'This track has too many sharp turns to process — simplify it in your GPS app and try again.'
     invalid_location: 'Set the location on the map before submitting.'
     name_required: 'Give the place a name.'

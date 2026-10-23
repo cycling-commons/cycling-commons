@@ -182,7 +182,8 @@ centre. Only the camera travels; the foot pin is never seeded from it
 ([../map-and-search.md §8.1](../map-and-search.md)).
 
 Submissions consume the shared per-user `contribution_submit` rate limiter
-(`web/config/packages/rate_limiter.yaml`, currently 20/hour sliding window).
+(`web/config/packages/rate_limiter.yaml`, currently 20/hour sliding window;
+a curator or admin spends `contribution_submit_curator`, 300/hour).
 
 ### Elevation, gradients and the profile live in their own spec
 

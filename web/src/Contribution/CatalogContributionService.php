@@ -37,7 +37,6 @@ use App\Service\ContributionReceipt;
 use App\Service\ContributionStubInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
 use Symfony\Component\Validator\ConstraintViolation;
@@ -59,6 +58,7 @@ final class CatalogContributionService implements ContributionStubInterface
         private readonly ValidatorInterface $validator,
         private readonly SpatialResolver $resolver,
         private readonly RateLimiterFactoryInterface $contributionSubmitLimiter,
+        private readonly RateLimiterFactoryInterface $contributionSubmitCuratorLimiter,
         private readonly MediaClaimService $mediaClaims,
         private readonly ClimbProfiler $profiler,
         private readonly LinkSafety $linkSafety,
@@ -880,9 +880,11 @@ final class CatalogContributionService implements ContributionStubInterface
      */
     public function submitDraft(SubmissionDraft $draft, SubmissionType $type, User|ApiAuthor $by, array $rawPayload = [], array $changes = []): Submission
     {
-        $limiter = $this->contributionSubmitLimiter->create(self::limiterKey($by));
-        if (!$limiter->consume()->isAccepted()) {
-            throw new TooManyRequestsHttpException(null, 'contribute.error.rate_limited');
+        // A curator or admin has their own, larger hour (security-architecture.md §7).
+        $rate = ($this->isCurator($by) ? $this->contributionSubmitCuratorLimiter : $this->contributionSubmitLimiter)
+            ->create(self::limiterKey($by))->consume();
+        if (!$rate->isAccepted()) {
+            throw LimitReached::of($rate, 'hour');
         }
 
         $violations = $this->validator->validate($draft);
@@ -1100,8 +1102,9 @@ final class CatalogContributionService implements ContributionStubInterface
      */
     private function spendValhallaBudget(RateLimiterFactoryInterface $limiter, User|ApiAuthor $by): void
     {
-        if (!$limiter->create(self::limiterKey($by))->consume()->isAccepted()) {
-            throw new TooManyRequestsHttpException(null, 'contribute.error.rate_limited');
+        $rate = $limiter->create(self::limiterKey($by))->consume();
+        if (!$rate->isAccepted()) {
+            throw LimitReached::of($rate, 'minute');
         }
     }
 

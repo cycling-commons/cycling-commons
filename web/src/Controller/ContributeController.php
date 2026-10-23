@@ -22,6 +22,8 @@ use App\Community\ItemConfirmationService;
 use App\Contribution\BikeWayLocator;
 use App\Contribution\BikeWayReading;
 use App\Contribution\CatalogContributionService;
+use App\Contribution\LimitMessage;
+use App\Contribution\LimitReached;
 use App\Contribution\SimilarPlaces;
 use App\Coverage\CoverageRepository;
 use App\Entity\User;
@@ -41,7 +43,6 @@ use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
@@ -63,6 +64,7 @@ final class ContributeController extends AbstractController
         private readonly CatalogContributionService $contributions,
         private readonly CatalogFormRegistry $registry,
         private readonly EntityManagerInterface $em,
+        private readonly LimitMessage $limitMessage,
     ) {
     }
 
@@ -351,8 +353,9 @@ final class ContributeController extends AbstractController
                 ] + $data, $user);
 
                 return $this->renderAddPlace($type, receipt: $receipt, fromOsm: true);
-            } catch (TooManyRequestsHttpException) {
-                $this->addFlash('error', 'contribute.error.rate_limited');
+            } catch (LimitReached $e) {
+                // How many the hour holds and when the next one is taken.
+                $this->addFlash('error', $this->limitMessage->text($e));
             } catch (ValidationFailedException $e) {
                 foreach ($e->getViolations() as $violation) {
                     $form->addError(new FormError((string) $violation->getMessage()));
@@ -407,8 +410,9 @@ final class ContributeController extends AbstractController
                 ] + $data, $user);
 
                 return $this->renderAddPlace($type, receipt: $receipt);
-            } catch (TooManyRequestsHttpException) {
-                $this->addFlash('error', 'contribute.error.rate_limited');
+            } catch (LimitReached $e) {
+                // How many the hour holds and when the next one is taken.
+                $this->addFlash('error', $this->limitMessage->text($e));
             } catch (ValidationFailedException $e) {
                 foreach ($e->getViolations() as $violation) {
                     $form->addError(new FormError((string) $violation->getMessage()));
@@ -552,8 +556,9 @@ final class ContributeController extends AbstractController
                     '_item_id' => $item->getId(),
                     '_title_fallback' => $translator->trans('item_type.'.$type->value.'.label'),
                 ] + (null !== $openNew ? ['_replaces' => self::replaces($data['replaces'] ?? null)] : []) + $data, $user);
-            } catch (TooManyRequestsHttpException) {
-                $this->addFlash('error', 'contribute.error.rate_limited');
+            } catch (LimitReached $e) {
+                // How many the hour holds and when the next one is taken.
+                $this->addFlash('error', $this->limitMessage->text($e));
                 $receipt = null;
             } catch (ValidationFailedException $e) {
                 foreach ($e->getViolations() as $violation) {

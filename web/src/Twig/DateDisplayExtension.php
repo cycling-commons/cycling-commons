@@ -93,6 +93,25 @@ final class DateDisplayExtension extends AbstractExtension
         return trim(($datePart ?: '').' '.($timePart ?: ''));
     }
 
+    /**
+     * A moment soon, as a refusal names when to try again: the time alone
+     * while that is today in the reader's zone, else the short date and time.
+     */
+    public function moment(\DateTimeInterface $when): string
+    {
+        $user = $this->security->getUser();
+        $zone = $user instanceof User ? $user->effectiveTimeZone() : 'UTC';
+        $tz = new \DateTimeZone($zone);
+        if (\DateTimeImmutable::createFromInterface($when)->setTimezone($tz)->format('Y-m-d') !== (new \DateTimeImmutable('now', $tz))->format('Y-m-d')) {
+            return $this->dateTime($when, true);
+        }
+        $pattern = $this->timePreference()->pattern();
+
+        return (null !== $pattern
+            ? $this->formatter(\IntlDateFormatter::NONE, \IntlDateFormatter::NONE, $pattern, $zone)
+            : $this->formatter(\IntlDateFormatter::NONE, \IntlDateFormatter::SHORT, null, $zone))->format($when) ?: '';
+    }
+
     /** Month and year for "member since". */
     public function month(\DateTimeInterface|string|int|null $value): string
     {

@@ -11,6 +11,8 @@ use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
 use App\Catalog\RouteMetadata;
+use App\Contribution\LimitMessage;
+use App\Contribution\LimitReached;
 use App\Contribution\RoutePhotoService;
 use App\Contribution\RouteProposalService;
 use App\Entity\User;
@@ -29,7 +31,6 @@ use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -53,6 +54,7 @@ final class ProposeRouteController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly MediaClaimService $claims,
         private readonly RouteQueue $routeQueue,
+        private readonly LimitMessage $limitMessage,
     ) {
     }
 
@@ -88,8 +90,9 @@ final class ProposeRouteController extends AbstractController
                     persisted: true,
                     submittedAt: new \DateTimeImmutable(),
                 );
-            } catch (TooManyRequestsHttpException) {
-                $this->addFlash('error', 'contribute.error.rate_limited');
+            } catch (LimitReached $e) {
+                // How many the hour holds and when the next one is taken.
+                $this->addFlash('error', $this->limitMessage->text($e));
             } catch (\InvalidArgumentException $e) {
                 $form->addError(new FormError($this->translator->trans($e->getMessage(), [
                     '%min%' => $this->units->distance(RouteProposalService::MIN_RAW_M / 1000, 0),
@@ -183,8 +186,9 @@ final class ProposeRouteController extends AbstractController
                 return $back;
             } catch (NotTheSubmitterException) {
                 throw $this->createNotFoundException('No route proposal of yours.');
-            } catch (TooManyRequestsHttpException) {
-                $this->addFlash('error', 'contribute.error.rate_limited');
+            } catch (LimitReached $e) {
+                // How many the hour holds and when the next one is taken.
+                $this->addFlash('error', $this->limitMessage->text($e));
             } catch (\InvalidArgumentException $e) {
                 $form->addError(new FormError($this->translator->trans($e->getMessage(), [
                     '%min%' => $this->units->distance(RouteProposalService::MIN_RAW_M / 1000, 0),
@@ -276,8 +280,9 @@ final class ProposeRouteController extends AbstractController
                     submittedAt: new \DateTimeImmutable(),
                     applied: $result['applied'],
                 );
-            } catch (TooManyRequestsHttpException) {
-                $this->addFlash('error', 'contribute.error.rate_limited');
+            } catch (LimitReached $e) {
+                // How many the hour holds and when the next one is taken.
+                $this->addFlash('error', $this->limitMessage->text($e));
             } catch (\InvalidArgumentException $e) {
                 $form->addError(new FormError($this->translator->trans($e->getMessage())));
             }

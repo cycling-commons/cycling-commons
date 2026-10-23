@@ -16,6 +16,7 @@ use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
+use App\Contribution\LimitReached;
 use App\Elevation\ClimbProfiler;
 use App\Elevation\ElevationClient;
 use App\Entity\User;
@@ -660,6 +661,50 @@ final class CatalogContributionServiceTest extends KernelTestCase
             '_item_id' => $item->getId(), 'lat' => 50.47, 'lng' => 5.86,
             'route' => '[[50.46,5.85],[50.47,5.86],[50.48,5.87]]',
         ], $rider);
+    }
+
+    /**
+     * A rider who has spent the hour's contributions learns how many the hour
+     * holds and from when the next one is taken (LimitReached), not "later".
+     */
+    public function testARiderAtTheHourlyLimitLearnsTheNumberAndTheTime(): void
+    {
+        $rider = $this->rider();
+        $budget = static::getContainer()->get('limiter.contribution_submit')->create('user-'.(string) $rider->getId());
+        $budget->consume($budget->consume(0)->getRemainingTokens());
+
+        try {
+            $this->service->submit('add', ['type' => 'climbs', 'details' => ['name' => 'One too many'], 'lat' => '50.47', 'lng' => '5.86'], $rider);
+            self::fail('the 21st contribution in an hour is refused');
+        } catch (LimitReached $e) {
+            self::assertSame(20, $e->limit);
+            self::assertSame('hour', $e->per);
+            self::assertGreaterThan(new \DateTimeImmutable(), $e->retryAt);
+        }
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function curatorRoles(): iterable
+    {
+        yield 'curator' => ['ROLE_CURATOR'];
+        yield 'admin' => ['ROLE_ADMIN'];
+    }
+
+    /** Curators and admins spend their own 300 an hour, never the riders' 20. */
+    #[\PHPUnit\Framework\Attributes\DataProvider('curatorRoles')]
+    public function testACuratorSpendsItsOwnLargerBudget(string $role): void
+    {
+        $curator = $this->curator()->setRoles([$role]);
+        $this->em->flush();
+        $riders = static::getContainer()->get('limiter.contribution_submit')->create('user-'.(string) $curator->getId());
+        $riders->consume($riders->consume(0)->getRemainingTokens());
+        $own = static::getContainer()->get('limiter.contribution_submit_curator')->create('user-'.(string) $curator->getId());
+        self::assertSame(300, $own->consume(0)->getLimit());
+
+        $receipt = $this->service->submit('add', ['type' => 'climbs', 'details' => ['name' => 'Climb by '.$role], 'lat' => '50.47', 'lng' => '5.86'], $curator);
+
+        self::assertTrue($receipt->persisted, $role.' is not held to the riders\' 20');
+        self::assertSame(299, $own->consume(0)->getRemainingTokens(), $role.' spends its own budget');
     }
 
     public function testVoteStaysUnpersisted(): void

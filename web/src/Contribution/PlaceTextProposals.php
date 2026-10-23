@@ -24,7 +24,6 @@ use App\Town\TownSummaryRepository;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
 
@@ -73,6 +72,7 @@ final readonly class PlaceTextProposals
         private TownSummaryRepository $towns,
         private TownPlaceRepository $places,
         private RateLimiterFactoryInterface $contributionSubmitLimiter,
+        private RateLimiterFactoryInterface $contributionSubmitCuratorLimiter,
         private ModerationService $moderation,
         private RoleHierarchyInterface $roleHierarchy,
         private ModerationScopeProvider $scopes,
@@ -219,8 +219,8 @@ final readonly class PlaceTextProposals
      *
      * @return array{submission: Submission, applied: bool}
      *
-     * @throws PlaceTextRefused             on text the form must send back
-     * @throws TooManyRequestsHttpException past the contribution rate limit
+     * @throws PlaceTextRefused on text the form must send back
+     * @throws LimitReached     past the contribution rate limit
      */
     public function proposeTown(User $by, string $osmRef, string $lang, string $text, string $note, ?string $name, ?bool $derived, ?string $basedOn = null): array
     {
@@ -266,8 +266,8 @@ final readonly class PlaceTextProposals
      *
      * @return array{submission: Submission, applied: bool}
      *
-     * @throws PlaceTextRefused             on text the form must send back
-     * @throws TooManyRequestsHttpException past the contribution rate limit
+     * @throws PlaceTextRefused on text the form must send back
+     * @throws LimitReached     past the contribution rate limit
      */
     public function proposeRegion(User $by, array $region, string $lang, string $text, string $note, ?bool $derived, ?string $basedOn = null): array
     {
@@ -312,8 +312,8 @@ final readonly class PlaceTextProposals
      *
      * @return array{submission: Submission, applied: bool}
      *
-     * @throws PlaceTextRefused             on text the form must send back
-     * @throws TooManyRequestsHttpException past the contribution rate limit
+     * @throws PlaceTextRefused on text the form must send back
+     * @throws LimitReached     past the contribution rate limit
      */
     public function proposeStory(User $by, array $region, string $lang, string $text, string $note, bool $linksConfirmed = false, ?string $basedOn = null): array
     {
@@ -770,10 +770,14 @@ final readonly class PlaceTextProposals
         $this->em->flush();
     }
 
+    /** A curator or admin has their own, larger hour (security-architecture.md §7). */
     private function consumeRateLimit(User $by): void
     {
-        if (!$this->contributionSubmitLimiter->create('user-'.(string) $by->getId())->consume()->isAccepted()) {
-            throw new TooManyRequestsHttpException(null, 'contribute.error.rate_limited');
+        $curator = \in_array('ROLE_CURATOR', $this->roleHierarchy->getReachableRoleNames($by->getRoles()), true);
+        $rate = ($curator ? $this->contributionSubmitCuratorLimiter : $this->contributionSubmitLimiter)
+            ->create('user-'.(string) $by->getId())->consume();
+        if (!$rate->isAccepted()) {
+            throw LimitReached::of($rate, 'hour');
         }
     }
 }

@@ -597,7 +597,8 @@ exceptions, each for a reason worth knowing:
 
 | Limiter | Policy | Limit (current config) | Key | Guards | Over-limit behaviour |
 |---|---|---|---|---|---|
-| `contribution_submit` | sliding_window | 20 / 1 hour | `user-<id>` | All item-submission intake, `App\Contribution\CatalogContributionService::submitDraft()` (every `/improve` arm: edit, and `mode=add` for all catalog types including climbs) | `TooManyRequestsHttpException` → flash `contribute.error.rate_limited`, form re-rendered (`ContributeController`) |
+| `contribution_submit` | sliding_window | 20 / 1 hour | `user-<id>` | All item-submission intake, `App\Contribution\CatalogContributionService::submitDraft()` (every `/improve` arm: edit, and `mode=add` for all catalog types including climbs), and town and region texts (`App\Contribution\PlaceTextProposals`) | `App\Contribution\LimitReached` (a `TooManyRequestsHttpException` with the limit and the retry time) → `contribute.error.rate_limited_hour`: how many the hour holds and from when the next one is taken, in the rider's time format (`LimitMessage`); a flash with the form re-rendered (`ContributeController`), the form's error (`PlaceTextController`) |
+| `contribution_submit_curator` | sliding_window | 300 / 1 hour | `user-<id>` | The same intake for a curator or admin (`ROLE_CURATOR` reached through the role hierarchy), instead of `contribution_submit`: they work the catalogue in bulk from a 2FA account, and 300 is still a brake on a stolen one | As `contribution_submit` |
 | `translation_propose` | sliding_window | 60 / 1 hour | `user-<id>` | In-site UI translation proposals: `App\Translation\ProposalService::submit()` ([translations.md](translations.md) §4); a human can translate a page, a loop cannot fill the curator desk | `TooManyRequestsHttpException` → flash `translate.error.rate_limited`, form re-rendered (`TranslateController`) |
 | `route_propose` | sliding_window | 3 / 1 day | `user-<id>` | Route proposal intake (GPX upload): `App\Contribution\RouteProposalService::propose()`; proposals are heavier than pin edits, the supply gate starts at intake | `TooManyRequestsHttpException` → flash (`ProposeRouteController`) |
 | `route_revise` | sliding_window | 20 / 1 day | `user-<id>` | The proposer's own edit of a route proposal still waiting for review, `App\Contribution\RouteProposalService::revise()` ([route-domain.md](route-domain.md) §4.6); a new GPX is parsed and profiled again, so this bounds that compute | `TooManyRequestsHttpException` → flash, form re-rendered (`ProposeRouteController::edit`) |
@@ -655,7 +656,7 @@ refuses**: over budget the report still files and still pins to the desk, it
 simply hides nothing.
 
 
-Storage note: every limiter but `contribution_submit` uses its own dedicated
+Storage note: every limiter but `contribution_submit` and `contribution_submit_curator` uses its own dedicated
 cache pool, `cache.<name>_limiter` (the three `verify_resend*` limiters share
 `cache.verify_resend_limiter`; `bug_report_no_js` uses
 `cache.bug_report_nojs_limiter` and `public_api_read` uses
@@ -665,7 +666,20 @@ the array adapter in test via that inheritance, and all but `content_report`,
 additionally overridden to the array adapter under `when@test`. A persistent
 pool would carry limiter counters across phpunit runs while DAMA reuses user
 ids, which flakes tests. A new limiter should copy this pool-plus-test-override
-shape. `contribution_submit` uses the default pool.
+shape. `contribution_submit` and `contribution_submit_curator` use the default pool.
+
+Every contribution limit says when to try again. The intake's limits
+(`contribution_submit`, `contribution_submit_curator`, the Valhalla budgets
+`elevation` and `route_snap` the intake spends, and the route channels
+`route_propose`, `route_revise`, `route_suggest`) throw
+`App\Contribution\LimitReached` with the limiter's own number, its period
+(minute, hour or day) and the retry time from the `RateLimit`;
+`App\Contribution\LimitMessage` words it as `contribute.error.rate_limited_minute`,
+`_hour` or `_day` ("You have sent 20 contributions in the last hour, the most
+we take in an hour. You can send again from 23:05."). The time is the
+reader's own format and zone, the time alone while it is today
+(`DateDisplayExtension::moment()`). The plain `contribute.error.rate_limited`
+stays for a caller that shows only the exception's message.
 
 ### One construction for every pseudonymous key
 

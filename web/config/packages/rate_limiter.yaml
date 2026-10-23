@@ -126,6 +126,14 @@ framework:
             policy: sliding_window
             limit: 20
             interval: '1 hour'
+        # A curator or admin works the catalogue in bulk (a run of region
+        # texts, a batch of fixes) and has an account behind 2FA, so they get
+        # their own, larger hour instead of the riders' 20. Still a brake: a
+        # stolen curator account cannot flood the queue.
+        contribution_submit_curator:
+            policy: sliding_window
+            limit: 300
+            interval: '1 hour'
         # route-domain.md §10: proposals are heavier than pin edits, the
         # supply gate starts at intake.
         route_propose:

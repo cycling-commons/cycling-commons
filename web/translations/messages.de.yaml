@@ -2390,7 +2390,10 @@ contribute:
     invalid_year: 'Schreib eine Jahreszahl in Ziffern, zum Beispiel 1903.'
     suspicious_characters: 'Dieser Text enthält nicht unterstützte Zeichen oder gemischte Schriftsysteme.'
     invalid_url: 'Gib eine vollständige Webadresse ein, die mit http:// oder https:// beginnt.'
-    rate_limited: 'Du hast das Beitragslimit vorerst erreicht — bitte versuche es später erneut.'
+    rate_limited: "Du hast das Beitragslimit vorerst erreicht. Bitte versuche es später erneut."
+    rate_limited_minute: "Du hast in der letzten Minute %limit% Routenberechnungen angefragt, mehr machen wir in einer Minute nicht. Ab %time% kannst du es wieder versuchen."
+    rate_limited_hour: "Du hast in der letzten Stunde %limit% Beiträge geschickt, mehr nehmen wir in einer Stunde nicht an. Ab %time% kannst du wieder senden."
+    rate_limited_day: "Du hast in den letzten 24 Stunden %limit% Beiträge geschickt, mehr nehmen wir an einem Tag nicht an. Ab %time% kannst du wieder senden."
     route_too_complex: 'Dieser Track hat zu viele scharfe Kurven zum Verarbeiten — vereinfache ihn in deiner GPS-App und versuche es erneut.'
     invalid_location: 'Lege den Standort auf der Karte fest, bevor du absendest.'
     name_required: 'Gib dem Ort einen Namen.'

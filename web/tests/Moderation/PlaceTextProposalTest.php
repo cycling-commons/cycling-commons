@@ -84,6 +84,34 @@ final class PlaceTextProposalTest extends WebTestCase
         self::assertStringContainsString('Testdorp: vlak, kasseien in het centrum.', $html);
     }
 
+    /** A text over the hourly limit says how many the hour holds and from when the next one is taken. */
+    public function testATextOverTheHourlyLimitSaysHowManyAndFromWhen(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $this->twoRegions();
+        $this->fetchedTown('nl', 'Testdorp is een dorp.');
+        $rider = $this->user('ptext-rider-limit@example.com', []);
+        $client->loginUser($rider);
+        // The array cache resets between HTTP requests, so the send must be
+        // the only request: the form's token is seeded in the session instead
+        // of read from a GET (DataExportTest convention).
+        $session = $client->getSession();
+        self::assertNotNull($session);
+        $session->set('_csrf/place-text', 'seeded-token');
+        $session->save();
+        $budget = static::getContainer()->get('limiter.contribution_submit')->create('user-'.(string) $rider->getId());
+        $budget->consume($budget->consume(0)->getRemainingTokens());
+
+        $client->request('POST', '/town/'.self::TOWN.'/text?lang=nl&name=Testdorp', ['_token' => 'seeded-token', 'lang' => 'nl', 'text' => 'Testdorp heeft een molen.', 'note' => '', 'derived' => 'adapted']);
+
+        self::assertResponseStatusCodeSame(429);
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('You have sent 20 contributions in the last hour', $html);
+        self::assertMatchesRegularExpression('/You can send again from [^<]*\d{1,2}[:.]\d{2}/', $html);
+        self::assertStringContainsString('Testdorp heeft een molen.', $html, 'the words stay in the box');
+    }
+
     public function testApprovingPutsTheTextOnTheCardWithTheRidersCredit(): void
     {
         $client = static::createClient();
