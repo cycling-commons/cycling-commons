@@ -162,8 +162,9 @@ final readonly class PlaceTextWriter
 
     /**
      * True when approving this history text still needs the curator's tick:
-     * a link in it is not plainly fine (StoryLinkCheck) and the approval's
-     * confirmation (`_links.approved`) does not cover it.
+     * a link in it is not plainly fine (StoryLinkCheck), no curator confirmed
+     * it before with that problem, and the approval's confirmation
+     * (`_links.approved`) does not cover it.
      */
     public function linksUnconfirmed(Submission $submission): bool
     {
@@ -172,9 +173,9 @@ final readonly class PlaceTextWriter
         if (null === $proposal || PlaceText::STORY !== $proposal['target']) {
             return false;
         }
-        $problems = $this->links->problems($proposal['text']);
+        $open = $this->links->open($this->links->problems($proposal['text']));
 
-        return [] !== $problems && !StoryLinkCheck::covers($payload, 'approved', $problems);
+        return [] !== $open && !StoryLinkCheck::covers($payload, 'approved', $open);
     }
 
     /**

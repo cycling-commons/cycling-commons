@@ -231,7 +231,7 @@
     askLater(links);
   }
 
-  /* Live link checks: url -> {site, safety, refused} | 'checking' | 'failed'. */
+  /* Live link checks: url -> {site, safety, refused, confirmed} | 'checking' | 'failed'. */
   var checks = {};
   var limited = false;
   var timer = null;
@@ -274,6 +274,8 @@
     if (c === undefined) { return limited ? { cls: 'warn', text: say('limit') } : { cls: 'wait', text: say('checking') }; }
     if (c === 'checking') { return { cls: 'wait', text: say('checking') }; }
     if (c === 'failed') { return { cls: 'warn', text: limited ? say('limit') : say('unknown') }; }
+    /* A curator confirmed it before, with the problem it has now: no tick needed for it. */
+    if (c.confirmed) { return { cls: 'ok', text: say('confirmed') }; }
     if (c.refused) { return { cls: 'bad', text: say(c.refused) }; }
     if (c.site === 'unknown' || c.safety === 'unknown') { return { cls: 'warn', text: say('unknown') }; }
     return { cls: 'ok', text: say('ok') };

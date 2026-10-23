@@ -15,6 +15,7 @@ use App\Catalog\SubmissionType;
 use App\Contribution\PlaceText;
 use App\Contribution\PlaceTextProposals;
 use App\Contribution\PlaceTextRefused;
+use App\Contribution\StoryLinkCheck;
 use App\Contribution\SubmissionChangeSummary;
 use App\Entity\User;
 use App\Links\WebsiteChecker;
@@ -356,6 +357,110 @@ final class RegionStoryProposalTest extends WebTestCase
         self::assertSame('unsafe', $db->fetchOne('SELECT verdict FROM link_verdict WHERE url_hash = :h', ['h' => LinkVerdictStore::hash('https://malware.test/page')]), 'the Safe Browsing verdict is kept for the desk');
     }
 
+    /**
+     * A link a curator confirmed on an approved text is not asked again, in
+     * another language either, while it shows the same problem. An unsafe
+     * link is asked every time, and so is one whose problem changed.
+     */
+    public function testALinkACuratorConfirmedOnceIsNotAskedAgain(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        [$a] = $this->twoRegions();
+        $this->story($a, 'en', self::TEXT);
+        $web = new MockHttpClient(static function (string $method, string $url): MockResponse {
+            if (str_contains($url, 'dead')) {
+                return new MockResponse('', ['error' => 'Could not resolve host: dead.test']);
+            }
+            if (str_contains($url, 'parked')) {
+                return new MockResponse('<title>Buy this domain</title>', ['http_code' => 200]);
+            }
+
+            return new MockResponse('<title>Archive</title>', ['http_code' => 200]);
+        });
+        static::getContainer()->set(WebsiteChecker::class, new WebsiteChecker($web, new NullLogger()));
+        $google = new MockHttpClient(static function (string $method, string $url, array $options): MockResponse {
+            return new MockResponse(str_contains((string) ($options['body'] ?? ''), 'malware.test') ? '{"matches":[{"threat":{"url":"https://malware.test/page"}}]}' : '{}');
+        });
+        static::getContainer()->set(SafeBrowsing::class, new SafeBrowsing($google, new NullLogger(), 'test-key'));
+        $curatorA = $this->user('pstory-cur-a9@example.com', ['ROLE_CURATOR'], $a);
+        $rider = $this->user('pstory-rider9@example.com', []);
+        $region = $this->proposals()->region('pstory-a');
+        self::assertNotNull($region);
+
+        // A rider's tick on a text still waiting confirms nothing for anyone else.
+        $this->proposals()->proposeStory($rider, $region, 'fr', self::TEXT."\nVoir [la digue](https://dead.test/a).", '', true);
+        try {
+            $this->proposals()->proposeStory($curatorA, $region, 'de', self::TEXT."\nSiehe [den Deich](https://dead.test/a).", '');
+            self::fail('a tick on a waiting text is no curator\'s confirmation');
+        } catch (PlaceTextRefused $e) {
+            self::assertSame(['%urls%' => 'https://dead.test/a'], $e->params);
+        }
+
+        // The curator's own English text, ticked, goes live: the tick is the approval's.
+        $en = self::TEXT."\nSee [the old dike](https://dead.test/a), [the shop](https://parked.test/) and [the page](https://malware.test/page).";
+        $this->proposals()->proposeStory($curatorA, $region, 'en', $en, '', true);
+
+        // The Dutch text with the same dead link and the same shop needs no tick.
+        $nl = self::TEXT."\nZie [de oude dijk](https://dead.test/a) en [de winkel](https://parked.test/).";
+        $sub = $this->proposals()->proposeStory($curatorA, $region, 'nl', $nl, '')['submission'];
+        self::assertSame(SubmissionStatus::Approved, $this->fresh($sub)->getStatus());
+        self::assertSame(['https://dead.test/a', 'https://parked.test/'], $this->fresh($sub)->getPayload()['_links']['writer']['earlier'], 'kept as confirmed before, not as ticked now');
+
+        // An unsafe link is asked again every time.
+        try {
+            $this->proposals()->proposeStory($curatorA, $region, 'nl', $nl."\nEn [de pagina](https://malware.test/page).", '');
+            self::fail('an unsafe link is confirmed by hand every time');
+        } catch (PlaceTextRefused $e) {
+            self::assertSame(['%urls%' => 'https://malware.test/page'], $e->params);
+        }
+
+        // The form says so as the links appear.
+        $verdicts = static::getContainer()->get(StoryLinkCheck::class)->checkLinks(['https://dead.test/a', 'https://malware.test/page', 'https://dead.test/other']);
+        self::assertTrue($verdicts['https://dead.test/a']['confirmed']);
+        self::assertFalse($verdicts['https://malware.test/page']['confirmed'], 'never for an unsafe link');
+        self::assertFalse($verdicts['https://dead.test/other']['confirmed'], 'another address is another link');
+    }
+
+    /**
+     * Every version is on the text's public list of changes (§3.1f): newest
+     * first, its day without a time, who wrote it, and against the version
+     * before only the words it changed. The credit line leads there (↺).
+     */
+    public function testEveryVersionIsOnTheTextsListOfChanges(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        [$a] = $this->twoRegions();
+        $rider = $this->user('pstory-rider10@example.com', [], null, 'Polderfietser');
+        $curatorA = $this->user('pstory-cur-a10@example.com', ['ROLE_CURATOR'], $a);
+        $region = $this->proposals()->region('pstory-a');
+        self::assertNotNull($region);
+
+        $first = "Polders everywhere.\n\nWind did the work for three hundred years, mill by mill and dike by dike across the old lake bed.";
+        $this->proposals()->proposeStory($curatorA, $region, 'en', $first, '');
+        $second = str_replace('three hundred', 'four hundred', $first);
+        $sub = $this->proposals()->proposeStory($rider, $region, 'en', $second, '')['submission'];
+        $this->proposals()->approve($this->fresh($sub), $curatorA, $second, null, '');
+
+        $crawler = $client->request('GET', '/regions/pstory-a');
+        $icon = $crawler->filter('#story .tc-line a.ring-ico--history');
+        self::assertSame('/regions/pstory-a/story/history?lang=en', $icon->attr('href'));
+        self::assertSame('Changes to this text', $icon->attr('aria-label'));
+
+        $crawler = $client->request('GET', '/regions/pstory-a/story/history?lang=en');
+        self::assertResponseIsSuccessful();
+        self::assertSame('History, nature and culture of Pstory A (English)', $crawler->filter('h1.th-h')->text());
+        $versions = $crawler->filter('.th-list > .th-v');
+        self::assertCount(2, $versions);
+        self::assertSame('By Polderfietser', $versions->eq(0)->filter('.th-by')->text(), 'newest first, the rider named');
+        self::assertSame('three', $versions->eq(0)->filter('.th-diff del')->text());
+        self::assertSame('four', $versions->eq(0)->filter('.th-diff ins')->text());
+        self::assertDoesNotMatchRegularExpression('/\d{1,2}:\d{2}/', $versions->eq(0)->filter('.th-meta time')->text(), 'a day, not a time');
+        self::assertSame("By this region's curators", $versions->eq(1)->filter('.th-by')->text());
+        self::assertStringContainsString('Polders everywhere.', $versions->eq(1)->filter('.th-text')->text(), 'the first version whole');
+    }
+
     public function testTheFormChecksLinksAsTheyAppear(): void
     {
         $client = static::createClient();
@@ -387,7 +492,7 @@ final class RegionStoryProposalTest extends WebTestCase
 
         [$status, $data] = $ask(['token' => $token, 'urls' => ['https://archive.test/a', 'https://dead.test/b', 'https://parked.test/']]);
         self::assertSame(200, $status);
-        self::assertSame(['site' => 'live', 'safety' => 'unknown', 'refused' => null], $data['links']['https://archive.test/a'], 'no Safe Browsing key in the suite: unknown');
+        self::assertSame(['site' => 'live', 'safety' => 'unknown', 'refused' => null, 'confirmed' => false], $data['links']['https://archive.test/a'], 'no Safe Browsing key in the suite: unknown');
         self::assertSame('dead', $data['links']['https://dead.test/b']['refused']);
         self::assertSame('parked', $data['links']['https://parked.test/']['refused']);
 

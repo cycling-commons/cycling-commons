@@ -2727,6 +2727,7 @@ place_text:
   links_confirm: "J’ai ouvert moi-même les liens qui ne sont pas marqués « Vérifié : OK », et ils mènent aux bonnes pages."
   link_st_checking: "Vérification…"
   link_st_ok: "Vérifié : OK"
+  link_st_confirmed: "Vérifié : OK par un curateur"
   link_st_dead: "Aucun site ne répond"
   link_st_parked: "Domaine à vendre ou inutilisé"
   link_st_unsafe: "Google le signale"

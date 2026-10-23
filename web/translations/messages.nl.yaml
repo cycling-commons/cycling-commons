@@ -2731,6 +2731,7 @@ place_text:
   links_confirm: "Ik heb de links die niet \"Gecontroleerd: OK\" zijn zelf geopend, en ze leiden naar de juiste pagina's."
   link_st_checking: "Controleren…"
   link_st_ok: "Gecontroleerd: OK"
+  link_st_confirmed: "Gecontroleerd: OK door een curator"
   link_st_dead: "Geen website antwoordt"
   link_st_parked: "Domein te koop of ongebruikt"
   link_st_unsafe: "Google waarschuwt ervoor"

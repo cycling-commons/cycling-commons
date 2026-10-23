@@ -305,8 +305,9 @@ final readonly class PlaceTextProposals
      * sources of its facts in place.
      *
      * A link that is not plainly fine needs the writer's confirmation that
-     * they opened it and it is right (`$linksConfirmed`, the form's tick);
-     * it is kept on the payload (`_links.writer`).
+     * they opened it and it is right (`$linksConfirmed`, the form's tick),
+     * unless a curator confirmed it before (StoryLinkCheck::open()); it is
+     * kept on the payload (`_links.writer`).
      *
      * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>} $region
      *
@@ -325,7 +326,7 @@ final readonly class PlaceTextProposals
         if ($current === $text) {
             throw new PlaceTextRefused('place_text.error.unchanged');
         }
-        $problems = $this->linkProblems($text, $linksConfirmed);
+        [$problems, $earlier] = $this->linkProblems($text, $linksConfirmed);
         $this->consumeRateLimit($by);
 
         $point = $this->db->fetchOne('SELECT ST_AsGeoJSON(ST_PointOnSurface(geom)) FROM region WHERE id = :id', ['id' => $region['id']]);
@@ -341,7 +342,7 @@ final readonly class PlaceTextProposals
             'text' => $text,
             'derived' => false,
             'details' => ['note' => $note],
-        ] + ([] === $problems ? [] : ['_links' => ['writer' => StoryLinkCheck::confirmation($by, $problems)]])
+        ] + ([] === $problems ? [] : ['_links' => ['writer' => StoryLinkCheck::confirmation($by, $problems, $earlier)]])
           + self::basedOnPayload($based), [PlaceText::changeKey($lang, PlaceText::STORY) => self::pair($current, $text)], mb_substr($region['name'], 0, 200), $point, $region['countryCode'], $region['id']);
     }
 
@@ -442,15 +443,15 @@ final readonly class PlaceTextProposals
         }
         $derived = $canDerive && true === $credit;
         // A history text's links that are not plainly fine need the curator's own tick too.
-        $problems = PlaceText::STORY === $proposal['target'] ? $this->linkProblems($text, $linksConfirmed) : [];
+        [$problems, $earlier] = PlaceText::STORY === $proposal['target'] ? $this->linkProblems($text, $linksConfirmed) : [[], []];
 
-        return $this->em->wrapInTransaction(function () use ($submission, $curator, $proposal, $text, $derived, $note, $problems): Submission {
+        return $this->em->wrapInTransaction(function () use ($submission, $curator, $proposal, $text, $derived, $note, $problems, $earlier): Submission {
             if ($text !== $proposal['text']) {
                 $this->correct($submission, $curator, $text);
             }
             $this->recordCredit($submission, $curator, $derived);
             if (PlaceText::STORY === $proposal['target']) {
-                $this->recordLinks($submission, $curator, $problems);
+                $this->recordLinks($submission, $curator, $problems, $earlier);
             }
 
             return $this->moderation->decide((int) $submission->getId(), 'approve', $curator, '' === $note ? null : $note);
@@ -617,13 +618,14 @@ final readonly class PlaceTextProposals
         }
         $derived = true === ($submission->getPayload()['derived'] ?? null);
         // Their tick when they sent it is the approval's confirmation of the links.
-        $writer = $submission->getPayload()['_links']['writer']['problems'] ?? [];
-        $problems = \is_array($writer) ? array_filter($writer, 'is_string') : [];
+        $writer = $submission->getPayload()['_links']['writer'] ?? [];
+        $problems = \is_array($writer['problems'] ?? null) ? array_filter($writer['problems'], 'is_string') : [];
+        $earlier = \is_array($writer['earlier'] ?? null) ? array_values(array_filter($writer['earlier'], 'is_string')) : [];
         try {
-            $this->em->wrapInTransaction(function () use ($submission, $by, $derived, $problems): void {
+            $this->em->wrapInTransaction(function () use ($submission, $by, $derived, $problems, $earlier): void {
                 $this->recordCredit($submission, $by, $derived);
                 if ([] !== $problems) {
-                    $this->recordLinks($submission, $by, $problems);
+                    $this->recordLinks($submission, $by, $problems, $earlier);
                 }
                 $this->moderation->decide((int) $submission->getId(), 'approve', $by, null);
             });
@@ -728,31 +730,36 @@ final readonly class PlaceTextProposals
     /**
      * The links of a history text that are not plainly fine, and whether the
      * one sending or approving it confirmed them by hand
-     * (moderation-and-contribution.md §3.1c). Asked before any transaction,
-     * so a refusal leaves the request's entity manager open.
+     * (moderation-and-contribution.md §3.1c). A link a curator already
+     * confirmed with the same problem needs no new tick (StoryLinkCheck::open()).
+     * Asked before any transaction, so a refusal leaves the request's entity
+     * manager open.
      *
-     * @return array<string, string> url => problem, empty when every link checked out
+     * @return array{0: array<string, string>, 1: list<string>} url => problem (empty when every link checked out), and the addresses a curator had confirmed before
      *
-     * @throws PlaceTextRefused when there are problems and no confirmation
+     * @throws PlaceTextRefused when a link still to confirm has no tick
      */
     private function linkProblems(string $text, bool $confirmed): array
     {
         $problems = $this->links->problems($text);
-        if ([] !== $problems && !$confirmed) {
-            throw new PlaceTextRefused('place_text.error.links_unconfirmed', ['%urls%' => implode(', ', array_keys($problems))]);
+        $open = $this->links->open($problems);
+        if ([] !== $open && !$confirmed) {
+            throw new PlaceTextRefused('place_text.error.links_unconfirmed', ['%urls%' => implode(', ', array_keys($open))]);
         }
 
-        return $problems;
+        return [$problems, array_map('strval', array_keys(array_diff_key($problems, $open)))];
     }
 
     /**
      * The approving curator's confirmation of a history text's problem links,
      * on the payload (`_links.approved`), inside the approval's transaction;
-     * none when every link checked out.
+     * none when every link checked out. `$earlier` names the ones a curator
+     * had confirmed before.
      *
      * @param array<string, string> $problems
+     * @param list<string>          $earlier
      */
-    private function recordLinks(Submission $submission, User $curator, array $problems): void
+    private function recordLinks(Submission $submission, User $curator, array $problems, array $earlier = []): void
     {
         $this->em->lock($submission, LockMode::PESSIMISTIC_WRITE);
         $this->em->refresh($submission);
@@ -760,7 +767,7 @@ final readonly class PlaceTextProposals
         $links = \is_array($payload['_links'] ?? null) ? $payload['_links'] : [];
         unset($links['approved']);
         if ([] !== $problems) {
-            $links['approved'] = StoryLinkCheck::confirmation($curator, $problems);
+            $links['approved'] = StoryLinkCheck::confirmation($curator, $problems, $earlier);
         }
         $payload['_links'] = $links;
         if ([] === $links) {

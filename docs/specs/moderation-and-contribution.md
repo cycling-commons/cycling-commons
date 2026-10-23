@@ -1046,6 +1046,15 @@ culture (NL)", a town card's "Text (NL)".
     became a problem after the tick is not covered. A curator's own text
     applied at once counts their send's tick as the approval's. Revoking the
     approval drops `_links.approved`.
+  - A curator confirms a link once. An address a curator ticked on a text
+    that is approved now (`_links.approved`), with the problem it has now,
+    needs no new tick from anyone, in any language (`StoryLinkCheck::open()`):
+    a confirmation of `whc.unesco.org/en/list/818` as "could not check" on
+    the English text covers it on the Dutch one. The send and the approval
+    still keep it, listed under `earlier` in the confirmation. An unsafe
+    link is ticked every time, and so is one whose problem changed (dead
+    then, parked now). A tick on a text still waiting, rejected or taken
+    back confirms nothing for later texts.
   - The desk card and drawer still show Safe Browsing's "unsafe" or "could
     not check" flag on the links.
 - **The same check, live in the form.** As links appear in the box, pasted
@@ -1053,7 +1062,9 @@ culture (NL)", a town card's "Text (NL)".
   `story_link_check` (`POST /regions/links/check`, signed in, the form's
   own token `story-link-check`, at most 20 http(s) addresses a time, the
   `link_check` limit of 60 an hour per writer) and gets
-  `PlaceTextProposals::checkLinks()`'s verdicts: `{site, safety, refused}`
+  `PlaceTextProposals::checkLinks()`'s verdicts: `{site, safety, refused, confirmed}`
+  (`confirmed`: a curator confirmed it before, shown "Checked: OK by a
+  curator", and the tick does not ask for it)
   per address. "Links in this text" shows each link's state: "Checking...",
   "Checked: OK", "No website answers", "Domain for sale or unused", "Google
   warns about it", "Could not check", or "Check limit reached, the send

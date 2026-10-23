@@ -2746,6 +2746,7 @@ place_text:
   links_confirm: "I opened the links that are not marked \"Checked: OK\" myself, and they lead to the right pages."
   link_st_checking: "Checking…"
   link_st_ok: "Checked: OK"
+  link_st_confirmed: "Checked: OK by a curator"
   link_st_dead: "No website answers"
   link_st_parked: "Domain for sale or unused"
   link_st_unsafe: "Google warns about it"

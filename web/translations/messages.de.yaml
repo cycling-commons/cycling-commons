@@ -2732,6 +2732,7 @@ place_text:
   links_confirm: "Ich habe die Links, die nicht mit „Geprüft: OK“ markiert sind, selbst geöffnet, und sie führen zu den richtigen Seiten."
   link_st_checking: "Wird geprüft…"
   link_st_ok: "Geprüft: OK"
+  link_st_confirmed: "Geprüft: OK von einem Kurator"
   link_st_dead: "Keine Website antwortet"
   link_st_parked: "Domain zu verkaufen oder ungenutzt"
   link_st_unsafe: "Google warnt davor"

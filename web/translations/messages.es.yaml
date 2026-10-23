@@ -2753,6 +2753,7 @@ place_text:
   links_confirm: "He abierto yo mismo los enlaces que no están marcados como «Comprobado: OK», y llevan a las páginas correctas."
   link_st_checking: "Comprobando…"
   link_st_ok: "Comprobado: OK"
+  link_st_confirmed: "Comprobado: OK por un curador"
   link_st_dead: "Ningún sitio responde"
   link_st_parked: "Dominio en venta o sin uso"
   link_st_unsafe: "Google advierte sobre él"
