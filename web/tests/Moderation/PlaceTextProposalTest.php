@@ -1019,9 +1019,8 @@ final class PlaceTextProposalTest extends WebTestCase
         self::assertStringEndsWith('/moderate/text/'.$sub->getId(), (string) $json['form']);
         self::assertSame(SubmissionStatus::Pending, $this->latestText((int) $rider->getId())->getStatus());
 
-        // Reject and needs-info stay on the map. A refused decision closes
-        // the request's entity manager, as any refused transaction does.
-        static::getContainer()->get('doctrine')->resetManager();
+        // Reject and needs-info stay on the map. The refusal (a DecisionRefusal)
+        // rolled back and left the database session open for this decision.
         $this->moderation()->decide((int) $sub->getId(), 'reject', $curatorA, 'Geen bron.');
         self::assertSame(SubmissionStatus::Rejected, $this->latestText((int) $rider->getId())->getStatus());
     }

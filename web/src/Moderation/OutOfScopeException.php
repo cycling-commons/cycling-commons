@@ -13,6 +13,6 @@ namespace App\Moderation;
  *
  * @api
  */
-final class OutOfScopeException extends \RuntimeException
+final class OutOfScopeException extends \RuntimeException implements DecisionRefusal
 {
 }

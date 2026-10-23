@@ -14,6 +14,6 @@ namespace App\Moderation;
  *
  * @api
  */
-final class OsmUnansweredException extends \RuntimeException
+final class OsmUnansweredException extends \RuntimeException implements DecisionRefusal
 {
 }

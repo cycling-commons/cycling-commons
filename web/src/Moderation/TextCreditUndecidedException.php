@@ -16,6 +16,6 @@ namespace App\Moderation;
  *
  * @api
  */
-final class TextCreditUndecidedException extends \RuntimeException
+final class TextCreditUndecidedException extends \RuntimeException implements DecisionRefusal
 {
 }

@@ -15,6 +15,6 @@ namespace App\Moderation;
  *
  * @api
  */
-final class TextLinksUnconfirmedException extends \RuntimeException
+final class TextLinksUnconfirmedException extends \RuntimeException implements DecisionRefusal
 {
 }

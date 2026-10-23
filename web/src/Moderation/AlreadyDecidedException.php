@@ -11,6 +11,6 @@ namespace App\Moderation;
  *
  * @api
  */
-final class AlreadyDecidedException extends \RuntimeException
+final class AlreadyDecidedException extends \RuntimeException implements DecisionRefusal
 {
 }

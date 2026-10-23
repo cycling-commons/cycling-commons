@@ -1236,7 +1236,14 @@ Pinned by `WithdrawSubmissionTest`.
 `App\Moderation\ModerationService::decide()` is **the only write path for
 decisions** — one transaction with a pessimistic row lock (two curators racing
 on the same submission: the second sees the decided status and gets
-`AlreadyDecidedException`). Semantics per decision:
+`AlreadyDecidedException`). A refusal by one of its checks (out of the
+curator's areas, already decided, an open OSM question, an undecided
+Wikipedia credit, unconfirmed links: `App\Moderation\DecisionRefusal`) comes
+before anything changes, so the transaction rolls back and the EntityManager
+stays open for the rest of the request: a curator's own add outside their
+areas stays queued, its receipt renders, and the request can still write.
+Any other error closes the EntityManager, as `wrapInTransaction()` does.
+Semantics per decision:
 
 - **approve, `new`** → `item.state` flips `submitted → unverified`; one
   `change_history` row (`field: state`).
@@ -2105,7 +2112,7 @@ Kinds are the cases of `UserMessageKind`; §7.9 shelves them.
 ### 7.2 Every decision writes a message, in-transaction: M2
 
 `MessageService::sendSystem()` **persists without flushing** and is called
-from inside the decision's `wrapInTransaction` closure, so the message commits
+from inside the decision's transaction (`ModerationService::refusable()`), so the message commits
 atomically with the status flip; the already-decided guards make the pair
 duplicate-proof (at most one message per outcome). If the recipient's account
 is already gone (`recipientExists()`), `sendSystem()` returns `null` rather

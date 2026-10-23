@@ -72,6 +72,39 @@ final class ModerationService
     }
 
     /**
+     * EntityManager::wrapInTransaction(), except on a DecisionRefusal: its
+     * checks run before anything changes, so the transaction rolls back and
+     * the EntityManager stays open for the rest of the request. Anything else
+     * closes it, as wrapInTransaction() does, because the unit of work may
+     * then hold half a decision.
+     *
+     * @param callable(): Submission $decision
+     */
+    private function refusable(callable $decision): Submission
+    {
+        $db = $this->em->getConnection();
+        $db->beginTransaction();
+        try {
+            $submission = $decision();
+            $this->em->flush();
+            $db->commit();
+
+            return $submission;
+        } catch (DecisionRefusal $refused) {
+            $db->rollBack();
+
+            throw $refused;
+        } catch (\Throwable $failed) {
+            $this->em->close();
+            if ($db->isTransactionActive()) {
+                $db->rollBack();
+            }
+
+            throw $failed;
+        }
+    }
+
+    /**
      * @param list<string> $rejectMediaIds uuids of pending photos the curator
      *                                     unticked; only meaningful on approve
      *                                     (docs/specs/photo-uploads.md §5)
@@ -90,7 +123,7 @@ final class ModerationService
             throw new MissingReasonException('dsa_statement.desk.reject_note_required');
         }
 
-        return $this->em->wrapInTransaction(function () use ($submissionId, $decision, $curator, $note, $rejectMediaIds): Submission {
+        return $this->refusable(function () use ($submissionId, $decision, $curator, $note, $rejectMediaIds): Submission {
             // Pessimistic lock: two concurrent decides must not both apply.
             $submission = $this->em->find(Submission::class, $submissionId, LockMode::PESSIMISTIC_WRITE);
             if (null === $submission) {

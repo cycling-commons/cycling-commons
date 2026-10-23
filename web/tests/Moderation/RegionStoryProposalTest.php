@@ -336,8 +336,8 @@ final class RegionStoryProposalTest extends WebTestCase
             $this->moderation()->decide((int) $sub->getId(), 'approve', $curatorA, null);
             self::fail('the drawer\'s approve must send the curator to the form');
         } catch (TextLinksUnconfirmedException) {
-            // Thrown inside the decision's transaction, as a missing credit decision is: that request ends here.
-            static::getContainer()->get('doctrine')->resetManager();
+            // A refusal (DecisionRefusal): rolled back, and the database session stays open.
+            self::assertTrue(static::getContainer()->get(EntityManagerInterface::class)->isOpen());
         }
         try {
             $this->proposals()->approve($this->fresh($sub), $curatorA, $text, null, '');
