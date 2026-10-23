@@ -1,0 +1,93 @@
+web/translations/messages.nl.yaml
+  s_2d39df76d606c6::t_1732ffdc403e82 651,2060
+  s_e6a1e72d46cd35::t_1f45958555aa33 5951-5963
+web/src/Controller/MapController.php
+  s_2d39df76d606c6::t_3ca2b3b586d419 669
+web/tests/Controller/ModerateTownControllerTest.php
+  s_2d39df76d606c6::t_044d4b9650e447 96-103
+web/translations/messages.en.yaml
+  s_2d39df76d606c6::t_1732ffdc403e82 651,2654
+  s_e6a1e72d46cd35::t_e5bb96c9ba9637 5969-5981
+web/translations/messages.de.yaml
+  s_2d39df76d606c6::t_1732ffdc403e82 651,2063
+  s_e6a1e72d46cd35::t_1d8b00f432e512 5952-5964
+web/src/Controller/ModerateTownController.php
+  s_e6a1e72d46cd35::t_018b6afa4fb331 10,72,97-98
+web/tests/Moderation/RegionAboutTextTest.php
+  s_2d39df76d606c6::t_6563b7b84a10bf 303-311
+web/assets/map/town-text.js
+  s_2d39df76d606c6::t_3ca2b3b586d419 67-68,79-80,94-105,113-114
+web/src/Moderation/PlaceTextWriter.php
+  s_e6a1e72d46cd35::t_c78815fd551a2f 41
+  s_e6a1e72d46cd35::t_fa952c0d649ada 15,62-63,248-250,283-284
+web/translations/messages.fr.yaml
+  s_2d39df76d606c6::t_1732ffdc403e82 649,2058
+  s_e6a1e72d46cd35::t_594cc23e24f43b 5947-5959
+web/config/table_comments.yaml
+  s_2d39df76d606c6::t_05f9a8c0744929 133-137
+web/templates/pages/text_history.html.twig
+  s_2d39df76d606c6::t_fcf600357ed184 1-53
+web/tests/js/text-credit-actions.test.mjs
+  s_2d39df76d606c6::t_e16798925e9ab5 15,59-64,69-72,80-91
+web/assets/map/places.js
+  s_2d39df76d606c6::t_3ca2b3b586d419 166
+web/assets/styles/text-credit.css
+  s_2d39df76d606c6::t_3ca2b3b586d419 31-32
+docs/specs/map-and-search.md
+  s_2d39df76d606c6::t_c857c7b4ca935e 934
+  s_e6a1e72d46cd35::t_4bb01e3fb390ce 935-936
+web/src/Controller/ModerateRegionsController.php
+  s_e6a1e72d46cd35::t_018b6afa4fb331 13-14,243,291-302
+web/translations/messages.es.yaml
+  s_2d39df76d606c6::t_1732ffdc403e82 653,2661
+  s_e6a1e72d46cd35::t_39f3957f649439 5979-5991
+web/src/Contribution/TextVersions.php
+  s_2d39df76d606c6::t_2289b1c50743de 1-100
+web/assets/styles/page/pages/region.css
+  s_2d39df76d606c6::t_b773f939b94485 92-93
+web/assets/styles/page/pages/text_history.css
+  s_2d39df76d606c6::t_bd80cd1a1936bf 1-18
+web/migrations/Version20261022050000.php
+  s_2d39df76d606c6::t_45f6e3762710da 1-100
+web/src/Controller/TextHistoryController.php
+  s_2d39df76d606c6::t_ab7fef0dd5f079 18,63,74,77,83-84
+  s_2d39df76d606c6::t_9e57002ead8bd2 25
+  s_2d39df76d606c6::t_a6ba51c0688a03 1-17,19-24,26-62,64-73,75-76,78-82,85-97
+web/templates/partials/_text_credit_actions.html.twig
+  s_2d39df76d606c6::t_3ca2b3b586d419 3-5,11-13,17-18,22
+docs/specs/moderation-and-contribution.md
+  s_e6a1e72d46cd35::t_ad48cd1e97b14b 1186-1230
+web/src/Catalog/RegionLead.php
+  s_e6a1e72d46cd35::t_fb5b8f45c60c61 35-37,45
+web/templates/pages/region.html.twig
+  s_e6a1e72d46cd35::t_4c74853397c481 140-141,178-182,194-195
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "89f4494ac1a7b6c98ef93afd50ed8bcbc7107659",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_2d39df76d606c6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "27dfa27c-d621-4eaa-8bff-2444730c849d",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_e6a1e72d46cd35": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d113dd9e-8347-4141-9c0b-e3edf1031fc9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
