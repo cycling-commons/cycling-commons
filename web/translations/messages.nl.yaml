@@ -4989,6 +4989,7 @@ moderate_regions:
     title: "De geografietekst op de regiopagina"
     lead: "De geografietekst die een lezer boven aan de regiopagina ziet, per taal: waar de regio ligt, het landschap, de grootte en de buren. Geschiedenis, natuur en cultuur hebben een eigen tekst. Laat een taal leeg en de pagina houdt de Wikipedia-tekst die wij hebben opgehaald. Wat je hier schrijft vervangt die tekst, en blijft staan na de volgende Wikipedia-import."
     link: "Geografietekst"
+    story_link: "Tekst over geschiedenis, natuur en cultuur"
     no_article: "Wikipedia heeft in deze taal geen artikel over deze regio, dus de pagina laat hier niets zien tot je iets schrijft."
     placeholder: "Laat leeg om de Wikipedia-tekst te houden."
     derived_label: "Ik heb de Wikipedia-tekst hierboven bewerkt in plaats van zelf te schrijven. De pagina houdt dan de Wikipedia-vermelding en meldt dat de tekst is gewijzigd."

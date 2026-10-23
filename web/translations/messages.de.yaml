@@ -4990,6 +4990,7 @@ moderate_regions:
     title: "Der Geografietext auf der Regionsseite"
     lead: "Der Geografietext, den Lesende oben auf der Regionsseite finden, je Sprache: wo die Region liegt, ihre Landschaft, Größe und Nachbarn. Geschichte, Natur und Kultur haben einen eigenen Text. Lass eine Sprache leer, dann behält die Seite den Wikipedia-Text, den wir geerntet haben. Was du hier schreibst, ersetzt ihn und überlebt den nächsten Wikipedia-Import."
     link: "Geografietext"
+    story_link: "Text zu Geschichte, Natur und Kultur"
     no_article: "Wikipedia hat in dieser Sprache keinen Artikel zu dieser Region, die Seite zeigt hier also nichts, bis du etwas schreibst."
     placeholder: "Leer lassen, um den Wikipedia-Text zu behalten."
     derived_label: "Ich habe den Wikipedia-Text oben bearbeitet, statt einen eigenen zu schreiben. Die Seite behält dann den Wikipedia-Nachweis und sagt, dass der Text geändert wurde."

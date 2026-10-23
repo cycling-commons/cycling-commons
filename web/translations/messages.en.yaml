@@ -5007,6 +5007,7 @@ moderate_regions:
     title: "The geography text on the region page"
     lead: "The geography text a reader meets at the top of the region page, in each language: where the region lies, its landscape, size and neighbours. History, nature and culture have their own text. Leave a language empty and the page keeps the Wikipedia text we harvested. What you write here replaces it, and it survives the next Wikipedia import."
     link: "Geography text"
+    story_link: "History, nature and culture text"
     no_article: "Wikipedia has no article for this region in this language, so the page shows nothing here until you write something."
     placeholder: "Leave empty to keep the Wikipedia text."
     derived_label: "I edited the Wikipedia text above instead of writing my own. The page then keeps the Wikipedia credit and says the text was changed."

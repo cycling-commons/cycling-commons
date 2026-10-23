@@ -76,4 +76,7 @@
 button.rg-mode{border:1px solid rgba(20,22,14,.3);background:transparent;color:var(--ink);cursor:pointer}
 button.rg-mode:hover{border-color:var(--trail);color:var(--trail)}
 .rg-mode--locked{border:1px dashed rgba(20,22,14,.22);color:#8a8d7d;cursor:help}
+/* The two text editors: square buttons, stacked one width so they read as a pair. */
+.rg-texts{flex-direction:column;align-items:stretch;gap:.35rem}
+.rg-text{font-size:.78rem;padding:.4rem .75rem;border-radius:4px;text-align:center;white-space:nowrap}
 @media(max-width:700px){.rg-item{align-items:flex-start}.rg-bar{flex-basis:100px}}

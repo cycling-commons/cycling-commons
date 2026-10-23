@@ -124,13 +124,18 @@
             {% endif %}
           {% endfor %}
         </div>
-        {# The region's own lead text. Its own page rather than five textareas
-           on a card that already carries a meter, six block counts and three
-           mode buttons — and the harvested article needs somewhere to be READ
-           before a curator decides to adapt or replace it. #}
-        <div class="rg-act">
-          <a class="btn-act btn-secondary rg-mode"
+        {# The region's two texts, each on its own page rather than five
+           textareas on a card that already carries a meter, six block counts
+           and three mode buttons. The geography lead's page shows the
+           harvested article to READ before a curator adapts or replaces it;
+           the history, nature and culture text opens its own form, in the
+           desk's language, where a curator's text inside their area goes
+           live at once. #}
+        <div class="rg-act rg-texts">
+          <a class="btn-act btn-secondary rg-text"
              href="{{ path('moderate_regions_about', {slug: r.slug}) }}">{{ 'moderate_regions.about.link'|trans }}</a>
+          <a class="btn-act btn-secondary rg-text"
+             href="{{ path('region_story', {slug: r.slug, lang: app.request.locale}) }}">{{ 'moderate_regions.about.story_link'|trans }}</a>
         </div>
       </div>
           {% endfor %}

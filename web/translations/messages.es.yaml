@@ -5016,6 +5016,7 @@ moderate_regions:
     title: "El texto de geografía de la página de región"
     lead: "El texto de geografía que el lector encuentra al principio de la página de región, en cada idioma: dónde está la región, su paisaje, su tamaño y sus vecinas. La historia, la naturaleza y la cultura tienen su propio texto. Deja un idioma vacío y la página conserva el texto de Wikipedia que recogimos. Lo que escribas aquí lo sustituye, y sobrevive a la siguiente importación de Wikipedia."
     link: "Texto de geografía"
+    story_link: "Texto de historia, naturaleza y cultura"
     no_article: "Wikipedia no tiene artículo sobre esta región en este idioma, así que la página no muestra nada aquí hasta que escribas algo."
     placeholder: "Déjalo vacío para conservar el texto de Wikipedia."
     derived_label: "He editado el texto de Wikipedia de arriba en lugar de escribir el mío. La página conserva entonces el crédito de Wikipedia e indica que el texto se cambió."

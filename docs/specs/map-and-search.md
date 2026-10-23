@@ -845,7 +845,9 @@ languages.
   pairing. Emptying every box removes the override entirely (the column goes
   back to NULL and the harvest returns by itself), so undoing needs no
   re-import. Edited on its own page, `/moderate/regions/{slug}/about`, linked
-  from each region card on the Regions desk and gated by moderator areas,
+  from each region card on the Regions desk ("Geography text", a square
+  button stacked above "History, nature and culture text", which opens that
+  text's form `/regions/{slug}/story?lang={desk language}`) and gated by moderator areas,
   re-checked on the POST like every other moderation write; the page has one
   slot per language this deployment serves (`App\Routing\Languages`,
   dev-environment.md §7 i18n) and quotes the harvested text per language so

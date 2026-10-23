@@ -137,6 +137,10 @@ final class CuratedDefaultGateTest extends WebTestCase
         // The per-block breakdown, so a moderator sees WHICH kind is short.
         self::assertStringContainsString('23 more curated picks needed', $html);
         self::assertStringContainsString('3 more block(s) need at least 5', $html);
+        // Both of the region's texts open from its card: the geography lead and the history text.
+        $crawler = $client->getCrawler();
+        self::assertSame(1, $crawler->filter('a.rg-text[href="/moderate/regions/gate-unready/about"]')->count());
+        self::assertSame(1, $crawler->filter('a.rg-text[href="/regions/gate-unready/story?lang=en"]')->count());
     }
 
     /**
