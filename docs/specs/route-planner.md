@@ -713,7 +713,7 @@ no account data: the pace is general, and it stays general (section 1).
   | Longest climb | it is 5 km or longer, or climbs 300 m or more | `climbKm` 5, `climbUpM` 300 |
   | Total climbing | the whole day climbs 2000 m or more ("4,185 m of climbing in total"; owner 2026-10-19: "Everything above 2000m of climbing then it is shown as tough"), the line lighting the climbing stretches | `climbedM` 2000 |
   | Rough surface | 5 km or more on rough surface | `roughKm` 5 |
-  | Water and food | the longest stretch without is longer than 40 km | `waterKm` 40 |
+  | Water and food | the longest stretch without is longer than 50 km | `waterKm` 50 |
   | Main roads | 5 km or more without a cycle lane | `busyKm` 5 |
   | Daylight | more than an hour of the ride is in the dark: before sunrise and after sunset from the start time, or the riding time past the daylight's length without one | `darkS` 3600 |
   | Wind | the day's highest wind speed is 30 km/h or more (Beaufort 5 and up), or its gusts reach 50 km/h or more | `windKmh` 30, `gustKmh` 50 |
@@ -904,7 +904,8 @@ no account data: the pace is general, and it stays general (section 1).
     heat index with the humidity (NOAA, `heatIndexC()`), "Up to 31 °C with
     65 % humidity: feels like 35 °C" (`map.plan_heat_humid`). Under the
     chart while ordinary; a line of what makes it tough at a wind chill
-    of 0 °C or colder (`TOUGHER.coldFeelC`) or a heat index of 32 °C or
+    of 5 °C or colder (`TOUGHER.coldFeelC`), or 10 °C or colder when the
+    ride also has its rain line (`TOUGHER.coldWetFeelC`), or a heat index of 32 °C or
     more (`TOUGHER.heatFeelC`, NOAA's "extreme caution").
   - **What is watched** (owner 2026-10-17): above the chart, three icons,
     wind chill, humidity and ice (drawn, `#planWatch`). While there is

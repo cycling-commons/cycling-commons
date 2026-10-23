@@ -837,8 +837,8 @@ test('each factor gets its line only past its baseline', () => {
   assert.deepEqual(at({ climb: { km: 3, upM: 300, grad: 10 } }), ['climb'], 'so does 300 m up');
   assert.deepEqual(at({ roughM: 4999 }), []);
   assert.deepEqual(at({ roughM: 5000 }), ['rough']);
-  assert.deepEqual(at({ waterKm: 40 }), [], '40 km is not longer than 40 km');
-  assert.deepEqual(at({ waterKm: 40.1 }), ['water']);
+  assert.deepEqual(at({ waterKm: 50 }), [], '50 km is not longer than 50 km');
+  assert.deepEqual(at({ waterKm: 50.1 }), ['water']);
   assert.deepEqual(at({ waterKm: null }), [], 'a capped list gives no water line');
   assert.deepEqual(at({ busyM: 4999 }), []);
   assert.deepEqual(at({ busyM: 5000 }), ['busy']);
@@ -866,7 +866,7 @@ test('daylight: shown only when more than an hour is ridden in the dark', () => 
 
 test('the lines come in the panel\'s order, with what each line says', () => {
   const all = tougherLines({
-    distM: 120000, steep: { grad: 11, atKm: 31 }, climb: { km: 6.2, upM: 410, grad: 6.6 }, roughM: 7000, waterKm: 45, busyM: 6000,
+    distM: 120000, steep: { grad: 11, atKm: 31 }, climb: { km: 6.2, upM: 410, grad: 6.6 }, roughM: 7000, waterKm: 55, busyM: 6000,
     sun: { daylightS: 7 * 3600, sunrise: new Date(0), sunset: new Date(0) }, rideS: 8.5 * 3600,
     forecast: { date: '2026-10-17', windKmh: 35, gustKmh: 62, windFromDeg: 225, tempMaxC: 31, rainMm: 6 },
   });
@@ -1044,6 +1044,18 @@ test('the hours ridden: coldest wind chill at riding pace into the wind, hottest
   assert.ok(hot.feelC >= BASE.heatFeelC, `31 °C at 65 % feels ${hot.feelC}`);
   const lines = linesOf({ distM: 0, roughM: 0, busyM: 0, feel: { cold: { feelC: -4 }, ice: { hour: 7, why: 'frost' }, hot: null }, forecast: null });
   assert.deepEqual(lines.map(x => x.kind), ['cold', 'ice']);
+});
+
+test('cold: a wind chill of 5 °C or colder, or 10 °C or colder with the rain line', () => {
+  const dry = { date: '2026-10-17', windKmh: 10, gustKmh: null, windFromDeg: 0, tempMaxC: 12, rainMm: 0 };
+  const cold = (feelC, rainMm) => linesOf({ distM: 0, roughM: 0, busyM: 0, feel: { cold: { feelC }, hot: null, ice: null }, forecast: { ...dry, rainMm } })
+    .some(x => x.kind === 'cold');
+  assert.equal(cold(5, 0), true);
+  assert.equal(cold(5.1, 0), false, 'dry, 5.1 °C is not tough');
+  assert.equal(cold(10, 0), false);
+  assert.equal(cold(10, 1), true, 'with 1 mm of rain, 10 °C is tough');
+  assert.equal(cold(10.1, 1), false);
+  assert.equal(cold(8, 0.9), false, 'rain under the rain line does not count');
 });
 
 import { hourSpan } from '../../assets/map/plan-model.js';

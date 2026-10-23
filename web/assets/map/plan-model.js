@@ -781,7 +781,7 @@ export const TOUGHER = {
   /** This much or more on rough surface (cobbles, dirt and the like), km. */
   roughKm: 5,
   /** The longest stretch without water or food is longer than this, km. */
-  waterKm: 40,
+  waterKm: 50,
   /** This much or more on main roads without a cycle lane (motorway, trunk, primary and secondary roads by their
       OpenStreetMap class, not measured traffic), km. */
   busyKm: 5,
@@ -795,8 +795,10 @@ export const TOUGHER = {
   heatC: 30,
   /** The day's rain is this or more, mm. */
   rainMm: 1,
-  /** The wind chill on the bike, riding into the wind, is this or colder, °C. */
-  coldFeelC: 0,
+  /** The wind chill on the bike, riding into the wind, is this or colder, °C ... */
+  coldFeelC: 5,
+  /** ... or this or colder when the ride also has its rain line (rainMm), °C. */
+  coldWetFeelC: 10,
   /** The heat with its humidity feels this hot or hotter, °C (NOAA's "extreme caution" from 32). */
   heatFeelC: 32,
 };
@@ -888,7 +890,8 @@ export function tougherLines(o){
     }
   }
   const fc = o.forecast, feel = o.feel || {};
-  if(feel.cold && feel.cold.feelC <= t.coldFeelC) out.push({ kind: 'cold', feelC: feel.cold.feelC });
+  const wet = !!fc && fc.rainMm >= t.rainMm;
+  if(feel.cold && feel.cold.feelC <= (wet ? t.coldWetFeelC : t.coldFeelC)) out.push({ kind: 'cold', feelC: feel.cold.feelC });
   if(feel.ice) out.push({ kind: 'ice', hour: feel.ice.hour, why: feel.ice.why });
   if(fc){
     const gust = Number.isFinite(fc.gustKmh) && fc.gustKmh >= t.gustKmh ? fc.gustKmh : null;
