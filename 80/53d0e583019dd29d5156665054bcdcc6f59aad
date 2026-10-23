@@ -1,0 +1,30 @@
+tools/wikimedia/region_population.py
+  s_e6a1e72d46cd35::t_6b2cd1436afccc 1-16,22-43,48-52,54-61,63-149
+  s_e6a1e72d46cd35::t_70668bd68aec19 17-21,44-47,53,62
+tools/wikimedia/out/region-population.json
+  s_e6a1e72d46cd35::t_f826a57ccf91d5 1-147,149-227,229,231-422,424,426-1057,1059,1061-1182,1184,1186-1417,1419,1421-1472
+  s_e6a1e72d46cd35::t_70668bd68aec19 148,228,230,423,425,1058,1060,1183,1185,1418,1420
+tools/wikimedia/tests/test_region_population.py
+  s_e6a1e72d46cd35::t_961d159e1388ef 1-36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8053d0e583019dd29d5156665054bcdcc6f59aad",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_e6a1e72d46cd35": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d113dd9e-8347-4141-9c0b-e3edf1031fc9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
