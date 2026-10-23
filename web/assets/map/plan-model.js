@@ -785,10 +785,8 @@ export const TOUGHER = {
   /** This much or more on main roads without a cycle lane (motorway, trunk, primary and secondary roads by their
       OpenStreetMap class, not measured traffic), km. */
   busyKm: 5,
-  /** The riding time plus this does not fit in the daylight, seconds: an hour to spare. */
-  daylightSpareS: 3600,
-  /** Daylight under this is short whatever the ride, seconds: 10 hours. */
-  daylightMinS: 10 * 3600,
+  /** Riding in the dark for longer than this, seconds: an hour. */
+  darkS: 3600,
   /** The day's highest wind speed is this or more, km/h: Beaufort 5 and up ... */
   windKmh: 30,
   /** ... or its gusts reach this or more, km/h, when the forecast has them. */
@@ -874,18 +872,20 @@ export function tougherLines(o){
   if(o.busyM >= t.busyKm * 1000) out.push({ kind: 'busy', busyM: o.busyM });
   if(o.sun){
     const ride = Number.isFinite(o.rideS) ? o.rideS : 0;
-    // With a start time the ride sits in the day: starting before sunrise or arriving after sunset is riding in the dark.
+    // With a start time the ride sits in the day: the time before sunrise and after sunset is ridden in the dark.
+    // Without one, the riding time past the daylight's length is.
     const startMs = o.startAt instanceof Date ? o.startAt.getTime() : NaN;
-    let over = null, arrive = null;
-    if(ride > o.sun.daylightS) over = 'over';
-    else if(Number.isFinite(startMs)){
+    let startDarkS = 0, endDarkS = 0, arrive = null;
+    if(Number.isFinite(startMs)){
       arrive = new Date(startMs + ride * 1000);
-      if(startMs < o.sun.sunrise.getTime()) over = 'darkStart';
-      else if(arrive.getTime() > o.sun.sunset.getTime()) over = 'darkEnd';
-      else if(arrive.getTime() + t.daylightSpareS * 1000 > o.sun.sunset.getTime()) over = 'tight';
+      startDarkS = Math.min(ride, Math.max(0, (o.sun.sunrise.getTime() - startMs) / 1000));
+      endDarkS = Math.min(ride, Math.max(0, (arrive.getTime() - o.sun.sunset.getTime()) / 1000));
     }
-    else if(ride + t.daylightSpareS > o.sun.daylightS) over = 'tight';
-    if(over || o.sun.daylightS < t.daylightMinS) out.push({ kind: 'daylight', sun: o.sun, over, arrive });
+    const darkS = Number.isFinite(startMs) ? Math.min(ride, startDarkS + endDarkS) : Math.max(0, ride - o.sun.daylightS);
+    if(darkS > t.darkS){
+      const over = !Number.isFinite(startMs) ? 'over' : startDarkS && endDarkS ? 'darkBoth' : startDarkS ? 'darkStart' : 'darkEnd';
+      out.push({ kind: 'daylight', sun: o.sun, over, arrive, darkS });
+    }
   }
   const fc = o.forecast, feel = o.feel || {};
   if(feel.cold && feel.cold.feelC <= t.coldFeelC) out.push({ kind: 'cold', feelC: feel.cold.feelC });

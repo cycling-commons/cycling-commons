@@ -715,7 +715,7 @@ no account data: the pace is general, and it stays general (section 1).
   | Rough surface | 5 km or more on rough surface | `roughKm` 5 |
   | Water and food | the longest stretch without is longer than 40 km | `waterKm` 40 |
   | Main roads | 5 km or more without a cycle lane | `busyKm` 5 |
-  | Daylight | the riding time plus an hour does not fit in the daylight, or the daylight is under 10 hours | `daylightSpareS` 3600, `daylightMinS` 36000 |
+  | Daylight | more than an hour of the ride is in the dark: before sunrise and after sunset from the start time, or the riding time past the daylight's length without one | `darkS` 3600 |
   | Wind | the day's highest wind speed is 30 km/h or more (Beaufort 5 and up), or its gusts reach 50 km/h or more | `windKmh` 30, `gustKmh` 50 |
   | Heat | the day's highest temperature is 30 °C or more | `heatC` 30 |
   | Rain | the day's rain is 1 mm or more | `rainMm` 1 |
@@ -803,14 +803,11 @@ no account data: the pace is general, and it stays general (section 1).
     duration words above: "Daylight 10h 40m, 08:12 to 18:52" (French and
     Spanish "10 h 40 min", Dutch "10 u 40 min", German "10 Std. 40 Min."),
     only past its baseline above. A second line says why:
-    "The riding time is longer than the daylight." when it is; otherwise,
     from the start time (below), "Sunrise is at 08:12: you start before
-    it." (`map.plan_dark_start`), "Sunset is at 18:52: you finish after
-    it." (`map.plan_dark_end`), or "Sunset is at 18:52: you finish less
-    than an hour before it." (`map.plan_dark_tight`); a day under 10 hours
-    shows the daylight line alone. Without a start time the ride is set
-    against the daylight's length: "The riding time leaves less than an
-    hour of daylight to spare." (`map.plan_daylight_tight`).
+    it." (`map.plan_dark_start`) and "Sunset is at 18:52: you finish after
+    it." (`map.plan_dark_end`), one or both; without a start time, "The
+    riding time is longer than the daylight." (`map.plan_daylight_short`).
+    A short day, or a finish close to sunset, is not tough by itself.
   - **The start time** (owner 2026-10-17): under the day, a list of half
     hours from 04:00 to 22:00 in the 24-hour clock (`#planStartTime`; a time
     field would follow the browser's clock, 9:00 AM in an English browser).
@@ -852,7 +849,7 @@ no account data: the pace is general, and it stays general (section 1).
     stretches (`busyRuns` from `/map/plan/leg`, `[from, to]` metres per leg);
     the water gap its yellow stretch, now over the veil; the wind the
     stretches into it; rain the stretches ridden in its hours, with drops;
-    daylight the stretch ridden in the dark, or the last hour before sunset;
+    daylight the stretches ridden in the dark;
     heat, cold and ice the stretch of their hour (ice from its hour on), at
     the average pace.
     **At rest** every line of what makes it tough lies on the ride at half

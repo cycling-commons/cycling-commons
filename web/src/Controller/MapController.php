@@ -796,7 +796,6 @@ final class MapController extends AbstractController
                 'busy' => $t->trans('map.plan_busy'),
                 'daylight' => $t->trans('map.plan_daylight'),
                 'daylightShort' => $t->trans('map.plan_daylight_short'),
-                'daylightTight' => $t->trans('map.plan_daylight_tight'),
                 'wind' => $t->trans('map.plan_wind'),
                 'windGusts' => $t->trans('map.plan_wind_gusts'),
                 'heat' => $t->trans('map.plan_heat'),
@@ -813,7 +812,7 @@ final class MapController extends AbstractController
                 'keyDock' => $t->trans('map.plan_key_dock'), 'keyUndock' => $t->trans('map.plan_key_undock'),
                 'wxKmh' => $t->trans('map.plan_wx_kmh'), 'wxTip' => $t->trans('map.plan_wx_tip'), 'wxAria' => $t->trans('map.plan_wx_aria'),
                 'startTime' => $t->trans('map.plan_start_time'), 'forecastHours' => $t->trans('map.plan_forecast_hours'),
-                'darkStart' => $t->trans('map.plan_dark_start'), 'darkEnd' => $t->trans('map.plan_dark_end'), 'darkTight' => $t->trans('map.plan_dark_tight'),
+                'darkStart' => $t->trans('map.plan_dark_start'), 'darkEnd' => $t->trans('map.plan_dark_end'),
                 'dirs' => [
                     'n' => $t->trans('map.plan_dir_n'), 'ne' => $t->trans('map.plan_dir_ne'), 'e' => $t->trans('map.plan_dir_e'), 'se' => $t->trans('map.plan_dir_se'),
                     's' => $t->trans('map.plan_dir_s'), 'sw' => $t->trans('map.plan_dir_sw'), 'w' => $t->trans('map.plan_dir_w'), 'nw' => $t->trans('map.plan_dir_nw'),

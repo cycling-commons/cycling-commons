@@ -854,26 +854,25 @@ test('each factor gets its line only past its baseline', () => {
   assert.deepEqual(at({ forecast: null }), []);
 });
 
-test('daylight: shown when the ride does not fit with an hour to spare, or the day is under 10 hours', () => {
+test('daylight: shown only when more than an hour is ridden in the dark', () => {
   const sun = s => ({ daylightS: s, sunrise: new Date(0), sunset: new Date(0) });
   const day = (daylightS, rideS) => tougherLines(Object.assign(ordinary(), { sun: sun(daylightS), rideS })).find(x => x.kind === 'daylight') || null;
-  assert.equal(day(11 * 3600, 10 * 3600), null, 'exactly an hour to spare fits');
-  assert.equal(day(11 * 3600, 10 * 3600 + 60).over, 'tight');
-  assert.equal(day(11 * 3600, 11 * 3600 + 60).over, 'over');
-  assert.equal(day(10 * 3600, 3 * 3600), null, '10 hours of daylight is not short');
-  const winter = day(10 * 3600 - 60, 3 * 3600);
-  assert.ok(winter && winter.over === null, 'under 10 hours shows the daylight, without a spare-time line');
+  assert.equal(day(11 * 3600, 11 * 3600), null, 'a ride as long as the day fits');
+  assert.equal(day(11 * 3600, 12 * 3600), null, 'exactly an hour in the dark is not tough');
+  assert.equal(day(11 * 3600, 12 * 3600 + 60).over, 'over');
+  assert.equal(day(12 * 3600, 12 * 3600 + 60 * 60 + 1).darkS, 3601);
+  assert.equal(day(10 * 3600 - 60, 3 * 3600), null, 'a short winter day is not tough by itself');
 });
 
 test('the lines come in the panel\'s order, with what each line says', () => {
   const all = tougherLines({
     distM: 120000, steep: { grad: 11, atKm: 31 }, climb: { km: 6.2, upM: 410, grad: 6.6 }, roughM: 7000, waterKm: 45, busyM: 6000,
-    sun: { daylightS: 9 * 3600, sunrise: new Date(0), sunset: new Date(0) }, rideS: 8.5 * 3600,
+    sun: { daylightS: 7 * 3600, sunrise: new Date(0), sunset: new Date(0) }, rideS: 8.5 * 3600,
     forecast: { date: '2026-10-17', windKmh: 35, gustKmh: 62, windFromDeg: 225, tempMaxC: 31, rainMm: 6 },
   });
   assert.deepEqual(all.map(x => x.kind), ['long', 'steep', 'climb', 'rough', 'water', 'busy', 'daylight', 'wind', 'heat', 'rain']);
   assert.deepEqual(all.find(x => x.kind === 'wind'), { kind: 'wind', windKmh: 35, gustKmh: 62, fromDeg: 225 });
-  assert.equal(all.find(x => x.kind === 'daylight').over, 'tight');
+  assert.equal(all.find(x => x.kind === 'daylight').over, 'over');
   assert.equal(TOUGHER.longKm, 100);
   assert.equal(TOUGHER.windKmh, 30);
 });
@@ -973,12 +972,16 @@ test('the start offered is 09:00, or the next half hour later today, never past 
   assert.equal(defaultStartMin(14 * 60), 14 * 60 + 30);
   assert.equal(defaultStartMin(23 * 60), 22 * 60);
 });
-test('with a start time, the daylight line says the rider starts or finishes in the dark', () => {
+test('with a start time, the daylight line says the rider starts or finishes more than an hour in the dark', () => {
   const sun = { sunrise: new Date('2026-10-18T06:12:00Z'), sunset: new Date('2026-10-18T16:52:00Z'), daylightS: 38400 };
-  const at = iso => tougherAt({ distM: 0, roughM: 0, busyM: 0, sun, rideS: 3 * 3600, startAt: new Date(iso) }).find(x => x.kind === 'daylight');
-  assert.equal(at('2026-10-18T05:30:00Z').over, 'darkStart');
-  assert.equal(at('2026-10-18T14:30:00Z').over, 'darkEnd');
-  assert.equal(at('2026-10-18T13:30:00Z').over, 'tight');
+  const at = (iso, rideS = 3 * 3600) => tougherAt({ distM: 0, roughM: 0, busyM: 0, sun, rideS, startAt: new Date(iso) }).find(x => x.kind === 'daylight');
+  assert.equal(at('2026-10-18T05:00:00Z').over, 'darkStart', '72 minutes before sunrise');
+  assert.equal(at('2026-10-18T05:30:00Z'), undefined, '42 minutes before sunrise is not tough');
+  assert.equal(at('2026-10-18T15:00:00Z').over, 'darkEnd', '68 minutes after sunset');
+  assert.equal(at('2026-10-18T14:30:00Z'), undefined, '38 minutes after sunset is not tough');
+  assert.equal(at('2026-10-18T13:30:00Z'), undefined, 'finishing just before sunset is not tough');
+  assert.equal(at('2026-10-18T05:42:00Z', 12.5 * 3600).over, 'darkBoth', '30 minutes before sunrise and 80 after sunset');
+  assert.equal(at('2026-10-18T05:42:00Z', 12.5 * 3600).darkS, 110 * 60);
   assert.equal(at('2026-10-18T09:00:00Z'), undefined, 'a ride well inside the day of 10h 40m says nothing');
 });
 

@@ -771,7 +771,6 @@ function toughSpans(cls){
     const t0 = startAt().getTime(), rise = (sun.sunrise.getTime() - t0) / 1000, set = (sun.sunset.getTime() - t0) / 1000, out = [];
     if(rise > 0) out.push([0, secToM(rise, n)]);
     if(set < n.day.seconds) out.push([secToM(set, n), n.total]);
-    if(!out.length && set - 3600 < n.day.seconds) out.push([secToM(set - 3600, n), n.total]);   // the last hour before sunset
     return out.filter(s => s[1] > s[0]);
   }
   const at = { 'hour-hot': n.feel.hot, 'hour-cold': n.feel.cold, 'hour-ice': n.feel.ice }[cls];
@@ -982,10 +981,8 @@ function renderTougher(day, f){
     else if(x.kind === 'daylight'){
       lines.push(tpl(P().daylight || 'Daylight {d}, {from} to {to}', { d: durationText(x.sun.daylightS, durWords(), 1), from: clockText(x.sun.sunrise), to: clockText(x.sun.sunset) }));
       if(x.over === 'over') lines.push(P().daylightShort || 'The riding time is longer than the daylight.');
-      else if(x.over === 'darkStart') lines.push(tpl(P().darkStart || 'Sunrise is at {t}: you start before it.', { t: clockText(x.sun.sunrise) }));
-      else if(x.over === 'darkEnd') lines.push(tpl(P().darkEnd || 'Sunset is at {t}: you finish after it.', { t: clockText(x.sun.sunset) }));
-      else if(x.over === 'tight' && x.arrive) lines.push(tpl(P().darkTight || 'Sunset is at {t}: you finish less than an hour before it.', { t: clockText(x.sun.sunset) }));
-      else if(x.over === 'tight') lines.push(P().daylightTight || 'The riding time leaves less than an hour of daylight to spare.');
+      if(x.over === 'darkStart' || x.over === 'darkBoth') lines.push(tpl(P().darkStart || 'Sunrise is at {t}: you start before it.', { t: clockText(x.sun.sunrise) }));
+      if(x.over === 'darkEnd' || x.over === 'darkBoth') lines.push(tpl(P().darkEnd || 'Sunset is at {t}: you finish after it.', { t: clockText(x.sun.sunset) }));
     }
     else if(x.kind === 'wind') lines.push(windText(x.windKmh, x.gustKmh, x.fromDeg));
     else if(x.kind === 'heat') lines.push(x.feelC != null ? humidText(x.tempC, x.humidity, x.feelC) : heatText(x.tempC));
