@@ -1,0 +1,63 @@
+web/assets/contribute/place-text.js
+  s_e6a1e72d46cd35::t_8a6b87d8685fb2 234,277-278
+web/src/Contribution/StoryLinkCheck.php
+  s_2d39df76d606c6::t_2cf5c0bac69761 15-16,29-35,44,50-52,56,66,72-78,82-83,101,111-129,133-134,137,139,141,147,164-205
+  s_e6a1e72d46cd35::t_8a6b87d8685fb2 130-132,206
+web/src/Contribution/PlaceTextProposals.php
+  s_2d39df76d606c6::t_5e34bb8480ac73 733
+  s_e6a1e72d46cd35::t_8a6b87d8685fb2 309,621-623,625,628,734-736,738,740,745-747,750
+  s_e6a1e72d46cd35::t_d7f15309e72008 308,310,329,345,446,448,454,756-757,760,762,770
+docs/specs/moderation-and-contribution.md
+  s_2d39df76d606c6::t_6af9141e26e150 1049
+  s_e6a1e72d46cd35::t_54ce9ce73cccb6 1050-1057,1065-1067
+web/tests/Moderation/RegionStoryProposalTest.php
+  s_2d39df76d606c6::t_b695169c7b5069 409-436,438-447
+  s_2d39df76d606c6::t_a2fb3ed0d58d15 18
+  s_2d39df76d606c6::t_dbe0d30d019ba3 360-408
+  s_2d39df76d606c6::t_ab7fef0dd5f079 437
+  s_e6a1e72d46cd35::t_4689e8dcb8f429 448-463,495
+web/src/Moderation/PlaceTextWriter.php
+  s_2d39df76d606c6::t_5e34bb8480ac73 165-166
+  s_e6a1e72d46cd35::t_5c290de22787d5 167,176,178
+web/templates/contribute/place_text.html.twig
+  s_e6a1e72d46cd35::t_06ebe22e061609 174
+web/translations/messages.de.yaml
+  s_e6a1e72d46cd35::t_1487a522ce70d8 2735
+web/translations/messages.en.yaml
+  s_e6a1e72d46cd35::t_bc1623ee4db12e 2749
+web/translations/messages.es.yaml
+  s_e6a1e72d46cd35::t_ca07a022f2d6df 2756
+web/translations/messages.fr.yaml
+  s_e6a1e72d46cd35::t_dba4b68a8013b9 2730
+web/translations/messages.nl.yaml
+  s_e6a1e72d46cd35::t_de256853327e12 2734
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9daae269d69e7fe86d2da99721c4ac41e77bd309",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_2d39df76d606c6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "27dfa27c-d621-4eaa-8bff-2444730c849d",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_e6a1e72d46cd35": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d113dd9e-8347-4141-9c0b-e3edf1031fc9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
