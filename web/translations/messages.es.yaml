@@ -650,6 +650,7 @@ region:
   about_source_rider: "Escrito por %name%,"
   about_removed_rider: 'un ciclista con la cuenta eliminada'
   about_edit: 'Editar este texto'
+  about_history: "Cambios en este texto"
   about_report: 'Denunciar este texto'
   about_write: "Escribir sobre la geografía de esta región"
   story_h: "Historia, naturaleza y cultura"
@@ -2657,6 +2658,7 @@ map:
   d_text_written: 'Escrito por nuestros curadores, CC BY-SA 4.0'
   d_text_written_by: 'Escrito por {name}, CC BY-SA 4.0'
   d_text_edit: 'Editar este texto'
+  d_text_history: "Cambios en este texto"
   d_text_add: 'Escribir un texto para esta localidad'
   d_text_edit_signin: 'Inicia sesión para editar este texto'
   d_text_add_signin: 'Inicia sesión para escribir un texto para esta localidad'
@@ -5974,3 +5976,16 @@ history:
   add_h: '¿Conoces un lugar con una historia ciclista?'
   add_p: 'Añádelo como lugar de Historia y cultura, con su historia, su año y su ubicación.'
   add_cta: 'Añadir un lugar'
+text_history:
+  kicker: "Cambios en este texto"
+  title_town: "Texto sobre %name% (%lang%)"
+  title_region: "Texto de geografía de %name% (%lang%)"
+  title_story: "Historia, naturaleza y cultura de %name% (%lang%)"
+  back: "Volver a la región"
+  back_map: "Volver al mapa"
+  empty: "Este texto aún no tiene cambios registrados."
+  by: "Por %name%"
+  by_curators: "Por los curadores de esta región"
+  by_curators_town: "Por nuestros curadores"
+  revoked: "Se retiró una aprobación: el texto de antes ha vuelto."
+  removed: "Se quitó el texto escrito aquí: la página vuelve a mostrar el texto de Wikipedia."

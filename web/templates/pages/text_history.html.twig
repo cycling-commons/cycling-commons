@@ -1,0 +1,53 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  A text's public list of changes (docs/specs/moderation-and-contribution.md
+  §3.1f): a town text, a region's geography text or its history text, in one
+  language, newest first. Each version shows the day it went live, who
+  wrote it, named the way the credit line names them, and against the
+  version before it only the words it changed (TranslationDiff::around()).
+  The first version shows its whole text. Reached from the ↺ icon on the
+  text's credit line (partials/_text_credit_actions.html.twig).
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+<link rel="stylesheet" href="{{ asset('styles/page/pages/text_history.css') }}">
+{% endblock %}
+
+{% block body %}
+<section class="pad"><div class="wrap th-wrap">
+  <div class="kicker">{% trans %}text_history.kicker{% endtrans %}</div>
+  <h1 class="th-h">{{ ('text_history.title_' ~ target)|trans({'%name%': name, '%lang%': lang_name}) }}</h1>
+  <p class="th-back"><a href="{{ back }}">← {{ (target == 'town' ? 'text_history.back_map' : 'text_history.back')|trans }}</a></p>
+  {% if versions is empty %}
+    <p class="th-empty">{% trans %}text_history.empty{% endtrans %}</p>
+  {% else %}
+    {% set curators = target == 'town' ? 'text_history.by_curators_town' : 'text_history.by_curators' %}
+    <ol class="th-list">
+      {% for v in versions %}
+        <li class="th-v">
+          <p class="th-meta">
+            <time datetime="{{ v.at|date('Y-m-d') }}">{{ v.at|cc_date }}</time>
+            <span class="th-by">{{ v.curators ? curators|trans : 'text_history.by'|trans({'%name%': v.author ?? 'region.about_removed_rider'|trans}) }}</span>
+          </p>
+          {% if v.cause == 'revoke' %}<p class="th-note">{% trans %}text_history.revoked{% endtrans %}</p>{% endif %}
+          {% if v.text is null %}
+            <p class="th-note">{% trans %}text_history.removed{% endtrans %}</p>
+          {% elseif v.diff is not null %}
+            <p class="th-diff"{% if lang != app.request.locale %} lang="{{ lang }}"{% endif %}>
+              {%- for s in v.diff -%}
+                {%- if s.type == 'del' %}<del>{{ s.text }}</del>
+                {%- elseif s.type == 'ins' %}<ins>{{ s.text }}</ins>
+                {%- else %}{{ s.text }}{% endif -%}
+                {%- if not loop.last %} {% endif -%}
+              {%- endfor -%}
+            </p>
+          {% else %}
+            <p class="th-text"{% if lang != app.request.locale %} lang="{{ lang }}"{% endif %}>{{ v.text }}</p>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ol>
+  {% endif %}
+</div></section>
+{% endblock %}

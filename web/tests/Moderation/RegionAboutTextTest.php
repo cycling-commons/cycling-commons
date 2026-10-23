@@ -300,6 +300,15 @@ final class RegionAboutTextTest extends WebTestCase
         ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
         self::assertNull($this->stored($id), 'a cleared override reads the same as one that never existed');
 
+        // Both saves are on the text's public list of changes (§3.1f), newest first.
+        $crawler = $client->request('GET', '/regions/about-clear/text/history?lang=en');
+        self::assertResponseIsSuccessful();
+        $versions = $crawler->filter('.th-list > .th-v');
+        self::assertCount(2, $versions);
+        self::assertStringContainsString('taken away', $versions->eq(0)->filter('.th-note')->text(), 'the lead going');
+        self::assertSame('Temporary.', $versions->eq(1)->filter('.th-text')->text(), 'the first version whole');
+        self::assertSame("By this region's curators", $versions->eq(1)->filter('.th-by')->text(), 'a curator\'s own text is its curators\'');
+
         // And the page falls back to the harvest with its plain citation.
         $back = RegionLead::resolve(json_decode(self::WIKI, true), null, 'en');
         self::assertIsArray($back);

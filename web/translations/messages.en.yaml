@@ -648,6 +648,7 @@ region:
   about_source_rider: 'Written by %name%,'
   about_removed_rider: 'a removed rider'
   about_edit: 'Edit this text'
+  about_history: "Changes to this text"
   about_report: 'Report this text'
   about_write: "Write about the geography of this region"
   story_h: "History, nature and culture"
@@ -2650,6 +2651,7 @@ map:
   d_text_written: 'Written by our curators, CC BY-SA 4.0'
   d_text_written_by: 'Written by {name}, CC BY-SA 4.0'
   d_text_edit: 'Edit this text'
+  d_text_history: "Changes to this text"
   d_text_add: 'Write a text for this town'
   d_text_edit_signin: 'Sign in to edit this text'
   d_text_add_signin: 'Sign in to write a text for this town'
@@ -5964,3 +5966,16 @@ history:
   add_h: 'Know a place with a cycling story?'
   add_p: 'Add it as a History & culture place, with its story, its year and its location.'
   add_cta: 'Add a place'
+text_history:
+  kicker: "Changes to this text"
+  title_town: "Text about %name% (%lang%)"
+  title_region: "Geography text of %name% (%lang%)"
+  title_story: "History, nature and culture of %name% (%lang%)"
+  back: "Back to the region"
+  back_map: "Back to the map"
+  empty: "This text has no changes on record yet."
+  by: "By %name%"
+  by_curators: "By this region's curators"
+  by_curators_town: "By our curators"
+  revoked: "An approval was taken back: the text from before it is back."
+  removed: "The text written here was taken away: the page shows the Wikipedia text again."

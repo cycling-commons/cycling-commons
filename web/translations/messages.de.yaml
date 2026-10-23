@@ -648,6 +648,7 @@ region:
   about_source_rider: "Von %name% geschrieben,"
   about_removed_rider: 'ein Fahrer mit gelöschtem Konto'
   about_edit: 'Diesen Text bearbeiten'
+  about_history: "Änderungen an diesem Text"
   about_report: 'Diesen Text melden'
   about_write: "Über die Geografie dieser Region schreiben"
   story_h: "Geschichte, Natur und Kultur"
@@ -2059,6 +2060,7 @@ map:
   d_text_written: 'Von unseren Kuratoren geschrieben, CC BY-SA 4.0'
   d_text_written_by: 'Von {name} geschrieben, CC BY-SA 4.0'
   d_text_edit: 'Diesen Text bearbeiten'
+  d_text_history: "Änderungen an diesem Text"
   d_text_add: 'Einen Text für diesen Ort schreiben'
   d_text_edit_signin: 'Anmelden, um diesen Text zu bearbeiten'
   d_text_add_signin: 'Anmelden, um einen Text für diesen Ort zu schreiben'
@@ -5947,3 +5949,16 @@ history:
   add_h: 'Du kennst einen Ort mit einer Radsportgeschichte?'
   add_p: 'Füge ihn als Ort unter Geschichte & Kultur hinzu, mit seiner Geschichte, seinem Jahr und seinem Standort.'
   add_cta: 'Ort hinzufügen'
+text_history:
+  kicker: "Änderungen an diesem Text"
+  title_town: "Text über %name% (%lang%)"
+  title_region: "Geografietext von %name% (%lang%)"
+  title_story: "Geschichte, Natur und Kultur von %name% (%lang%)"
+  back: "Zurück zur Region"
+  back_map: "Zurück zur Karte"
+  empty: "Zu diesem Text sind noch keine Änderungen verzeichnet."
+  by: "Von %name%"
+  by_curators: "Von den Kuratoren dieser Region"
+  by_curators_town: "Von unseren Kuratoren"
+  revoked: "Eine Freigabe wurde zurückgenommen: Der Text von davor steht wieder da."
+  removed: "Der hier geschriebene Text wurde entfernt: Die Seite zeigt wieder den Wikipedia-Text."

@@ -28,6 +28,8 @@
   color:inherit;font-family:var(--sans);font-size:.72rem;font-weight:700;line-height:1;
   letter-spacing:0;text-transform:none;text-decoration:none;vertical-align:middle}
 .ring-ico--edit{font-weight:400}
+/* The list of changes: an open circle arrow, a touch larger to read at this size. */
+.ring-ico--history{font-weight:400;font-size:.8rem}
 a.ring-ico,.tc-line a.ring-ico,.tc-acts a.ring-ico{text-decoration:none}
 .ring-ico:hover,a:hover>.ring-ico{border-color:var(--clay);color:var(--clay)}
 a.ring-ico:focus-visible{outline:2px solid var(--clay);outline-offset:2px}

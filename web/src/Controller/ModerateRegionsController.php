@@ -10,6 +10,8 @@ use App\Catalog\CuratedReadiness;
 use App\Catalog\OperationalRegions;
 use App\Catalog\RegionLabels;
 use App\Catalog\RegionLead;
+use App\Contribution\PlaceText;
+use App\Contribution\TextVersions;
 use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
 use App\Routing\Languages;
@@ -238,7 +240,7 @@ final class ModerateRegionsController extends AbstractController
     }
 
     #[Route('/moderate/regions/{slug}/about', name: 'moderate_regions_about_save', requirements: ['slug' => '[a-z0-9-]+'], methods: ['POST'])]
-    public function saveAbout(string $slug, Request $request): Response
+    public function saveAbout(string $slug, Request $request, TextVersions $versions): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -286,6 +288,18 @@ final class ModerateRegionsController extends AbstractController
             'UPDATE region SET context_curated = :ctx, updated_at = NOW() WHERE id = :id',
             ['ctx' => [] === $curated ? null : json_encode($curated, \JSON_THROW_ON_ERROR), 'id' => $region['id']],
         );
+        // Each language whose text changed is a version in its public list of
+        // changes (§3.1f); an emptied one is the local text going.
+        foreach (RegionLead::LOCALES as $locale) {
+            if (!$this->languages->isServed($locale)) {
+                continue;
+            }
+            $was = RegionLead::override($stored, $locale);
+            $now = RegionLead::override($curated, $locale);
+            if (($was['text'] ?? null) !== ($now['text'] ?? null) || ($was['derived'] ?? null) !== ($now['derived'] ?? null)) {
+                $versions->record(PlaceText::REGION, (string) $region['id'], $locale, $now['text'] ?? null, $now['derived'] ?? false, (int) $user->getId(), (int) $user->getId(), null, TextVersions::DESK);
+            }
+        }
         $this->addFlash('success', 'moderate_regions.about.flash_saved');
 
         return $this->redirectToRoute('moderate_regions_about', ['slug' => $slug]);

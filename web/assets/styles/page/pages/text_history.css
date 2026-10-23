@@ -1,0 +1,18 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* A text's public list of changes (pages/text_history.html.twig): newest
+   first, each version its day, its writer, and the words it changed. */
+.th-wrap{max-width:46rem}
+.th-h{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,3.6vw,2.2rem);line-height:1.12;margin:.4rem 0 .6rem}
+.th-back{font-size:.9rem;margin:0 0 1.6rem}
+.th-back a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+.th-empty{color:#4f5344;font-size:.95rem}
+.th-list{list-style:none;margin:0;padding:0}
+.th-v{padding:1rem 0;border-top:1px solid rgba(20,22,14,.12)}
+.th-v:last-child{border-bottom:1px solid rgba(20,22,14,.12)}
+.th-meta{display:flex;flex-wrap:wrap;gap:.3rem .8rem;align-items:baseline;margin:0 0 .45rem;
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d}
+.th-meta time{color:var(--ink)}
+.th-note{font-size:.88rem;color:#4f5344;margin:0 0 .4rem;font-style:italic}
+.th-diff,.th-text{font-size:.98rem;line-height:1.65;margin:0;white-space:pre-line;overflow-wrap:anywhere}
+.th-diff del{color:#8a8d7d;text-decoration:line-through}
+.th-diff ins{color:var(--trail);text-decoration:none;font-weight:600}

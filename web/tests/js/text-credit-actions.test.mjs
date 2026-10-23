@@ -12,7 +12,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { textCreditActionsHtml } from '../../assets/map/town-text.js';
+import { textCreditActionsHtml, townActionsHtml } from '../../assets/map/town-text.js';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const read = (...p) => fs.readFileSync(path.join(root, ...p), 'utf8');
@@ -56,11 +56,20 @@ const CASES = [
   { report_href: '/report/town/node-1?from=/map', report_label: 'Report this text', edit_href: '', edit_label: 'Edit this text' },
   { report_href: '', report_label: 'Report this text', edit_href: '/regions/x/text', edit_label: 'Edit this text' },
   { report_href: '', report_label: 'x', edit_href: '', edit_label: 'y' },
+  {
+    report_href: '/report/region/42?from=/regions/flanders', report_label: 'Report this text',
+    edit_href: '/regions/flanders/story?lang=nl', edit_label: 'Edit this text',
+    history_href: '/regions/flanders/story/history?lang=nl', history_label: 'Changes to this text',
+  },
+  { report_href: '', report_label: 'x', edit_href: '', edit_label: 'y', history_href: '/regions/x/text/history?lang=en', history_label: 'Changes' },
 ];
 
 test('the Twig partial and the town card draw the same two icons, byte for byte', () => {
   for (const c of CASES) {
-    const js = textCreditActionsHtml({ reportHref: c.report_href, reportLabel: c.report_label, editHref: c.edit_href, editLabel: c.edit_label });
+    const js = textCreditActionsHtml({
+      reportHref: c.report_href, reportLabel: c.report_label, editHref: c.edit_href, editLabel: c.edit_label,
+      historyHref: c.history_href, historyLabel: c.history_label,
+    });
     assert.equal(renderPartial(c), js, JSON.stringify(c));
   }
   const both = renderPartial(CASES[0]);
@@ -68,6 +77,18 @@ test('the Twig partial and the town card draw the same two icons, byte for byte'
     '<span class="tc-acts"><a class="ring-ico ring-ico--report" href="/report/region/42?from=/regions/flanders" title="Report this text" aria-label="Report this text">!</a>'
     + '<a class="ring-ico ring-ico--edit" href="/regions/flanders/text" title="Edit this text" aria-label="Edit this text">✎</a></span>');
   assert.equal(renderPartial(CASES[3]), '', 'nothing when neither has an address');
+  assert.match(renderPartial(CASES[4]), /<a class="ring-ico ring-ico--history" href="\/regions\/flanders\/story\/history\?lang=nl" title="Changes to this text" aria-label="Changes to this text">↺<\/a><\/span>$/,
+    'the list of changes last');
+});
+
+test('a town text written here carries the list of changes, a fetched one does not', () => {
+  const meta = { osm: 'node/1' };
+  const D = { textHistory: 'Wijzigingen in deze tekst' };
+  const edited = townActionsHtml(meta, 'Zwaag', { lang: 'nl', from: '/map', signedIn: true, edited: true }, D);
+  assert.match(edited, /ring-ico--history" href="\/nl\/town\/node\/1\/text\/history\?lang=nl&amp;name=Zwaag"/);
+  assert.match(edited, /aria-label="Wijzigingen in deze tekst">↺</);
+  const fetched = townActionsHtml(meta, 'Zwaag', { lang: 'nl', from: '/map', signedIn: true, edited: false }, D);
+  assert.doesNotMatch(fetched, /ring-ico--history/);
 });
 
 test('one stylesheet defines the credit line and the ringed icon, and no other sheet does', () => {

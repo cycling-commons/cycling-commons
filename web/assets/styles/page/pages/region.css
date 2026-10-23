@@ -89,6 +89,8 @@ a.rsteward-name:hover{background:rgba(239,230,212,.16);border-color:rgba(239,230
 /* A region with no text: the one plain link to write one. */
 .rg-about-write{font-size:.9rem;line-height:1.55;color:#4f5344;margin:.5rem 0 0}
 .rg-about-write a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+/* The other-language note sits between the heading and the text it is about. */
+.rg-story-lang{margin:.4rem 0 .6rem}
 /* "History, nature and culture": the lead's measure and type, one <p> per
    paragraph. */
 .rg-story-text{max-width:46rem;font-size:1.02rem;line-height:1.65;margin:.4rem 0 .5rem}

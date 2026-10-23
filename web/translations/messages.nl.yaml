@@ -648,6 +648,7 @@ region:
   about_source_rider: "Geschreven door %name%,"
   about_removed_rider: 'een fietser met verwijderd account'
   about_edit: 'Deze tekst bewerken'
+  about_history: "Wijzigingen in deze tekst"
   about_report: 'Deze tekst melden'
   about_write: "Schrijf over de geografie van deze regio"
   story_h: "Geschiedenis, natuur en cultuur"
@@ -2056,6 +2057,7 @@ map:
   d_text_written: 'Geschreven door onze regiobeheerders, CC BY-SA 4.0'
   d_text_written_by: 'Geschreven door {name}, CC BY-SA 4.0'
   d_text_edit: 'Deze tekst bewerken'
+  d_text_history: "Wijzigingen in deze tekst"
   d_text_add: 'Een tekst voor deze plaats schrijven'
   d_text_edit_signin: 'Log in om deze tekst te bewerken'
   d_text_add_signin: 'Log in om een tekst voor deze plaats te schrijven'
@@ -5946,3 +5948,16 @@ history:
   add_h: 'Ken je een plek met een fietsverhaal?'
   add_p: 'Voeg hem toe als plek bij Geschiedenis & cultuur, met zijn verhaal, zijn jaar en zijn locatie.'
   add_cta: 'Plek toevoegen'
+text_history:
+  kicker: "Wijzigingen in deze tekst"
+  title_town: "Tekst over %name% (%lang%)"
+  title_region: "Geografietekst van %name% (%lang%)"
+  title_story: "Geschiedenis, natuur en cultuur van %name% (%lang%)"
+  back: "Terug naar de regio"
+  back_map: "Terug naar de kaart"
+  empty: "Deze tekst heeft nog geen wijzigingen."
+  by: "Door %name%"
+  by_curators: "Door de regiobeheerders van deze regio"
+  by_curators_town: "Door onze regiobeheerders"
+  revoked: "Een goedkeuring is ingetrokken: de tekst van daarvoor staat er weer."
+  removed: "De tekst die hier geschreven was, is weggehaald: de pagina toont weer de Wikipedia-tekst."

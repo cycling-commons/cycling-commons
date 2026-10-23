@@ -666,7 +666,7 @@ final class MapController extends AbstractController
             'textEdit' => 'd_text_edit', 'textAdd' => 'd_text_add', 'textEditSignin' => 'd_text_edit_signin',
             'textAddSignin' => 'd_text_add_signin', 'placeTextLabel' => 'd_place_text_label', 'langTitle' => 'd_lang_title',
             'placeStoryLabel' => 'd_place_story_label',
-            'reportText' => 'd_report_text', 'wikiEdited' => 'd_wiki_edited', 'founded' => 'd_founded', 'inhabitants' => 'd_inhabitants', 'circa' => 'd_circa', 'yearBc' => 'd_year_bc',
+            'reportText' => 'd_report_text', 'textHistory' => 'd_text_history', 'wikiEdited' => 'd_wiki_edited', 'founded' => 'd_founded', 'inhabitants' => 'd_inhabitants', 'circa' => 'd_circa', 'yearBc' => 'd_year_bc',
             'raceStageStart' => 'd_race_stage_start', 'raceStageFinish' => 'd_race_stage_finish', 'raceStageStartFinish' => 'd_race_stage_start_finish', 'nothingHere' => 'd_nothing_here',
             'kindShop' => 'd_kind_shop', 'kindStation' => 'd_kind_station', 'kindPump' => 'd_kind_pump',
             'rideCheck' => 'd_ride_check', 'rideSummary' => 'd_ride_summary',

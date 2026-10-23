@@ -130,6 +130,11 @@ tables:
         The partner apps that may send contributions through the public API: name, contact
         address, the SHA-256 of the key (never the key), scopes and status.
 
+    # Hand-written migration (Version20261022050000). Written by App\Contribution\TextVersions.
+    text_version: >-
+        Every version of a town text, a region's geography text and a region's history text,
+        one row per write: its words, who wrote and approved it, and when; the public list of
+        a text's changes (moderation-and-contribution.md 3.1f).
     job_run: >-
         Last good run of each daily console job; the admin dashboard warns when one is late.
 

@@ -64,8 +64,8 @@ export function townEditTarget(meta, name, opts) {
   return (PREFIX[o.lang] || '') + '/login?_target_path=' + encodeURIComponent(href);
 }
 
-/** The two ringed icons ending a text's credit line: "!" to report the
-    text, "✎" to edit it. The same markup as
+/** The ringed icons ending a text's credit line: "!" to report the text,
+    "✎" to edit it, "↺" for its list of changes. The same markup as
     templates/partials/_text_credit_actions.html.twig, which the region page
     uses, and the same styles (styles/text-credit.css). An icon without an
     address is left out; '' when both are. */
@@ -76,7 +76,8 @@ export function textCreditActionsHtml(a) {
     const l = escPend(label);
     return `<a class="ring-ico ring-ico--${kind}" href="${safeHref(href)}" title="${l}" aria-label="${l}">${glyph}</a>`;
   };
-  const icons = icon('report', o.reportHref, o.reportLabel, '!') + icon('edit', o.editHref, o.editLabel, '✎');
+  const icons = icon('report', o.reportHref, o.reportLabel, '!') + icon('edit', o.editHref, o.editLabel, '✎')
+    + icon('history', o.historyHref, o.historyLabel, '↺');
   return icons ? `<span class="tc-acts">${icons}</span>` : '';
 }
 
@@ -90,7 +91,18 @@ export function townReportHref(meta, from) {
     + '?from=' + encodeURIComponent(from || '');
 }
 
-/** The town card's "!" and "✎" after its credit line. */
+/** Where a town text's "↺" goes: its public list of changes, in the
+    card's language (moderation-and-contribution.md §3.1f); '' when the card
+    names no element. */
+export function townHistoryHref(meta, name, lang) {
+  const [type, id] = String((meta && meta.osm) || '').split('/');
+  if (!/^(node|way|relation)$/.test(type || '') || !/^\d{1,16}$/.test(id || '')) return '';
+  const q = new URLSearchParams({ lang: lang || 'en' });
+  if (name) q.set('name', name);
+  return `${PREFIX[lang] || ''}/town/${type}/${id}/text/history?${q}`;
+}
+
+/** The town card's "!", "✎" and, on a text written here, "↺" after its credit line. */
 export function townActionsHtml(meta, name, opts, D) {
   const o = opts || {};
   return textCreditActionsHtml({
@@ -98,6 +110,8 @@ export function townActionsHtml(meta, name, opts, D) {
     reportLabel: D.reportText || 'Report this text',
     editHref: townEditTarget(meta, name, o),
     editLabel: o.signedIn ? (D.textEdit || 'Edit this text') : (D.textEditSignin || 'Sign in to edit this text'),
+    historyHref: o.edited ? townHistoryHref(meta, name, o.lang) : '',
+    historyLabel: D.textHistory || 'Changes to this text',
   });
 }
 

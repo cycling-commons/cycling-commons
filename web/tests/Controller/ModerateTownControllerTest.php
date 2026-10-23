@@ -93,6 +93,14 @@ final class ModerateTownControllerTest extends WebTestCase
         self::assertTrue($row['answered'] && $row['edited']);
         self::assertSame('Village', $row['title']);
         self::assertFalse($towns->claim('node/999990202', 'fr'), 'and no fetch will ever claim it');
+
+        // A version on the text's public list of changes (§3.1f), by the town's curators, dated by the day.
+        $crawler = $client->request('GET', '/town/node/999990202/text/history?lang=fr&name=Village');
+        self::assertResponseIsSuccessful();
+        self::assertSame('Text about Village (French)', $crawler->filter('h1.th-h')->text());
+        self::assertSame('Village test.', $crawler->filter('.th-v .th-text')->text());
+        self::assertSame('By our curators', $crawler->filter('.th-v .th-by')->text());
+        self::assertDoesNotMatchRegularExpression('/\d{1,2}:\d{2}/', $crawler->filter('.th-v .th-meta time')->text(), 'a day, not a time');
     }
 
     public function testARiderCannotOpenThePen(): void

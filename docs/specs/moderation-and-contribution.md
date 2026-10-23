@@ -1183,6 +1183,51 @@ from, and its translator is told when that original changes (owner
 
 Pinned by `TextLineageTest`.
 
+### 3.1f A text's public list of changes (2026-10-22)
+
+Every town text, region geography text and region history text written
+here has a public list of its changes, per language.
+
+- **The store.** `text_version` (migration `Version20261022050000`): one row
+  per write, with the words (`text`, null when the local text went and the
+  page shows the fetched one again), `derived`, the writer (`user_id`) and
+  the approving curator (`approved_by`), both foreign keys to `users` with
+  `ON DELETE SET NULL`, the `submission_id` when there is one, the `cause`
+  and the moment. `App\Contribution\TextVersions::record()` writes it on
+  every path that writes a text: an approval (`PlaceTextWriter::apply()`,
+  a rider's suggestion or a curator's own text applied at once, `approval`),
+  the town desk and the Regions desk's geography page (`desk`, an emptied
+  language too), and a revoke (`PlaceTextWriter::revert()`, `revoke`). The
+  migration fills it from every approved Text submission and every local
+  text written on a desk without one.
+- **The page.** `/regions/{slug}/text/history`,
+  `/regions/{slug}/story/history` and `/town/{osmType}/{osmId}/text/history`,
+  each `?lang=` (a served language, else the page's), public
+  (`TextHistoryController`, `pages/text_history.html.twig`). The heading
+  names the text, the place and the language in the reader's language
+  ("History, nature and culture of Noord-Holland (Dutch)"). Newest first,
+  each version shows the day it went live, never the time (`cc_date`), and
+  who wrote it, named the way the credit line names them: a rider by their
+  public name, else their rider# handle, a deleted account as a removed
+  rider, and a text a curator wrote themselves "By this region's curators"
+  ("By our curators" for a town). Against the version before it, a version
+  shows only the words it changed, struck and new, with a few words around
+  them (`TranslationDiff::around()`); the first version shows its whole
+  text. A revoke reads "An approval was taken back: the text from before it
+  is back." and a text that went "The text written here was taken away: the
+  page shows the Wikipedia text again." Names are read when the page is,
+  so withdrawing consent or deleting the account takes the name off at once,
+  as on the credit line.
+- **The way in.** A third ringed icon, "↺" ("Changes to this text"), ends
+  the credit line after "!" and "✎" (`partials/_text_credit_actions.html.twig`,
+  `townActionsHtml()` on the town card), on a text written here: a region's
+  local geography text (`region.context.curated`, in the language it is
+  shown in), every history text, and a town text the card marks `edited`.
+  A fetched Wikipedia text has no list.
+
+Pinned by `RegionStoryProposalTest`, `RegionAboutTextTest`,
+`ModerateTownControllerTest` and `tests/js/text-credit-actions.test.mjs`.
+
 ### 3.2 The `changes` contract
 
 - Computed **at submit against the item's then-current values**; only fields

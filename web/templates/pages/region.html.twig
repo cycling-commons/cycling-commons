@@ -137,6 +137,8 @@
       report_label: 'region.about_report'|trans,
       edit_href: path('region_text', {slug: region.slug}),
       edit_label: 'region.about_edit'|trans,
+      history_href: region.context.curated ? path('region_text_history', {slug: region.slug, lang: region.context.lang|default(app.request.locale)}) : '',
+      history_label: 'region.about_history'|trans,
     }) }}{% endset %}
     {% set licence %}<a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noopener noreferrer">CC BY-SA 4.0</a>{% endset %}
     {% if region.context.url %}
@@ -173,6 +175,11 @@
   {% if region.story %}
     {% set story = region.story %}
     {% set other_lang = story.lang != app.request.locale %}
+    {# A text in another language says so before the reader starts it, with the way to translate it. #}
+    {% if other_lang %}
+      <p class="rg-about-write rg-story-lang">{{ 'region.story_other_lang'|trans({'%lang%': story.langName}) }}
+        <a href="{{ path('region_story', {slug: region.slug, lang: app.request.locale}) }}">{{ 'region.story_translate'|trans }}</a></p>
+    {% endif %}
     <div class="rg-story-text"{% if other_lang %} lang="{{ story.lang }}"{% endif %}>
       {% for p in story.paragraphs %}<p>{{ include('pages/_story_parts.html.twig', {parts: p}) }}</p>{% endfor %}
     </div>
@@ -184,14 +191,12 @@
         report_label: 'region.about_report'|trans,
         edit_href: path('region_story', {slug: region.slug, lang: story.lang}),
         edit_label: 'region.about_edit'|trans,
+        history_href: path('region_story_history', {slug: region.slug, lang: story.lang}),
+        history_label: 'region.about_history'|trans,
       }) }}</p>
     {# What it translates (§3.1e), and whether that original changed since. #}
     {% if story.basedOnName|default(null) %}
       <p class="rg-translated">{{ 'region.translated_from'|trans({'%lang%': story.basedOnName}) }}{% if story.outdated %} {{ 'region.original_changed'|trans }}{% endif %}</p>
-    {% endif %}
-    {% if other_lang %}
-      <p class="rg-about-write">{{ 'region.story_other_lang'|trans({'%lang%': story.langName}) }}
-        <a href="{{ path('region_story', {slug: region.slug, lang: app.request.locale}) }}">{{ 'region.story_translate'|trans }}</a></p>
     {% endif %}
   {% else %}
     <p class="rg-about-write"><a href="{{ path('region_story', {slug: region.slug}) }}">{{ 'region.story_write'|trans }}</a></p>

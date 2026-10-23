@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Contribution\PlaceText;
+use App\Contribution\TextVersions;
 use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
 use App\Routing\Languages;
@@ -68,7 +69,7 @@ final class ModerateTownController extends AbstractController
     }
 
     #[Route('/moderate/town/{osmType}/{osmId}', name: 'moderate_town_save', requirements: ['osmType' => 'node|way|relation', 'osmId' => '\d+'], methods: ['POST'])]
-    public function save(string $osmType, int $osmId, Request $request, TownSummaryRepository $towns): Response
+    public function save(string $osmType, int $osmId, Request $request, TownSummaryRepository $towns, TextVersions $versions): Response
     {
         if (!$this->isCsrfTokenValid(self::CSRF_ID, (string) $request->request->get('_token'))) {
             $this->addFlash('error', 'flash.invalid_token');
@@ -93,6 +94,8 @@ final class ModerateTownController extends AbstractController
         $user = $this->getUser();
         $title = trim((string) $request->request->get('title'));
         $towns->overrideText($osmType.'/'.$osmId, $lang, $text, $request->request->has('derived'), (int) $user->getId(), '' === $title ? null : mb_substr($title, 0, 240), (int) $user->getId());
+        // A version in the text's public list of changes (§3.1f).
+        $versions->record(PlaceText::TOWN, $osmType.'/'.$osmId, $lang, $text, $request->request->has('derived'), (int) $user->getId(), (int) $user->getId(), null, TextVersions::DESK);
         $this->addFlash('notice', 'moderate.town.saved');
 
         return $this->redirectToRoute('moderate_town', ['osmType' => $osmType, 'osmId' => $osmId]);

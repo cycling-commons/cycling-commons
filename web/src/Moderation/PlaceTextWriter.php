@@ -12,6 +12,7 @@ use App\Catalog\RegionStory;
 use App\Contribution\PlaceText;
 use App\Contribution\StoryLinkCheck;
 use App\Contribution\TextLineage;
+use App\Contribution\TextVersions;
 use App\Town\TownSummaryRepository;
 use Doctrine\DBAL\Connection;
 
@@ -37,7 +38,7 @@ use Doctrine\DBAL\Connection;
  */
 final readonly class PlaceTextWriter
 {
-    public function __construct(private Connection $db, private TownSummaryRepository $towns, private StoryLinkCheck $links, private TextLineage $lineage)
+    public function __construct(private Connection $db, private TownSummaryRepository $towns, private StoryLinkCheck $links, private TextLineage $lineage, private TextVersions $versions)
     {
     }
 
@@ -58,6 +59,8 @@ final readonly class PlaceTextWriter
         $submission->setPayload($payload);
         $basedOn = \is_array($payload['_basedOn'] ?? null) ? TextLineage::basedOnOf(['basedOn' => $payload['_basedOn']]) : null;
         $this->write($submission, $proposal, $approvedBy);
+        // Each approved text is a version in the text's public list of changes (§3.1f).
+        $this->versions->record($proposal['target'], $proposal['ref'], $proposal['lang'], $proposal['text'], $proposal['derived'], $submission->getUserId(), $approvedBy, $submission->getId(), TextVersions::APPROVAL);
         // What it translates, if anything, then the translators of this
         // language told the original changed (§3.1e).
         $this->stampBasedOn($proposal, $basedOn);
@@ -242,6 +245,9 @@ final readonly class PlaceTextWriter
                 $snapshot = null === $was ? null : ['answered' => true, 'extract' => $was, 'derived' => false, 'edited_by' => null, 'approved_by' => null, 'submission_id' => null, 'edited_at' => null];
             }
             $this->towns->restoreText($proposal['ref'], $lang, \is_array($snapshot) ? $snapshot : null);
+            // A local text back is a version; the fetched text back is the local text going.
+            $local = \is_array($snapshot) && null !== ($snapshot['edited_at'] ?? null) && \is_string($snapshot['extract'] ?? null);
+            $this->versions->record(PlaceText::TOWN, $proposal['ref'], $lang, $local ? $snapshot['extract'] : null, $local && (bool) ($snapshot['derived'] ?? false), null, null, $id, TextVersions::REVOKE);
 
             return;
         }
@@ -274,6 +280,8 @@ final readonly class PlaceTextWriter
             sprintf('UPDATE region SET %s = :e, updated_at = NOW() WHERE id = :id', $column),
             ['e' => [] === $entries ? null : json_encode($entries, \JSON_THROW_ON_ERROR), 'id' => (int) $proposal['ref']],
         );
+        $back = \is_array($entry) && \is_string($entry['text'] ?? null) ? $entry['text'] : null;
+        $this->versions->record($proposal['target'], $proposal['ref'], $lang, $back, null !== $back && true === ($entry['derived'] ?? false), null, null, $id, TextVersions::REVOKE);
     }
 
     /**

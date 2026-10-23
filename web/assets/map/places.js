@@ -163,7 +163,7 @@ function townHtml(d, name, meta){
   // Anyone signed in may suggest a change; a curator of the town's region approves it (moderation-and-contribution.md §3.1b).
   // The credit line ends in the "!" (the one report door, docs/specs/content-reports.md) and the pencil,
   // the region page's icons; a card with no text carries one plain link instead.
-  const editOpts = { signedIn: !!window.CC_CONFIRM_TOKEN, lang: lang.slice(0,2), from: location.pathname+location.search };
+  const editOpts = { signedIn: !!window.CC_CONFIRM_TOKEN, lang: lang.slice(0,2), from: location.pathname+location.search, edited: !!d.edited };
   const edit = townAddHtml(d, meta, name, editOpts, D);
   const actions = townActionsHtml(meta, name, editOpts, D);
   // Facts first, then the paragraph (owner 2026-09-08: "place these 2 info points above the text").

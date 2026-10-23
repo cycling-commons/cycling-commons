@@ -931,9 +931,9 @@ languages.
   The text is several paragraphs, one `<p>` per line as stored. The reader
   gets their own language, else English, else the first language that has a
   text (`App\Catalog\RegionStory::resolve()`); a text in another language
-  carries a `lang` attribute and one line under the credit, "This text is in
-  {language}. Nobody has translated it yet." with the link "Translate it" to
-  `/regions/{slug}/story?lang={reader's language}`. The credit line is the
+  carries a `lang` attribute and one line above it, between the heading and
+  the text, "This text is in {language}. Nobody has translated it yet." with
+  the link "Translate it" to `/regions/{slug}/story?lang={reader's language}`. The credit line is the
   lead's: "Written by {name}," or "Written by this region's curators," then
   the linked "CC BY-SA 4.0" and the two ringed icons, the pencil to
   `/regions/{slug}/story?lang={language shown}`. The text links its sources
