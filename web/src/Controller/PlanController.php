@@ -522,7 +522,9 @@ final class PlanController extends AbstractController
      * The forecast for a planned ride's date (docs/specs/route-planner.md
      * section 4.4): one point, rounded before it leaves our server, and one
      * date; `forecast: null` when the service is off, does not answer, or the
-     * date is past its reach, so the panel simply shows no line.
+     * date is past its reach, so the panel simply shows no line. With
+     * `cached: true` only our cache answers, on its own limiters, and
+     * `uncached: true` says an ask without it would get the forecast.
      */
     #[Route('/map/plan/weather', name: 'map_plan_weather', methods: ['POST'])]
     public function weather(
@@ -530,6 +532,8 @@ final class PlanController extends AbstractController
         Forecast $forecast,
         RateLimiterFactoryInterface $planWeatherLimiter,
         RateLimiterFactoryInterface $planWeatherAnonLimiter,
+        RateLimiterFactoryInterface $planWeatherCachedLimiter,
+        RateLimiterFactoryInterface $planWeatherCachedAnonLimiter,
         #[Autowire('%kernel.secret%')]
         string $secret,
     ): JsonResponse {
@@ -543,6 +547,15 @@ final class PlanController extends AbstractController
         if (!is_numeric($lat) || !is_numeric($lng) || abs((float) $lat) > 90 || abs((float) $lng) > 180
             || !\is_string($date) || 1 !== preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || false === \DateTimeImmutable::createFromFormat('!Y-m-d', $date)) {
             return new JsonResponse(['error' => 'bad_request'], 400);
+        }
+        $cachedOnly = true === ($payload['cached'] ?? false);
+        if ($cachedOnly) {
+            if (!$this->spend($request, $planWeatherCachedLimiter, $planWeatherCachedAnonLimiter, $secret)) {
+                return new JsonResponse(['error' => 'rate_limited'], 429);
+            }
+            $day = $forecast->forDay((float) $lat, (float) $lng, $date, cachedOnly: true);
+
+            return new JsonResponse(null === $day && $forecast->answers($date) ? ['forecast' => null, 'uncached' => true] : ['forecast' => $day]);
         }
         if (!$this->spend($request, $planWeatherLimiter, $planWeatherAnonLimiter, $secret)) {
             return new JsonResponse(['error' => 'rate_limited'], 429);

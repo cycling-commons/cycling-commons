@@ -18,7 +18,8 @@ use Symfony\Component\HttpClient\Response\MockResponse;
  * The forecast behind a planned ride's date (docs/specs/route-planner.md
  * section 4.4 and 8): the point rounded to a tenth of a degree before the
  * request, one request for two asks of the same rounded point and date,
- * null past the service's reach, with no service, and with no answer.
+ * null past the service's reach, with no service, and with no answer; an ask
+ * of the cache only never a request.
  */
 final class ForecastTest extends TestCase
 {
@@ -148,6 +149,21 @@ final class ForecastTest extends TestCase
         self::assertCount(0, $this->asked);
         self::assertNull($this->forecast(null)->forDay(50.5, 5.9, '2026-10-18'));
         self::assertNull($this->forecast(new MockResponse('{"daily":{"time":[]}}'))->forDay(50.5, 5.9, '2026-10-18'));
+    }
+
+    public function testAnAskOfTheCacheOnlyNeverReachesTheService(): void
+    {
+        $f = $this->forecast(self::day());
+
+        self::assertNull($f->forDay(50.5, 5.9, '2026-10-18', cachedOnly: true), 'the cache does not hold it yet');
+        self::assertCount(0, $this->asked);
+        self::assertTrue($f->answers('2026-10-18'), 'an ask without the cache would get it');
+        $day = $f->forDay(50.5, 5.9, '2026-10-18');
+        self::assertSame($day, $f->forDay(50.4825, 5.8630, '2026-10-18', cachedOnly: true), 'the same rounded point and date');
+        self::assertCount(1, $this->asked);
+
+        self::assertFalse($f->answers('2026-11-02'), 'past the reach');
+        self::assertFalse($this->forecast(self::day(), '')->answers('2026-10-18'), 'no service');
     }
 
     public function testRoundingIsToATenthOfADegree(): void

@@ -42,8 +42,9 @@ const history = createHistory(30, 5);
 const legCache = new Map();
 const REPEAT_ROUNDS = 3;   // requests the repeat check sends at most for one routing
 let gen = 0, routing = false, alongTimer = null;
-/* The day (route-planner.md section 4.4): the along rows once fetched (null until then), the forecast for the ride's date, and what was last asked. */
-let alongRows = null, forecast = null, forecastKey = '', weatherTimer = null;
+/* The day (route-planner.md section 4.4): the along rows once fetched (null until then), the forecast for the ride's date, what was last asked,
+   and whether an ask is on its way (the weather list's spinner). */
+let alongRows = null, forecast = null, forecastKey = '', weatherTimer = null, weatherWaiting = false;
 const weatherCache = new Map();
 let markers = [], scrubMarker = null;
 const $ = id => document.getElementById(id);
@@ -219,7 +220,7 @@ function syncPlanning(){
 function sleepRide(){
   if(asleep || !ride.stops.length) return;
   asleep = true; everOpened = false; gen++; routing = false;
-  clearTimeout(alongTimer); clearTimeout(weatherTimer); clearTimeout(tileTimer);
+  clearTimeout(alongTimer); clearTimeout(weatherTimer); clearTimeout(tileTimer); weatherWaiting = false;
   const empty = { type: 'FeatureCollection', features: [] };
   for(const id of ['plan', 'plan-straight', 'plan-alt', 'plan-gap', 'plan-hl', 'plan-rain', 'plan-wind']){ const s = map.getSource(id); if(s) s.setData(empty); }
   markers.forEach(m => m.remove()); markers = [];
@@ -939,14 +940,18 @@ function renderTougher(day, f){
     for(let i = before; i < lines.length; i++) parts[i] = TOUGH_PART[x.kind] || null;
   }
   renderWeather(fc, new Set(found.map(x => x.kind)), feel);
-  // The credit names Open-Meteo, a link to its own page for the same rounded point and day; it closes the weather list.
+  // The credit names Open-Meteo, a link to its own page for the same rounded point and day, then what CC BY 4.0
+  // asks of the data (route-planner.md section 4.4): the licence, linked, and that we changed it (summarised for the
+  // ride: one rounded point, the hours ridden, the lines above). It closes the weather list.
   let credit = '';
   if(fc){
     const href = forecastPageUrl(fc);
     const source = href ? `<a href="${escPend(href)}" target="_blank" rel="noopener noreferrer">Open-Meteo</a>` : 'Open-Meteo';
+    const licence = '<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>';
     // With the hours, the credit says which hours the figures are for: the hours ridden.
-    const words = (Number.isFinite(fc.fromH) ? tpl(P().forecastHours || 'Forecast for {from} to {to}: {source}', { from: hhmm(fc.fromH * 60), to: hhmm(Math.min(24, fc.toH + 1) * 60), source: '{source}' }) : (P().forecastBy || 'Forecast: {source}')) + ' · ' + leadText(fc.date);
-    credit = `<li class="cc-plan-credit">${escPend(words).replace('{source}', source)}</li>`;
+    const words = (Number.isFinite(fc.fromH) ? tpl(P().forecastHours || 'Forecast for {from} to {to}: {source}', { from: hhmm(fc.fromH * 60), to: hhmm(Math.min(24, fc.toH + 1) * 60), source: '{source}' }) : (P().forecastBy || 'Forecast: {source}'))
+      + ' · ' + (P().forecastLicence || '{licence}, summarised for this ride') + ' · ' + leadText(fc.date);
+    credit = `<li class="cc-plan-credit">${escPend(words).replace('{source}', source).replace('{licence}', licence)}</li>`;
   }
   // The water-gap line (owner 2026-10-15): hovered or focused it shows its stretch on the map; its icon adds the nearest place for water or food.
   const label = P().fillWater || 'Add the nearest place for water or food';
@@ -979,7 +984,18 @@ function rainText(mm){ return tpl(P().rain || '{r} mm of rain', { r: mm < 1 ? mm
    the temperature, the wind and the rain, "No rain" on a dry ride. Hidden without a forecast. */
 function renderWeather(fc, tough, feel){
   const grp = $('planWeatherGrp'), ul = $('planWeather'); if(!grp || !ul) return;
-  if(!fc){ grp.hidden = true; ul.innerHTML = ''; const w = $('planWatch'); if(w) w.innerHTML = ''; return; }
+  // While an ask is on its way: the chart's three empty panels where the chart will be, the words over them; above a
+  // forecast already shown, the words alone and the forecast dimmed.
+  const waitWords = escPend(fc ? (P().weatherUpdating || 'Updating the forecast') : (P().weatherWait || 'Getting the forecast'));
+  const wait = !weatherWaiting ? '' : fc
+    ? `<li class="cc-wx-wait" role="status">${waitWords}</li>`
+    : `<li class="cc-wx-wait cc-wx-wait-new" role="status">${WX_EMPTY}<span>${waitWords}</span></li>`;
+  grp.classList.toggle('cc-wx-dim', weatherWaiting && !!fc);
+  if(!fc){
+    const w = $('planWatch'); if(w) w.innerHTML = '';
+    ul.innerHTML = wait; grp.hidden = wait === '';
+    return;
+  }
   renderWatch(fc, feel || {});
   // The words stay for a screen reader; the eye reads the chart (owner 2026-10-17: "graphs instead of dry text").
   const lines = [];
@@ -992,9 +1008,11 @@ function renderWeather(fc, tough, feel){
   if(f.cold && !tough.has('cold') && Math.round(f.cold.feelC) < Math.round(f.cold.tempC)) felt.push(coldText(f.cold.feelC));
   if(f.hot && !tough.has('heat') && Math.round(f.hot.feelC) > Math.round(f.hot.tempC)) felt.push(humidText(f.hot.tempC, f.hot.humidity, f.hot.feelC));
   const chart = Array.isArray(fc.hours) && fc.hours.length === 24 ? `<li class="cc-wx">${weatherSvg(fc, f.ice)}<div class="cc-wx-tip" hidden></div></li>` : '';
-  ul.innerHTML = chart + felt.map(l => `<li class="cc-wx-words">${escPend(l)}</li>`).join('') + windShareHtml(fc.windFromDeg) + (chart ? words : lines.map(l => `<li>${escPend(l)}</li>`).join(''));
+  ul.innerHTML = wait + chart + felt.map(l => `<li class="cc-wx-words">${escPend(l)}</li>`).join('') + windShareHtml(fc.windFromDeg) + (chart ? words : lines.map(l => `<li>${escPend(l)}</li>`).join(''));
   grp.hidden = false;
 }
+/* The day-by-the-hour chart's three panels, empty, at the chart's own size: temperature, wind, rain (weatherSvg). */
+const WX_EMPTY = '<svg class="cc-wx-svg cc-wx-empty" viewBox="0 0 300 162" aria-hidden="true"><rect x="34" y="16" width="260" height="36" rx="4"/><rect x="34" y="70" width="260" height="34" rx="4"/><rect x="34" y="116" width="260" height="24" rx="4"/></svg>';
 /* What the planner watches in the hours ridden (route-planner.md section 4.4, owner 2026-10-17): the wind chill, the
    humidity in the heat and a chance of ice, each an icon that is struck through while there is nothing to say, so a rider
    knows it would warn; lit, it says its figure, and its title the whole line. */
@@ -1160,20 +1178,55 @@ async function fillWater(){
     pendingFill = { beforeKm: span.km, name: place.name, item: place.item, steps: history.size(), stop };
   } catch(e){ none(); }
 }
-/* The forecast for the ride's date near the ride's middle (forecastPoint), through our server, once the ride has been
-   still for WEATHER_SETTLE_MS; one ask per 0.1° cell and date. A ride under 20 km asks nothing and shows no forecast. */
-const WEATHER_SETTLE_MS = 3000;
-function scheduleWeather(){ clearTimeout(weatherTimer); weatherTimer = setTimeout(fetchWeather, WEATHER_SETTLE_MS); }
+/* The forecast for the ride's date near the ride's middle (forecastPoint), through our server. An answer this page
+   already has shows at once; else our server's cache is asked first (`cached: true`, never a request to the service),
+   so a reopened ride shows its forecast at once. Only when the cache does not hold it does the ride wait until it has
+   been still for WEATHER_SETTLE_MS, so checkpoints added one after another ask once, at the end; one ask per 0.1° cell
+   and date. Meanwhile the weather list shows the chart's empty panels, or dims the forecast it already shows. A ride
+   under 20 km asks nothing and shows no forecast. */
+const WEATHER_SETTLE_MS = 20000;
+/** The ask the ride needs now, the `lat,lng,date` of its rounded point, or '' when it needs none. */
+function weatherKeyNow(){
+  if(asleep || !CC_PLAN.weather || ride.stops.length < 2 || unrouted()) return '';
+  const at = forecastPoint(ride.legs);
+  return at ? `${at[1].toFixed(1)},${at[0].toFixed(1)},${rideDate()}` : '';
+}
+function setWeatherWaiting(on){ if(on !== weatherWaiting){ weatherWaiting = on; renderFigures(); } }
+function scheduleWeather(){
+  clearTimeout(weatherTimer);
+  const key = weatherKeyNow();
+  if(key && key !== forecastKey && weatherCache.has(key)){ fetchWeather(); return; }
+  weatherTimer = setTimeout(fetchWeather, WEATHER_SETTLE_MS);
+  if(key && key !== forecastKey) cachedWeather(key);
+  else setWeatherWaiting(false);
+}
+/* Our server's cache for the ask, before any wait: a forecast it holds shows at once and ends the wait; one it does
+   not hold, or no answer, shows the wait. An answer for a ride no longer drawn is kept for the page and not shown. */
+async function cachedWeather(key){
+  const [lat, lng, date] = key.split(',');
+  let got;
+  try {
+    const r = await fetch(CC_PLAN.weather, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CC-Token': CC_PLAN.weatherToken }, body: JSON.stringify({ lat: Number(lat), lng: Number(lng), date, cached: true }) });
+    const a = r.ok ? await r.json() : null;
+    if(a && !a.uncached) got = a.forecast || null;
+  } catch(e){ /* the wait stands */ }
+  if(got !== undefined) weatherCache.set(key, got);
+  if(asleep || weatherKeyNow() !== key) return;
+  if(got === undefined){ setWeatherWaiting(true); return; }
+  clearTimeout(weatherTimer); fetchWeather();
+}
 async function fetchWeather(){
   if(asleep) return;   // a sleeping ride asks nothing (sleepRide())
-  if(!CC_PLAN.weather || ride.stops.length < 2 || unrouted()) return;
+  if(!CC_PLAN.weather || ride.stops.length < 2 || unrouted()){ setWeatherWaiting(false); return; }
   const at = forecastPoint(ride.legs);
   if(!at){
-    if(forecast || forecastKey){ forecast = null; forecastKey = ''; renderFigures(); }
+    weatherWaiting = false;
+    if(forecast || forecastKey){ forecast = null; forecastKey = ''; }
+    renderFigures();
     return;
   }
   const date = rideDate(), key = `${at[1].toFixed(1)},${at[0].toFixed(1)},${date}`;
-  if(forecastKey === key) return;
+  if(forecastKey === key){ setWeatherWaiting(false); return; }
   let got = weatherCache.get(key);
   if(got === undefined){
     try {
@@ -1182,10 +1235,10 @@ async function fetchWeather(){
     } catch(e){ got = null; }
     weatherCache.set(key, got);
   }
-  // The ride may have changed while the answer travelled: an answer for a ride no longer drawn is dropped.
-  const now = forecastPoint(ride.legs);
-  if(!now || `${now[1].toFixed(1)},${now[0].toFixed(1)},${rideDate()}` !== key) return;
-  forecast = got; forecastKey = key;
+  // The ride may have changed while the answer travelled: an answer for a ride no longer drawn is dropped, and the
+  // spinner stays for the ask that change scheduled.
+  if(weatherKeyNow() !== key) return;
+  forecast = got; forecastKey = key; weatherWaiting = false;
   renderFigures();
 }
 

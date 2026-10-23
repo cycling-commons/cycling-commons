@@ -24,7 +24,10 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * address, a 10 km cell and a date, nothing about the rider; the answer is
  * cached under that cell and date, so a ride dragged around a town costs one
  * request an afternoon. Null when the service is off, does not answer, or
- * the date is past its reach: the panel then shows no line.
+ * the date is past its reach: the panel then shows no line. Asked from the
+ * cache only, it answers what the cache holds and never asks the service:
+ * null then also means the cache does not hold it ({@see answers()} tells the
+ * two apart).
  *
  * @api
  */
@@ -50,12 +53,18 @@ final class Forecast
         return round($v, 1);
     }
 
+    /** Whether the service is on and the date within its reach: whether an ask for that date can get a forecast. */
+    public function answers(string $date): bool
+    {
+        return '' !== $this->forecastUrl && $this->withinReach($date);
+    }
+
     /**
      * @return array{date: string, lat: float, lng: float, windKmh: float, gustKmh: float|null, windFromDeg: int, tempMaxC: float, rainMm: float, hours: list<array{windKmh: float, gustKmh: float|null, fromDeg: int, tempC: float, rainMm: float, humidity: int|null, dewC: float|null, groundC: float|null, snowCm: float|null, code: int|null}>|null}|null
      */
-    public function forDay(float $lat, float $lng, string $date): ?array
+    public function forDay(float $lat, float $lng, string $date, bool $cachedOnly = false): ?array
     {
-        if ('' === $this->forecastUrl || !$this->withinReach($date)) {
+        if (!$this->answers($date)) {
             return null;
         }
         $lat = self::round($lat);
@@ -67,6 +76,9 @@ final class Forecast
             $hit = $item->get();
 
             return $hit;
+        }
+        if ($cachedOnly) {
+            return null;
         }
         $day = $this->fetch($lat, $lng, $date);
         if (null !== $day) {

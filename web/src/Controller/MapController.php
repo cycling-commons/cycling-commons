@@ -801,7 +801,7 @@ final class MapController extends AbstractController
                 'windGusts' => $t->trans('map.plan_wind_gusts'),
                 'heat' => $t->trans('map.plan_heat'),
                 'rain' => $t->trans('map.plan_rain'),
-                'forecastBy' => $t->trans('map.plan_forecast_by'), 'dry' => $t->trans('map.plan_dry'),
+                'forecastBy' => $t->trans('map.plan_forecast_by'), 'forecastLicence' => $t->trans('map.plan_forecast_licence'), 'weatherWait' => $t->trans('map.plan_weather_wait'), 'weatherUpdating' => $t->trans('map.plan_weather_updating'), 'dry' => $t->trans('map.plan_dry'),
                 'wxRide' => $t->trans('map.plan_wx_ride'), 'wxInto' => $t->trans('map.plan_wx_into'), 'wxSide' => $t->trans('map.plan_wx_side'), 'wxWith' => $t->trans('map.plan_wx_with'),
                 'coldFeel' => $t->trans('map.plan_cold_feel'), 'heatHumid' => $t->trans('map.plan_heat_humid'), 'ice' => $t->trans('map.plan_ice'),
                 'iceFreezing' => $t->trans('map.plan_ice_freezing'), 'iceSnow' => $t->trans('map.plan_ice_snow'), 'iceFrost' => $t->trans('map.plan_ice_frost'),

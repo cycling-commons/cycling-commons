@@ -82,6 +82,15 @@ test('the day: the time tile, the time bar, the date and what makes it tough, wi
   // open-meteo.com appears once, as the page the rider opens from the credit, never fetched.
   assert.deepEqual((plan + model).match(/open-meteo\.com[^'"`]*/gi), ['open-meteo.com/en/docs?'], 'open-meteo.com is named anywhere but the credit\'s link');
   assert.match(plan, /<a href="\$\{escPend\(href\)\}" target="_blank" rel="noopener noreferrer">Open-Meteo<\/a>/, 'the credit does not link Open-Meteo in a new tab');
+  // Our server's cache is asked first; only an ask it does not hold waits until the ride has been still 20 s, the
+  // chart's empty panels shown meanwhile (route-planner.md section 4.4).
+  assert.ok(plan.includes('body: JSON.stringify({ lat: Number(lat), lng: Number(lng), date, cached: true })'), 'a new ask does not try our cache first');
+  assert.match(plan, /weatherTimer = setTimeout\(fetchWeather, WEATHER_SETTLE_MS\);\n {2}if\(key && key !== forecastKey\) cachedWeather\(key\);/, 'the cache is not asked as the wait starts');
+  assert.match(plan, /const WEATHER_SETTLE_MS = 20000;/, 'the forecast does not wait 20 s for the ride to settle');
+  assert.ok(plan.includes('<li class="cc-wx-wait cc-wx-wait-new" role="status">${WX_EMPTY}<span>'), 'no empty chart in the weather list while the forecast is asked');
+  // CC BY 4.0 asks for the licence, linked, and a word that the data were changed (route-planner.md section 4.4).
+  assert.ok(plan.includes('<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>'), 'the credit does not link the CC BY 4.0 licence');
+  for (const l of ['en', 'fr', 'nl', 'de', 'es']) assert.match(read(`translations/messages.${l}.yaml`), /^ {2}plan_forecast_licence: ".*\{licence\}.*"$/m, `messages.${l}.yaml does not say the forecast was changed`);
   // Every planner duration reads through durationText(): the riding time, the parts and the daylight.
   assert.match(plan, /tpl\(P\(\)\.daylight \|\| 'Daylight \{d\}, \{from\} to \{to\}', \{ d: durationText\(x\.sun\.daylightS, durWords\(\), 1\)/, 'the daylight has a duration format of its own');
   assert.ok(!/String\(m\)\.padStart|\{h\} h \{m\}/.test(plan), 'a duration is still written "h mm"');

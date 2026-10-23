@@ -2249,6 +2249,18 @@
   :root{--wx-temp:#D96A33;--wx-wind:#2AA57C;--wx-rain:#7579E0;--wx-into:#D96A33;--wx-with:#5B9BD5;--wx-side:rgb(var(--chrome-fg) / .35)}
   html[data-map-theme="light"]{--wx-temp:#C0561E;--wx-wind:#21946F;--wx-rain:#5B5FC7;--wx-into:#B8501A;--wx-with:#2E78C2}
   .cc-plan-tougher li.cc-wx{position:relative;border-top:none;padding:.2rem 0 .4rem}
+  /* While the forecast is on its way (plan.js renderWeather): the words in the credit's type; with no forecast yet,
+     over the chart's three empty panels, which breathe; above a forecast, alone, the forecast dimmed under them. */
+  .cc-plan-tougher li.cc-wx-wait{border-top:none;padding:.1rem 0 .35rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:rgb(var(--chrome-fg) / .7)}
+  .cc-plan-tougher li.cc-wx-wait-new{position:relative;padding:.2rem 0 .4rem}
+  .cc-wx-wait-new span{position:absolute;left:11.3%;right:2%;top:53.7%;transform:translateY(-50%);text-align:center}
+  .cc-wx-empty rect{fill:rgb(var(--chrome-fg) / .07);animation:cc-wx-breathe 1.8s ease-in-out infinite}
+  .cc-wx-empty rect:nth-child(2){animation-delay:.25s}
+  .cc-wx-empty rect:nth-child(3){animation-delay:.5s}
+  @keyframes cc-wx-breathe{0%,100%{opacity:.5}50%{opacity:1}}
+  .cc-wx-dim #planWeather li:not(.cc-wx-wait),.cc-wx-dim .cc-wx-watch{opacity:.45}
+  #planWeather li,.cc-wx-watch{transition:opacity .2s ease}
+  @media (prefers-reduced-motion: reduce){.cc-wx-empty rect{animation:none}#planWeather li,.cc-wx-watch{transition:opacity .12s ease!important}}
   .cc-wx-svg{display:block;width:100%;height:auto;overflow:visible}
   .cc-wx-svg .wx-temp{fill:none;stroke:var(--wx-temp);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
   .cc-wx-svg .wx-dot{fill:var(--wx-temp);stroke:var(--chrome-bg);stroke-width:2}

@@ -585,7 +585,7 @@ exceptions, each for a reason worth knowing:
   `public_api_read`, `pow_challenge`, `content_report` and
   `media_report_urgent`.
 * **A keyed hash of the address**, so the limiter store never holds one in the
-  clear: `ride_check_anon`, `plan_leg_anon`, `plan_along_anon`, `plan_weather_anon`, `password_reset`,
+  clear: `ride_check_anon`, `plan_leg_anon`, `plan_along_anon`, `plan_weather_anon`, `plan_weather_cached_anon`, `password_reset`,
   `registration`, the three
   `verify_resend*` and `display_name_check` (`PseudonymousKey`), and
   `contact_form`, `bug_report` and `bug_report_no_js` (`FormGuard::key()`,
@@ -613,8 +613,10 @@ exceptions, each for a reason worth knowing:
 | `plan_along` | sliding_window | 60 / 10 minutes | `user-<id>` | What is along the planned line, `PlanController::along()` (`POST /map/plan/along`): the ride check's corridor queries (`RideCheckService::alongLine()`) on a line the rider drew, asked once the legs settle, not on every click | `429 {"error":"rate_limited"}` |
 | `plan_along_anon` | sliding_window | 20 / 1 day | `anon-<sha256(secret\|plan\|ip)>` | The same for a visitor, the `plan_leg_anon` construction | `429 {"error":"rate_limited"}` |
 | `map_preset_save` | sliding_window | 30 / 10 minutes | `user-<id>` | Saving a map preset, `MapPresetController::save()` (`POST /map/presets/save`, [map-presets.md](map-presets.md) section 5): one row per save, after the body's shape is checked. Signed in only, so no visitor limiter; a rider keeps six at most | `429 {"error":"rate_limited"}` |
-| `plan_weather` | sliding_window | 60 / 10 minutes | `user-<id>` | The forecast for a planned ride's date, `PlanController::weather()` (`POST /map/plan/weather`): one outbound request to Open-Meteo per rounded point and date, cached three hours (`Forecast`), asked once the legs settle | `429 {"error":"rate_limited"}` |
+| `plan_weather` | sliding_window | 60 / 10 minutes | `user-<id>` | The forecast for a planned ride's date, `PlanController::weather()` (`POST /map/plan/weather`): one outbound request to Open-Meteo per rounded point and date, cached three hours (`Forecast`), asked once the ride has been still for 20 seconds | `429 {"error":"rate_limited"}` |
 | `plan_weather_anon` | sliding_window | 30 / 1 day | `anon-<sha256(secret\|plan\|ip)>` | The same for a visitor, the `plan_leg_anon` construction | `429 {"error":"rate_limited"}` |
+| `plan_weather_cached` | sliding_window | 600 / 10 minutes | `user-<id>` | The same ask with `cached: true`: our cache only, never a request to Open-Meteo, asked once per new point or date before the wait, so its own budget | `429 {"error":"rate_limited"}` |
+| `plan_weather_cached_anon` | sliding_window | 300 / 1 day | `anon-<sha256(secret\|plan\|ip)>` | The same for a visitor, the `plan_leg_anon` construction | `429 {"error":"rate_limited"}` |
 | `traffic_submit` | sliding_window | 120 / 1 hour | `user-<id>` | Traffic summaries from Scout's ride review: `App\Controller\TrafficController::submit()` (`POST /scout/traffic`, stateless `scout-traffic` token). Sized for bulk mode, which sends an archive in chunks of 500 lines; every chunk is idempotent through the dedupe codes, so a retry costs budget and never a double count ([traffic-measurements.md](traffic-measurements.md) §4.1) | `429 {"error":"rate_limited"}` |
 | `coverage_read` | sliding_window | 120 / 1 min | per **IP** (anonymous) | Coverage read endpoints, consistent with the no-scraping access terms ([osm-data-architecture.md](osm-data-architecture.md) §7) | `429 JSON {"error":"rate_limited"}` (`CoverageController::rateLimited()`) |
 | `coverage_photo` | sliding_window | 120 / 1 min | per **IP** (anonymous) | Polling a Commons photo for a coverage POI or a town card, `CoverageController::photo()` and `TownController` ([coverage-provider.md](coverage-provider.md) §7). Spent per poll; `commons-photo.js` backs off and gives up inside 45 seconds | `429 JSON {"error":"rate_limited"}` with `Retry-After` (`ThirdPartyBudget::rateLimited()`) |

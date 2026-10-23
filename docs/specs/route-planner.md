@@ -945,8 +945,15 @@ no account data: the pace is general, and it stays general (section 1).
     south-west, gusts to 55 km/h: 42 km into it, 25 km with it",
     `map.plan_wind_gusts`); the day's highest temperature ("Up to 31 °C");
     the day's rain sum ("6 mm of rain"). The forecast reaches 16 days; a
-    later date shows no line. Credited "Forecast: Open-Meteo" under the
-    list whenever a forecast was used, and on the credits page. "Open-Meteo"
+    later date shows no line. Credited under the list whenever a forecast
+    was used, and on the credits page: "Forecast: Open-Meteo · CC BY 4.0,
+    summarised for this ride · in 9 days". Open-Meteo's data are CC BY 4.0,
+    whose attribution asks for the source next to the data, a link to the
+    licence and a word that the data were changed; ours are (one point
+    rounded to 10 km, the hours ridden, the lines above), hence "summarised
+    for this ride" (`map.plan_forecast_licence`). "CC BY 4.0" links
+    `https://creativecommons.org/licenses/by/4.0/`, in a new tab.
+    "Open-Meteo"
     is a link, in a new tab with `rel="noopener noreferrer"`, to Open-Meteo's
     own forecast page for the same point and day (`forecastPageUrl()`):
     `https://open-meteo.com/en/docs?latitude=<lat>&longitude=<lng>&start_date=<day>&end_date=<day>`
@@ -967,10 +974,22 @@ no account data: the pace is general, and it stays general (section 1).
     third is 5 km from both ends (laps of a short circuit), nothing is asked;
   - the browser rounds the point to 0.1° (about 10 km) before it sends it, so
     our server never receives the exact point either.
-  There is no "done planning": the ask follows the ride as it is. It goes out
-  once the ride has been still for 3 seconds (`WEATHER_SETTLE_MS`), once per
-  0.1° cell and date, and an answer that arrives for a ride since changed is
-  dropped. A ride from a GPX file asks once, for its whole line.
+  There is no "done planning": the ask follows the ride as it is. An answer
+  the page already has (the same cell and date, asked earlier on this page)
+  shows at once. Else our server's cache is asked first (`cachedWeather()`,
+  `cached: true`, section 8), which never reaches the service: a forecast it
+  holds shows at once, so a reopened ride shows its weather without a wait.
+  Only when the cache does not hold it does the ask wait until the ride has
+  been still for 20 seconds (`WEATHER_SETTLE_MS`), so checkpoints added one
+  after another ask once, at the end; once per 0.1° cell and date; and an
+  answer that arrives for a ride since changed is dropped. While the ask
+  waits or travels, the weather list shows where the chart will be: its
+  three panels, empty and slowly breathing (`WX_EMPTY`, still for a reduced
+  motion), with "Getting the forecast" (`map.plan_weather_wait`) over them in
+  the credit's type; above a forecast it already shows, "Updating the
+  forecast" (`map.plan_weather_updating`) alone, the forecast dimmed under
+  it, so the list never blanks while a checkpoint is added. A ride from a
+  GPX file asks once, for its whole line.
 - **The ride bar** (section 3) adds the time: "42.3 km · 610 m ↑ · 2h 5m ·
   3 stops".
 
@@ -1397,7 +1416,7 @@ one of those.
 | `POST /map/plan/budget` `{}` → `{budget: {left, limit, per}}`: the legs left to plan, `per` `day` for a visitor and `window` (ten minutes) for a rider; spends none (the limiter's `consume(0)`). Every answer of `leg`, `legs` and `detours`, a 429 too, carries the same `budget`. The planner shows it under the status line, always, for everyone (owner 2026-10-18: "where can I see my number of legs remaining?", "always for everyone"): "73 of 100 legs left today", "590 of 600 legs left for the next 10 minutes" (`#planLegsLeft`, `map.plan_legs_left_day`, `map.plan_legs_left_window`). It asks when the panel opens, at most once a minute | everyone | `plan-leg` | the `plan_leg` limiters, read only |
 | `POST /map/plan/snap` `{point: [lng, lat], bike}` → `{snapped: true, point, distanceM}` or `{snapped: false}`: a map point onto the nearest road the bike may ride, within 500 m, no one's driveway (section 4.1); a bad point or bike, 400 | everyone | `plan-leg` | `plan_snap` 1200 per 10 minutes per user; `plan_snap_anon` 300 per day, keyed as the legs' |
 | `POST /map/plan/along` `{line: GeoJSON LineString, radius?}` (`radius` one of 250, 500, 1000, 2000, 5000 metres, 250 when left out) → `{radiusM, climbs, groups, coverage, regions}`, the ride check's lists and the regions the line crosses (section 5); 2 to 5000 points, 500 m to 400 km, else 400 (`bad_request`, `length_range`) | everyone | `plan-along` | `plan_along` 60 per 10 minutes per user; `plan_along_anon` 20 per day |
-| `POST /map/plan/weather` `{lat, lng, date}` → `{forecast: {date, lat, lng, windKmh, gustKmh, windFromDeg, tempMaxC, rainMm} \| null}`, `lat` and `lng` the rounded point asked for, `gustKmh` null when the service gives no gust; `null` when the service is off (`FORECAST_URL` empty), does not answer, or the date is past its 16 days; a malformed point or date is 400 | everyone | `plan-weather` | `plan_weather` 60 per 10 minutes per user; `plan_weather_anon` 30 per day |
+| `POST /map/plan/weather` `{lat, lng, date}` → `{forecast: {date, lat, lng, windKmh, gustKmh, windFromDeg, tempMaxC, rainMm} \| null}`, `lat` and `lng` the rounded point asked for, `gustKmh` null when the service gives no gust; `null` when the service is off (`FORECAST_URL` empty), does not answer, or the date is past its 16 days; a malformed point or date is 400. With `cached: true` only our cache answers and the service is never asked: the forecast it holds, or `{forecast: null, uncached: true}` when it does not hold it and an ask without `cached` would get it (section 4.4) | everyone | `plan-weather` | `plan_weather` 60 per 10 minutes per user; `plan_weather_anon` 30 per day. With `cached: true`: `plan_weather_cached` 600 per 10 minutes per user; `plan_weather_cached_anon` 300 per day, never the forecast's budget |
 
 - The two open endpoints follow the stateless-JSON pattern (security-architecture.md
   section 5.1): a bad or cross-site token is 403, a malformed body is 400
@@ -1463,6 +1482,14 @@ No rider's rows: nothing of a ride is stored, so there is no scope to leak.
   the token, 400 for a bad point or date, the two limiters, `forecast: null`
   passed through. The test environment has no forecast service
   (`FORECAST_URL` empty in `.env.test`), as it has no engine.
+- **PHP, our cache first.** `Forecast`: an ask of the cache only never
+  reaches the service, answers what a full ask stored, and `answers()` is
+  false past the reach and with no service (`ForecastTest`).
+  `POST /map/plan/weather` with `cached: true`: `uncached: true` before a
+  full ask and the forecast after it, one request in all; no service,
+  nothing to wait for; its own budget, a spent forecast budget does not stop
+  it and a spent cache budget is 429 (`PlanControllerTest`). The wiring pins
+  the cache ask as the wait starts and the empty chart while it waits.
 - **Copy.** The five locales carry every new key (translations.md).
 
 ## 10. Build order

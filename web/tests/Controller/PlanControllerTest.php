@@ -525,6 +525,68 @@ final class PlanControllerTest extends WebTestCase
         self::assertStringNotContainsString('50.48', $asked[0]);
     }
 
+    public function testWithoutAForecastServiceAnAskOfOurCacheHasNothingToWaitFor(): void
+    {
+        $client = static::createClient();
+
+        self::post($client, '/map/plan/weather', 'plan-weather', [...self::weatherAsk(), 'cached' => true]);
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(['forecast' => null], self::json($client));
+    }
+
+    public function testAnAskOfOurCacheOnlySaysWhetherAWaitWouldGetTheForecast(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $asked = [];
+        $http = new MockHttpClient(function (string $method, string $url) use (&$asked): MockResponse {
+            $asked[] = $url;
+
+            return new MockResponse((string) json_encode(['daily' => [
+                'time' => [self::weatherAsk()['date']], 'wind_speed_10m_max' => [28.1], 'wind_direction_10m_dominant' => [225], 'temperature_2m_max' => [31.4], 'precipitation_sum' => [6.2],
+            ]]));
+        });
+        static::getContainer()->set(Forecast::class, new Forecast($http, new ArrayAdapter(), new NullLogger(), static::getContainer()->get(ClockInterface::class), 'https://forecast.test'));
+
+        self::post($client, '/map/plan/weather', 'plan-weather', [...self::weatherAsk(), 'cached' => true]);
+        self::assertSame(['forecast' => null, 'uncached' => true], self::json($client), 'not in our cache: the planner waits, then asks');
+        self::assertCount(0, $asked, 'an ask of the cache never reaches the service');
+
+        self::post($client, '/map/plan/weather', 'plan-weather', self::weatherAsk());
+        self::post($client, '/map/plan/weather', 'plan-weather', [...self::weatherAsk(), 'cached' => true]);
+        self::assertSame(31.4, self::json($client)['forecast']['tempMaxC'] ?? null, 'in our cache: shown at once');
+        self::assertCount(1, $asked);
+    }
+
+    public function testAnAskOfOurCacheHasItsOwnBudget(): void
+    {
+        $client = static::createClient();
+        $secret = (string) static::getContainer()->getParameter('kernel.secret');
+        $limiter = static::getContainer()->get('limiter.plan_weather_anon')->create(PlanController::anonKey('127.0.0.1', $secret));
+        for ($i = 0, $n = self::limit('plan_weather_anon'); $i < $n; ++$i) {
+            self::assertTrue($limiter->consume()->isAccepted());
+        }
+
+        self::post($client, '/map/plan/weather', 'plan-weather', [...self::weatherAsk(), 'cached' => true]);
+
+        self::assertResponseIsSuccessful();
+    }
+
+    public function testAVisitorOverTheCacheBudgetIs429(): void
+    {
+        $client = static::createClient();
+        $secret = (string) static::getContainer()->getParameter('kernel.secret');
+        $limiter = static::getContainer()->get('limiter.plan_weather_cached_anon')->create(PlanController::anonKey('127.0.0.1', $secret));
+        for ($i = 0, $n = self::limit('plan_weather_cached_anon'); $i < $n; ++$i) {
+            self::assertTrue($limiter->consume()->isAccepted());
+        }
+
+        self::post($client, '/map/plan/weather', 'plan-weather', [...self::weatherAsk(), 'cached' => true]);
+
+        self::assertResponseStatusCodeSame(429);
+    }
+
     public function testAVisitorOverTheForecastBudgetIs429(): void
     {
         $client = static::createClient();
