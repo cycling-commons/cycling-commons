@@ -1,0 +1,36 @@
+web/assets/map/plan-model.js
+  s_b132c4909850ff::t_3701ff2e0e9218 788-789,875-876,878-879,881-885
+  s_b132c4909850ff::t_970d3bd0e3834c 886-887
+web/src/Controller/MapController.php
+  s_b132c4909850ff::t_3701ff2e0e9218 815
+docs/specs/route-planner.md
+  s_b132c4909850ff::t_12de27f25d8417 807-809
+  s_b132c4909850ff::t_29f8ea94e42a03 718,810,852
+web/assets/map/plan.js
+  s_b132c4909850ff::t_3701ff2e0e9218 984-985
+web/tests/js/plan-model.test.mjs
+  s_b132c4909850ff::t_12de27f25d8417 860-864,870,875,975,977-979
+  s_b132c4909850ff::t_9c0de5fd1b5e9a 980-981
+  s_b132c4909850ff::t_b52069dddb4764 857,982-984
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "260f24c2266c1edb47c4b714002c390ccf023e2d",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_b132c4909850ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c3c831df-6dca-4e42-a804-a10ae200a3e1",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
