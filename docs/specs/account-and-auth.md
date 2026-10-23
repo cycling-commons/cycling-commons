@@ -533,6 +533,7 @@ codes and disables the flag: audited, confirm-gated.
 | Hasher | `auto` (argon2id-class) |
 | `form_login` | CSRF on, `success_handler: App\Security\LoginSuccessHandler` |
 | `logout` | CSRF on, target `home` |
+| Session | Redis (`framework.session.handler_id`), `gc_maxlifetime: 28800`: a session lives 8 hours without a request, longer than writing a region text takes, so the form's token is still there when it is sent. The cookie ends when the browser closes |
 | `remember_me` | lifetime `604800` (7 days), `samesite: lax`, `secure: auto`. The sign-in form's "Stay signed in" box carries a line under it (`security.login.remember_hint`): signed in for 7 days on this browser, not for a public or shared device |
 | `/login` shortcut | fires on **`IS_AUTHENTICATED_FULLY`**, never on `getUser()` (below) |
 | `/join/{cc}` | `ROLE_USER`; password re-confirmed **on submit** when the session is only remembered (below) |

@@ -20,6 +20,11 @@ framework:
         handler_id: '%env(REDIS_URL)%'
         # PHPSESSID in production; the dev stack's own name (services.yaml).
         name: '%cc.session_cookie%'
+        # How long a session lives without a request: 8 hours, the Redis key's
+        # TTL. Longer than writing a region text takes, so the session and the
+        # form's token are both still there when the text is sent. The cookie
+        # itself ends when the browser closes.
+        gc_maxlifetime: 28800
         cookie_secure: auto
         cookie_samesite: lax
 
