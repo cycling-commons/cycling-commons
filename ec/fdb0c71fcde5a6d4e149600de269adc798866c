@@ -1,0 +1,44 @@
+web/tests/Provider/ProviderHarvestTest.php
+  s_a0581e5e43c0aa::t_6291c91a706a98 467-478
+web/tests/Links/WebsiteCheckerTest.php
+  s_a0581e5e43c0aa::t_ee252c7fa2e946 88-101
+web/src/Provider/Command/HarvestProviderCommand.php
+  s_a0581e5e43c0aa::t_89712c13e9f984 146-168
+  s_a0581e5e43c0aa::t_ce1bc8cb9b8f9b 113
+web/src/Links/WebsiteChecker.php
+  s_a0581e5e43c0aa::t_a16cbdb505896e 43-44,48
+  s_a0581e5e43c0aa::t_89f9539cc9f6e0 59-63,67-70
+web/src/Provider/ProviderHarvest.php
+  s_a0581e5e43c0aa::t_a0d9888512d013 420
+  s_a0581e5e43c0aa::t_599f3d542e49c8 99,103,107-111,117,119-122
+  s_a0581e5e43c0aa::t_a834ee6cc71aaa 407,411
+  s_a0581e5e43c0aa::t_c1167e9a0cbe6a 175-177
+docs/specs/data-provider-hierarchy.md
+  s_a0581e5e43c0aa::t_2579030a9f9c86 189-194
+web/tests/Provider/HarvestWebsiteGateTest.php
+  s_a0581e5e43c0aa::t_7fd2ab72d8c2ab 88-106
+web/src/Links/WebsiteGate.php
+  s_a0581e5e43c0aa::t_d117975af7968c 37-38,42
+  s_a0581e5e43c0aa::t_bc340325e16a65 65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ecfdb0c71fcde5a6d4e149600de269adc798866c",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_a0581e5e43c0aa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2398684d-f59e-472d-af09-d3728defd34d",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
