@@ -1490,6 +1490,7 @@ map:
   plan_way_taken: "kürzester Weg"
   plan_way_back: "Zurück zum Weg deines Rads"
   plan_busy: "{d} auf Hauptstraßen ohne Radweg"
+  plan_when: "Start"
   plan_date: "Startdatum"
   plan_daylight: "Tageslicht {d}, {from} bis {to}"
   plan_daylight_short: "Die Fahrzeit ist länger als das Tageslicht."

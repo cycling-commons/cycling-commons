@@ -1487,6 +1487,7 @@ map:
   plan_way_taken: "kortste weg"
   plan_way_back: "Terug naar de weg van je fiets"
   plan_busy: "{d} op hoofdwegen zonder fietspad"
+  plan_when: "Start"
   plan_date: "Startdatum"
   plan_daylight: "Daglicht {d}, van {from} tot {to}"
   plan_daylight_short: "De rijtijd is langer dan het daglicht."

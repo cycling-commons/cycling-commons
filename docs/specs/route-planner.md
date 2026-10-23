@@ -167,8 +167,9 @@ shows, which is the point.
   over any other layer, but stay below spot icons"). It is thin, 1.8 px at zoom 10
   to 3 px at zoom 18 over a faint cream edge, so the surface band under it
   stays readable on both sides (owner 2026-10-15). Chevrons along it, from
-  zoom 11, show which way the ride goes (`plan-arrows`, owner 2026-10-15);
-  the line's eye hides them with it.
+  zoom 11, show which way the ride goes (`plan-arrows`, owner 2026-10-15),
+  21 px drawn (1.5 times the first 14 px, `ARROW_K`, drawn at that size so
+  they stay sharp); the line's eye hides them with it.
 - **Show or hide the line** (owner 2026-10-15): an eye beside "Your ride"
   in the panel (`#planLineToggle`) hides the ride line and shows it again,
   so the surface under it can be read on its own; the stops, the profile and
@@ -410,7 +411,10 @@ location"). The first block of the panel (`#planStart`):
 1. **Name your ride** (`#planRideName`, up to 80 characters, kept with the
    draft and written into the GPX). The map takes no first stop without
    it: a click, or Add to ride on a drawer, opens the panel on the name with
-   "Give your ride a name first."
+   "Give your ride a name first." Its label, the place search's ("Where
+   do you start?", then "Go to a place") and the day's "Start" are headings
+   like "Your bike": bold mono capitals, 0.74rem, in the heading colour
+   (`.cc-plan-field span`; Start on the line of its fields).
 2. **Where do you start?** (`#planStartSearch`), shown once the ride has a
    name and until it has a stop: a town or a street, through Photon in the
    browser as the map search is (map-and-search.md section 7.2), with
@@ -814,9 +818,13 @@ no account data: the pace is general, and it stays general (section 1).
     22:00 (`defaultStartMin()`), and is kept with the browser's draft like
     the day, never in the ride file. The day and the start time sit at the
     top of the panel under the name, the ride's base facts (`#planWhen`,
-    owner 2026-10-17), each label beside its field in the small capitals of
-    "Name your ride" (0.64rem, owner 2026-10-18), the fields at a size read
-    at a glance; the day is any date from today on. In the details,
+    owner 2026-10-17), on one line under one word, "Start" (`map.plan_when`),
+    a heading like "Your bike" on the line of its fields, the day's button and
+    the time's list side by side at a size read at a glance (a narrow side
+    wraps the time under the day). The button's name is the word and the
+    date it shows; the field under it is "Start date" (`map.plan_date`) and
+    the list "Start time" (`map.plan_start_time`) to a screen reader. The
+    day is any date from today on. In the details,
     the finish stands beside the riding time, two tiles of one row (owner
     2026-10-17): "Finish time ~ 11:35" (`map.plan_finish_h`), the start plus
     the riding time plus 5 % for lights, crossings and traffic
@@ -1155,8 +1163,12 @@ two (2026-10-14). The ride bar and the legend step up above the strip.
 
 While the strip is open, the map's bottom-edge furniture moves up with it:
 the ride bar, the filter "!" (just above the strip, at the left) and the
-surface legend (just above the strip, at the right; the bug button sits on
-the strip, so the legend keeps no gap for it there; owner 2026-10-15).
+surface legend (at the right; the bug button sits on the strip, so the
+legend keeps no gap for it there; owner 2026-10-15). The legend stands 0.6
+rem above the corner of credits and scale bar, whose height is measured
+(`--ctrl-br-h` on `.map-wrap`, a `ResizeObserver` in `map-init.js`): the
+credits can wrap to two lines, and a fixed offset let the folded legend lie
+over the scale bar.
 
 ## 5. Along the ride
 
@@ -1542,7 +1554,9 @@ No rider's rows: nothing of a ride is stored, so there is no scope to leak.
   tough at rest: the band under the ride at half strength and wider than
   the line, the longest stretch first, a long day and the water gap not in
   it, the headwind's arrows at rest on its stretches only and gone while
-  anything is pointed at, the lit arrows every 3 km.
+  anything is pointed at, the lit arrows every 3 km; the direction arrows
+  drawn 1.5 times their first size; the legend above the measured corner of
+  credits and scale bar while the strip is up.
 - **PHP, the day.** `LegSurfaces` counts the busy metres from `road_class`
   and `cycle_lane`. `Forecast`: the point rounded to 0.1° before the request,
   one request for two asks of the same rounded point and date, the rounded

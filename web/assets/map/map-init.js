@@ -170,6 +170,11 @@ export function initMapControls({toast}={}){
   /* A scale bar above the attribution, in the rider's distance unit. Bottom-right, not in the zoom
      column: that column ends just under the filter pill's mark (map-and-search.md section 4.3). */
   map.addControl(new maplibregl.ScaleControl({maxWidth:100, unit: uDistUnit()==='mi' ? 'imperial' : 'metric'}),'bottom-right');
+  /* The key stands above this corner while the ride's profile strip is up (map.css, .cc-strip-on .legend). The
+     credits can wrap to two lines and the scale bar sits on them, so the corner's own height is measured, never
+     guessed (owner 2026-10-23: the folded key lay over the scale bar). */
+  const corner = map.getContainer().querySelector('.maplibregl-ctrl-bottom-right'), wrap = map.getContainer().closest('.map-wrap');
+  if(corner && wrap && 'ResizeObserver' in window) new ResizeObserver(() => wrap.style.setProperty('--ctrl-br-h', corner.offsetHeight + 'px')).observe(corner);
   /* The compass with the zoom buttons (owner 2026-10-19: "can we add a compass when you click it the map always
      rotates North up"): its needle shows where north is; a click turns the map north up and keeps the tilt. */
   map.addControl(new maplibregl.NavigationControl({showCompass:true, visualizePitch:false}),'bottom-left');

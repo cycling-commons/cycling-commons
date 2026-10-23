@@ -2081,6 +2081,7 @@ map:
   plan_way_taken: "shortest way"
   plan_way_back: "Back to your bike's way"
   plan_busy: "{d} on main roads without a cycle lane"
+  plan_when: "Start"
   plan_date: "Start date"
   plan_daylight: "Daylight {d}, {from} to {to}"
   plan_daylight_short: "The riding time is longer than the daylight."

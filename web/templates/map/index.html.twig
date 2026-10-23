@@ -547,12 +547,12 @@
       {# When: the day and the start time, the ride's base facts beside its name (owner 2026-10-17); the day is mostly ahead,
          any date from today on, and the forecast reaches 16 days (route-planner.md section 4.4). #}
       <div class="grp cc-plan cc-plan-when" id="planWhen">
-        {# The date reads in the page's language on a button that opens our own calendar (date-pick.js); the field holds
-           the value, unseen under the button (route-planner.md section 4.4). #}
-        <div class="cc-plan-date"><span id="planDateLbl">{{ 'map.plan_date'|trans }}</span><span class="cc-plan-datebox"><button type="button" class="cc-plan-dateshow" id="planDateShow" aria-describedby="planDateLbl" hidden></button><input type="date" id="planDate" aria-labelledby="planDateLbl"></span></div>
-        {# The start time: a list of half hours in 24-hour clock, as a time field would read the browser's clock; plan.js fills it.
-           With it the panel says when the ride finishes and reads the forecast for the hours ridden (route-planner.md section 4.4). #}
-        <div class="cc-plan-date"><label for="planStartTime">{{ 'map.plan_start_time'|trans }}</label><select id="planStartTime"></select></div>
+        {# The start, the day and the time on one line under one word (owner 2026-10-23). The date reads in the page's language
+           on a button that opens our own calendar (date-pick.js), its name the word and the date it shows; the field holds the
+           value, unseen under the button. The time is a list of half hours in 24-hour clock, as a time field would read the
+           browser's clock; plan.js fills it. With it the panel says when the ride finishes and reads the forecast for the
+           hours ridden (route-planner.md section 4.4). #}
+        <div class="cc-plan-date"><span id="planWhenLbl">{{ 'map.plan_when'|trans }}</span><span class="cc-plan-startbox"><span class="cc-plan-datebox"><button type="button" class="cc-plan-dateshow" id="planDateShow" aria-labelledby="planWhenLbl planDateShow" hidden></button><input type="date" id="planDate" aria-label="{{ 'map.plan_date'|trans }}"></span><select id="planStartTime" aria-label="{{ 'map.plan_start_time'|trans }}"></select></span></div>
       </div>
       {# The place search, a card of its own after the day (owner 2026-10-18): where the ride starts while it has no
          checkpoint, then a way to any place on the map ("Go to a place"). Shown once the ride has a name. #}

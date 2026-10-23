@@ -399,7 +399,8 @@ map module opens `#drawer` behind its back.
   attribution, in the rider's distance unit (`imperial` when the account
   shows miles, else `metric`), in the zoom badge's glass so it reads on every
   base map; it stays out of the zoom column, which ends just under the filter
-  pill's mark. The attribution box at
+  pill's mark. While the ride's profile strip is up, the map key stands above
+  the scale bar and the attribution (route-planner.md section 4.5). The attribution box at
   bottom-right is capped at the map width minus 4.5rem
   (`.maplibregl-ctrl-bottom-right{max-width}`, map.css), so the long notice
   (OSM, DEM, imagery provider) wraps inside its own box and its last line, the

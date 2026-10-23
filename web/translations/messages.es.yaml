@@ -2088,6 +2088,7 @@ map:
   plan_way_taken: "camino más corto"
   plan_way_back: "Volver al camino de tu bici"
   plan_busy: "{d} por carreteras principales sin carril bici"
+  plan_when: "Salida"
   plan_date: "Fecha de salida"
   plan_daylight: "Luz de día {d}, de {from} a {to}"
   plan_daylight_short: "El tiempo de pedaleo es mayor que las horas de luz."

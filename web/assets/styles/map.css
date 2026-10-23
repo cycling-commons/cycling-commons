@@ -2119,7 +2119,8 @@
   /* the start: name, then where (route-planner.md section 4.1) */
   .cc-plan-field{display:block;margin-top:.4rem;max-width:20rem}
   .cc-plan-field:first-child{margin-top:0}
-  .cc-plan-field span{display:block;font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .7);margin-bottom:.25rem}
+  /* Name your ride and Go to a place are headings like Your bike (owner 2026-10-23), over their fields. */
+  .cc-plan-field span{display:block;font-family:var(--mono);font-size:.74rem;letter-spacing:.18em;font-weight:700;text-transform:uppercase;color:var(--chrome-head);margin-bottom:.6rem}
   .cc-plan-field input{width:100%;background:var(--chrome-field);border:1px solid rgb(var(--chrome-fg) / .25);color:var(--chrome-fg-solid);border-radius:6px;padding:.45rem .6rem;font:inherit}
   .cc-plan-startsearch[hidden]{display:none}
   .cc-plan-startsearch{margin-top:.6rem}
@@ -2172,12 +2173,13 @@
   .cc-plan-strip-x:hover{background:rgb(var(--chrome-fg) / .12);color:var(--chrome-fg-solid)}
   /* The strip covers the map's foot, so the map's credits (OpenStreetMap, the elevation notice, the
      imagery provider) and the zoom buttons sit on top of it, never under it (owner 2026-10-16: the legal
-     text was missing in the planner). What sat above them moves up with them: the ride bar and the
-     legend clear the credits line, the filter mark clears the zoom column. */
+     text was missing in the planner). What sat above them moves up with them: the ride bar clears the credits
+     line, the legend the whole corner of credits and scale bar as measured (--ctrl-br-h, map-init.js), the filter
+     mark clears the zoom column. */
   .map-wrap.cc-strip-on .maplibregl-ctrl-bottom-right,.map-wrap.cc-strip-on .maplibregl-ctrl-bottom-left{bottom:140px}
   .map-wrap .maplibregl-ctrl-bottom-right,.map-wrap .maplibregl-ctrl-bottom-left{transition:bottom .3s ease}
   .map-wrap.cc-strip-on .cc-plan-bar{bottom:calc(140px + 3.4rem)}
-  .map-wrap.cc-strip-on .legend{bottom:calc(140px + 3.4rem)}
+  .map-wrap.cc-strip-on .legend{bottom:calc(140px + var(--ctrl-br-h, 3.4rem) + .6rem)}
   .map-wrap.cc-strip-on .fpill{bottom:calc(140px + 13.2rem)}
   .cc-plan-fig-wide{grid-column:1 / -1}
   .cc-plan-fig-wide span em{font-style:normal;text-transform:none;letter-spacing:0;color:rgb(var(--chrome-fg) / .8)}
@@ -2205,6 +2207,8 @@
   .cc-plan-date select,.cc-plan-reach{background:color-mix(in srgb, var(--chrome-bg) 94%, rgb(var(--chrome-fg)));font-family:var(--mono);font-size:.78rem;letter-spacing:0;text-transform:none;color:var(--chrome-fg-solid);border:1px solid rgb(var(--chrome-fg) / .15);border-radius:6px;padding:.25rem .4rem;cursor:pointer}
   .cc-plan-date select option,.cc-plan-reach option{background:var(--chrome-bg);color:var(--chrome-fg-solid)}
   .cc-plan-datebox{position:relative;display:inline-flex}
+  /* The start's day and time side by side, right of the word; a narrow side wraps the time under the day. */
+  .cc-plan-startbox{display:inline-flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:.4rem}
   .cc-plan-dateshow{cursor:pointer}
   .cc-plan-dateshow:hover{border-color:var(--trail)}
   /* Under its button: the calendar opens where the button is, and the field's own order is never seen. */
@@ -2307,7 +2311,6 @@
   /* When: the day and the start time under the name, the ride's base facts. */
   #p-plan .grp.cc-plan-when{padding-top:.7rem;padding-bottom:.8rem}
   .cc-plan-when .cc-plan-date:first-of-type{margin-top:0}
-  .cc-plan-when .cc-plan-date + .cc-plan-date{margin-top:.55rem}
   /* The day graphic with more air and larger words (owner 2026-10-17). */
   #planSide .cc-plan-dayfx,#p-plan .cc-plan-dayfx{padding:.85rem .9rem .6rem}
   .cc-plan-daybars svg{height:12px}
@@ -2347,8 +2350,8 @@
   .cc-wx-w b{font-weight:600}
   /* The labels in the small capitals of "Name your ride", on one line; the fields keep their size (owner 2026-10-18). */
   .cc-plan-when .cc-plan-date{font-size:.76rem}
-  .cc-plan-when .cc-plan-date > span:first-child,.cc-plan-when .cc-plan-date > label{font-size:.64rem;letter-spacing:.12em;white-space:nowrap}
-  .cc-plan-when .cc-plan-date + .cc-plan-date{margin-top:.7rem}
+  /* Start is a heading like Your bike (owner 2026-10-23), on the line of its day and time. */
+  .cc-plan-when .cc-plan-date > span:first-child,.cc-plan-when .cc-plan-date > label{font-size:.74rem;letter-spacing:.18em;font-weight:700;color:var(--chrome-head);white-space:nowrap}
   /* The details' heading as one row: the eye beside the words, the side's close button at the right edge, both one
      size (owner 2026-10-18: "not aligned, and on the right of the drawer"). */
   #planFigsGrp > h3{display:flex;align-items:center}

@@ -1529,12 +1529,14 @@ function addWindArrowImages(){
     map.addImage(id, x.getImageData(0, 0, W * S, H * S), { pixelRatio: S });
   });
 }
-/* A chevron for the ride's direction, orange on a cream edge as the line is, pointing along the line; drawn once per style. */
+/* A chevron for the ride's direction, orange on a cream edge as the line is, pointing along the line; drawn once per style.
+   Half as big again as the first one (ARROW_K, owner 2026-10-23), drawn at that size so it stays sharp. */
+const ARROW_K = 1.5;
 function addArrowImage(){
   if(map.hasImage && map.hasImage('plan-arrow')) return;
-  const S = 2, D = 14, c = document.createElement('canvas'); c.width = c.height = D * S;
+  const S = 2, D = 14 * ARROW_K, c = document.createElement('canvas'); c.width = c.height = D * S;
   const x = c.getContext('2d'); if(!x) return;
-  x.scale(S, S); x.lineCap = 'round'; x.lineJoin = 'round';
+  x.scale(S * ARROW_K, S * ARROW_K); x.lineCap = 'round'; x.lineJoin = 'round';
   const path = () => { x.beginPath(); x.moveTo(4.5, 3); x.lineTo(10, 7); x.lineTo(4.5, 11); };
   x.strokeStyle = '#F3EBD8'; x.lineWidth = 4; path(); x.stroke();
   x.strokeStyle = '#FF5A1F'; x.lineWidth = 2; path(); x.stroke();

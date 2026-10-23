@@ -128,7 +128,7 @@ test('the ride line lies over every other line layer and under the icons (owner 
 
 test('with the profile strip open, the surface legend sits just above it, not a bug-button gap higher (owner 2026-10-15)', () => {
   const css = read('assets/styles/map.css');
-  assert.match(css, /\.map-wrap\.cc-strip-on \.legend\{bottom:calc\(140px \+ 3\.4rem\)\}/, 'the legend does not clear the credits line on the strip');
+  assert.match(css, /\.map-wrap\.cc-strip-on \.legend\{bottom:calc\(140px \+ var\(--ctrl-br-h, 3\.4rem\) \+ \.6rem\)\}/, 'the legend does not clear the credits and the scale bar on the strip');
 });
 
 test('the surface legend is compact vertically (owner 2026-10-15)', () => {
@@ -454,6 +454,9 @@ test('arrows along the ride line show the way it is ridden', () => {
   assert.match(plan, /'symbol-placement': 'line'/);
   assert.match(plan, /'icon-image': 'plan-arrow'/);
   assert.match(plan, /function addArrowImage\(\)\{/);
+  // Half as big again (owner 2026-10-23), drawn at that size: the canvas and the drawing both scale.
+  assert.match(plan, /const ARROW_K = 1\.5;/, 'the arrows are not 50 % bigger');
+  assert.match(plan, /D = 14 \* ARROW_K[\s\S]{0,160}x\.scale\(S \* ARROW_K, S \* ARROW_K\)/, 'the arrow is scaled up blurred instead of drawn at its size');
   assert.match(plan, /\['plan-casing', 'plan-line', 'plan-straight', 'plan-tough', 'plan-wind-rest', 'plan-arrows'\]\.forEach\(id => \{ if\(map\.getLayer\(id\)\) map\.setLayoutProperty\(id, 'visibility'/, 'the eye does not hide the arrows with the line');
   const render = read('assets/map/render.js');
   assert.match(render, /\['plan-gap','plan-tough','plan-alt','plan-casing','plan-line','plan-straight','plan-hl-casing','plan-hl','plan-rain','plan-wind-rest','plan-wind','plan-arrows'\]\.forEach/, 'the arrows, the gap and the shorter way do not keep their place over the other lines');
@@ -829,6 +832,12 @@ test('the guide runs in the order a ride is made, each step its own box (owner 2
   assert.match(en, /^ {2}plan_date: "Start date"/m);
 });
 
+test('the start: day and time on one line under one word (owner 2026-10-23)', () => {
+  assert.match(twig, /<div class="cc-plan-date"><span id="planWhenLbl">\{\{ 'map\.plan_when'\|trans \}\}<\/span><span class="cc-plan-startbox"><span class="cc-plan-datebox"><button [^>]*aria-labelledby="planWhenLbl planDateShow"[^>]*><\/button><input type="date" id="planDate" aria-label="\{\{ 'map\.plan_date'\|trans \}\}"><\/span><select id="planStartTime" aria-label="\{\{ 'map\.plan_start_time'\|trans \}\}"><\/select><\/span><\/div>/, 'the day and the time are not one row under Start');
+  for (const l of ['en', 'fr', 'nl', 'de', 'es']) assert.match(read(`translations/messages.${l}.yaml`), /^ {2}plan_when: "/m, `messages.${l}.yaml lacks plan_when`);
+  assert.match(read('translations/messages.en.yaml'), /^ {2}plan_when: "Start"$/m);
+});
+
 test('the side\'s close button and the arrow back never show together; the guide is 39 rem wide (owner 2026-10-18)', () => {
   const css = read('assets/styles/map.css');
   assert.match(css, /#planSideX\[hidden\],#planSideBack\[hidden\]\{display:none\}/, 'an id rule beats the hidden attribute');
@@ -962,11 +971,15 @@ test('the checkpoints shrink as the map zooms out (owner 2026-10-18)', () => {
   assert.match(css, /\.cc-mk-s \.cc-plan-mk:not\(\.scrub\)\{width:15px;height:15px;/);
 });
 
-test('the day and the start time labels read as small as the name\'s; the fields keep their size (owner 2026-10-18)', () => {
+test('Name your ride, Start and Go to a place are headings like Your bike; Start on the line of its fields (owner 2026-10-23)', () => {
   const css = read('assets/styles/map.css');
   const name = (css.match(/\.cc-plan-field span\{([^}]*)\}/) || [])[1] || '';
+  const bike = (css.match(/\.grp h3\{([^}]*)\}/) || [])[1] || '';
+  for (const rule of ['font-family:var(--mono)', 'font-size:.74rem', 'letter-spacing:.18em', 'color:var(--chrome-head)', 'text-transform:uppercase']) assert.ok(name.includes(rule) && bike.includes(rule), `the name's heading differs from Your bike on ${rule}`);
+  assert.ok(name.includes('font-weight:700'), 'the name\'s heading is not bold as an h3 is');
   const when = (css.match(/\.cc-plan-when \.cc-plan-date > span:first-child,\.cc-plan-when \.cc-plan-date > label\{([^}]*)\}/) || [])[1] || '';
-  for (const rule of ['font-size:.64rem', 'letter-spacing:.12em']) assert.ok(name.includes(rule) && when.includes(rule), `the labels differ on ${rule}`);
+  for (const rule of ['font-size:.74rem', 'letter-spacing:.18em', 'font-weight:700', 'color:var(--chrome-head)', 'white-space:nowrap']) assert.ok(when.includes(rule), `Start differs from the headings on ${rule}`);
+  assert.match(css, /\.cc-plan-date\{display:flex;align-items:center;justify-content:space-between;/, 'Start is not on the line of its fields');
   assert.match(css, /\.cc-plan-when \.cc-plan-date\{font-size:\.76rem\}/, 'the fields changed size');
 });
 
@@ -1007,6 +1020,12 @@ test('the ride details move left or right with a labelled button, and stay where
   assert.match(plan, /\$\('planSideX'\)\?\.addEventListener\('click', \(\) => \{ sideClosed = true; keepSide\(\); syncSide\(\); \}\);/);
   assert.doesNotMatch(plan, /e\.detail\.key === 'plan'\) sideClosed = false/, 'opening the planner puts the details back on the right');
   for (const l of ['en', 'fr', 'nl', 'de', 'es']) assert.match(read(`translations/messages.${l}.yaml`), /^ {2}plan_side_left: "/m, l);
+});
+
+test('the key stands above the corner of credits and scale bar while the strip is up (owner 2026-10-23)', () => {
+  const init = read('assets/map/map-init.js'), css = read('assets/styles/map.css');
+  assert.match(init, /new ResizeObserver\(\(\) => wrap\.style\.setProperty\('--ctrl-br-h', corner\.offsetHeight \+ 'px'\)\)\.observe\(corner\)/, 'the corner is not measured');
+  assert.ok(css.includes('.map-wrap.cc-strip-on .legend{bottom:calc(140px + var(--ctrl-br-h, 3.4rem) + .6rem)}'), 'the folded key can lie over the scale bar');
 });
 
 test('the headwind shows its arrows at rest at half strength; pointed at, the arrows stand all along, half as many (owner 2026-10-23)', () => {
