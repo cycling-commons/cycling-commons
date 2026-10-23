@@ -17,6 +17,8 @@ The reference documentation for the open cycling-data Commons. The public site
   climbs, routes, views, heritage and stays. Curation, not overload.
 - **[Contributing](contributing.md)**: how to add a fact or confirm one, how every edit is reviewed,
   and the intended path for giving durable facts back to OpenStreetMap (design, not built).
+- **[Writing region texts](region-texts.md)**: what goes in a region's geography text, what goes
+  in its history, nature and culture text, and a worked example for Drenthe.
 - **[Scout](scout.md)**: the one-tap tagger that records what you notice while
   you ride, straight into your own ride file, and how a tag becomes a place.
 - **[Location & privacy](location-privacy.md)**: why the map's location guessing and scope memory
