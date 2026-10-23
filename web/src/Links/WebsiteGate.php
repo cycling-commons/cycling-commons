@@ -34,11 +34,12 @@ final class WebsiteGate
     }
 
     /**
-     * @param list<string> $urls
+     * @param list<string>                    $urls
+     * @param (\Closure(int, int): void)|null $progress the fetches only, see {@see WebsiteChecker::checkMany()}
      *
      * @return array<string, string> url => verdict, every url answered
      */
-    public function verdictsOf(array $urls): array
+    public function verdictsOf(array $urls, ?\Closure $progress = null): array
     {
         $now = $this->clock->now();
         $out = [];
@@ -61,7 +62,7 @@ final class WebsiteGate
             return $out;
         }
 
-        $verdicts = $this->checker->checkMany(array_values($toFetch));
+        $verdicts = $this->checker->checkMany(array_values($toFetch), $progress);
         $byHost = [];
         foreach ($toFetch as $host => $url) {
             $verdict = $verdicts[$url] ?? WebsiteVerdict::failed('no answer');

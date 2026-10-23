@@ -40,11 +40,12 @@ final class WebsiteChecker
     }
 
     /**
-     * @param list<string> $urls
+     * @param list<string>                    $urls
+     * @param (\Closure(int, int): void)|null $progress how many fetched addresses are answered and how many there are, before the first batch and after each
      *
      * @return array<string, WebsiteVerdict> url => verdict, every url answered
      */
-    public function checkMany(array $urls): array
+    public function checkMany(array $urls, ?\Closure $progress = null): array
     {
         $out = [];
         $fetch = [];
@@ -55,9 +56,18 @@ final class WebsiteChecker
             }
             $fetch[] = $url;
         }
+        $total = \count($fetch);
+        $done = 0;
+        if (null !== $progress && $total > 0) {
+            $progress($done, $total);
+        }
         // Every request in flight holds a socket; a provider's thousands of hosts at once exhaust the open-file limit.
         foreach (array_chunk($fetch, self::CONCURRENCY) as $batch) {
             $out += $this->checkBatch($batch);
+            $done += \count($batch);
+            if (null !== $progress) {
+                $progress($done, $total);
+            }
         }
 
         return $out;

@@ -85,6 +85,20 @@ final class WebsiteCheckerTest extends TestCase
         self::assertSame(WebsiteChecker::CONCURRENCY, $peak);
     }
 
+    public function testProgressComesBeforeTheFirstBatchAndAfterEach(): void
+    {
+        $http = new MockHttpClient(static fn (): MockResponse => new MockResponse('<title>Gîte</title>', ['http_code' => 200]));
+        $urls = array_map(static fn (int $i): string => sprintf('https://site%d.test/', $i), range(1, 2 * WebsiteChecker::CONCURRENCY + 1));
+        $urls[] = 'not an address';
+        $calls = [];
+
+        (new WebsiteChecker($http, new NullLogger()))->checkMany($urls, static function (int $done, int $total) use (&$calls): void {
+            $calls[] = [$done, $total];
+        });
+
+        self::assertSame([[0, 41], [20, 41], [40, 41], [41, 41]], $calls, 'only fetched addresses count');
+    }
+
     public function testAnAddressWithoutAHostIsNotFetched(): void
     {
         $checker = $this->checker(new MockResponse('never', ['http_code' => 200]));

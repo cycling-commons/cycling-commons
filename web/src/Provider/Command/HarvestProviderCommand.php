@@ -110,7 +110,7 @@ final class HarvestProviderCommand extends Command
         $write = (bool) $input->getOption('write');
         $this->em->getConnection()->beginTransaction();
         try {
-            $counts = $this->harvest->apply($provider, $features);
+            $counts = $this->harvest->apply($provider, $features, progress: self::progressLines($io));
             if ($write) {
                 $this->em->getConnection()->commit();
                 $provider->recordRun(new \DateTimeImmutable(), \count($features), null);
@@ -141,6 +141,29 @@ final class HarvestProviderCommand extends Command
         $io->success(sprintf('%s: %d records applied.', $key, \count($features)));
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * One line per step at its start, every 5 % and its end, on standard
+     * error: a PIVOT run checks thousands of websites and looks hung without.
+     *
+     * @return \Closure(string, int, int): void
+     */
+    private static function progressLines(SymfonyStyle $io): \Closure
+    {
+        $err = $io->getErrorStyle();
+        /** @var array<string, int> $shown step => the last 5 % mark printed */
+        $shown = [];
+
+        return static function (string $step, int $done, int $total) use ($err, &$shown): void {
+            $percent = 0 === $total ? 100 : intdiv(100 * $done, $total);
+            $mark = intdiv($percent, 5);
+            if (($shown[$step] ?? null) === $mark) {
+                return;
+            }
+            $shown[$step] = $mark;
+            $err->writeln(sprintf('%s %s: %d of %d (%d%%)', date('H:i'), $step, $done, $total, $percent));
+        };
     }
 
     private function providerByKey(string $key): ?DataProvider

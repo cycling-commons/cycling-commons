@@ -186,6 +186,12 @@ command once with `run --rm --no-deps`. Where each half runs is a flag:
 | Dev stack | `make provider-run KEY=rivm-drinkwater [WRITE=1]` (the script with `developers/docker/compose.yaml`, services `pipeline` and `app`, the ingest as `DEV_UID:DEV_GID`) |
 | Staging, production | on the worker host as `deploy`, from its copy of the release: `tools/provider-run.sh --worker-dir /opt/workers/cyclingcommons-<env> <key> [--write]`, which means `compose.pipeline.yaml` service `pipeline` and `compose.compute.yaml` service `worker` in that directory; `--pipeline-compose`, `--pipeline-service`, `--app-compose`, `--app-service` and `--app-user` override one part each |
 
+**The ingest reports as it goes.** Each step prints a line on standard error
+when it starts, at every 5 % and when it ends, such as
+`06:14 websites checked: 145 of 2912 (5%)` and then `records matched`. A
+PIVOT run checks thousands of websites, twenty at a time, before it matches
+its first record; without these lines it looks hung.
+
 **No cache is cleared after a run, and none needs to be.** Every catalogue
 table the payload reads carries a `catalog_change` trigger, so a written
 harvest moves its regions' stamps at commit and the map's documents rebuild on

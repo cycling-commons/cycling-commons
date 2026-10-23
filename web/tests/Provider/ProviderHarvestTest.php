@@ -464,6 +464,18 @@ final class ProviderHarvestTest extends KernelTestCase
         self::assertSame($before, $this->stamps()->counts());
     }
 
+    /** A PIVOT ingest runs for many minutes; without these lines it looks hung. */
+    public function testTheCommandReportsItsProgress(): void
+    {
+        $this->provider(50, 'harvest-progress');
+
+        $tester = $this->harvestFromStdin(['provider' => 'harvest-progress', 'file' => '-'], $this->body([$this->geoFeature('harvest-test:progress', self::LAT, self::LNG)]));
+        $tester->assertCommandIsSuccessful();
+
+        self::assertMatchesRegularExpression('/\d\d:\d\d records matched: 0 of 1 \(0%\)/', $tester->getDisplay());
+        self::assertMatchesRegularExpression('/\d\d:\d\d records matched: 1 of 1 \(100%\)/', $tester->getDisplay());
+    }
+
     /**
      * A written harvest moves its region's stamp by trigger, so the map's
      * documents rebuild on their next request with no cache clear

@@ -96,21 +96,30 @@ final class ProviderHarvest
 
     /**
      * @param list<array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code?: string|null}> $features
+     * @param (\Closure(string, int, int): void)|null                                                                                                      $progress step ('websites checked', 'records matched'), how many done, how many in all
      *
      * @return array{attached: int, inserted: int, updated: int, moved: int, skipped_rider: int, retired_beside_ours: int, stale: int, contested: int, reclaimed: int, websites_dropped: int}
      */
-    public function apply(DataProvider $provider, array $features, \DateTimeImmutable $now = new \DateTimeImmutable()): array
+    public function apply(DataProvider $provider, array $features, \DateTimeImmutable $now = new \DateTimeImmutable(), ?\Closure $progress = null): array
     {
         $counts = ['attached' => 0, 'inserted' => 0, 'updated' => 0, 'moved' => 0, 'skipped_rider' => 0, 'retired_beside_ours' => 0, 'stale' => 0, 'contested' => 0, 'reclaimed' => 0, 'websites_dropped' => 0];
         $this->droppedWebs = [];
-        $features = $this->withoutDeadWebsites($features, $counts['websites_dropped']);
+        $features = $this->withoutDeadWebsites(
+            $features,
+            $counts['websites_dropped'],
+            null === $progress ? null : static fn (int $done, int $total) => $progress('websites checked', $done, $total),
+        );
         $features = self::officeOnlyWithoutWebsite($features);
         // Every ref this run carries, known up front: a row whose ref is not
         // among them and that sits near a ref nobody has is a point that MOVED.
         $refs = array_map(static fn (array $f): string => $f['ref'], $features);
         $seen = [];
+        $total = \count($features);
 
-        foreach ($features as $feature) {
+        foreach ($features as $done => $feature) {
+            if (null !== $progress) {
+                $progress('records matched', $done, $total);
+            }
             $ref = $feature['ref'];
             $seen[] = $ref;
 
@@ -162,6 +171,9 @@ final class ProviderHarvest
             if (null !== $osmRef) {
                 ++$counts['attached'];
             }
+        }
+        if (null !== $progress) {
+            $progress('records matched', $total, $total);
         }
 
         $this->stampSeen($provider, $seen, $now);
@@ -392,10 +404,11 @@ final class ProviderHarvest
      * One fetch per host for the whole run, none within a verdict's period.
      *
      * @param list<array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code?: string|null}> $features
+     * @param (\Closure(int, int): void)|null                                                                                                              $progress
      *
      * @return list<array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code?: string|null}>
      */
-    private function withoutDeadWebsites(array $features, int &$dropped): array
+    private function withoutDeadWebsites(array $features, int &$dropped, ?\Closure $progress): array
     {
         $urls = [];
         foreach ($features as $feature) {
@@ -404,7 +417,7 @@ final class ProviderHarvest
                 $urls[] = trim($web);
             }
         }
-        $verdicts = [] === $urls ? [] : $this->websites->verdictsOf(array_values(array_unique($urls)));
+        $verdicts = [] === $urls ? [] : $this->websites->verdictsOf(array_values(array_unique($urls)), $progress);
         foreach ($features as $i => $feature) {
             $web = $feature['attributes']['web'] ?? null;
             if (\is_string($web) && '' !== trim($web) && (self::isAddress($web) || WebsiteVerdict::hides($verdicts[trim($web)] ?? null))) {

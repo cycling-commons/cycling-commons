@@ -85,6 +85,25 @@ final class HarvestWebsiteGateTest extends KernelTestCase
         self::assertCount(1, $this->fetched, 'a verdict is about a host, and two places with the same site share it');
     }
 
+    public function testAHarvestReportsItsWebsitesAndItsRecords(): void
+    {
+        $calls = [];
+        $this->harvest()->apply($this->provider(), [
+            $this->feature('web-gate-test:progress-one', 'https://progress-one.test/'),
+            $this->feature('web-gate-test:progress-two', 'https://progress-two.test/'),
+        ], progress: static function (string $step, int $done, int $total) use (&$calls): void {
+            $calls[] = [$step, $done, $total];
+        });
+
+        self::assertSame([
+            ['websites checked', 0, 2],
+            ['websites checked', 2, 2],
+            ['records matched', 0, 2],
+            ['records matched', 1, 2],
+            ['records matched', 2, 2],
+        ], $calls);
+    }
+
     /**
      * The tourist office (`officeWeb`) is how a rider reaches a stay without a
      * site of its own (data-provider-hierarchy.md §10): kept beside no website
