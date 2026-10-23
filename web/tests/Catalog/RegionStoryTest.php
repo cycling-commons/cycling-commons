@@ -37,6 +37,19 @@ final class RegionStoryTest extends TestCase
         ]], RegionStory::paragraphs('The [Stelling van Amsterdam](https://www.stelling-amsterdam.nl) is a ring; [no address](ftp://x.test) and https://bare.test stay text.'));
     }
 
+    public function testOnlyAnHttpsAddressLinks(): void
+    {
+        $text = 'The [Hunebedcentrum](http://www.hunebedcentrum.nl/) and the [Geopark](https://www.dehondsrug.nl/), and [again](http://www.hunebedcentrum.nl/).';
+
+        self::assertSame([[
+            ['text' => 'The [Hunebedcentrum](http://www.hunebedcentrum.nl/) and the ', 'href' => null],
+            ['text' => 'Geopark', 'href' => 'https://www.dehondsrug.nl/'],
+            ['text' => ', and [again](http://www.hunebedcentrum.nl/).', 'href' => null],
+        ]], RegionStory::paragraphs($text), 'an http address stays as written');
+        self::assertSame(['http://www.hunebedcentrum.nl/'], RegionStory::insecureLinks($text), 'named once, for the writer to change');
+        self::assertSame([], RegionStory::insecureLinks('A bare http://x.test address is no link.'));
+    }
+
     public function testTheReadableLengthCountsALinksWordsNotItsAddress(): void
     {
         self::assertSame(\mb_strlen("The Stelling rings.\n\nWind."), RegionStory::readableLength("The [Stelling](https://www.stelling-amsterdam.nl) rings.\n\nWind."));

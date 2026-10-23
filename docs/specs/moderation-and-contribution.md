@@ -732,10 +732,12 @@ Wikipedia credit (below, "The Wikipedia credit"); the drawer's Approve on a
 `text` submission opens that form.
 
 **The form.** The town card (`places.js`, the line is drawn by
-`assets/map/town-text.js`) and the region page open one small form per text
-(`PlaceTextController`, routes `town_text` `/town/{osmType}/{osmId}/text` and
-`region_text` `/regions/{slug}/text`, ROLE_USER; a visitor is sent to sign in
-and comes back to it). A text's credit line ends in two ringed icons, the
+`assets/map/town-text.js`) opens one small form for its text
+(`PlaceTextController`, route `town_text` `/town/{osmType}/{osmId}/text`,
+ROLE_USER; a visitor is sent to sign in and comes back to it). A region's
+two texts and its figures share one page in three steps, the region editor
+(§3.1g); `region_text` `/regions/{slug}/text` opens it at the geography
+step, and what follows about the town form holds for that step. A text's credit line ends in two ringed icons, the
 same on the card and on the region page (owner 2026-10-01: "attribution
 style report and edit must look the same"): a "!" labelled "Report this
 text", to the one report door ([content-reports.md](content-reports.md);
@@ -771,8 +773,8 @@ paragraph; an optional
 note for the curator (the card body, `payload.details.note`), and, where
 there is an article to adapt (for a town: the card's fetched article in that
 language; for a region: the article in that locale or English), a required
-fieldset "Where your text comes from" with two radios and no default, "I
-adapted this from the Wikipedia article" and "I wrote my own text" (owner
+fieldset "Where your text comes from" with two radios and no default,
+"Based on the default Wikipedia text" and "I wrote my own text" (owner
 2026-10-01: "Required one of the 2. Same for the regions."; `name=derived`,
 values `adapted` / `own`). The language select shows it for a language with
 an article and hides and disables it for one without, so its required radios
@@ -847,7 +849,7 @@ based on the Wikipedia article" and "Drop the Wikipedia credit: the text is
 written fresh", the hint "Approve needs this choice. Keep the credit while
 the text still uses the article's words or facts as its base. Drop it only
 when the text is written fresh.", and the writer's claim under it ('The
-writer says: "I adapted this from the Wikipedia article".' or 'The writer
+writer says: "Based on the default Wikipedia text".' or 'The writer
 says: "I wrote my own text".'), when they made one. The writer's own radios
 are not on this form: the curator's choice is the decision. Save correction carries `formnovalidate`: it needs no
 choice. `PlaceTextProposals::approve()` refuses a missing choice
@@ -984,14 +986,19 @@ curator's correction form (`moderate_text`) and the rate limit. Its row icon
 on the desk is an open book (`PlaceText::ICONS`).
 
 **Which text is which.** The lead of §3.1b is the region's geography text
-(where it lies, its landscape, size and neighbours); this one is its
-history, nature and culture. The form says which one it is in a note at
-its top, "This is the geography text: ..." or "This is the history, nature
-and culture text: ...", with a link to the other text's form; on the
-curator's correction form the note asks them to check, before approving,
-that the text keeps to its purpose (`place_text.purpose_*`). The desk labels
+(where it lies, its landscape and neighbours; its area, population and ride
+character are its figures, §3.1g); this one is its history, nature and
+culture. Each has its own step on the region editor (§3.1g), opened by a
+line that says what belongs in it and in which step the rest goes
+(`region_edit.step_*_p`); on the curator's correction form a note asks
+them to check, before approving, that the text keeps to its purpose
+(`place_text.purpose_*_correct`). The desk labels
 a lead's change "Geography (NL)", a history text's "History, nature and
-culture (NL)", a town card's "Text (NL)".
+culture (NL)", a town card's "Text (NL)". The wiki page
+[Writing region texts](../../wiki/region-texts.md) is the writers' guide:
+what goes in each text, a geography template, the three paragraphs of a
+history text, the link rules and a worked example for Drenthe, with links
+to the region editor's three steps.
 
 **What differs from the lead.**
 
@@ -1008,9 +1015,13 @@ culture (NL)", a town card's "Text (NL)".
 - **Citations in place, no list of sources.** The text cites a source where
   it uses it: `[the words that describe it](https://address)` links those
   words, so a reader and a search engine see what the link is about. There
-  is no separate list of sources under the text. Only `http` and `https`
-  addresses link, and only words link; a bare address stays plain text.
-  A translation carries the citations along with the words.
+  is no separate list of sources under the text. Only `https` addresses
+  link, and only words link; a bare address stays plain text. A link
+  written with `http://` is refused (`place_text.error.http_link`, "Link
+  only https addresses. Change these: ...", naming them,
+  `RegionStory::insecureLinks()`, 422, nothing filed), on a send, a
+  correction and an approval alike; the page never links one. A
+  translation carries the citations along with the words.
 - **Link words say what the source is.** A link whose words are only
   "source", "link", "here", "click here" and the like, in any of the five
   languages (`RegionStory::GENERIC_ANCHORS`), is refused
@@ -1060,7 +1071,7 @@ culture (NL)", a town card's "Text (NL)".
 - **The same check, live in the form.** As links appear in the box, pasted
   or typed, the editor posts the addresses it has not asked about to
   `story_link_check` (`POST /regions/links/check`, signed in, the form's
-  own token `story-link-check`, at most 20 http(s) addresses a time, the
+  own token `story-link-check`, at most 20 https addresses a time, the
   `link_check` limit of 60 an hour per writer) and gets
   `PlaceTextProposals::checkLinks()`'s verdicts: `{site, safety, refused, confirmed}`
   (`confirmed`: a curator confirmed it before, shown "Checked: OK by a
@@ -1079,19 +1090,24 @@ culture (NL)", a town card's "Text (NL)".
   article to adapt or credit, so neither the writer's "Where your text comes
   from" nor the curator's "Wikipedia credit" is asked, and Approve on the
   drawer needs no form.
-- **The form** (route `region_story`, `/regions/{slug}/story`, ROLE_USER).
-  The box starts from the current text in the chosen language, because the
+- **The form**: the region editor's third step (§3.1g; route
+  `region_story`, `/regions/{slug}/story`, opens the editor there,
+  ROLE_USER). The box (`story`) starts from the current text in the chosen language, because the
   text is several paragraphs long and an edit changes what is there. For a
   language without a text, the box is empty and the text of another
   language (English first, then the others in order) shows above it,
   captioned "To translate from ({language})". Switching the language swaps
   the box only while the rider has not changed it
   (`assets/contribute/place-text.js`). A send equal to the current text is
-  refused (`place_text.error.unchanged`).
+  refused (`place_text.error.unchanged`); on the region editor a box left as
+  it was, or emptied, sends no history text at all.
 - **The link editor** (the same script, on the form and on the curator's
   correction form; hidden without script, where the box is a plain box).
   "Link the selected words" above the box: select words, press it, give a
-  full `http(s)` address, and the words become `[words](address)`. In the
+  full `https` address, and the words become `[words](address)`. A link
+  typed with `http://` gets a red address and "Only https addresses" in
+  the list, is never sent to the check, and needs no tick, since a tick
+  cannot let it through. In the
   box, a tint behind each link's words and a quieter one behind its
   address, red behind words the server refuses (the page gets
   `RegionStory::GENERIC_ANCHORS` as `data-generic`). The tints are drawn on
@@ -1145,16 +1161,23 @@ text, and then it says so, keeps which version of the original it was made
 from, and its translator is told when that original changes (owner
 2026-10-20). The original can be any language. `App\Contribution\TextLineage`.
 
-- **The form asks.** "This text is a translation of" (`based_on`) offers
-  "Not a translation: written in this language" and every served language
-  that holds a local text, one a person wrote here (a town row with
+- **The form asks.** "Original or translation" (`based_on`) offers
+  "Original: the base text every translation starts from" and, as
+  "Translation of: {language}", every served language that holds a local
+  text, one a person wrote here (a town row with
   `edited_at`, a region entry); a fetched Wikipedia paragraph is no
   original. The text's own language is never offered (`place-text.js`
-  hides it). On the history form, the language shown to translate from is
-  chosen already. Not on a curator's correction form: the writer said it. A
+  hides it). On the region editor (§3.1g) both text steps always ask it
+  and list every other served language: one without a local text shows
+  as "Translation of: Français (no text yet)", disabled, so the writer sees
+  why it cannot be picked. The town form asks it only when there is an original to pick.
+  Picking an original shows its text above the box, captioned "To
+  translate from ({language})". On the history step, the language shown to
+  translate from is chosen already. Not on a curator's correction form: the
+  writer said it. A
   language with no local text, or the text's own, is refused
   (`place_text.error.based_on`, "Pick a language that has a text to
-  translate from, or "Not a translation".", 422, nothing filed), checked
+  translate from, or "Original".", 422, nothing filed), checked
   before the send costs a rate-limit credit.
 - **What is kept.** The proposal carries `payload._basedOn = {lang, at,
   sub}`: the original's language, the moment it was written and the
@@ -1227,6 +1250,113 @@ here has a public list of its changes, per language.
 
 Pinned by `RegionStoryProposalTest`, `RegionAboutTextTest`,
 `ModerateTownControllerTest` and `tests/js/text-credit-actions.test.mjs`.
+
+### 3.1g A region's figures (2026-10-23)
+
+The top of a region page shows the land before what the Commons holds
+there: its area, its population with the year it was counted, and its ride
+character, flat, hilly or mountainous ([map-and-search.md](map-and-search.md)
+§4.5). Anyone signed in proposes them on the region editor's first step; a
+curator of the region approves them. They are the fourth
+target of the same `text` submission (`payload.target = facts`), so the one
+queue, the region's curators, the decision, thread, withdraw, History desk,
+retention, revoke and rate limit of §3.1b all hold. Its row icon is a
+mountain profile (`PlaceText::ICONS`).
+
+- **Storage.** `region.facts` (JSONB, migration `Version20261023010000`),
+  one entry per figure set: `area {value, submissionId, at}` in whole km²,
+  `population {value, year, submissionId, at}`, `ride {value, ...}` with
+  value `flat`, `hilly` or `mountainous` (`App\Catalog\RegionFacts`). No
+  user id is stored: the submission names its writer. `region.area_km2`
+  stays the area measured from the boundary, because lookups pick the
+  smallest region holding a point by it; the page shows a stated area over
+  it, and the measured one while none is stated, on the region page and on
+  `/regions` alike.
+- **The fetched population.** `region.facts_harvest` (JSONB, migration
+  `Version20261023020000`) holds figures fetched at build time, in a column
+  of their own so an import never touches what a person set: today the
+  population, `{value, year, qid}`, from Wikidata (CC0;
+  [data-source-register.md](data-source-register.md), region boundaries).
+  `tools/wikimedia/region_population.py` matches each region by its ISO
+  code, takes the latest dated count among the best-ranked `P1082`
+  statements (a count without `P585` is skipped), and writes the
+  reviewable `tools/wikimedia/out/region-population.json`;
+  `app:regions:import-population` loads it (every entry checked before any
+  is written; `--prune` drops the count of a region no longer named). A
+  person's population shows over the fetched one, and a revoke of theirs
+  brings the fetched one back. The figures step names the source beside
+  the fields, "Source: Wikidata Q772", linking the item, while the count
+  shown is the fetched one. Some counts are old (Irish counties: 2011): the
+  year shows on the page, and a person sets a newer one.
+- **The region editor** (`contribute/region_edit.html.twig`, route
+  `region_edit` `/regions/{slug}/edit`, ROLE_USER): one page, one form,
+  three steps. 1 "Figures", 2 "Geography" (§3.1b), 3 "History, nature and
+  culture" (§3.1c). With script the steps are tabs (`place-text.js`): one
+  shows at a time, arrow keys move between the tabs, and "Next: ..." moves
+  on; without it the three follow one another under their headings. The
+  note, Send and the licence sit outside the steps, so one send may change
+  one part or all three. The language select ("Language of the texts")
+  sits under the tabs and shows on the two text steps only: the figures
+  have no language (`data-step-for`).
+  Under the tabs, the open step's lead, in larger type above its first
+  field ("Where the region lies, its landscape and neighbours. History,
+  nature and culture go in step 3."). Each step has a column beside its
+  fields from 1,140 px (under them below that): first "The full guide,
+  with an example: Writing region texts", linking the wiki page's part
+  about that step, then how to fill it in or write it
+  (`wiki.cyclingcommons.org/region-texts/`, a new tab, so the form keeps
+  what was written). `region_edit` opens at the figures, `region_text` at
+  the geography, `region_story` at the history, `?step=` at any; the hidden `step` field
+  keeps the open step, so a send that comes back opens where it left. A
+  field the browser finds invalid in a hidden step brings its step
+  forward. The hero's figures end in a ringed pencil, "Edit these figures",
+  to `region_edit`.
+- **The figures step.** "Area in km²" (with the measured area beside the
+  field, "Measured from the region's boundary: 2,680 km²."), "Population" and
+  "Counted in" side by side, and "Ride character" as three radios. Each
+  field starts from the figure as it stands. A field left as it is, or
+  emptied, changes nothing: a figure is changed, never removed, and an area
+  equal to the measured one changes nothing while none is stated. Numbers
+  are whole, as digits or grouped by threes ("494,000", "494.000",
+  "494 000"). The geography box is not required: it starts empty, and an
+  empty one sends no geography text. "Where your text comes from" is
+  required only while it holds a text (`place-text.js`; the server asks it
+  of a text only). A send that changes no part:
+  `region_edit.error.nothing`, "Change a figure or one of the texts before
+  you send.", 422.
+- **One send, every part checked first.** The figures
+  (`factChanges()`), then the geography text (`checkRegion()`), then the
+  history text (`checkStory()`, links included) are each checked as their
+  own proposal would be; a refused part files nothing at all, and the page
+  opens at that part's step with the error. Then each changed part is filed
+  as its own submission, in step order, decided apart from the others. The
+  sent page lists each part with its reference and "live now" or "waiting
+  for a curator", under "Sent for review" (or "Changes live" when all
+  applied at once). Should the rate limit stop a later part, the filed parts
+  are listed and the rest is named as not sent.
+- **Checks** (`PlaceTextProposals::factChanges()`, before anything is
+  filed): an area from 1 to 20,000,000 (`facts_area`), a population from 0
+  to 2,000,000,000 (`facts_population`) given with a year from 1900 to the
+  current year (`facts_year`), never one without the other (`facts_pair`),
+  and one of the three ride characters (`facts_ride`), each
+  `place_text.error.*`, 422, the figures kept as written.
+- **Its own proposal.** `payload = {target: facts, ref: <region id>, slug,
+  lang, facts: {area?, population?: {value, year}, ride?}, details: {note}}`;
+  `lang` is the editor's language, the one the note is written in. `changes`
+  holds one pair per figure under `fact:area`, `fact:population`,
+  `fact:ride`, which the desk shows as "Area 2,633 km²", "Population
+  494,000 (2024)", "Ride character Hilly", in that order. A rider's second
+  send while the first waits amends it whatever the language, and a figure
+  the second send does not name stays as the first set it.
+- **Approval.** No Wikipedia question and no form: the drawer's Approve
+  decides it, and the desk card has no ✎. A curator's own figures inside
+  their area apply at once. `RegionFactsWriter::apply()` writes each figure
+  with the submission's id and keeps what stood before on the payload
+  (`_before.facts`); a revoke puts that back, or refuses
+  (`moderate.revoke.error.changed_since`) once a later proposal set one of
+  its figures. The approval message links the region page.
+
+Pinned by `RegionFactsTest`.
 
 ### 3.2 The `changes` contract
 

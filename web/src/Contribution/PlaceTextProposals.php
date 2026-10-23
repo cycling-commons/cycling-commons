@@ -8,6 +8,7 @@ namespace App\Contribution;
 
 use App\Catalog\Entity\Submission;
 use App\Catalog\OperationalRegions;
+use App\Catalog\RegionFacts;
 use App\Catalog\RegionLead;
 use App\Catalog\RegionStory;
 use App\Catalog\SubmissionStatus;
@@ -24,6 +25,7 @@ use App\Town\TownSummaryRepository;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Clock\ClockInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
 
@@ -46,8 +48,8 @@ use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
  * Where the text's language has a Wikipedia article to credit, approving it
  * takes the curator's explicit decision on that credit (owner 2026-10-01):
  * keep it, the text is based on the article, or drop it, the text is written
- * fresh. The writer's own choice ("I adapted this from the Wikipedia
- * article" or "I wrote my own text", required where there is an article) is
+ * fresh. The writer's own choice ("Based on the default Wikipedia text"
+ * or "I wrote my own text", required where there is an article) is
  * their claim only; the decision is recorded on the payload
  * ({@see self::recordCredit()}) in the approval's transaction, and the
  * generic decision refuses a text that has none
@@ -57,7 +59,12 @@ use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
  * same way: one proposal per language, written fresh or translated, its
  * sources linked in the text, and no Wikipedia question.
  *
- * @see docs/specs/moderation-and-contribution.md §3.1b and §3.1c
+ * A region's figures (target `facts`: area, population with its year, ride
+ * character) are sent on the geography form, beside its text or alone, as
+ * a proposal of their own: no language of their own, no Wikipedia question,
+ * and decided apart from the text (§3.1g).
+ *
+ * @see docs/specs/moderation-and-contribution.md §3.1b, §3.1c and §3.1g
  *
  * @api
  */
@@ -79,6 +86,7 @@ final readonly class PlaceTextProposals
         private Languages $languages,
         private StoryLinkCheck $links,
         private TextLineage $lineage,
+        private ClockInterface $clock,
     ) {
     }
 
@@ -135,7 +143,7 @@ final readonly class PlaceTextProposals
     /**
      * An operational region by slug, as the region page shows it.
      *
-     * @return array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>}|null
+     * @return array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float}|null
      */
     public function region(string $slug): ?array
     {
@@ -145,7 +153,7 @@ final readonly class PlaceTextProposals
     /**
      * An operational region by id, as a region text's payload names it.
      *
-     * @return array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>}|null
+     * @return array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float}|null
      */
     public function regionById(int $id): ?array
     {
@@ -182,7 +190,7 @@ final readonly class PlaceTextProposals
      * A region's history text in exactly one locale, or '' when that locale
      * has none.
      *
-     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>} $region
+     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
      */
     public function currentStory(array $region, string $locale): string
     {
@@ -193,7 +201,7 @@ final readonly class PlaceTextProposals
      * A region's current lead in exactly one locale: the local one, else the
      * article in that language, else ''.
      *
-     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>} $region
+     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
      *
      * @return array{text: string, derived: bool}
      */
@@ -211,8 +219,8 @@ final readonly class PlaceTextProposals
     }
 
     /**
-     * `$derived` is the writer's answer to where the text comes from: true "I
-     * adapted this from the Wikipedia article", false "I wrote my own text",
+     * `$derived` is the writer's answer to where the text comes from: true
+     * "Based on the default Wikipedia text", false "I wrote my own text",
      * null no answer. Where the language has an article the answer is
      * required; where it has none there is no question and the text is the
      * writer's own.
@@ -262,7 +270,7 @@ final readonly class PlaceTextProposals
      * `$derived` is the writer's answer to where the text comes from, as for
      * a town ({@see self::proposeTown()}).
      *
-     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>} $region
+     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
      *
      * @return array{submission: Submission, applied: bool}
      *
@@ -271,15 +279,7 @@ final readonly class PlaceTextProposals
      */
     public function proposeRegion(User $by, array $region, string $lang, string $text, string $note, ?bool $derived, ?string $basedOn = null): array
     {
-        $this->assertServed($lang);
-        [$lang, $text, $note] = $this->checked($lang, $text, $note);
-        // What it translates, checked before it costs a send (§3.1e).
-        $based = $this->lineage->basedOn(PlaceText::REGION, (string) $region['id'], $lang, (string) $basedOn);
-        $derived = self::sourceAnswered(RegionLead::hasSource($region['wiki'], $lang), $derived);
-        $current = $this->currentRegionText($region, $lang);
-        if ($current['text'] === $text && $current['derived'] === $derived) {
-            throw new PlaceTextRefused('place_text.error.unchanged');
-        }
+        ['lang' => $lang, 'text' => $text, 'note' => $note, 'based' => $based, 'derived' => $derived, 'was' => $was] = $this->regionChecked($region, $lang, $text, $note, $derived, $basedOn);
         $this->consumeRateLimit($by);
 
         $point = $this->db->fetchOne('SELECT ST_AsGeoJSON(ST_PointOnSurface(geom)) FROM region WHERE id = :id', ['id' => $region['id']]);
@@ -295,7 +295,101 @@ final readonly class PlaceTextProposals
             'text' => $text,
             'derived' => $derived,
             'details' => ['note' => $note],
-        ] + self::basedOnPayload($based), [PlaceText::changeKey($lang) => self::pair($current['text'], $text)], mb_substr($region['name'], 0, 200), $point, $region['countryCode'], $region['id']);
+        ] + self::basedOnPayload($based), [PlaceText::changeKey($lang) => self::pair($was, $text)], mb_substr($region['name'], 0, 200), $point, $region['countryCode'], $region['id']);
+    }
+
+    /**
+     * Whether a geography text would be refused, checked exactly as
+     * {@see self::proposeRegion()} checks it, without filing it: the region
+     * page's one send checks every part before it files any (§3.1g).
+     *
+     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
+     *
+     * @throws PlaceTextRefused
+     */
+    public function checkRegion(array $region, string $lang, string $text, string $note, ?bool $derived, ?string $basedOn = null): void
+    {
+        $this->regionChecked($region, $lang, $text, $note, $derived, $basedOn);
+    }
+
+    /**
+     * Whether a history text would be refused, checked exactly as
+     * {@see self::proposeStory()} checks it, links included, without filing
+     * it.
+     *
+     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
+     *
+     * @throws PlaceTextRefused
+     */
+    public function checkStory(array $region, string $lang, string $text, string $note, bool $linksConfirmed = false, ?string $basedOn = null): void
+    {
+        $this->storyChecked($region, $lang, $text, $note, $linksConfirmed, $basedOn);
+    }
+
+    /**
+     * Whether a history text box holds what readers see now in that
+     * language, once folded as it would be stored. The region page's box
+     * starts from that text, so a box left as it was, or emptied, sends no
+     * history text.
+     *
+     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
+     */
+    public function storyUnchanged(array $region, string $lang, string $text): bool
+    {
+        $text = RegionStory::normaliseText($text);
+
+        return '' === $text || $text === $this->currentStory($region, $lang);
+    }
+
+    /**
+     * A geography text as a send checks it: the words and note
+     * ({@see self::checked()}), what it translates (§3.1e), the writer's
+     * answer on the Wikipedia article, and that it changes what readers see.
+     *
+     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
+     *
+     * @return array{lang: string, text: string, note: string, based: array{lang: string, at: ?string, sub: ?int}|null, derived: bool, was: string}
+     *
+     * @throws PlaceTextRefused
+     */
+    private function regionChecked(array $region, string $lang, string $text, string $note, ?bool $derived, ?string $basedOn): array
+    {
+        $this->assertServed($lang);
+        [$lang, $text, $note] = $this->checked($lang, $text, $note);
+        // What it translates, checked before it costs a send (§3.1e).
+        $based = $this->lineage->basedOn(PlaceText::REGION, (string) $region['id'], $lang, (string) $basedOn);
+        $derived = self::sourceAnswered(RegionLead::hasSource($region['wiki'], $lang), $derived);
+        $current = $this->currentRegionText($region, $lang);
+        if ($current['text'] === $text && $current['derived'] === $derived) {
+            throw new PlaceTextRefused('place_text.error.unchanged');
+        }
+
+        return ['lang' => $lang, 'text' => $text, 'note' => $note, 'based' => $based, 'derived' => $derived, 'was' => $current['text']];
+    }
+
+    /**
+     * A history text as a send checks it: the words and note, what it
+     * translates, that it changes what readers see, and its links.
+     *
+     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
+     *
+     * @return array{lang: string, text: string, note: string, based: array{lang: string, at: ?string, sub: ?int}|null, was: string, problems: array<string, string>, earlier: list<string>}
+     *
+     * @throws PlaceTextRefused
+     */
+    private function storyChecked(array $region, string $lang, string $text, string $note, bool $linksConfirmed, ?string $basedOn): array
+    {
+        $this->assertServed($lang);
+        [$lang, $text, $note] = $this->checked($lang, $text, $note, PlaceText::STORY);
+        // What it translates, checked before it costs a send (§3.1e).
+        $based = $this->lineage->basedOn(PlaceText::STORY, (string) $region['id'], $lang, (string) $basedOn);
+        $current = $this->currentStory($region, $lang);
+        if ($current === $text) {
+            throw new PlaceTextRefused('place_text.error.unchanged');
+        }
+        [$problems, $earlier] = $this->linkProblems($text, $linksConfirmed);
+
+        return ['lang' => $lang, 'text' => $text, 'note' => $note, 'based' => $based, 'was' => $current, 'problems' => $problems, 'earlier' => $earlier];
     }
 
     /**
@@ -309,7 +403,7 @@ final readonly class PlaceTextProposals
      * unless a curator confirmed it before (StoryLinkCheck::open()); it is
      * kept on the payload (`_links.writer`).
      *
-     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>} $region
+     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
      *
      * @return array{submission: Submission, applied: bool}
      *
@@ -318,15 +412,7 @@ final readonly class PlaceTextProposals
      */
     public function proposeStory(User $by, array $region, string $lang, string $text, string $note, bool $linksConfirmed = false, ?string $basedOn = null): array
     {
-        $this->assertServed($lang);
-        [$lang, $text, $note] = $this->checked($lang, $text, $note, PlaceText::STORY);
-        // What it translates, checked before it costs a send (§3.1e).
-        $based = $this->lineage->basedOn(PlaceText::STORY, (string) $region['id'], $lang, (string) $basedOn);
-        $current = $this->currentStory($region, $lang);
-        if ($current === $text) {
-            throw new PlaceTextRefused('place_text.error.unchanged');
-        }
-        [$problems, $earlier] = $this->linkProblems($text, $linksConfirmed);
+        ['lang' => $lang, 'text' => $text, 'note' => $note, 'based' => $based, 'was' => $current, 'problems' => $problems, 'earlier' => $earlier] = $this->storyChecked($region, $lang, $text, $note, $linksConfirmed, $basedOn);
         $this->consumeRateLimit($by);
 
         $point = $this->db->fetchOne('SELECT ST_AsGeoJSON(ST_PointOnSurface(geom)) FROM region WHERE id = :id', ['id' => $region['id']]);
@@ -344,6 +430,126 @@ final readonly class PlaceTextProposals
             'details' => ['note' => $note],
         ] + ([] === $problems ? [] : ['_links' => ['writer' => StoryLinkCheck::confirmation($by, $problems, $earlier)]])
           + self::basedOnPayload($based), [PlaceText::changeKey($lang, PlaceText::STORY) => self::pair($current, $text)], mb_substr($region['name'], 0, 200), $point, $region['countryCode'], $region['id']);
+    }
+
+    /**
+     * A region's figures as the geography form starts them, and the area
+     * measured from its boundary, which the page shows while nobody stated
+     * one (§3.1g).
+     *
+     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
+     *
+     * @return array{area: ?int, population: ?int, year: ?int, ride: ?string, populationQid: ?string, measuredKm2: ?int}
+     */
+    public function currentFacts(array $region): array
+    {
+        return RegionFacts::current($region['facts'], $region['harvest']) + ['measuredKm2' => self::measured($region)];
+    }
+
+    /**
+     * What the figures a form sends change, checked (§3.1g): one was/now
+     * pair per figure that differs from what stands. A field left as it is,
+     * or emptied, changes nothing: a figure is changed, never removed. An
+     * area equal to the measured one changes nothing while none is stated.
+     * The population comes with the year it was counted.
+     *
+     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
+     * @param array<array-key, mixed>                                                                                                                                                                                                                   $raw    the form's `facts[area]`, `facts[population]`, `facts[year]` and `facts[ride]`
+     *
+     * @return array<string, array{was: mixed, now: mixed}> by figure, in RegionFacts::FIELDS order
+     *
+     * @throws PlaceTextRefused on a figure the form must send back
+     */
+    public function factChanges(array $region, array $raw): array
+    {
+        $current = RegionFacts::current($region['facts'], $region['harvest']);
+        $changes = [];
+
+        $area = self::wholeNumber($raw['area'] ?? null, 1, RegionFacts::AREA_MAX, 'place_text.error.facts_area');
+        if (null !== $area && $area !== $current['area'] && !(null === $current['area'] && $area === self::measured($region))) {
+            $changes[RegionFacts::AREA] = ['was' => $current['area'], 'now' => $area];
+        }
+
+        $population = self::wholeNumber($raw['population'] ?? null, 0, RegionFacts::POPULATION_MAX, 'place_text.error.facts_population');
+        $thisYear = (int) $this->clock->now()->format('Y');
+        $year = self::wholeNumber($raw['year'] ?? null, RegionFacts::YEAR_MIN, $thisYear, 'place_text.error.facts_year', ['%min%' => (string) RegionFacts::YEAR_MIN, '%max%' => (string) $thisYear]);
+        if (null !== $population || null !== $year) {
+            if (null === $population || null === $year) {
+                throw new PlaceTextRefused('place_text.error.facts_pair');
+            }
+            if ($population !== $current['population'] || $year !== $current['year']) {
+                $changes[RegionFacts::POPULATION] = ['was' => RegionFacts::valueOf($current, RegionFacts::POPULATION), 'now' => ['value' => $population, 'year' => $year]];
+            }
+        }
+
+        $ride = $raw['ride'] ?? null;
+        $ride = \is_string($ride) ? trim($ride) : null;
+        if (null !== $ride && '' !== $ride) {
+            if (!\in_array($ride, RegionFacts::RIDES, true)) {
+                throw new PlaceTextRefused('place_text.error.facts_ride');
+            }
+            if ($ride !== $current['ride']) {
+                $changes[RegionFacts::RIDE] = ['was' => $current['ride'], 'now' => $ride];
+            }
+        }
+
+        return $changes;
+    }
+
+    /**
+     * A region's figures (§3.1g): the changes {@see self::factChanges()}
+     * found, filed as one proposal in the region's queue, apart from any
+     * text sent with them. `$lang` is the language the form was in, which
+     * the note is written in. A rider's second send while their first is
+     * open adds to it: a figure the second does not name stays as the first
+     * set it, unless it now stands as the first asked.
+     *
+     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
+     * @param array<string, array{was: mixed, now: mixed}>                                                                                                                                                                                              $changes
+     *
+     * @return array{submission: Submission, applied: bool}
+     *
+     * @throws PlaceTextRefused on a note or a send the form must send back
+     * @throws LimitReached     past the contribution rate limit
+     */
+    public function proposeFacts(User $by, array $region, string $lang, array $changes, string $note): array
+    {
+        $this->assertServed($lang);
+        $note = trim($note);
+        if (mb_strlen($note) > PlaceText::NOTE_MAX) {
+            throw new PlaceTextRefused('place_text.error.note_too_long');
+        }
+        $payload = ['target' => PlaceText::FACTS, 'ref' => (string) $region['id']];
+        $open = $this->openFor($by, $payload);
+        $earlier = null !== $open ? (PlaceText::factsOf($open->getPayload())['facts'] ?? []) : [];
+        $current = RegionFacts::current($region['facts'], $region['harvest']);
+        $facts = [];
+        $pairs = [];
+        foreach (RegionFacts::FIELDS as $field) {
+            $was = RegionFacts::valueOf($current, $field);
+            $now = isset($changes[$field]) ? $changes[$field]['now'] : ($earlier[$field] ?? null);
+            if (null === $now || $now === $was) {
+                continue;
+            }
+            $facts[$field] = $now;
+            $pairs[PlaceText::factKey($field)] = ['was' => $was, 'now' => $now];
+        }
+        if ([] === $facts) {
+            throw new PlaceTextRefused('region_edit.error.nothing');
+        }
+        $this->consumeRateLimit($by);
+
+        $point = $this->db->fetchOne('SELECT ST_AsGeoJSON(ST_PointOnSurface(geom)) FROM region WHERE id = :id', ['id' => $region['id']]);
+        if (!\is_string($point)) {
+            throw new PlaceTextRefused('place_text.error.unknown');
+        }
+
+        return $this->file($by, $payload + [
+            'slug' => $region['slug'],
+            'lang' => $lang,
+            'facts' => $facts,
+            'details' => ['note' => $note],
+        ], $pairs, mb_substr($region['name'], 0, 200), $point, $region['countryCode'], $region['id']);
     }
 
     /**
@@ -460,7 +666,7 @@ final readonly class PlaceTextProposals
 
     /**
      * What the writer said about the Wikipedia article when they sent the
-     * text: true "I adapted this from the Wikipedia article", false "I wrote
+     * text: true "Based on the default Wikipedia text", false "I wrote
      * my own text", null when they were not asked (no article, or a town text
      * sent before the question existed).
      */
@@ -495,12 +701,12 @@ final readonly class PlaceTextProposals
     }
 
     /**
-     * @return array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>}|null
+     * @return array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float}|null
      */
     private function regionWhere(string $predicate, int|string $key): ?array
     {
         $row = $this->db->fetchAssociative(
-            'SELECT r.id, r.slug, r.name, r.country_code, r.context, r.context_curated, r.story FROM region r
+            'SELECT r.id, r.slug, r.name, r.country_code, r.context, r.context_curated, r.story, r.facts, r.facts_harvest, r.area_km2 FROM region r
               WHERE '.$predicate.' AND r.geom IS NOT NULL AND r.country_code <> \'\' AND '.OperationalRegions::predicate('r'),
             ['key' => $key],
         );
@@ -516,29 +722,76 @@ final readonly class PlaceTextProposals
             'wiki' => PlaceText::decode($row['context']),
             'curated' => PlaceText::decode($row['context_curated']),
             'story' => PlaceText::decode($row['story']),
+            'facts' => PlaceText::decode($row['facts']),
+            'harvest' => PlaceText::decode($row['facts_harvest']),
+            'areaKm2' => null === $row['area_km2'] ? null : (float) $row['area_km2'],
         ];
     }
 
     /**
+     * The area measured from the region's boundary, in whole km², or null.
+     *
+     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
+     */
+    private static function measured(array $region): ?int
+    {
+        return null === $region['areaKm2'] ? null : (int) round($region['areaKm2']);
+    }
+
+    /**
+     * A whole number from a form field, or null for an empty one. Digits,
+     * or digits grouped by threes with spaces, commas, dots or apostrophes
+     * ("494,000", "494.000", "494 000"); anything else, or a number outside
+     * the range, is sent back with `$error`.
+     *
+     * @param array<string, string> $params
+     *
+     * @throws PlaceTextRefused
+     */
+    private static function wholeNumber(mixed $raw, int $min, int $max, string $error, array $params = []): ?int
+    {
+        if (null === $raw) {
+            return null;
+        }
+        if (!\is_string($raw)) {
+            throw new PlaceTextRefused($error, $params);
+        }
+        $raw = trim($raw);
+        if ('' === $raw) {
+            return null;
+        }
+        if (1 === preg_match('~^\d{1,3}(?:[ ,.\'\x{00A0}\x{202F}]\d{3})+$~u', $raw)) {
+            $raw = preg_replace('~\D~u', '', $raw) ?? '';
+        }
+        if (1 !== preg_match('~^\d{1,10}$~', $raw) || (int) $raw < $min || (int) $raw > $max) {
+            throw new PlaceTextRefused($error, $params);
+        }
+
+        return (int) $raw;
+    }
+
+    /**
      * The open Text submission this rider already has for the same text and
-     * language, if any.
+     * language, if any. A region's figures hold in every language, so their
+     * open proposal is the same whatever language the form was in.
      *
      * @param array<string, mixed> $payload
      */
     private function openFor(User $by, array $payload): ?Submission
     {
+        $facts = PlaceText::FACTS === $payload['target'];
         $id = $this->db->fetchOne(
             "SELECT id FROM submission
               WHERE user_id = :u AND type = :t AND status IN ('pending', 'needs_info') AND escalated_at IS NULL
-                AND payload->>'target' = :target AND payload->>'ref' = :ref AND payload->>'lang' = :lang
-              ORDER BY id DESC LIMIT 1",
+                AND payload->>'target' = :target AND payload->>'ref' = :ref"
+            .($facts ? '' : " AND payload->>'lang' = :lang")
+            .' ORDER BY id DESC LIMIT 1',
             [
                 'u' => (int) $by->getId(),
                 't' => SubmissionType::Text->value,
                 'target' => $payload['target'],
                 'ref' => $payload['ref'],
-                'lang' => $payload['lang'],
-            ],
+            ] + ($facts ? [] : ['lang' => $payload['lang']]),
         );
 
         return false === $id ? null : $this->em->find(Submission::class, (int) $id);
@@ -567,8 +820,8 @@ final readonly class PlaceTextProposals
     }
 
     /**
-     * @param array<string, mixed>                            $payload
-     * @param array<string, array{was: ?string, now: string}> $changes
+     * @param array<string, mixed>                         $payload
+     * @param array<string, array{was: mixed, now: mixed}> $changes
      *
      * @return array{submission: Submission, applied: bool}
      */
@@ -617,13 +870,17 @@ final readonly class PlaceTextProposals
             return false;
         }
         $derived = true === ($submission->getPayload()['derived'] ?? null);
+        // A region's figures have no Wikipedia credit to decide.
+        $credit = PlaceText::FACTS !== ($submission->getPayload()['target'] ?? null);
         // Their tick when they sent it is the approval's confirmation of the links.
         $writer = $submission->getPayload()['_links']['writer'] ?? [];
         $problems = \is_array($writer['problems'] ?? null) ? array_filter($writer['problems'], 'is_string') : [];
         $earlier = \is_array($writer['earlier'] ?? null) ? array_values(array_filter($writer['earlier'], 'is_string')) : [];
         try {
-            $this->em->wrapInTransaction(function () use ($submission, $by, $derived, $problems, $earlier): void {
-                $this->recordCredit($submission, $by, $derived);
+            $this->em->wrapInTransaction(function () use ($submission, $by, $derived, $credit, $problems, $earlier): void {
+                if ($credit) {
+                    $this->recordCredit($submission, $by, $derived);
+                }
                 if ([] !== $problems) {
                     $this->recordLinks($submission, $by, $problems, $earlier);
                 }
@@ -718,6 +975,11 @@ final readonly class PlaceTextProposals
         }
         if ($story && null !== RegionStory::genericAnchor($text)) {
             throw new PlaceTextRefused('place_text.error.generic_anchor');
+        }
+        // Only https addresses link (§3.1c).
+        $insecure = $story ? RegionStory::insecureLinks($text) : [];
+        if ([] !== $insecure) {
+            throw new PlaceTextRefused('place_text.error.http_link', ['%urls%' => implode(', ', $insecure)]);
         }
         $note = trim($note);
         if (mb_strlen($note) > PlaceText::NOTE_MAX) {

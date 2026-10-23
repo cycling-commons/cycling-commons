@@ -241,9 +241,23 @@ final class RegionStory
     }
 
     /**
+     * The addresses of links written with `http://`
+     * (`[words](http://address)`), in order. Only https addresses link, so
+     * a send with any of these is sent back to its writer.
+     *
+     * @return list<string>
+     */
+    public static function insecureLinks(string $text): array
+    {
+        preg_match_all('~\[[^\[\]\n]{1,300}\]\((http://[^\s()<>"]+)\)~i', $text, $matches);
+
+        return array_values(array_unique($matches[1]));
+    }
+
+    /**
      * One paragraph as text and links: `[words](https://address)` links the
-     * words. Only http and https addresses link, and only words link: a
-     * bare address, or a link with any other address, stays as written.
+     * words. Only https addresses link, and only words link: a bare
+     * address, or a link with any other address, stays as written.
      *
      * @return list<array{text: string, href: ?string}>
      */
@@ -251,7 +265,7 @@ final class RegionStory
     {
         $parts = [];
         $at = 0;
-        preg_match_all('~\[([^\[\]]{1,300})\]\((https?://[^\s()<>"]+)\)~i', $line, $matches, \PREG_SET_ORDER | \PREG_OFFSET_CAPTURE);
+        preg_match_all('~\[([^\[\]]{1,300})\]\((https://[^\s()<>"]+)\)~i', $line, $matches, \PREG_SET_ORDER | \PREG_OFFSET_CAPTURE);
         foreach ($matches as $m) {
             [$whole, $offset] = $m[0];
             self::addText($parts, substr($line, $at, $offset - $at));

@@ -643,6 +643,7 @@ region:
   everywhere:
     label: 'Todo el mundo'
   about_h: "Geografía"
+  about_auto_h: "Sobre %region%"
   about_source: 'Texto de Wikipedia:'
   about_source_adapted: "Adaptado de Wikipedia por los curadores de esta región:"
   about_source_curator: "Escrito por los curadores de esta región,"
@@ -667,6 +668,12 @@ region:
   cta_vote: 'Vota para la próxima temporada'
   stat_items: 'Elementos verificados'
   stat_area: 'Superficie'
+  stat_population: "Población (%year%)"
+  stat_ride: "Relieve"
+  facts_edit: "Editar estas cifras"
+  ride_flat: "Llano"
+  ride_hilly: "Ondulado"
+  ride_mountainous: "Montañoso"
   stat_routes: 'Rutas'
   by_kind_h: 'Qué encuentran aquí los ciclistas'
   kind_verified: 'en el Commons'
@@ -2719,17 +2726,13 @@ place_text:
   kicker_town: 'Texto de una localidad'
   kicker_region: "Geografía"
   lead_town: 'Cualquier persona con sesión iniciada puede proponer un cambio en el texto de la ficha de esta localidad. Un curador de la región donde está lo aprueba antes de que aparezca.'
-  lead_region: "Cualquier persona con sesión iniciada puede proponer un cambio en el texto de geografía de esta región: dónde está, su paisaje, su tamaño y sus vecinas. Un curador de esta región lo aprueba antes de que aparezca."
   kicker_story: "Historia, naturaleza y cultura"
-  lead_story: "Cualquier persona con sesión iniciada puede escribir, cambiar o traducir el texto sobre la historia, la naturaleza y la cultura de esta región. Un curador de esta región lo aprueba antes de que aparezca."
-  field_based_on: "Este texto es una traducción de"
-  based_on_none: "No es una traducción: escrito en este idioma"
-  field_based_on_hint: "Si has traducido el texto de otro idioma, di cuál. Cuando ese original cambie, te avisaremos para que puedas actualizar el tuyo."
-  purpose_region: "Este es el texto de geografía: dónde está la región, su paisaje, su tamaño y sus vecinas. La historia, la naturaleza y la cultura tienen su propio texto."
-  purpose_story: "Este es el texto sobre la historia, la naturaleza y la cultura. Dónde está la región y cómo es su tierra van en el texto de geografía."
-  purpose_go_story: "Escribir sobre su historia, naturaleza y cultura"
-  purpose_go_region: "Escribir sobre su geografía"
-  purpose_region_correct: "Este es el texto de geografía. Antes de aprobar, comprueba que se ciñe a dónde está la región, su paisaje, su tamaño y sus vecinas: la historia, la naturaleza y la cultura van en el otro texto."
+  field_based_on: "Original o traducción"
+  based_on_none: "Original: el texto base del que parte cada traducción"
+  based_on_lang: "Traducción de: %lang%"
+  based_on_no_text: "Traducción de: %lang% (aún sin texto)"
+  field_based_on_hint: "Elige Original si escribiste este texto tú mismo. Si has traducido el texto de otro idioma, elige ese idioma: cuando ese original cambie, te avisaremos para que puedas actualizar el tuyo."
+  purpose_region_correct: "Este es el texto de geografía. Antes de aprobar, comprueba que se ciñe a dónde está la región, su paisaje y sus vecinas: la historia, la naturaleza y la cultura van en el otro texto."
   purpose_story_correct: "Este es el texto sobre la historia, la naturaleza y la cultura. Antes de aprobar, comprueba que no describe dónde está la región: eso va en el texto de geografía."
   geography_change_label: "Geografía (%lang%)"
   field_lang: 'Idioma'
@@ -2761,11 +2764,12 @@ place_text:
   link_st_unsafe: "Google advierte sobre él"
   link_st_unknown: "No se pudo comprobar"
   link_st_limit: "Límite alcanzado, se comprobará al enviar"
+  link_st_http: "Solo direcciones https"
   translate_h: "Para traducir desde (%lang%)"
   current_h: 'Texto actual'
   current_none: 'Todavía no hay texto en este idioma.'
   count: '%count% de %max%'
-  field_derived: 'He adaptado esto del artículo de Wikipedia'
+  field_derived: "Basado en el texto predeterminado de Wikipedia"
   field_source: 'De dónde viene tu texto'
   field_own: 'He escrito mi propio texto'
   field_note: 'Nota para el curador (opcional)'
@@ -2778,9 +2782,15 @@ place_text:
   sent_h_applied: 'Texto actualizado'
   sent_p_applied: 'Esto está dentro de tus zonas, así que tu texto ya se muestra.'
   sent_ref: 'Tu referencia: %ref%'
+  facts_area: "Superficie en km²"
+  facts_area_measured: "Medida según el límite de la región: %km2% km²."
+  facts_population: "Población"
+  facts_year: "Contada en"
+  facts_ride: "Relieve"
+  fact_label_area: "Superficie"
+  fact_label_population: "Población"
+  fact_label_ride: "Relieve"
   back_town: 'Volver al mapa'
-  back_region: 'Volver a la región'
-  back_story: "Volver a la región"
   follow: 'Síguelo en tu perfil'
   change_label: 'Texto (%lang%)'
   story_change_label: "Historia, naturaleza y cultura (%lang%)"
@@ -2809,10 +2819,54 @@ place_text:
     unknown: 'Este texto no se puede editar aquí.'
     correct_unchanged: 'Es el texto tal como lo envió el ciclista. Cambia algo o vuelve a la cola.'
     credit_required: 'Elige si el crédito de Wikipedia se mantiene y luego aprueba.'
-    source_required: 'Indica de dónde viene tu texto: adaptado del artículo de Wikipedia, o escrito por ti.'
+    source_required: "Di de dónde viene tu texto: basado en el texto predeterminado de Wikipedia, o tu propio texto."
     generic_anchor: "Un enlace dice solo «fuente», «enlace» o «aquí». Enlaza mejor las palabras que dicen de qué trata la página."
     links_unconfirmed: "Algunos enlaces no están marcados como «Comprobado: OK»: %urls%. Ábrelos tú mismo y marca la casilla bajo los enlaces, o cámbialos."
-    based_on: "Elige un idioma que tenga un texto del que traducir, o «No es una traducción»."
+    based_on: "Elige un idioma que tenga un texto del que traducir, o «Original»."
+    facts_area: "Indica la superficie como un número entero de kilómetros cuadrados."
+    facts_population: "Indica la población como un número entero."
+    facts_year: "Indica el año en que se contó la población, de %min% a %max%."
+    facts_pair: "Indica la población junto con el año en que se contó."
+    facts_ride: "Elige llano, ondulado o montañoso."
+    http_link: "Enlaza solo direcciones https. Cambia estas: %urls%."
+
+# The region editor: figures, geography and history in three steps
+# (PlaceTextController::region(), moderation-and-contribution.md §3.1g).
+region_edit:
+  kicker: "Región"
+  lead: "Cualquier persona con sesión iniciada puede proponer cambios en las cifras y los textos de esta región. Un curador de esta región aprueba cada cambio antes de que aparezca."
+  field_lang: "Idioma de los textos"
+  steps: "Pasos"
+  step_figures: "Cifras"
+  step_geography: "Geografía"
+  step_story: "Historia, naturaleza y cultura"
+  step_figures_p: "Superficie, población y relieve: las cifras en la parte superior de la página de la región. Son las mismas en todos los idiomas."
+  step_geography_p: "Dónde está la región, su paisaje y sus vecinas. La historia, la naturaleza y la cultura van en el paso 3."
+  step_story_p: "Lo que la historia, la naturaleza y la cultura del territorio cuentan a un ciclista. Dónde está la región va en el paso 2."
+  population_source: "Fuente:"
+  next: "Siguiente: %step%"
+  field_geography: "Texto de geografía"
+  field_geography_hint: "Escribe el texto completo tal como deben verlo los lectores, no solo el cambio. Deja la casilla vacía para mantener el texto actual."
+  field_story: "Texto de historia, naturaleza y cultura"
+  sent_h_queued: "Enviado para revisión"
+  sent_p_queued: "Gracias. Un curador de esta región revisa tus cambios; hasta entonces los lectores ven los actuales. Recibirás un mensaje cuando se decida cada uno."
+  sent_h_applied: "Cambios publicados"
+  sent_p_applied: "Esto está dentro de tus zonas, así que tus cambios ya se muestran."
+  sent_live: "publicado"
+  sent_waiting: "espera a un curador"
+  sent_rest: "El resto no se envió:"
+  back: "Volver a la región"
+  guide_figures_h: "Cómo rellenarlo"
+  guide_figures_area: "Superficie: deja el campo vacío para mostrar la superficie medida según el límite."
+  guide_figures_population: "Población: el último recuento oficial, con el año en que se hizo."
+  guide_figures_ride: "Relieve: cómo es la mayor parte de las rutas en la región."
+  guide_geo_whole: "Un solo párrafo, como máximo %max% caracteres, sin enlaces."
+  guide_geo_what: "Dónde está la región y sus límites, su suelo y relieve, qué cubre el terreno y cómo se rueda."
+  guide_geo_out: "Deja fuera las cifras, la historia y la cultura."
+  guide_more: "La guía completa, con un ejemplo:"
+  guide_link: "Escribir textos de región (en inglés)"
+  error:
+    nothing: "Cambia una cifra o uno de los textos antes de enviar."
 
 moderate:
   lang_title: "Escrito en %lang%"

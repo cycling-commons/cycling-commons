@@ -886,7 +886,7 @@ languages.
   `PlaceTextProposalTest` and `RegionsPagesTest`.
 
   **Two texts, two purposes (2026-10-20).** The first text is the region's
-  GEOGRAPHY, kicker "Geography": where it lies, its landscape, size and
+  GEOGRAPHY, kicker "Geography": where it lies, its landscape and
   neighbours (`RegionLead`, the Wikipedia lead or a local one, §3.1b of
   [moderation-and-contribution.md](moderation-and-contribution.md)); with
   none, the link reads "Write about the geography of this region". The second
@@ -950,7 +950,26 @@ languages.
   `Version20261020010000`, as a system text (no writer, no approver). Pinned
   by `RegionStoryProposalTest` and `tests/Catalog/RegionStoryTest.php`.
 
-  **The hero opens with the same three figures as `/coverage`**, in the same
+  **The land first (2026-10-23).** Under the name, one row of the region's
+  own figures: its area (`cc_km2`, a stated area over the one measured from
+  the boundary), "Population (2024)" (a person's count, else the one
+  fetched from Wikidata at build time) and "Ride character" (Flat, Hilly or
+  Mountainous), each shown once it is set; the area always is while the
+  boundary is known. The row ends in a ringed pencil, "Edit these figures",
+  to the region editor, where they are proposed; a curator of the region
+  approves them ([moderation-and-contribution.md](moderation-and-contribution.md)
+  §3.1g). The geography text leaves them out.
+
+  **An automatic text is about the region, and asks for a geography text
+  (2026-10-23).** The Wikipedia lead is the article's opening summary, which
+  is not always about geography: while it stands, its kicker reads "About
+  {region}", and only a text written here is headed "Geography". Under its
+  credit line, the same plain link as an empty history text, "Write about
+  the geography of this region", opens the region editor at the geography
+  step ([moderation-and-contribution.md](moderation-and-contribution.md)
+  §3.1g). Pinned by `RegionFactsTest`.
+
+  **Then the same three figures as `/coverage`**, in a second row, in the same
   order and under the same labels: reference items on file, verified items,
   routes. With only the last two, a region holding thousands of reference
   items would look like it held three, and a reader moving between the two
@@ -2856,8 +2875,8 @@ shown above it, save per language; a save for any other language is refused. Sav
 the row becomes answered, `edited_by`/`edited_at` are set, and from then on it
 is LOCAL, "we can't connect to online anymore": the fetch never claims an
 answered row, and any future refresh sweep must skip `edited_at IS NOT NULL`.
-The endpoint carries `edited: true` and `derived`, the box's "I adapted this
-from the Wikipedia article" tick (offered where the row has an article,
+The endpoint carries `edited: true` and `derived`, the box's "Based on the
+default Wikipedia text" tick (offered where the row has an article,
 checked while the box starts from it): adapted, the card's credit reads
 "Edited by our curators, after Wikipedia CC BY-SA 4.0" (a rewrite of CC BY-SA
 text keeps its attribution; the Wikipedia link stays); written fresh, "Written

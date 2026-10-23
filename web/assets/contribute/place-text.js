@@ -2,138 +2,180 @@
 /* "Edit this text": the current text of the chosen language shows read-only
    above an empty box (docs/specs/moderation-and-contribution.md §3.1b).
 
-   Picking another language swaps that quote, or says plainly there is no
-   text in that language yet. The box keeps whatever the rider wrote. Under
-   the box a polite live count says how many of the allowed characters are
-   used, counted as the server counts them (code points); the server enforces
-   the limit either way. "Where your text comes from" follows the language
-   too: shown where there is an article to adapt, hidden and disabled where
-   there is none, so its required radios never block the send; the server
-   checks the answer again either way.
+   Each text is a section (.pt-section[data-texts]): the town form and a
+   curator's correction form hold one, the region editor two, its
+   geography and its history text (§3.1g). The language select (#pt-lang)
+   drives every section on the page.
+
+   Picking another language swaps the quote of the current text, or says
+   plainly there is no text in that language yet. The box keeps whatever
+   the rider wrote. Under the box a polite live count says how many of the
+   allowed characters are used, counted as the server counts them (code
+   points); the server enforces the limit either way. "Where your text
+   comes from" follows the language too: shown where there is an article to
+   adapt, hidden and disabled where there is none, so its required radios
+   never block the send; the server checks the answer again either way.
+   Where the box is not required (the region editor, where a send may
+   change only the figures), the choice is required only while the box
+   holds a text.
 
    A region's "History, nature and culture" text (data-story, §3.1c) works
    the other way round: its box starts from the chosen language's current
    text. Picking another language swaps it, but only while the rider has
    not changed it, so their writing is never lost. For a language without
-   a text, the text of another language (English first) shows above the
-   box to translate from.
+   a text, the text of another language (English first) is picked as the
+   original to translate from.
+
+   "This text is a translation of" (§3.1e) offers the languages with a text
+   written here. Picking one shows its text above the box, to translate
+   from; "Not a translation" hides it.
 
    A file rather than an inline block, so the page carries no CSP nonce. */
 (function () {
-  var form = document.getElementById('place-text-form');
   var select = document.getElementById('pt-lang');
-  var box = document.getElementById('pt-text');
-  if (!form || !select || !box) { return; }
-  var texts = {};
-  var articles = null;
-  try { texts = JSON.parse(form.getAttribute('data-texts') || '{}'); } catch (e) { texts = {}; }
-  try { articles = form.hasAttribute('data-articles') ? JSON.parse(form.getAttribute('data-articles')) : null; } catch (e) { articles = null; }
-  var source = document.getElementById('pt-source');
-  var quote = document.getElementById('pt-current-text');
-  var none = document.getElementById('pt-current-none');
-  var count = document.getElementById('pt-text-count');
-  var story = form.hasAttribute('data-story');
-  var names = {};
-  try { names = JSON.parse(form.getAttribute('data-langs') || '{}'); } catch (e) { names = {}; }
-  var translate = document.getElementById('pt-translate');
-  var translateH = document.getElementById('pt-translate-h');
-  var translateText = document.getElementById('pt-translate-text');
+  if (!select) { return; }
 
-  function textOf(lang) { return typeof texts[lang] === 'string' ? texts[lang] : ''; }
-
-  /* The language a text without one is translated from: English first. */
-  function fromFor(lang) {
-    if (textOf(lang) !== '') { return null; }
-    var order = ['en'].concat(Object.keys(texts));
-    for (var i = 0; i < order.length; i++) {
-      if (order[i] !== lang && textOf(order[i]) !== '') { return order[i]; }
-    }
-    return null;
+  function json(el, attr, fallback) {
+    try { return el.hasAttribute(attr) ? JSON.parse(el.getAttribute(attr) || 'null') : fallback; } catch (e) { return fallback; }
   }
 
-  /* What the box starts from for a language, and what it is translated from. */
-  function startOf(lang) {
-    return { text: textOf(lang), from: fromFor(lang) };
-  }
-
-  function showTranslate(from) {
-    if (!translate || !translateH || !translateText) { return; }
-    translate.hidden = from === null;
-    translateText.textContent = from === null ? '' : textOf(from);
-    translateH.textContent = from === null ? '' : (translateH.getAttribute('data-words') || '%lang%')
-      .replace('%lang%', typeof names[from] === 'string' ? names[from] : from);
-  }
-
-  var start = startOf(select.value);
-
-  function showCurrent(lang) {
-    if (!quote || !none) { return; }
-    var t = typeof texts[lang] === 'string' ? texts[lang] : '';
-    quote.textContent = t;
-    quote.hidden = t === '';
-    none.hidden = t !== '';
-  }
-
-  /* A history text counts what a reader sees: a [words](address) link
-     counts its words, and paragraphs are one line apart as stored
+  /* A history text counts what a reader sees: a [words](https://address)
+     link counts its words, and paragraphs are one line apart as stored
      (RegionStory::readableLength). */
   function readable(text) {
     var lines = text.split(/\r\n|\r|\n/).map(function (l) { return l.replace(/\s+/g, ' ').trim(); })
       .filter(function (l) { return l !== ''; });
     var n = 0;
     lines.forEach(function (l) {
-      n += Array.from(l.replace(/\[([^\[\]\n]{1,300})\]\((https?:\/\/[^\s()<>"]+)\)/gi, function (m, w) { return w.trim() === '' ? m : w.trim(); })).length;
+      n += Array.from(l.replace(/\[([^\[\]\n]{1,300})\]\((https:\/\/[^\s()<>"]+)\)/gi, function (m, w) { return w.trim() === '' ? m : w.trim(); })).length;
     });
     return n + 2 * Math.max(0, lines.length - 1);
   }
 
-  function recount() {
-    if (!count) { return; }
-    var max = parseInt(count.getAttribute('data-max'), 10) || 0;
-    var n = box.hasAttribute('data-links') ? readable(box.value) : Array.from(box.value).length;
-    count.textContent = (count.getAttribute('data-words') || '%count% / %max%')
-      .replace('%count%', String(n)).replace('%max%', String(max));
-    count.classList.toggle('is-over', max > 0 && n > max);
-  }
+  function setup(section) {
+    var box = section.querySelector('.pt-box');
+    if (!box) { return; }
+    var texts = json(section, 'data-texts', {}) || {};
+    var articles = json(section, 'data-articles', null);
+    var names = json(section, 'data-langs', {}) || {};
+    var story = section.hasAttribute('data-story');
+    var source = section.querySelector('.pt-source');
+    var quote = section.querySelector('.pt-current-text');
+    var none = section.querySelector('.pt-current-none');
+    var count = section.querySelector('.pt-count');
+    var translate = section.querySelector('.pt-translate');
+    var translateH = section.querySelector('.pt-translate-h');
+    var translateText = section.querySelector('.pt-translate-text');
+    var basedOn = section.querySelector('.pt-based-on');
 
-  /* "This text is a translation of" never offers the text's own language. */
-  var basedOn = document.getElementById('pt-based-on');
-  function syncBasedOn(lang) {
-    if (!basedOn) { return; }
-    Array.prototype.forEach.call(basedOn.options, function (o) {
-      var own = o.value !== '' && o.value === lang;
-      o.hidden = own;
-      o.disabled = own;
-      if (own && o.selected) { basedOn.value = ''; }
-    });
-  }
+    function textOf(lang) { return typeof texts[lang] === 'string' ? texts[lang] : ''; }
 
-  select.addEventListener('change', function () {
-    var lang = select.value;
-    syncBasedOn(lang);
-    if (story) {
-      var next = startOf(lang);
-      if (box.value === start.text) {
-        box.value = next.text;
-        /* The link editor below redraws on input. */
-        box.dispatchEvent(new Event('input'));
+    /* The language a text without one is translated from: English first. */
+    function fromFor(lang) {
+      if (textOf(lang) !== '') { return null; }
+      var order = ['en'].concat(Object.keys(texts));
+      for (var i = 0; i < order.length; i++) {
+        if (order[i] !== lang && textOf(order[i]) !== '') { return order[i]; }
       }
-      start = next;
-      showTranslate(next.from);
-      /* A box to fill from another language's text is a translation of it. */
-      if (basedOn && next.from && basedOn.value === '') { basedOn.value = next.from; }
-      recount();
-      return;
+      return null;
     }
-    showCurrent(lang);
-    if (articles && source) {
-      var asked = articles[lang] === true;
-      source.hidden = !asked;
-      source.disabled = !asked;
+
+    /* What the box starts from for a language, and what it is translated from. */
+    function startOf(lang) {
+      return { text: textOf(lang), from: fromFor(lang) };
     }
-  });
-  box.addEventListener('input', recount);
-  recount();
+
+    function showTranslate(from) {
+      if (!translate || !translateH || !translateText) { return; }
+      translate.hidden = from === null;
+      translateText.textContent = from === null ? '' : textOf(from);
+      translateH.textContent = from === null ? '' : (translateH.getAttribute('data-words') || '%lang%')
+        .replace('%lang%', typeof names[from] === 'string' ? names[from] : from);
+    }
+
+    var start = startOf(select.value);
+
+    function showCurrent(lang) {
+      if (!quote || !none) { return; }
+      var t = textOf(lang);
+      quote.textContent = t;
+      quote.hidden = t === '';
+      none.hidden = t !== '';
+    }
+
+    function recount() {
+      if (!count) { return; }
+      var max = parseInt(count.getAttribute('data-max'), 10) || 0;
+      var n = box.hasAttribute('data-links') ? readable(box.value) : Array.from(box.value).length;
+      count.textContent = (count.getAttribute('data-words') || '%count% / %max%')
+        .replace('%count%', String(n)).replace('%max%', String(max));
+      count.classList.toggle('is-over', max > 0 && n > max);
+    }
+
+    /* "This text is a translation of" never offers the text's own language,
+       nor a language without a text written here (data-none). */
+    function syncBasedOn(lang) {
+      if (!basedOn) { return; }
+      Array.prototype.forEach.call(basedOn.options, function (o) {
+        var own = o.value !== '' && o.value === lang;
+        o.hidden = own;
+        o.disabled = own || o.hasAttribute('data-none');
+        if (own && o.selected) { basedOn.value = ''; }
+      });
+    }
+
+    /* Whether a language may be picked as the original. */
+    function offered(lang) {
+      if (!basedOn || !lang) { return false; }
+      var o = basedOn.querySelector('option[value="' + lang + '"]');
+      return !!o && !o.disabled;
+    }
+
+    /* The picked original's text shows above the box, to translate from. */
+    function showOriginal() {
+      if (basedOn) { showTranslate(basedOn.value === '' ? null : basedOn.value); }
+    }
+
+    function sourceRequired() {
+      if (!source || box.required) { return; }
+      var need = box.value.trim() !== '';
+      Array.prototype.forEach.call(source.querySelectorAll('input[type="radio"]'), function (r) { r.required = need; });
+    }
+
+    select.addEventListener('change', function () {
+      var lang = select.value;
+      syncBasedOn(lang);
+      if (story) {
+        var next = startOf(lang);
+        if (box.value === start.text) {
+          box.value = next.text;
+          /* The link editor below redraws on input. */
+          box.dispatchEvent(new Event('input'));
+        }
+        start = next;
+        /* A box to fill from another language's text is a translation of it. */
+        if (basedOn && next.from && basedOn.value === '' && offered(next.from)) { basedOn.value = next.from; }
+        if (basedOn) { showOriginal(); } else { showTranslate(next.from); }
+        recount();
+        return;
+      }
+      showOriginal();
+      showCurrent(lang);
+      if (articles && source) {
+        var asked = articles[lang] === true;
+        source.hidden = !asked;
+        source.disabled = !asked;
+      }
+    });
+    if (basedOn) { basedOn.addEventListener('change', showOriginal); }
+    box.addEventListener('input', recount);
+    box.addEventListener('input', sourceRequired);
+    syncBasedOn(select.value);
+    recount();
+    sourceRequired();
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('.pt-section[data-texts]'), setup);
 })();
 
 /* The link editor of a history text (textarea[data-links], §3.1c). A text
@@ -142,7 +184,7 @@
 
    - "Link the selected words": select words in the box, press it, give the
      address, and the words become [words](address). The address must be a
-     full http(s) address; the box keeps its undo history where the browser
+     full https address; the box keeps its undo history where the browser
      allows (execCommand), else the value is set directly.
    - Colours behind the box's own text: a layer under the transparent
      textarea draws the same text invisibly, with a tint behind each link's
@@ -151,7 +193,9 @@
      the rider reads and edits is the textarea's own, so a small mismatch in
      the layer can only shift a tint, never garble the text.
    - Under the box, the links in order: the words, then where they go, with
-     a warning on a refused one.
+     a warning on a refused one. A link written with http:// is refused
+     (only https addresses link): its address is red, it says so, and it is
+     never sent to the check.
    - Each link is checked as it appears, a paste or a typed link alike:
      the addresses not asked before go to story_link_check (debounced, at
      most 20 a time), which answers with the verdicts a send would meet.
@@ -218,11 +262,12 @@
     LINK.lastIndex = 0;
     while ((m = LINK.exec(text)) !== null) {
       var bad = isGeneric(m[1]);
+      var insecure = !/^https:/i.test(m[2]);
       html += esc(text.slice(at, m.index))
         + '<mark class="w' + (bad ? ' bad' : '') + '">' + esc('[' + m[1] + ']') + '</mark>'
-        + '<mark class="u' + (refused(m[2]) ? ' bad' : '') + '">' + esc('(' + m[2] + ')') + '</mark>';
+        + '<mark class="u' + (insecure || refused(m[2]) ? ' bad' : '') + '">' + esc('(' + m[2] + ')') + '</mark>';
       at = m.index + m[0].length;
-      links.push({ words: m[1], href: m[2], bad: bad });
+      links.push({ words: m[1], href: m[2], bad: bad, insecure: insecure });
     }
     /* A last line break needs a character after it, or the layer ends one line short. */
     layer.innerHTML = html + esc(text.slice(at)) + '\n ';
@@ -241,7 +286,7 @@
   }
   function askLater(links) {
     if (!list || !list.getAttribute('data-check-url') || limited) { return; }
-    var todo = links.map(function (l) { return l.href; })
+    var todo = links.filter(function (l) { return !l.insecure; }).map(function (l) { return l.href; })
       .filter(function (h, i, all) { return all.indexOf(h) === i && checks[h] === undefined; });
     if (todo.length === 0) { return; }
     clearTimeout(timer);
@@ -271,6 +316,7 @@
   function stateOf(href) {
     var c = checks[href];
     var say = function (k) { return list.getAttribute('data-st-' + k) || ''; };
+    if (!/^https:/i.test(href)) { return { cls: 'bad', text: say('http') }; }
     if (c === undefined) { return limited ? { cls: 'warn', text: say('limit') } : { cls: 'wait', text: say('checking') }; }
     if (c === 'checking') { return { cls: 'wait', text: say('checking') }; }
     if (c === 'failed') { return { cls: 'warn', text: limited ? say('limit') : say('unknown') }; }
@@ -285,7 +331,8 @@
     /* The tick appears once a link is checked and not plainly fine (or a
        send came back for it); it never blocks while checks are running. */
     if (confirmBox) {
-      var unclear = links.some(function (l) { var c = stateOf(l.href).cls; return c === 'warn' || c === 'bad'; });
+      /* A tick cannot let an http link through, so it does not ask for one. */
+      var unclear = links.some(function (l) { var c = stateOf(l.href).cls; return !l.insecure && (c === 'warn' || c === 'bad'); });
       confirmBox.hidden = !unclear && !confirmBox.classList.contains('is-asked');
     }
     if (!list || !listH || !listOl) { return; }
@@ -302,7 +349,7 @@
       a.href = l.href;
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
-      a.textContent = l.href.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+      a.textContent = l.insecure ? l.href : l.href.replace(/^https:\/\//i, '').replace(/\/$/, '');
       var st = stateOf(l.href);
       var chip = document.createElement('span');
       chip.className = 'pt-links-st is-' + st.cls;
@@ -354,7 +401,7 @@
   function insertLink() {
     if (!sel) { closePanel(); return; }
     var href = url.value.trim();
-    if (!/^https?:\/\/[^\s()<>"]+\.[^\s()<>"]+$/i.test(href)) {
+    if (!/^https:\/\/[^\s()<>"]+\.[^\s()<>"]+$/i.test(href)) {
       say(msg ? msg.getAttribute('data-bad-url') : '');
       url.focus();
       return;
@@ -391,4 +438,66 @@
   window.addEventListener('resize', fitLayer);
   fitLayer();
   draw();
+})();
+
+/* The region editor's steps as tabs (region_edit.html.twig, §3.1g): one
+   step shows at a time, its tab marked, "Next" moving on. The note and
+   Send sit outside the steps, so a send may change one part or all three;
+   the texts' language shows on the text steps only (data-step-for). The hidden `step` field follows, so a send that comes back
+   opens where it left. A field the browser finds invalid in a hidden step
+   brings its step forward, so the browser can show what is wrong. Without
+   this script every step shows, one under the other. */
+(function () {
+  var form = document.querySelector('[data-steps]');
+  if (!form) { return; }
+  var bar = form.querySelector('.pt-tabs');
+  var tabs = form.querySelectorAll('[data-step-tab]');
+  var panels = form.querySelectorAll('[data-step-panel]');
+  var field = form.querySelector('[data-step-field]');
+  if (!bar || tabs.length === 0 || panels.length === 0) { return; }
+  var order = Array.prototype.map.call(tabs, function (t) { return t.getAttribute('data-step-tab'); });
+
+  function show(step, focus) {
+    if (order.indexOf(step) === -1) { step = order[0]; }
+    Array.prototype.forEach.call(tabs, function (t) {
+      var on = t.getAttribute('data-step-tab') === step;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+      if (on && focus) { t.focus(); }
+    });
+    Array.prototype.forEach.call(panels, function (p) { p.hidden = p.getAttribute('data-step-panel') !== step; });
+    /* What belongs to some steps only, as the texts' language. */
+    Array.prototype.forEach.call(form.querySelectorAll('[data-step-for]'), function (el) {
+      el.hidden = (' ' + el.getAttribute('data-step-for') + ' ').indexOf(' ' + step + ' ') === -1;
+    });
+    if (field) { field.value = step; }
+    /* A box that was hidden had no size: the history editor lines its tints up again. */
+    window.dispatchEvent(new Event('resize'));
+  }
+
+  bar.hidden = false;
+  form.classList.add('is-tabbed');
+  Array.prototype.forEach.call(form.querySelectorAll('.pt-step-next'), function (p) { p.hidden = false; });
+  Array.prototype.forEach.call(tabs, function (t) {
+    t.addEventListener('click', function () { show(t.getAttribute('data-step-tab'), false); });
+    /* Arrow keys move between the tabs, as in any tab list. */
+    t.addEventListener('keydown', function (e) {
+      var at = order.indexOf(t.getAttribute('data-step-tab'));
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        show(order[(at + (e.key === 'ArrowRight' ? 1 : order.length - 1)) % order.length], true);
+      }
+    });
+  });
+  Array.prototype.forEach.call(form.querySelectorAll('[data-step-next]'), function (b) {
+    b.addEventListener('click', function () {
+      show(b.getAttribute('data-step-next'), true);
+      bar.scrollIntoView({ block: 'nearest' });
+    });
+  });
+  form.addEventListener('invalid', function (e) {
+    var panel = e.target && e.target.closest ? e.target.closest('[data-step-panel]') : null;
+    if (panel && panel.hidden) { show(panel.getAttribute('data-step-panel'), false); }
+  }, true);
+  show(field ? field.value : order[0], false);
 })();

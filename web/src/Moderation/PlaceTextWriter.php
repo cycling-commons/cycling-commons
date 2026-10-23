@@ -38,16 +38,22 @@ use Doctrine\DBAL\Connection;
  */
 final readonly class PlaceTextWriter
 {
-    public function __construct(private Connection $db, private TownSummaryRepository $towns, private StoryLinkCheck $links, private TextLineage $lineage, private TextVersions $versions)
+    public function __construct(private Connection $db, private TownSummaryRepository $towns, private StoryLinkCheck $links, private TextLineage $lineage, private TextVersions $versions, private RegionFactsWriter $facts)
     {
     }
 
     /**
      * Apply an approved Text submission. Throws on a payload that names no
      * valid target, so the approval fails loudly rather than with no effect.
+     * A region's figures go to RegionFactsWriter (§3.1g).
      */
     public function apply(Submission $submission, int $approvedBy): void
     {
+        if (PlaceText::FACTS === ($submission->getPayload()['target'] ?? null)) {
+            $this->facts->apply($submission);
+
+            return;
+        }
         $proposal = PlaceText::fromPayload($submission->getPayload());
         if (null === $proposal) {
             throw new \InvalidArgumentException(sprintf('Submission %d names no text target', (int) $submission->getId()));
@@ -223,6 +229,11 @@ final readonly class PlaceTextWriter
      */
     public function revert(Submission $submission): void
     {
+        if (PlaceText::FACTS === ($submission->getPayload()['target'] ?? null)) {
+            $this->facts->revert($submission);
+
+            return;
+        }
         $payload = $submission->getPayload();
         $proposal = PlaceText::fromPayload($payload);
         if (null === $proposal) {
@@ -292,6 +303,11 @@ final readonly class PlaceTextWriter
      */
     public function assertRevertable(Submission $submission): void
     {
+        if (PlaceText::FACTS === ($submission->getPayload()['target'] ?? null)) {
+            $this->facts->assertRevertable($submission);
+
+            return;
+        }
         $proposal = PlaceText::fromPayload($submission->getPayload());
         if (null === $proposal) {
             return;

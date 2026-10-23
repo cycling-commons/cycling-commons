@@ -641,6 +641,7 @@ region:
   everywhere:
     label: 'Overal'
   about_h: "Geografie"
+  about_auto_h: "Over %region%"
   about_source: 'Tekst van Wikipedia:'
   about_source_adapted: "Door de regiobeheerders van deze regio bewerkt uit Wikipedia:"
   about_source_curator: "Geschreven door de regiobeheerders van deze regio,"
@@ -664,6 +665,12 @@ region:
   cta_vote: 'Stem voor volgend seizoen'
   stat_items: 'Geverifieerde items'
   stat_area: 'Oppervlakte'
+  stat_population: "Inwoners (%year%)"
+  stat_ride: "Terrein"
+  facts_edit: "Deze cijfers wijzigen"
+  ride_flat: "Vlak"
+  ride_hilly: "Heuvelachtig"
+  ride_mountainous: "Bergachtig"
   stat_routes: 'Routes'
   by_kind_h: 'Wat fietsers hier vinden'
   kind_verified: 'in de Commons'
@@ -2697,17 +2704,13 @@ place_text:
   kicker_town: 'Tekst van een plaats'
   kicker_region: "Geografie"
   lead_town: 'Iedereen die is aangemeld kan een wijziging voorstellen van de tekst op het kaartje van deze plaats. Een regiobeheerder van de regio waarin ze ligt keurt hem goed voordat hij verschijnt.'
-  lead_region: "Iedereen die is aangemeld kan een wijziging voorstellen van de geografietekst van deze regio: waar hij ligt, het landschap, de grootte en de buren. Een regiobeheerder van deze regio keurt hem goed voordat hij verschijnt."
   kicker_story: "Geschiedenis, natuur en cultuur"
-  lead_story: "Iedereen die is aangemeld kan de tekst over de geschiedenis, natuur en cultuur van deze regio schrijven, wijzigen of vertalen. Een regiobeheerder van deze regio keurt hem goed voordat hij verschijnt."
-  field_based_on: "Deze tekst is een vertaling van"
-  based_on_none: "Geen vertaling: in deze taal geschreven"
-  field_based_on_hint: "Heb je de tekst van een andere taal vertaald, zeg dan welke. Als dat origineel verandert, laten we het je weten, zodat je de jouwe kunt bijwerken."
-  purpose_region: "Dit is de geografietekst: waar de regio ligt, het landschap, de grootte en de buren. Geschiedenis, natuur en cultuur hebben een eigen tekst."
-  purpose_story: "Dit is de tekst over geschiedenis, natuur en cultuur. Waar de regio ligt en hoe het land eruitziet, hoort in de geografietekst."
-  purpose_go_story: "Schrijf over de geschiedenis, natuur en cultuur"
-  purpose_go_region: "Schrijf over de geografie"
-  purpose_region_correct: "Dit is de geografietekst. Controleer voor je goedkeurt dat hij gaat over waar de regio ligt, het landschap, de grootte en de buren: geschiedenis, natuur en cultuur horen in de andere tekst."
+  field_based_on: "Origineel of vertaling"
+  based_on_none: "Origineel: de basistekst waar elke vertaling van uitgaat"
+  based_on_lang: "Vertaling van: %lang%"
+  based_on_no_text: "Vertaling van: %lang% (nog geen tekst)"
+  field_based_on_hint: "Kies Origineel als je deze tekst zelf schreef. Heb je de tekst van een andere taal vertaald, kies dan die taal: als dat origineel verandert, laten we het je weten, zodat je de jouwe kunt bijwerken."
+  purpose_region_correct: "Dit is de geografietekst. Controleer voor je goedkeurt dat hij gaat over waar de regio ligt, het landschap en de buren: geschiedenis, natuur en cultuur horen in de andere tekst."
   purpose_story_correct: "Dit is de tekst over geschiedenis, natuur en cultuur. Controleer voor je goedkeurt dat hij niet beschrijft waar de regio ligt: dat hoort in de geografietekst."
   geography_change_label: "Geografie (%lang%)"
   field_lang: 'Taal'
@@ -2739,11 +2742,12 @@ place_text:
   link_st_unsafe: "Google waarschuwt ervoor"
   link_st_unknown: "Kon niet controleren"
   link_st_limit: "Limiet bereikt, bij versturen wordt het gecontroleerd"
+  link_st_http: "Alleen https-adressen"
   translate_h: "Om uit te vertalen (%lang%)"
   current_h: 'Huidige tekst'
   current_none: 'Er is nog geen tekst in deze taal.'
   count: '%count% van %max%'
-  field_derived: 'Ik heb dit bewerkt uit het Wikipedia-artikel'
+  field_derived: "Gebaseerd op de standaardtekst van Wikipedia"
   field_source: 'Waar je tekst vandaan komt'
   field_own: 'Ik heb mijn eigen tekst geschreven'
   field_note: 'Opmerking voor de regiobeheerder (optioneel)'
@@ -2756,9 +2760,15 @@ place_text:
   sent_h_applied: 'Tekst bijgewerkt'
   sent_p_applied: 'Dit ligt binnen jouw gebieden, dus je tekst staat er nu.'
   sent_ref: 'Je referentie: %ref%'
+  facts_area: "Oppervlakte in km²"
+  facts_area_measured: "Gemeten aan de grens van de regio: %km2% km²."
+  facts_population: "Inwoners"
+  facts_year: "Geteld in"
+  facts_ride: "Terrein"
+  fact_label_area: "Oppervlakte"
+  fact_label_population: "Inwoners"
+  fact_label_ride: "Terrein"
   back_town: 'Terug naar de kaart'
-  back_region: 'Terug naar de regio'
-  back_story: "Terug naar de regio"
   follow: 'Volg het op je profiel'
   change_label: 'Tekst (%lang%)'
   story_change_label: "Geschiedenis, natuur en cultuur (%lang%)"
@@ -2787,10 +2797,54 @@ place_text:
     unknown: 'Deze tekst kan hier niet bewerkt worden.'
     correct_unchanged: 'Dit is de tekst zoals de fietser hem stuurde. Verander iets, of ga terug naar de wachtrij.'
     credit_required: 'Kies of de Wikipedia-vermelding blijft, en keur dan goed.'
-    source_required: 'Zeg waar je tekst vandaan komt: bewerkt uit het Wikipedia-artikel, of je eigen tekst.'
+    source_required: "Zeg waar je tekst vandaan komt: gebaseerd op de standaardtekst van Wikipedia, of je eigen tekst."
     generic_anchor: "Een link zegt alleen \"bron\", \"link\" of \"hier\". Link liever de woorden die zeggen waar de pagina over gaat."
     links_unconfirmed: "Sommige links zijn niet \"Gecontroleerd: OK\": %urls%. Open ze zelf en vink het vakje onder de links aan, of pas ze aan."
-    based_on: "Kies een taal met een tekst om uit te vertalen, of \"Geen vertaling\"."
+    based_on: "Kies een taal met een tekst om uit te vertalen, of \"Origineel\"."
+    facts_area: "Geef de oppervlakte als een heel getal vierkante kilometers."
+    facts_population: "Geef het aantal inwoners als een heel getal."
+    facts_year: "Geef het jaar waarin de inwoners zijn geteld, van %min% tot %max%."
+    facts_pair: "Geef het aantal inwoners samen met het jaar waarin ze zijn geteld."
+    facts_ride: "Kies vlak, heuvelachtig of bergachtig."
+    http_link: "Link alleen https-adressen. Pas deze aan: %urls%."
+
+# The region editor: figures, geography and history in three steps
+# (PlaceTextController::region(), moderation-and-contribution.md §3.1g).
+region_edit:
+  kicker: "Regio"
+  lead: "Iedereen die is aangemeld kan wijzigingen voorstellen in de cijfers en teksten van deze regio. Een regiobeheerder van deze regio keurt elke wijziging goed voordat ze verschijnt."
+  field_lang: "Taal van de teksten"
+  steps: "Stappen"
+  step_figures: "Cijfers"
+  step_geography: "Geografie"
+  step_story: "Geschiedenis, natuur en cultuur"
+  step_figures_p: "Oppervlakte, inwoners en terrein: de cijfers bovenaan de regiopagina. Ze zijn in elke taal hetzelfde."
+  step_geography_p: "Waar de regio ligt, het landschap en de buren. Geschiedenis, natuur en cultuur horen in stap 3."
+  step_story_p: "Wat de geschiedenis, natuur en cultuur van het land een fietser vertellen. Waar de regio ligt hoort in stap 2."
+  population_source: "Bron:"
+  next: "Volgende: %step%"
+  field_geography: "Geografietekst"
+  field_geography_hint: "Schrijf de hele tekst zoals lezers hem moeten zien, niet alleen de wijziging. Laat het vak leeg om de huidige tekst te houden."
+  field_story: "Tekst over geschiedenis, natuur en cultuur"
+  sent_h_queued: "Verstuurd ter controle"
+  sent_p_queued: "Bedankt. Een regiobeheerder van deze regio bekijkt je wijzigingen; tot dan zien lezers de huidige. Je krijgt een bericht zodra over elke wijziging is beslist."
+  sent_h_applied: "Wijzigingen staan erop"
+  sent_p_applied: "Dit ligt binnen jouw gebieden, dus je wijzigingen staan er nu."
+  sent_live: "staat er nu"
+  sent_waiting: "wacht op een regiobeheerder"
+  sent_rest: "De rest is niet verstuurd:"
+  back: "Terug naar de regio"
+  guide_figures_h: "Zo vul je het in"
+  guide_figures_area: "Oppervlakte: laat het veld leeg om de oppervlakte te tonen die aan de grens is gemeten."
+  guide_figures_population: "Inwoners: de laatste officiële telling, met het jaar van de telling."
+  guide_figures_ride: "Terrein: hoe het meeste fietsen in de regio is."
+  guide_geo_whole: "Eén alinea, hoogstens %max% tekens, zonder links."
+  guide_geo_what: "Waar de regio ligt en haar grenzen, de bodem en het reliëf, wat het land bedekt, en hoe het fietst."
+  guide_geo_out: "Laat de cijfers, de geschiedenis en de cultuur weg."
+  guide_more: "De volledige gids, met een voorbeeld:"
+  guide_link: "Regioteksten schrijven (Engels)"
+  error:
+    nothing: "Wijzig een cijfer of een van de teksten voordat je verstuurt."
 
 moderate:
   lang_title: "Geschreven in het %lang%"

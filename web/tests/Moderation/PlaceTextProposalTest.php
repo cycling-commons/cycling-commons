@@ -367,7 +367,7 @@ final class PlaceTextProposalTest extends WebTestCase
         self::assertNull($fieldset->attr('disabled'));
         self::assertSame('Where your text comes from', trim(str_replace('*', '', $fieldset->filter('legend')->text())));
         self::assertCount(1, $fieldset->filter('legend .req'), 'marked required like the text box');
-        self::assertSame('I adapted this from the Wikipedia article', $fieldset->filter('label[for=pt-source-adapted]')->text());
+        self::assertSame('Based on the default Wikipedia text', $fieldset->filter('label[for=pt-source-adapted]')->text());
         self::assertSame('I wrote my own text', $fieldset->filter('label[for=pt-source-own]')->text());
         foreach (['adapted', 'own'] as $v) {
             $radio = $fieldset->filter('input#pt-source-'.$v);
@@ -383,7 +383,7 @@ final class PlaceTextProposalTest extends WebTestCase
         // Without an answer the send is refused and nothing is filed.
         $client->submit($crawler->filter('#place-text-form')->form(['lang' => 'nl', 'text' => 'Testdorp heeft een kerk.']));
         self::assertResponseStatusCodeSame(422);
-        self::assertStringContainsString('Say where your text comes from: adapted from the Wikipedia article, or your own text.', (string) $client->getResponse()->getContent());
+        self::assertStringContainsString('Say where your text comes from: based on the default Wikipedia text, or your own text.', (string) $client->getResponse()->getContent());
         /** @var Connection $db */
         $db = self::getContainer()->get(Connection::class);
         self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM submission WHERE type = 'text' AND user_id = :u", ['u' => $rider->getId()]));
@@ -537,7 +537,8 @@ final class PlaceTextProposalTest extends WebTestCase
 
         // The region page's credit line ends in the town card's two ringed
         // icons, "!" to report the text and the pencil to the form, with no
-        // sentence and no second link under it.
+        // sentence. Under an automatic text, one plain link asks for a text
+        // written here.
         $crawler = $client->request('GET', '/regions/ptext-a');
         self::assertResponseIsSuccessful();
         $page = (string) $client->getResponse()->getContent();
@@ -557,7 +558,7 @@ final class PlaceTextProposalTest extends WebTestCase
         self::assertSame('/regions/ptext-a/text', $pen->attr('href'));
         self::assertSame('Edit this text', $pen->attr('aria-label'));
         self::assertSame('Edit this text', $pen->attr('title'));
-        self::assertCount(0, $crawler->filter('.rg-about:not(.rg-story) .rg-about-write'), 'a region with a text has no plain link');
+        self::assertSame('Write about the geography of this region', $crawler->filter('.rg-about:not(.rg-story) .rg-about-write a')->text(), 'an automatic Wikipedia text asks for a geography text written here');
 
         // A region with no text has no credit line, so one plain link stands instead.
         $crawler = $client->request('GET', '/regions/ptext-b');
@@ -851,7 +852,7 @@ final class PlaceTextProposalTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSame('Wikipedia says Ptext.', $crawler->filter('blockquote#pt-current-text')->text());
         self::assertCount(0, $crawler->filter('#pt-source, input[name=derived]'), 'the claim is the writer\'s, not a field to correct');
-        self::assertStringContainsString('The writer says: "I adapted this from the Wikipedia article".', $crawler->filter('#pt-credit-claim')->text(), 'the rider\'s adaptation claim, as sent, as the hint');
+        self::assertStringContainsString('The writer says: "Based on the default Wikipedia text".', $crawler->filter('#pt-credit-claim')->text(), 'the rider\'s adaptation claim, as sent, as the hint');
         $client->submit($crawler->filter('#place-text-form')->form(['text' => 'Ptext A is flat and windy.']));
         self::assertResponseRedirects();
         $this->approve($this->latestText((int) $rider->getId()), $curatorA, true);

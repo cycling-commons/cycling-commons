@@ -1,0 +1,88 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  A history text's editor (docs/specs/moderation-and-contribution.md §3.1c),
+  on the region editor's third step and on a curator's correction form: the
+  box, the link editor above it, the links under it with their checks, the
+  tick for links that are not plainly fine, the live count, and how to
+  write it.
+
+  The links are made easy to place and to see: a button that wraps the
+  selected words in a link, tints behind the link words and the address in
+  the box, and a list of the links under it. All drawn by place-text.js;
+  hidden until it runs, so without script the box is a plain box.
+
+  Takes: box_id, box_name, label (a message key), value, required, max,
+  raw_max, generic_anchors, error, link_check_csrf_id, count_id, hint_id,
+  and guide_href, the wiki guide's address, optional.
+#}
+<div class="cfield pt-editor">
+  <label for="{{ box_id }}">{{ label|trans }}{% if required %} <span class="req" aria-hidden="true">*</span>{% endif %}</label>
+  <div class="pt-linkbar" id="pt-linkbar" hidden>
+    <button type="button" class="btn btn-g pt-link-open" id="pt-link-open" aria-controls="pt-link-form" aria-expanded="false">{{ 'place_text.link_add'|trans }}</button>
+    <div class="pt-link-form" id="pt-link-form" hidden>
+      <label for="pt-link-url">{{ 'place_text.link_url'|trans }}</label>
+      <input type="url" id="pt-link-url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://">
+      <button type="button" class="btn btn-p" id="pt-link-insert">{{ 'place_text.link_insert'|trans }}</button>
+      <button type="button" class="btn btn-g" id="pt-link-cancel">{{ 'place_text.cancel'|trans }}</button>
+    </div>
+    <p class="chint pt-link-msg" id="pt-link-msg" role="status" aria-live="polite"
+       data-select="{{ 'place_text.link_select_first'|trans }}"
+       data-bad-url="{{ 'place_text.link_bad_url'|trans }}"
+       data-for="{{ 'place_text.link_for'|trans({'%words%': '%words%'}) }}"></p>
+  </div>
+  <div class="pt-hl-wrap">
+    <textarea id="{{ box_id }}" class="pt-box" name="{{ box_name }}"{{ required ? ' required' }} maxlength="{{ raw_max }}" rows="16" data-links data-generic="{{ generic_anchors|json_encode }}" aria-describedby="{{ hint_id }} {{ count_id }}">{{ value }}</textarea>
+  </div>
+  {# Each link's check (website gate + Safe Browsing) as it appears, from
+     `story_link_check`: the same verdicts a send meets. #}
+  <div class="pt-links" id="pt-links" hidden
+       data-h="{{ 'place_text.links_h'|trans({'%count%': '%count%'}) }}"
+       data-generic-note="{{ 'place_text.links_generic'|trans }}"
+       data-check-url="{{ path('story_link_check') }}"
+       data-check-token="{{ csrf_token(link_check_csrf_id) }}"
+       data-st-checking="{{ 'place_text.link_st_checking'|trans }}"
+       data-st-ok="{{ 'place_text.link_st_ok'|trans }}"
+       data-st-confirmed="{{ 'place_text.link_st_confirmed'|trans }}"
+       data-st-dead="{{ 'place_text.link_st_dead'|trans }}"
+       data-st-parked="{{ 'place_text.link_st_parked'|trans }}"
+       data-st-unsafe="{{ 'place_text.link_st_unsafe'|trans }}"
+       data-st-unknown="{{ 'place_text.link_st_unknown'|trans }}"
+       data-st-limit="{{ 'place_text.link_st_limit'|trans }}"
+       data-st-http="{{ 'place_text.link_st_http'|trans }}">
+    <p class="pt-links-h" id="pt-links-h"></p>
+    <ol id="pt-links-list"></ol>
+  </div>
+  {# A link that is not plainly fine never blocks the text: the writer, and
+     the curator approving it, confirm by hand that they opened it
+     (StoryLinkCheck, §3.1c). Shown by place-text.js when a link is not
+     "Checked: OK"; shown by the server when a send came back for want of it. #}
+  {% set links_refused = error == 'place_text.error.links_unconfirmed' %}
+  <label class="cinline pt-links-ok{{ links_refused ? ' is-asked' }}" id="pt-links-ok" for="pt-links-confirm"{{ not links_refused ? ' hidden' }}>
+    <input type="checkbox" id="pt-links-confirm" name="links_confirmed" value="1">
+    <span>{{ 'place_text.links_confirm'|trans }}</span>
+  </label>
+  <p class="chint pt-count" id="{{ count_id }}" aria-live="polite" data-max="{{ max }}"
+     data-words="{{ 'place_text.count'|trans({'%count%': '%count%', '%max%': max}) }}">{{ 'place_text.count'|trans({'%count%': value|length, '%max%': max}) }}</p>
+  {# How to write it, as steps beside the box on a wide screen and under it
+     on a narrow one (place-text.css). The link example wears the box's own
+     tints, then shows how the page reads it, so the markup is learned by
+     sight. #}
+  <aside class="pt-howto" id="{{ hint_id }}">
+    {# The wiki guide first, where there is one. #}
+    {% if guide_href|default(null) %}
+      <p class="pt-guide-more">{{ 'region_edit.guide_more'|trans }} <a href="{{ guide_href }}" target="_blank" rel="noopener">{{ 'region_edit.guide_link'|trans }}</a></p>
+    {% endif %}
+    <p class="pt-howto-h">{{ 'place_text.howto_h'|trans }}</p>
+    <ol>
+      <li>{{ 'place_text.howto_whole'|trans({'%max%': max|number_format(0, '.', ',')}) }}</li>
+      <li>{{ 'place_text.howto_paragraph'|trans }}</li>
+      <li>{{ 'place_text.howto_cite'|trans }}
+        {# The example in the page's own language: its words and address are messages too. #}
+        {% set ex_words = 'place_text.howto_ex_words'|trans %}
+        <code class="pt-howto-ex"><mark class="w">[{{ ex_words }}]</mark><mark class="u">({{ 'place_text.howto_ex_url'|trans }})</mark></code>
+        {{ 'place_text.howto_reads'|trans }} <span class="pt-howto-link">{{ ex_words }}</span></li>
+      <li>{{ 'place_text.howto_words'|trans }}</li>
+      <li>{{ 'place_text.howto_sites'|trans }}</li>
+    </ol>
+  </aside>
+</div>

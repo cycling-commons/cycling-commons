@@ -7,9 +7,9 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * A region's GEOGRAPHY text, the page's first: where it lies, its landscape,
- * size and neighbours. History, nature and culture are the other text
- * (RegionStory). Harvest and local override are separate stores so import cannot wipe an override. Adapted Wikipedia stays cited; original text must not.
+ * A region's GEOGRAPHY text, the page's first: where it lies, its landscape
+ * and neighbours. Its figures are RegionFacts; history, nature and culture
+ * are the other text (RegionStory). Harvest and local override are separate stores so import cannot wipe an override. Adapted Wikipedia stays cited; original text must not.
  *
  * A local lead is written on the Regions desk by a curator of the region, or
  * proposed by anyone signed in and approved by one (moderation-and-contribution.md §3.1b).

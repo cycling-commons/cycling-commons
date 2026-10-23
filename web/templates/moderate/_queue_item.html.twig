@@ -28,10 +28,11 @@
 {% set row_unseen = unseen_ids[item.id] is defined %}
 {# The form a curator corrects the submission in: the place wizard for an
    edit of an existing place, the text form for a town or region text
-   (moderation-and-contribution.md §3.1b). None for anything else. #}
+   (moderation-and-contribution.md §3.1b). None for anything else, a
+   region's figures included (§3.1g): they are approved as sent. #}
 {% set edit_href = item.itemId
     ? path('improve') ~ '?item=' ~ item.itemId ~ '&type=' ~ item.letter ~ '&sub=' ~ item.id
-    : (item.type == 'text' ? path('moderate_text', {id: item.id}) : null) %}
+    : (item.type == 'text' and item.textTarget|default(null) != 'facts' ? path('moderate_text', {id: item.id}) : null) %}
 <div class="q-item {{ row_unseen ? 'is-unseen' }}" data-item-id="{{ item.id }}"{% if row_unseen %} data-unread-class="is-unseen"{% endif %}>
   <div class="q-top">
     <div class="q-headwrap">

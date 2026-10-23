@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Contribution;
 
+use App\Catalog\RegionFacts;
 use App\Catalog\RegionLead;
 use App\Catalog\RegionStory;
 
@@ -18,17 +19,25 @@ use App\Catalog\RegionStory;
  * text), which is what the desk card, the drawer and the rider's own list
  * render.
  *
- * @see docs/specs/moderation-and-contribution.md §3.1b and §3.1c
+ * A region's figures (target `facts`: area, population, ride character,
+ * RegionFacts) ride the same queue from the geography form. Their payload
+ * holds no text, so {@see self::fromPayload()} names no text for them and
+ * {@see self::factsOf()} reads them; `changes` holds one pair per figure
+ * under `fact:<name>`.
+ *
+ * @see docs/specs/moderation-and-contribution.md §3.1b, §3.1c and §3.1g
  *
  * @api
  */
 final class PlaceText
 {
     public const string TOWN = 'town';
-    /** A region's geography text: where it lies, its landscape, size and neighbours (the page's first text, RegionLead). */
+    /** A region's geography text: where it lies, its landscape and neighbours (the page's first text, RegionLead). */
     public const string REGION = 'region';
     /** A region's history, nature and culture text (RegionStory). */
     public const string STORY = 'story';
+    /** A region's figures at the top of its page (RegionFacts): no language, no text. */
+    public const string FACTS = 'facts';
 
     /**
      * The row icon of a Text submission, by target, drawn in the 24-box of
@@ -36,12 +45,14 @@ final class PlaceText
      * `cc_text_icons()`): a text has no catalogue letter, so it has no
      * category icon of its own (owner 2026-10-01: "add a city or a region
      * icon"). Town: two houses with windows. Region: a folded map. A
-     * region's history text: an open book.
+     * region's history text: an open book. A region's figures: a mountain
+     * profile over its ground line.
      */
     public const array ICONS = [
         self::TOWN => 'M2 21V11.5l4.5-3.5 4.5 3.5V21Z M12 21V6.5l5-4 5 4V21Z M5.5 14h2v2h-2Z M15.5 8.5h3v2h-3Z M15.5 12.5h3v2h-3Z M15.5 16.5h3v2h-3Z',
         self::REGION => 'M2 5l6.5-2.5 7 2.5L22 2.5V19l-6.5 2.5-7-2.5L2 21.5Z M8 4.5h1v14h-1Z M15 7h1v13h-1Z',
         self::STORY => 'M2 5c3.3-1.4 6.3-1.2 9 .6V20.5c-2.7-1.6-5.7-1.8-9-.6Z M13 5.6c2.7-1.8 5.7-2 9-.6v14.9c-3.3-1.2-6.3-1-9 .6Z',
+        self::FACTS => 'M2 19.5 8.5 8l4 6.5 2.5-3.5L22 19.5Z M2 20.5h20V22H2Z',
     ];
 
     /** Same cap for both: a region's lead and a town card's paragraph. The history text has its own ({@see RegionStory::MAX}, {@see RegionStory::RAW_MAX}). */
@@ -60,8 +71,9 @@ final class PlaceText
     /**
      * The form a Text submission was written on, as a route and its
      * parameters, so its rider can open it again from their list: the town
-     * text with the town's name, or the region's geography or history text
-     * by the region's slug. Null for a payload without what the route needs.
+     * text with the town's name, or the region editor at the step of the
+     * region's figures, geography or history text, by the region's slug.
+     * Null for a payload without what the route needs.
      *
      * @param array<string, mixed> $payload
      *
@@ -83,6 +95,8 @@ final class PlaceText
             self::REGION, self::STORY => \is_string($slug) && '' !== $slug
                 ? [self::STORY === $payload['target'] ? 'region_story' : 'region_text', ['slug' => $slug, 'lang' => $lang]]
                 : null,
+            // The figures are the region editor's first step.
+            self::FACTS => \is_string($slug) && '' !== $slug ? ['region_edit', ['slug' => $slug, 'lang' => $lang]] : null,
             default => null,
         };
     }
@@ -97,6 +111,45 @@ final class PlaceText
     public static function langOfKey(string $key): ?string
     {
         return 1 === preg_match('/^text:([a-z]{2})$/', $key, $m) ? $m[1] : null;
+    }
+
+    /** The `changes` key for one of a region's figures: `fact:area`, `fact:population`, `fact:ride`. */
+    public static function factKey(string $field): string
+    {
+        return 'fact:'.$field;
+    }
+
+    /** The figure a `changes` key names (`fact:area`), or null when it is none. */
+    public static function factOfKey(string $key): ?string
+    {
+        return 1 === preg_match('/^fact:([a-z]+)$/', $key, $m) && \in_array($m[1], RegionFacts::FIELDS, true) ? $m[1] : null;
+    }
+
+    /**
+     * The figures a `facts` payload sets and the region it names, or null
+     * for any other payload. A figure is the area or the ride character as
+     * it is, the population as `{value, year}`.
+     *
+     * @param array<string, mixed> $payload
+     *
+     * @return array{ref: string, facts: array<string, mixed>}|null
+     */
+    public static function factsOf(array $payload): ?array
+    {
+        $ref = $payload['ref'] ?? null;
+        $facts = $payload['facts'] ?? null;
+        if (self::FACTS !== ($payload['target'] ?? null) || !\is_array($facts) || [] === $facts
+            || !(\is_int($ref) || \is_string($ref)) || 1 !== preg_match('~^\d{1,16}$~', (string) $ref)) {
+            return null;
+        }
+        $out = [];
+        foreach (RegionFacts::FIELDS as $field) {
+            if (\array_key_exists($field, $facts)) {
+                $out[$field] = $facts[$field];
+            }
+        }
+
+        return [] === $out ? null : ['ref' => (string) $ref, 'facts' => $out];
     }
 
     /** The language a history-text `changes` key names (`story:nl`), or null when it is none. */

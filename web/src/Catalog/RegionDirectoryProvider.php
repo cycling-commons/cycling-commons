@@ -25,7 +25,7 @@ final class RegionDirectoryProvider
     }
 
     private const BASE_SELECT = '
-        SELECT r.id, r.slug, r.area_km2, r.country_code, r.default_map_mode,
+        SELECT r.id, r.slug, r.area_km2, r.facts, r.facts_harvest, r.country_code, r.default_map_mode,
                EXISTS (SELECT 1 FROM moderator_area ma WHERE ma.region_id = r.id)              AS curator_local,
                EXISTS (SELECT 1 FROM moderator_area ma WHERE ma.country_code = r.country_code) AS curator_national,
                COALESCE(iv.n, 0) AS items_verified,
@@ -191,7 +191,13 @@ final class RegionDirectoryProvider
                 + ['langName' => self::languageName($story['lang'], $locale), 'basedOnName' => self::languageName($story['basedOn'], $locale)];
         }
 
+        // The figures under the name: area, population, ride character (§3.1g).
+        $facts = RegionFacts::resolve(self::decodeJson($row['facts'] ?? null), null === $row['area_km2'] ? null : (float) $row['area_km2'], self::decodeJson($row['facts_harvest'] ?? null));
+
         return $this->shape($row) + [
+            'population' => $facts['population'],
+            'populationYear' => $facts['populationYear'],
+            'ride' => $facts['ride'],
             'context' => $context,
             'story' => $story,
             // The silhouette needs the row id to read `region.outline`.
@@ -248,7 +254,8 @@ final class RegionDirectoryProvider
 
         return [
             'slug' => (string) $row['slug'],
-            'areaKm2' => null === $row['area_km2'] ? null : (float) $row['area_km2'],
+            // A stated area over the measured one, the same on the list and the page.
+            'areaKm2' => RegionFacts::resolve(self::decodeJson($row['facts'] ?? null), null === $row['area_km2'] ? null : (float) $row['area_km2'])['areaKm2'],
             // Established supersedes growing. docs/specs/map-and-search.md §4.2
             'tier' => match (true) {
                 'curated' === $row['default_map_mode'] => 'established',

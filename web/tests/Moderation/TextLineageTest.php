@@ -52,9 +52,13 @@ final class TextLineageTest extends WebTestCase
         // The form offers it as an original, and a translation from it says so.
         $client->loginUser($translator);
         $crawler = $client->request('GET', '/regions/lin-a/story?lang=nl');
-        self::assertSame(['', 'en'], $crawler->filter('#pt-based-on option')->each(static fn ($o): string => (string) $o->attr('value')));
-        self::assertSame('en', $crawler->filter('#pt-based-on option[selected]')->attr('value'), 'the text shown to translate from is chosen');
-        $client->submit($crawler->filter('#place-text-form')->form(['lang' => 'nl', 'text' => 'Overal polders.']));
+        self::assertSame(['', 'en'], $crawler->filter('#pt-story-based-on option:not([disabled])')->each(static fn ($o): string => (string) $o->attr('value')), 'only a language with a text written here is offered');
+        self::assertSame('Translation of: Français (no text yet)', $crawler->filter('#pt-story-based-on option[value=fr][disabled][data-none]')->text(), 'the others are listed, not offered');
+        self::assertSame('Polders everywhere.', $crawler->filter('#pt-translate blockquote')->text(), 'the original shows, to translate from');
+        // The geography step asks it too, with no original to pick yet.
+        self::assertSame([''], $crawler->filter('#pt-based-on option:not([disabled])')->each(static fn ($o): string => (string) $o->attr('value')));
+        self::assertSame('en', $crawler->filter('#pt-story-based-on option[selected]')->attr('value'), 'the text shown to translate from is chosen');
+        $client->submit($crawler->filter('#place-text-form')->form(['lang' => 'nl', 'story' => 'Overal polders.']));
         $nl = $this->latest((int) $translator->getId());
         self::assertSame('en', $nl->getPayload()['_basedOn']['lang']);
         $this->proposals()->approve($this->fresh($nl), $curator, 'Overal polders.', null, '');
@@ -129,7 +133,7 @@ final class TextLineageTest extends WebTestCase
         return [$region, $this->user('lin-cur@example.com', ['ROLE_CURATOR'], $region)];
     }
 
-    /** @return array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>} */
+    /** @return array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} */
     private function info(): array
     {
         $info = $this->proposals()->region('lin-a');

@@ -37,7 +37,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 /**
  * "Edit this text": one small form per town card text and per region lead,
  * for anyone signed in (owner 2026-09-30), and the same form for a region's
- * "History, nature and culture" text (§3.1c).
+ * "History, nature and culture" text (§3.1c). A region's two texts and its
+ * figures share one page in three steps, with one send (§3.1g).
  *
  * What it sends is a Text submission in the one queue; a curator of the
  * region approves it there, or it applies at once when a curator writes it
@@ -47,7 +48,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * area corrects a waiting proposal before deciding it: the queue card's ✎
  * (`moderate_text`).
  *
- * @see docs/specs/moderation-and-contribution.md §3.1b and §3.1c
+ * @see docs/specs/moderation-and-contribution.md §3.1b, §3.1c and §3.1g
  *
  * @api
  */
@@ -63,6 +64,12 @@ final class PlaceTextController extends AbstractController
 
     /** Addresses one live link check may ask about: a long text's links, not a list to crawl. */
     private const int LINK_CHECK_MAX = 20;
+
+    /** The region editor's steps, in order (§3.1g). */
+    private const string STEP_FIGURES = 'figures';
+    private const string STEP_GEOGRAPHY = 'geography';
+    private const string STEP_STORY = 'story';
+    private const array STEPS = [self::STEP_FIGURES, self::STEP_GEOGRAPHY, self::STEP_STORY];
 
     /** The two answers to "Where your text comes from", as the form sends them. */
     private const string SOURCE_ADAPTED = 'adapted';
@@ -111,8 +118,24 @@ final class PlaceTextController extends AbstractController
         return $this->form($context, $lang, '', null);
     }
 
-    #[Route('/regions/{slug}/text', name: 'region_text', requirements: ['slug' => '[a-z0-9-]+'], methods: ['GET', 'POST'])]
-    public function region(string $slug, Request $request, PlaceTextProposals $proposals, RegionLabels $regionLabels): Response
+    /**
+     * A region's editor, one page in three steps (§3.1g): its figures, its
+     * geography text, and its history, nature and culture text, with one
+     * send at the end. Each part the send changes becomes a proposal of its
+     * own, decided apart from the others, and every part is checked before
+     * any is filed. `/text` opens it at the geography step and `/story` at
+     * the history step, as the region page's pencils link them; `?step=`
+     * picks a step too.
+     *
+     * The geography box starts empty beside the current text; the history
+     * box starts from the current text of the chosen language, or, for a
+     * language without one, empty under another language's text to
+     * translate from (English first).
+     */
+    #[Route('/regions/{slug}/edit', name: 'region_edit', requirements: ['slug' => '[a-z0-9-]+'], defaults: ['step' => self::STEP_FIGURES], methods: ['GET', 'POST'])]
+    #[Route('/regions/{slug}/text', name: 'region_text', requirements: ['slug' => '[a-z0-9-]+'], defaults: ['step' => self::STEP_GEOGRAPHY], methods: ['GET', 'POST'])]
+    #[Route('/regions/{slug}/story', name: 'region_story', requirements: ['slug' => '[a-z0-9-]+'], defaults: ['step' => self::STEP_STORY], methods: ['GET', 'POST'])]
+    public function region(string $slug, string $step, Request $request, PlaceTextProposals $proposals, RegionLabels $regionLabels): Response
     {
         $region = $proposals->region($slug);
         if (null === $region) {
@@ -120,85 +143,166 @@ final class PlaceTextController extends AbstractController
         }
         $source = 'POST' === $request->getMethod() ? $request->request : $request->query;
         $lang = $this->lang($source->getString('lang'), $request);
+        $asked = $source->getString('step');
+        $step = \in_array($asked, self::STEPS, true) ? $asked : $step;
 
         $texts = [];
         $articles = [];
+        $stories = [];
         foreach (array_keys($this->languages->options()) as $l) {
             $texts[$l] = $proposals->currentRegionText($region, $l)['text'];
             // "Where your text comes from" is asked only where there is an article to adapt.
             $articles[$l] = RegionLead::hasSource($region['wiki'], $l);
+            $stories[$l] = $proposals->currentStory($region, $l);
         }
-        $context = [
-            'target' => PlaceText::REGION,
-            'title' => $regionLabels->label($slug),
-            'action' => $this->generateUrl('region_text', ['slug' => $slug]),
-            'hidden' => [],
-            'back' => $this->generateUrl('region_detail', ['slug' => $slug]),
-            // The region's other text, for a writer whose words belong there.
-            'other' => $this->generateUrl('region_story', ['slug' => $slug]),
-            'texts' => $texts,
-            'articles' => $articles,
-        ] + $this->originals(PlaceText::REGION, (string) $region['id'], $request, null);
-
-        if ('POST' === $request->getMethod()) {
-            $derived = self::sourceAnswer($request);
-
-            return $this->submit($request, $context, $lang, fn (User $user, string $text, string $note): array => $proposals->proposeRegion($user, $region, $lang, $text, $note, $derived, $request->request->getString('based_on')));
-        }
-
-        return $this->form($context, $lang, '', null);
-    }
-
-    /**
-     * A region's "History, nature and culture" text, written, edited or
-     * translated one language at a time. The box starts from that
-     * language's current text, so an edit changes what is there; for a
-     * language without one, the text of another language shows above the
-     * empty box to translate from.
-     */
-    #[Route('/regions/{slug}/story', name: 'region_story', requirements: ['slug' => '[a-z0-9-]+'], methods: ['GET', 'POST'])]
-    public function story(string $slug, Request $request, PlaceTextProposals $proposals, RegionLabels $regionLabels): Response
-    {
-        $region = $proposals->region($slug);
-        if (null === $region) {
-            throw $this->createNotFoundException(sprintf('No region "%s".', $slug));
-        }
-        $source = 'POST' === $request->getMethod() ? $request->request : $request->query;
-        $lang = $this->lang($source->getString('lang'), $request);
-
-        $texts = [];
-        foreach (array_keys($this->languages->options()) as $l) {
-            $texts[$l] = $proposals->currentStory($region, $l);
-        }
-        $context = [
-            'target' => PlaceText::STORY,
-            'title' => $regionLabels->label($slug),
-            'action' => $this->generateUrl('region_story', ['slug' => $slug]),
-            'hidden' => [],
-            'back' => $this->generateUrl('region_detail', ['slug' => $slug]).'#story',
-            'other' => $this->generateUrl('region_text', ['slug' => $slug]),
-            'texts' => $texts,
-            'articles' => null,
-        ];
-
-        // A language without a text is translated from another: English first.
+        // A language without a history text is translated from another: English first.
         $from = null;
-        if ('' === ($texts[$lang] ?? '')) {
-            foreach (array_unique(['en', ...array_keys($texts)]) as $l) {
-                if ($l !== $lang && '' !== ($texts[$l] ?? '')) {
+        if ('' === ($stories[$lang] ?? '')) {
+            foreach (array_unique(['en', ...array_keys($stories)]) as $l) {
+                if ($l !== $lang && '' !== ($stories[$l] ?? '')) {
                     $from = $l;
                     break;
                 }
             }
         }
-        $context['translate_from'] = $from;
-        $context += $this->originals(PlaceText::STORY, (string) $region['id'], $request, $from);
+        $story = $this->originals(PlaceText::STORY, (string) $region['id'], $request, $from, 'story_based_on');
+        $context = [
+            'title' => $regionLabels->label($slug),
+            'action' => $this->generateUrl('region_edit', ['slug' => $slug]),
+            'back' => $this->generateUrl('region_detail', ['slug' => $slug]),
+            'step' => $step,
+            'texts' => $texts,
+            'articles' => $articles,
+            'stories' => $stories,
+            'translate_from' => $from,
+            'story_originals' => $story['originals'],
+            'story_based_on' => $story['based_on'],
+            'facts' => $proposals->currentFacts($region),
+        ] + $this->originals(PlaceText::REGION, (string) $region['id'], $request, null);
 
         if ('POST' === $request->getMethod()) {
-            return $this->submit($request, $context, $lang, fn (User $user, string $text, string $note): array => $proposals->proposeStory($user, $region, $lang, $text, $note, $request->request->getBoolean('links_confirmed'), $request->request->getString('based_on')));
+            return $this->regionSubmit($request, $context, $region, $lang, $proposals);
         }
 
-        return $this->form($context, $lang, $texts[$lang] ?? '', null);
+        return $this->regionForm($context, $lang, '', $stories[$lang] ?? '', null);
+    }
+
+    /**
+     * The region editor's one send: the figures, the geography text when
+     * the box holds one, the history text when it differs from what readers
+     * see. Every part is checked first, so a refused part files nothing; the
+     * page then opens at that part's step. Filed parts are listed with their
+     * references. Should the rate limit stop a later part, the parts already
+     * filed are listed, and the rest is named as not sent.
+     *
+     * @param array<string, mixed>                                                                                                                                                                                                                      $context
+     * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
+     */
+    private function regionSubmit(Request $request, array $context, array $region, string $lang, PlaceTextProposals $proposals): Response
+    {
+        $text = $request->request->getString('text');
+        $story = $request->request->getString('story');
+        $note = $request->request->getString('note');
+        $raw = $request->request->all('facts');
+        $derived = self::sourceAnswer($request);
+        $linksConfirmed = $request->request->getBoolean('links_confirmed');
+        // A send that comes back refused keeps what was written.
+        $context['facts_input'] = array_map(static fn (mixed $v): string => \is_string($v) ? $v : '', $raw);
+        $context['source'] = match ($derived) {
+            true => self::SOURCE_ADAPTED,
+            false => self::SOURCE_OWN,
+            null => null,
+        };
+        $refuse = fn (string $step, string $error, array $params = [], int $status = Response::HTTP_UNPROCESSABLE_ENTITY): Response => $this->regionForm(['step' => $step, 'error_params' => $params] + $context, $lang, $text, $story, $error, $status);
+
+        if (!$this->isCsrfTokenValid(self::CSRF_ID, $request->request->getString('_token'))) {
+            return $refuse((string) $context['step'], 'flash.invalid_token');
+        }
+        // A send for a language this deployment does not serve is refused,
+        // never filed under the page's language instead.
+        $posted = $request->request->getString('lang');
+        if ('' !== $posted && !$this->languages->isServed(self::langCode($posted))) {
+            return $refuse((string) $context['step'], 'place_text.error.lang');
+        }
+
+        $sendText = '' !== trim($text);
+        $sendStory = !$proposals->storyUnchanged($region, $lang, $story);
+        $basedOn = $request->request->getString('based_on');
+        $storyBasedOn = $request->request->getString('story_based_on');
+        try {
+            $step = self::STEP_FIGURES;
+            $facts = $proposals->factChanges($region, $raw);
+            if (!$sendText && !$sendStory && [] === $facts) {
+                return $refuse((string) $context['step'], 'region_edit.error.nothing');
+            }
+            $step = self::STEP_GEOGRAPHY;
+            if ($sendText) {
+                $proposals->checkRegion($region, $lang, $text, $note, $derived, $basedOn);
+            }
+            $step = self::STEP_STORY;
+            if ($sendStory) {
+                $proposals->checkStory($region, $lang, $story, $note, $linksConfirmed, $storyBasedOn);
+            }
+        } catch (PlaceTextRefused $e) {
+            return $refuse($step, $e->getMessage(), $e->params);
+        }
+
+        /** @var User $user */
+        $user = $this->getUser();
+        $sent = [];
+        $rest = null;
+        try {
+            if ([] !== $facts) {
+                $sent[self::STEP_FIGURES] = $proposals->proposeFacts($user, $region, $lang, $facts, $note);
+            }
+            if ($sendText) {
+                $sent[self::STEP_GEOGRAPHY] = $proposals->proposeRegion($user, $region, $lang, $text, $note, $derived, $basedOn);
+            }
+            if ($sendStory) {
+                $sent[self::STEP_STORY] = $proposals->proposeStory($user, $region, $lang, $story, $note, $linksConfirmed, $storyBasedOn);
+            }
+        } catch (LimitReached $e) {
+            if ([] === $sent) {
+                return $this->regionForm(['error_params' => $this->limitMessage->params($e)] + $context, $lang, $text, $story, $e->key(), Response::HTTP_TOO_MANY_REQUESTS);
+            }
+            $rest = ['key' => $e->key(), 'params' => $this->limitMessage->params($e)];
+        }
+
+        return $this->render('contribute/region_edit.html.twig', $context + [
+            'sent' => array_map(static fn (array $r): array => ['reference' => SubmissionRef::of($r['submission']), 'applied' => $r['applied']], $sent),
+            'rest' => $rest,
+        ]);
+    }
+
+    /**
+     * The region editor at its step: `$text` is the geography box (empty
+     * on a first visit), `$story` the history box (the current text).
+     *
+     * @param array<string, mixed> $context
+     */
+    private function regionForm(array $context, string $lang, string $text, string $story, ?string $error, int $status = Response::HTTP_OK): Response
+    {
+        return $this->render('contribute/region_edit.html.twig', $context + [
+            'sent' => null,
+            'rest' => null,
+            'facts_input' => null,
+            'source' => null,
+            'lang' => $lang,
+            'text' => $text,
+            'story' => $story,
+            'error' => $error,
+            'error_params' => [],
+            'langs' => $this->languages->options(),
+            'max' => PlaceText::MAX,
+            'story_max' => RegionStory::MAX,
+            // What the box may hold: a history text's addresses do not count towards `story_max`.
+            'story_raw_max' => RegionStory::RAW_MAX,
+            // The link words the server refuses, for the editor to mark before a send.
+            'generic_anchors' => RegionStory::GENERIC_ANCHORS,
+            'note_max' => PlaceText::NOTE_MAX,
+            'link_check_csrf_id' => self::LINK_CHECK_CSRF_ID,
+            'csrf_id' => self::CSRF_ID,
+        ], new Response(status: $status));
     }
 
     /**
@@ -206,7 +310,7 @@ final class PlaceTextController extends AbstractController
      * that appear in its box, `{"token": ..., "urls": [...]}`, and gets the
      * same verdicts a send would meet, so a dead, parked or unsafe link shows
      * before the writer sends. Signed-in writers only, with the form's own
-     * token, at most 20 http(s) addresses, under the `link_check` limit.
+     * token, at most 20 https addresses, under the `link_check` limit.
      */
     #[Route('/regions/links/check', name: 'story_link_check', methods: ['POST'])]
     public function checkLinks(Request $request, StoryLinkCheck $links, RateLimiterFactoryInterface $linkCheckLimiter): JsonResponse
@@ -225,7 +329,7 @@ final class PlaceTextController extends AbstractController
         }
         $clean = [];
         foreach ($urls as $url) {
-            if (!\is_string($url) || mb_strlen($url) > 2000 || 1 !== preg_match('~^https?://[^\s()<>"]+$~i', $url)) {
+            if (!\is_string($url) || mb_strlen($url) > 2000 || 1 !== preg_match('~^https://[^\s()<>"]+$~i', $url)) {
                 return new JsonResponse(['error' => 'urls'], Response::HTTP_UNPROCESSABLE_ENTITY);
             }
             $clean[] = $url;
@@ -394,13 +498,12 @@ final class PlaceTextController extends AbstractController
     }
 
     /**
-     * The box holds only what the rider wrote: empty on a first visit, their
-     * own words when a send comes back refused, the proposal itself when a
-     * curator corrects it. The current text is shown above it, read-only,
-     * from `texts`. A history text is the exception: its box starts from
-     * the current text, which is several paragraphs long. The context's own
-     * keys win (a correction
-     * names its single language and its own token).
+     * The town form, and the correction form of any text. The box holds
+     * only what the rider wrote: empty on a first visit, their own words
+     * when a send comes back refused, the proposal itself when a curator
+     * corrects it. The current text is shown above it, read-only, from
+     * `texts`. The context's own keys win (a correction names its single
+     * language and its own token).
      *
      * @param array<string, mixed> $context
      */
@@ -410,7 +513,6 @@ final class PlaceTextController extends AbstractController
 
         return $this->render('contribute/place_text.html.twig', $context + [
             'correcting' => null,
-            'other' => null,
             'originals' => [],
             'based_on' => '',
             'credit' => null,
@@ -435,16 +537,16 @@ final class PlaceTextController extends AbstractController
     /**
      * The texts a new one may say it translates (§3.1e): the languages this
      * deployment serves that hold a local text, by name, and which is
-     * chosen: what was sent, else `$default` (the text the history form
-     * shows to translate from), else none.
+     * chosen: what was sent in `$field`, else `$default` (the text the
+     * history step shows to translate from), else none.
      *
      * @return array{originals: array<string, string>, based_on: string}
      */
-    private function originals(string $target, string $ref, Request $request, ?string $default): array
+    private function originals(string $target, string $ref, Request $request, ?string $default, string $field = 'based_on'): array
     {
         $locals = $this->lineage->locals($target, $ref);
         $originals = array_intersect_key($this->languages->options(), $locals);
-        $chosen = 'POST' === $request->getMethod() ? $request->request->getString('based_on') : ($default ?? '');
+        $chosen = 'POST' === $request->getMethod() ? $request->request->getString($field) : ($default ?? '');
 
         return ['originals' => $originals, 'based_on' => isset($originals[$chosen]) ? $chosen : ''];
     }

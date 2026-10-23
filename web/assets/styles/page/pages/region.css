@@ -106,3 +106,9 @@ a.rsteward-name:hover{background:rgba(239,230,212,.16);border-color:rgba(239,230
 /* What a text translates, and whether its original changed since
    (moderation-and-contribution.md §3.1e): the write link's quiet type. */
 .rg-translated{font-size:.9rem;line-height:1.55;color:#4f5344;margin:.5rem 0 0}
+/* Two rows of figures in the hero: the land (area, population, ride
+   character) above what the Commons holds there. The second row sits close
+   under the first, without a rule of its own. */
+.rstats + .rstats{margin-top:1.1rem;padding-top:0;border-top:0}
+/* The ringed pencil after the land's figures, to the region editor. */
+.rstats .rstats-edit{align-self:center;color:rgba(239,230,212,.7)}

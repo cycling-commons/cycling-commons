@@ -28,6 +28,18 @@
     {% if region.stewardship != 'none' %}<span>· {{ ('regions.status_' ~ region.stewardship)|trans }}</span>{% endif %}
   </div>
   <h1 class="disp">{{ cc_region_label(region.slug) }}</h1>
+  {# The land first: its area (stated, else measured from the boundary),
+     its population with the year it was counted, and its ride character,
+     each shown once somebody set it, and the ringed pencil to the region
+     editor's figures (moderation-and-contribution.md §3.1g). #}
+  <div class="rstats rstats-land">
+    {# The label is the noun, not the unit: cc_km2 already appends the suffix. #}
+    {% if region.areaKm2 %}<div class="s"><b>{{ region.areaKm2|cc_km2 }}</b><span>{% trans %}region.stat_area{% endtrans %}</span></div>{% endif %}
+    {% if region.population is not null %}<div class="s"><b>{{ region.population|number_format(0, '.', ',') }}</b><span>{{ 'region.stat_population'|trans({'%year%': region.populationYear}) }}</span></div>{% endif %}
+    {% if region.ride %}<div class="s"><b>{{ ('region.ride_' ~ region.ride)|trans }}</b><span>{% trans %}region.stat_ride{% endtrans %}</span></div>{% endif %}
+    {% set facts_edit = 'region.facts_edit'|trans %}
+    <a class="ring-ico ring-ico--edit rstats-edit" href="{{ path('region_edit', {slug: region.slug}) }}" title="{{ facts_edit }}" aria-label="{{ facts_edit }}">✎</a>
+  </div>
   {# THE SAME THREE FIGURES AS /coverage, in the same order (owner 2026-08-14).
      That page opens with reference items, catalog items and routes; a region
      page that opened with only the last two made the region look like it holds
@@ -38,10 +50,6 @@
     <div class="s"><b>{{ region.coveragePois|number_format(0, '.', ',') }}</b><span>{% trans %}coverage.kpi_pois{% endtrans %}</span></div>
     <div class="s"><b>{{ region.itemsVerified }}</b><span>{% trans %}region.stat_items{% endtrans %}</span></div>
     <div class="s"><b>{{ region.routes }}</b><span>{% trans %}region.stat_routes{% endtrans %}</span></div>
-    {# The label is the noun, not the unit: cc_km2 already appends the suffix,
-       so "372,910 km²" sat above a second "KM²". The other three stats name
-       what they count and this one now does too. #}
-    {% if region.areaKm2 %}<div class="s"><b>{{ region.areaKm2|cc_km2 }}</b><span>{% trans %}region.stat_area{% endtrans %}</span></div>{% endif %}
   </div>
   {# WHO LOOKS AFTER IT, as a sentence (owner: "I do not see if there is a
      curator for the region yet"). The kicker above carries the same fact as a
@@ -93,8 +101,9 @@
   </div>
 </div></div>
 
-{# The region's GEOGRAPHY text: where it lies, its landscape, size and
-   neighbours. History, nature and culture are the other text below
+{# The region's GEOGRAPHY text: where it lies, its landscape and
+   neighbours. Its figures sit in the hero above; history, nature and
+   culture are the other text below
    (#story). A short encyclopedic lead, harvested at BUILD time (never fetched live) in
    the reader's locale with an English fallback. Verbatim, with its
    attribution rendered from the SAME stored entry as the text: the extract
@@ -112,8 +121,12 @@
 <section class="pad rbody"><div class="wrap">
 <div class="rbody-cols">
 <div class="rbody-main">
+{# The automatic text is the Wikipedia article's opening summary, which is
+   not always about geography: it is headed "About {region}", and only a
+   text written here is headed "Geography". #}
+{% set automatic = region.context and not (region.context.curated|default(false)) %}
 <div class="rg-about">
-  <div class="kicker">{% trans %}region.about_h{% endtrans %}</div>
+  <div class="kicker">{{ automatic ? 'region.about_auto_h'|trans({'%region%': cc_region_label(region.slug)}) : 'region.about_h'|trans }}</div>
   {% if region.context %}
     <p class="rg-about-text">{{ region.context.text }}</p>
     {# Three credit lines, because three things can be true and only one of
@@ -155,7 +168,10 @@
     {% if region.context.basedOnName|default(null) %}
       <p class="rg-translated">{{ 'region.translated_from'|trans({'%lang%': region.context.basedOnName}) }}{% if region.context.outdated %} {{ 'region.original_changed'|trans }}{% endif %}</p>
     {% endif %}
-  {% else %}
+  {% endif %}
+  {# No text written here: the same plain link as an empty history text,
+     under the automatic text where there is one (§3.1g). #}
+  {% if not region.context or automatic %}
     <p class="rg-about-write"><a href="{{ path('region_text', {slug: region.slug}) }}">{{ 'region.about_write'|trans }}</a></p>
   {% endif %}
 </div>

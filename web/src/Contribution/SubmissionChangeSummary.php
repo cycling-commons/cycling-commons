@@ -9,6 +9,7 @@ namespace App\Contribution;
 use App\Catalog\CatalogFormRegistry;
 use App\Catalog\Entity\Submission;
 use App\Catalog\ItemType;
+use App\Catalog\RegionFacts;
 use App\Translation\TranslationDiff;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -53,6 +54,9 @@ final readonly class SubmissionChangeSummary
     {
         $labels = $this->labels($letter);
         $rows = [];
+        // A region's figures in the page's order, whatever order JSONB keeps
+        // them in; the sort is stable, so every other row keeps its place.
+        uksort($changes, static fn (int|string $a, int|string $b): int => self::factOrder((string) $a) <=> self::factOrder((string) $b));
 
         foreach ($changes as $field => $pair) {
             if (!\is_array($pair)) {
@@ -61,6 +65,17 @@ final readonly class SubmissionChangeSummary
             }
             $was = $pair['was'] ?? null;
             $now = $pair['now'] ?? null;
+
+            // A region's figure (§3.1g), in the words and units the page shows it in.
+            $fact = PlaceText::factOfKey((string) $field);
+            if (null !== $fact) {
+                $rows[] = [
+                    'label' => $this->translator->trans('place_text.fact_label_'.$fact),
+                    'was' => $this->factValue($fact, $was),
+                    'now' => $this->factValue($fact, $now) ?? '',
+                ];
+                continue;
+            }
 
             $textLang = PlaceText::langOfKey((string) $field);
             $storyLang = PlaceText::storyLangOfKey((string) $field);
@@ -81,6 +96,26 @@ final readonly class SubmissionChangeSummary
         }
 
         return $rows;
+    }
+
+    /** Where a figure's row goes: its place in RegionFacts::FIELDS; any other row after them. */
+    private static function factOrder(string $key): int
+    {
+        $fact = PlaceText::factOfKey($key);
+        $at = null === $fact ? false : array_search($fact, RegionFacts::FIELDS, true);
+
+        return false === $at ? \count(RegionFacts::FIELDS) : (int) $at;
+    }
+
+    /** One figure's value as the region page shows it: "2,680 km²", "494,000 (2024)", "Hilly". Null for none. */
+    private function factValue(string $fact, mixed $value): ?string
+    {
+        return match (true) {
+            RegionFacts::AREA === $fact && \is_int($value) => number_format($value, 0, '.', ',').' km²',
+            RegionFacts::POPULATION === $fact && \is_array($value) && \is_int($value['value'] ?? null) => number_format($value['value'], 0, '.', ',').(\is_int($value['year'] ?? null) ? ' ('.$value['year'].')' : ''),
+            RegionFacts::RIDE === $fact && \is_string($value) && \in_array($value, RegionFacts::RIDES, true) => $this->translator->trans('region.ride_'.$value),
+            default => null,
+        };
     }
 
     private static function isProse(string $value): bool

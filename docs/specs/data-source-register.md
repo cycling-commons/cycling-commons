@@ -261,6 +261,7 @@ is this.
 | Source | What it gives | Licence | Verdict | Confidence |
 |---|---|---|---|---|
 | Overture Maps `divisions` theme (`division_area`) | Every `region` polygon on the atlas, plus the ISO 3166-1/-2 codes the world directory is keyed on; and every candidate boundary in `world_division`, onboarded or not | ODbL (conflates OSM + geoBoundaries), attribution required (notice on `/credits`) | **Ingest** - in use (`pipeline/divisions/export_divisions.py` -> `app:catalog:import` for `region`; `pipeline/divisions/export_candidates.py` -> `app:divisions:import` for `world_division`) | verified (in use) |
+| Wikidata population (`P1082`, with its point in time `P585`) | Each region's population and the year it was counted, for the top of its page; matched by ISO 3166-2 (`P300`, `P297`), the latest count among the best-ranked statements | CC0 | **Ingest**, in use (`tools/wikimedia/region_population.py` writes `tools/wikimedia/out/region-population.json`, `app:regions:import-population` loads it into `region.facts_harvest`) | verified (in use; 294 of 298 regions on 2026-10-23) |
 
 Provenance is recorded per row: `region.source` is `osm` or `overture`
 (catalog-data-model.md §2.4). Today every seeded row is `overture`. Both

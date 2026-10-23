@@ -67,6 +67,12 @@ final readonly class ApprovedSubmissionLinks
             if ('text' !== $r['type']) {
                 continue;
             }
+            // A region's figures lead to the region, as its texts do.
+            $facts = PlaceText::factsOf(PlaceText::decode($r['payload']) ?? []);
+            if (null !== $facts) {
+                $regionOf[$id] = (int) $facts['ref'];
+                continue;
+            }
             $proposal = PlaceText::fromPayload(PlaceText::decode($r['payload']) ?? []);
             if (null === $proposal) {
                 continue;

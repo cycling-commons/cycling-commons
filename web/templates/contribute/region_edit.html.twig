@@ -1,0 +1,274 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  A region's editor: one page, one form, three steps
+  (docs/specs/moderation-and-contribution.md §3.1g). 1, its figures: area,
+  population with the year it was counted, ride character. 2, its geography
+  text (§3.1b). 3, its history, nature and culture text (§3.1c). Anyone
+  signed in sends it; each part the send changes becomes a proposal of its
+  own, which a curator of the region approves, or which applies at once when
+  a curator writes it inside their own area.
+
+  The steps are tabs (place-text.js): one shows at a time, "Next" moves on,
+  and the note and Send sit outside them, so a send may change one part or
+  all three. The language of the texts shows on the two text steps only.
+  Without script all three show, one under the other, the language first.
+  `step` opens the page at a step: the region page's pencils open the text
+  they sit on, and a refused send opens the step it was refused for.
+
+  The figures hold in every language; each field starts from the figure as
+  it stands. The geography box starts empty beside the current text, so the
+  rider writes their version beside it. The history box starts from the
+  current text of the chosen language, or, for a language without one,
+  empty under another language's text to translate from. The language
+  select drives both (place-text.js).
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+<link rel="stylesheet" href="{{ asset('styles/page/support/report.css') }}">
+<link rel="stylesheet" href="{{ asset('styles/page/contribute/place-text.css') }}">
+{% endblock %}
+
+{% block body_scripts %}
+<script src="{{ asset('contribute/place-text.js') }}" defer></script>
+{% endblock %}
+
+{% block body %}
+{% set steps = ['figures', 'geography', 'story'] %}
+<div class="lhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{{ 'region_edit.kicker'|trans }}</div>
+  <h1 class="disp">{{ title }}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ 'region_edit.lead'|trans }}</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="reppage">
+    {% if sent is not null %}
+      {% set live = sent|filter(r => not r.applied) is empty %}
+      <div class="csent" role="status">
+        <h2>{{ (live ? 'region_edit.sent_h_applied' : 'region_edit.sent_h_queued')|trans }}</h2>
+        <p>{{ (live ? 'region_edit.sent_p_applied' : 'region_edit.sent_p_queued')|trans }}</p>
+        <ul class="pt-sent-list">
+          {% for step, r in sent %}
+            <li><b>{{ ('region_edit.step_' ~ step)|trans }}</b> · {{ 'place_text.sent_ref'|trans({'%ref%': r.reference}) }} · {{ (r.applied ? 'region_edit.sent_live' : 'region_edit.sent_waiting')|trans }}</li>
+          {% endfor %}
+        </ul>
+        {% if rest %}<div class="cerr" role="alert">{{ 'region_edit.sent_rest'|trans }} {{ rest.key|trans(rest.params) }}</div>{% endif %}
+        <p><a href="{{ back }}">{{ 'region_edit.back'|trans }}</a> &middot;
+           <a href="{{ path('profile') }}">{{ 'place_text.follow'|trans }}</a></p>
+      </div>
+    {% else %}
+      {% if error %}
+        <div class="cerr" role="alert">{{ error|trans({'%max%': step == 'story' ? story_max : max}|merge(error_params)) }}</div>
+      {% endif %}
+
+      <form method="post" action="{{ action }}" id="place-text-form" class="pt-steps" data-steps>
+        <input type="hidden" name="_token" value="{{ csrf_token(csrf_id) }}">
+        {# The step that shows, so a send that comes back opens where it left. #}
+        <input type="hidden" name="step" value="{{ step }}" data-step-field>
+
+        {# The tabs, drawn once place-text.js runs; without it every step shows. #}
+        <div class="pt-tabs" role="tablist" aria-label="{{ 'region_edit.steps'|trans }}" hidden>
+          {% for s in steps %}
+            <button type="button" role="tab" class="pt-tab" id="pt-tab-{{ s }}" aria-controls="pt-step-{{ s }}"
+                    aria-selected="{{ s == step ? 'true' : 'false' }}" data-step-tab="{{ s }}"><span class="pt-tab-n">{{ loop.index }}</span> {{ ('region_edit.step_' ~ s)|trans }}</button>
+          {% endfor %}
+        </div>
+
+        {# The open step: its lead, the texts' language and its fields. On a
+           wide screen with tabs, the column beside it starts level with the
+           lead (place-text.css). #}
+        <div class="pt-step-body">
+        {# Each step's lead, above its first field and in larger type: shown
+           for the open step once place-text.js runs (data-step-for); without
+           it each step carries its own under its heading (.pt-step-p). #}
+        {% for s in steps %}
+          <p class="pt-step-lead" data-step-for="{{ s }}" hidden>{{ ('region_edit.step_' ~ s ~ '_p')|trans }}</p>
+        {% endfor %}
+
+        {# The texts' language: the figures have none, so it shows on the two
+           text steps only (data-step-for, place-text.js). One select for
+           both texts. #}
+        <div class="cfield pt-lang-field" data-step-for="geography story">
+          <label for="pt-lang">{{ 'region_edit.field_lang'|trans }}</label>
+          <select id="pt-lang" name="lang">
+            {% for code, label in langs %}
+              <option value="{{ code }}"{{ code == lang ? ' selected' }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        {# 1. The figures (§3.1g). A field left as it is, or emptied, changes
+           nothing. The area's hint gives the area measured from the
+           boundary, which the page shows while nobody states one. #}
+        {% set fin = facts_input ?? {} %}
+        <section class="pt-step" id="pt-step-figures" role="tabpanel" aria-labelledby="pt-tab-figures" data-step-panel="figures">
+          <h2 class="pt-step-h"><span class="pt-tab-n">1</span> {{ 'region_edit.step_figures'|trans }}</h2>
+          <p class="pt-step-p">{{ 'region_edit.step_figures_p'|trans }}</p>
+          <div class="cfield pt-fact">
+            <label for="pt-fact-area">{{ 'place_text.facts_area'|trans }}</label>
+            {# The measured area beside the field it stands in for. #}
+            <div class="pt-fact-row">
+              <input type="text" id="pt-fact-area" name="facts[area]" inputmode="numeric" autocomplete="off" maxlength="14"
+                     value="{{ fin.area ?? facts.area }}"{% if facts.measuredKm2 %} aria-describedby="pt-fact-area-hint"{% endif %}>
+              {% if facts.measuredKm2 %}<span class="chint" id="pt-fact-area-hint">{{ 'place_text.facts_area_measured'|trans({'%km2%': facts.measuredKm2|number_format(0, '.', ',')}) }}</span>{% endif %}
+            </div>
+          </div>
+          <div class="pt-fact-pair">
+            <div class="cfield pt-fact">
+              <label for="pt-fact-population">{{ 'place_text.facts_population'|trans }}</label>
+              <input type="text" id="pt-fact-population" name="facts[population]" inputmode="numeric" autocomplete="off" maxlength="16"
+                     value="{{ fin.population ?? facts.population }}">
+            </div>
+            <div class="cfield pt-fact pt-fact-year">
+              <label for="pt-fact-year">{{ 'place_text.facts_year'|trans }}</label>
+              <input type="text" id="pt-fact-year" name="facts[year]" inputmode="numeric" autocomplete="off" maxlength="4"
+                     value="{{ fin.year ?? facts.year }}">
+            </div>
+            {# A count fetched from Wikidata names its item, beside the fields. #}
+            {% if facts.populationQid %}
+              <p class="chint pt-fact-src">{{ 'region_edit.population_source'|trans }} <a href="https://www.wikidata.org/wiki/{{ facts.populationQid }}" target="_blank" rel="noopener noreferrer">Wikidata {{ facts.populationQid }}</a></p>
+            {% endif %}
+          </div>
+          {% set ride = fin.ride ?? facts.ride %}
+          <fieldset class="pt-fact-ride">
+            <legend>{{ 'place_text.facts_ride'|trans }}</legend>
+            {% for r in ['flat', 'hilly', 'mountainous'] %}
+              <label class="cinline" for="pt-fact-ride-{{ r }}">
+                <input type="radio" id="pt-fact-ride-{{ r }}" name="facts[ride]" value="{{ r }}"{{ ride == r ? ' checked' }}>
+                <span>{{ ('region.ride_' ~ r)|trans }}</span>
+              </label>
+            {% endfor %}
+          </fieldset>
+          {# The wiki guide first, then how to fill it in: beside the fields
+             on a wide screen, under them on a narrow one (place-text.css). #}
+          <aside class="pt-howto pt-guide">
+            {{ _self.guide('https://wiki.cyclingcommons.org/region-texts/#the-regions-figures') }}
+            <p class="pt-howto-h">{{ 'region_edit.guide_figures_h'|trans }}</p>
+            <ul>
+              <li>{{ 'region_edit.guide_figures_area'|trans }}</li>
+              <li>{{ 'region_edit.guide_figures_population'|trans }}</li>
+              <li>{{ 'region_edit.guide_figures_ride'|trans }}</li>
+            </ul>
+          </aside>
+          <p class="pt-step-next" hidden><button type="button" class="btn btn-g" data-step-next="geography">{{ 'region_edit.next'|trans({'%step%': 'region_edit.step_geography'|trans}) }}</button></p>
+        </section>
+
+        {# 2. The geography text (§3.1b): the box starts empty beside the
+           current text. "Where your text comes from" is asked for a language
+           with a Wikipedia article, and required only while the box holds a
+           text (place-text.js); the server asks it of a text only. #}
+        <section class="pt-step pt-section" id="pt-step-geography" role="tabpanel" aria-labelledby="pt-tab-geography" data-step-panel="geography"
+                 data-texts="{{ texts|json_encode }}" data-articles="{{ articles|json_encode }}">
+          <h2 class="pt-step-h"><span class="pt-tab-n">2</span> {{ 'region_edit.step_geography'|trans }}</h2>
+          <p class="pt-step-p">{{ 'region_edit.step_geography_p'|trans }}</p>
+          {{ _self.based_on('pt-based-on', 'based_on', originals, based_on, langs, lang) }}
+          {# The original it translates, to work from, once one is picked. #}
+          {% set geo_from = based_on is not empty ? based_on : null %}
+          <figure class="pt-current pt-translate" id="pt-geo-translate"{{ geo_from is null ? ' hidden' }}>
+            <figcaption class="pt-translate-h" data-words="{{ 'place_text.translate_h'|trans({'%lang%': '%lang%'}) }}">{{ geo_from ? 'place_text.translate_h'|trans({'%lang%': langs[geo_from] ?? geo_from}) }}</figcaption>
+            <blockquote class="pt-translate-text">{{ geo_from ? texts[geo_from] ?? '' }}</blockquote>
+          </figure>
+          {% set current = texts[lang] ?? '' %}
+          <figure class="pt-current" id="pt-current">
+            <figcaption>{{ 'place_text.current_h'|trans }}</figcaption>
+            <blockquote id="pt-current-text" class="pt-current-text"{{ current is empty ? ' hidden' }}>{{ current }}</blockquote>
+            <p class="chint pt-current-none" id="pt-current-none"{{ current is not empty ? ' hidden' }}>{{ 'place_text.current_none'|trans }}</p>
+          </figure>
+          <div class="cfield">
+            <label for="pt-text">{{ 'region_edit.field_geography'|trans }}</label>
+            <textarea id="pt-text" class="pt-box" name="text" maxlength="{{ max }}" aria-describedby="pt-text-hint pt-text-count">{{ text }}</textarea>
+            <p class="chint pt-count" id="pt-text-count" aria-live="polite" data-max="{{ max }}"
+               data-words="{{ 'place_text.count'|trans({'%count%': '%count%', '%max%': max}) }}">{{ 'place_text.count'|trans({'%count%': text|length, '%max%': max}) }}</p>
+            <p class="chint" id="pt-text-hint">{{ 'region_edit.field_geography_hint'|trans }}</p>
+          </div>
+          <aside class="pt-howto pt-guide">
+            {{ _self.guide('https://wiki.cyclingcommons.org/region-texts/#the-geography-text') }}
+            <p class="pt-howto-h">{{ 'place_text.howto_h'|trans }}</p>
+            <ol>
+              <li>{{ 'region_edit.guide_geo_whole'|trans({'%max%': max|number_format(0, '.', ',')}) }}</li>
+              <li>{{ 'region_edit.guide_geo_what'|trans }}</li>
+              <li>{{ 'region_edit.guide_geo_out'|trans }}</li>
+            </ol>
+          </aside>
+          {% set has_article = articles[lang] ?? false %}
+          <fieldset class="cpick pt-pick pt-source" id="pt-source"{{ not has_article ? ' hidden disabled' }}>
+            <legend>{{ 'place_text.field_source'|trans }} <span class="req" aria-hidden="true">*</span></legend>
+            <label class="cinline" for="pt-source-adapted">
+              <input type="radio" id="pt-source-adapted" name="derived" value="adapted"{{ source == 'adapted' ? ' checked' }}>
+              <span>{{ 'place_text.field_derived'|trans }}</span>
+            </label>
+            <label class="cinline" for="pt-source-own">
+              <input type="radio" id="pt-source-own" name="derived" value="own"{{ source == 'own' ? ' checked' }}>
+              <span>{{ 'place_text.field_own'|trans }}</span>
+            </label>
+          </fieldset>
+          <p class="pt-step-next" hidden><button type="button" class="btn btn-g" data-step-next="story">{{ 'region_edit.next'|trans({'%step%': 'region_edit.step_story'|trans}) }}</button></p>
+        </section>
+
+        {# 3. The history, nature and culture text (§3.1c): the box starts from
+           the current text, links its sources in place, and is checked as it
+           is written. A box left as it was sends no history text. #}
+        <section class="pt-step pt-section pt-story-form" id="pt-step-story" role="tabpanel" aria-labelledby="pt-tab-story" data-step-panel="story"
+                 data-texts="{{ stories|json_encode }}" data-story data-langs="{{ langs|json_encode }}">
+          <h2 class="pt-step-h"><span class="pt-tab-n">3</span> {{ 'region_edit.step_story'|trans }}</h2>
+          <p class="pt-step-p">{{ 'region_edit.step_story_p'|trans }}</p>
+          {{ _self.based_on('pt-story-based-on', 'story_based_on', story_originals, story_based_on, langs, lang) }}
+          {% set from = story_based_on is not empty ? story_based_on : null %}
+          <figure class="pt-current pt-translate" id="pt-translate"{{ from is null ? ' hidden' }}>
+            <figcaption class="pt-translate-h" id="pt-translate-h" data-words="{{ 'place_text.translate_h'|trans({'%lang%': '%lang%'}) }}">{{ from ? 'place_text.translate_h'|trans({'%lang%': langs[from] ?? from}) }}</figcaption>
+            <blockquote class="pt-translate-text" id="pt-translate-text">{{ from ? stories[from] ?? '' }}</blockquote>
+          </figure>
+          {{ include('contribute/_story_editor.html.twig', {
+            box_id: 'pt-story', box_name: 'story', label: 'region_edit.field_story', value: story, required: false,
+            max: story_max, raw_max: story_raw_max, generic_anchors: generic_anchors, error: error,
+            link_check_csrf_id: link_check_csrf_id, count_id: 'pt-story-count', hint_id: 'pt-story-hint',
+            guide_href: 'https://wiki.cyclingcommons.org/region-texts/#the-history-nature-and-culture-text',
+          }) }}
+        </section>
+        </div>
+
+        <div class="cfield">
+          <label for="pt-note">{{ 'place_text.field_note'|trans }}</label>
+          <input type="text" id="pt-note" name="note" maxlength="{{ note_max }}" aria-describedby="pt-note-hint">
+          <p class="chint" id="pt-note-hint">{{ 'place_text.field_note_hint'|trans }}</p>
+        </div>
+
+        <div class="pt-actions">
+          <button type="submit" class="btn btn-p">{{ 'place_text.submit'|trans }}</button>
+          <a class="btn btn-g" href="{{ back }}">{{ 'place_text.cancel'|trans }}</a>
+        </div>
+        {# Small print under the buttons: the terms of sending, not a field. #}
+        <p class="pt-licence">{{ 'place_text.licence'|trans|rich }}</p>
+      </form>
+    {% endif %}
+  </div>
+</div></section>
+{% endblock %}
+
+{#
+  "Original or translation" (§3.1e), on each text step, always: "Original",
+  the base text every translation starts from, then every other language. A
+  language with a text written here is an original to pick; one without is
+  listed but not offered, so the writer sees why. place-text.js leaves out
+  the text's own language and shows the picked original's text to translate
+  from.
+#}
+{% macro based_on(id, name, originals, chosen, langs, lang) %}
+  <div class="cfield">
+    <label for="{{ id }}">{{ 'place_text.field_based_on'|trans }}</label>
+    <select id="{{ id }}" class="pt-based-on" name="{{ name }}" aria-describedby="{{ id }}-hint">
+      <option value="">{{ 'place_text.based_on_none'|trans }}</option>
+      {% for code, label in langs %}
+        {% set has = originals[code] is defined %}
+        <option value="{{ code }}"{{ has and code == chosen ? ' selected' }}{{ code == lang ? ' hidden' }}{{ code == lang or not has ? ' disabled' }}{{ not has ? ' data-none' }}>{{ (has ? 'place_text.based_on_lang' : 'place_text.based_on_no_text')|trans({'%lang%': label}) }}</option>
+      {% endfor %}
+    </select>
+    <p class="chint" id="{{ id }}-hint">{{ 'place_text.field_based_on_hint'|trans }}</p>
+  </div>
+{% endmacro %}
+
+{# The wiki's guide to writing a region's texts, at the part about this step; it opens in a new tab, so the form keeps what was written. #}
+{% macro guide(href) %}
+  <p class="pt-guide-more">{{ 'region_edit.guide_more'|trans }} <a href="{{ href }}" target="_blank" rel="noopener">{{ 'region_edit.guide_link'|trans }}</a></p>
+{% endmacro %}

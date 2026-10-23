@@ -742,8 +742,9 @@ function buildRecord(layer, f){
       : '';
     /* A town or region text is approved on its own form, where the curator
        decides whether the Wikipedia credit stays (moderation-and-contribution.md
-       §3.1b): its Approve opens that form instead of posting the decision. */
-    const approveBtn = 'text' === s.type
+       §3.1b): its Approve opens that form instead of posting the decision.
+       A region's figures have no such question (§3.1g): approved here. */
+    const approveBtn = 'text' === s.type && 'facts' !== s.textTarget
       ? `<a class="cc-mod-btn approve" href="/moderate/text/${encodeURIComponent(s.id)}" target="_blank" rel="noopener" title="${escPend(D.approveOnForm||'Approve on the text\'s form, where you choose whether the Wikipedia credit stays')}">✓ ${D.approve||'Approve'}</a>`
       : `<button class="cc-mod-btn approve" data-decision="approve">✓ ${D.approve||'Approve'}</button>`;
     /* Curator-only decide chrome; a rider sees a preview of their own pending pin. */

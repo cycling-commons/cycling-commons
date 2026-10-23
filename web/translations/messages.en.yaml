@@ -641,6 +641,7 @@ region:
   everywhere:
     label: 'Everywhere'
   about_h: "Geography"
+  about_auto_h: "About %region%"
   about_source: 'Text from Wikipedia:'
   about_source_adapted: "Adapted from Wikipedia by this region's curators:"
   about_source_curator: "Written by this region's curators,"
@@ -664,6 +665,12 @@ region:
   cta_vote: 'Vote for next season'
   stat_items: 'Verified items'
   stat_area: 'Area'
+  stat_population: "Population (%year%)"
+  stat_ride: "Ride character"
+  facts_edit: "Edit these figures"
+  ride_flat: "Flat"
+  ride_hilly: "Hilly"
+  ride_mountainous: "Mountainous"
   stat_routes: 'Routes'
   by_kind_h: 'What riders find here'
   kind_verified: 'in the Commons'
@@ -2712,17 +2719,13 @@ place_text:
   kicker_town: 'Town text'
   kicker_region: "Geography"
   lead_town: "Anyone signed in can suggest an edit to the text on this town's card. A curator of the region it lies in approves it before it shows."
-  lead_region: "Anyone signed in can suggest an edit to this region's geography text: where it lies, its landscape, size and neighbours. A curator of this region approves it before it shows."
   kicker_story: "History, nature and culture"
-  lead_story: "Anyone signed in can write, edit or translate this region's history, nature and culture text. A curator of this region approves it before it shows."
-  field_based_on: "This text is a translation of"
-  based_on_none: "Not a translation: written in this language"
-  field_based_on_hint: "If you translated the text of another language, say which. When that original changes, we tell you, so you can update yours."
-  purpose_region: "This is the geography text: where the region lies, its landscape, size and neighbours. History, nature and culture have their own text."
-  purpose_story: "This is the history, nature and culture text. Where the region lies and what its land looks like belong in the geography text."
-  purpose_go_story: "Write about its history, nature and culture"
-  purpose_go_region: "Write about its geography"
-  purpose_region_correct: "This is the geography text. Before you approve, check it sticks to where the region lies, its landscape, size and neighbours: history, nature and culture belong in the other text."
+  field_based_on: "Original or translation"
+  based_on_none: "Original: the base text every translation starts from"
+  based_on_lang: "Translation of: %lang%"
+  based_on_no_text: "Translation of: %lang% (no text yet)"
+  field_based_on_hint: "Pick Original when you wrote this text yourself. If you translated another language's text, pick that language: when the original changes, we tell you, so you can update yours."
+  purpose_region_correct: "This is the geography text. Before you approve, check it sticks to where the region lies, its landscape and neighbours: history, nature and culture belong in the other text."
   purpose_story_correct: "This is the history, nature and culture text. Before you approve, check it is not a description of where the region lies: that belongs in the geography text."
   geography_change_label: "Geography (%lang%)"
   field_lang: 'Language'
@@ -2754,11 +2757,12 @@ place_text:
   link_st_unsafe: "Google warns about it"
   link_st_unknown: "Could not check"
   link_st_limit: "Check limit reached, the send checks it"
+  link_st_http: "Only https addresses"
   translate_h: "To translate from (%lang%)"
   current_h: 'Current text'
   current_none: 'There is no text in this language yet.'
   count: '%count% of %max%'
-  field_derived: 'I adapted this from the Wikipedia article'
+  field_derived: "Based on the default Wikipedia text"
   field_source: 'Where your text comes from'
   field_own: 'I wrote my own text'
   field_note: 'Note for the curator (optional)'
@@ -2771,9 +2775,15 @@ place_text:
   sent_h_applied: 'Text updated'
   sent_p_applied: 'This lies inside your areas, so your text shows now.'
   sent_ref: 'Your reference: %ref%'
+  facts_area: "Area in km²"
+  facts_area_measured: "Measured from the region's boundary: %km2% km²."
+  facts_population: "Population"
+  facts_year: "Counted in"
+  facts_ride: "Ride character"
+  fact_label_area: "Area"
+  fact_label_population: "Population"
+  fact_label_ride: "Ride character"
   back_town: 'Back to the map'
-  back_region: 'Back to the region'
-  back_story: "Back to the region"
   follow: 'Follow it on your profile'
   change_label: 'Text (%lang%)'
   story_change_label: "History, nature and culture (%lang%)"
@@ -2802,10 +2812,54 @@ place_text:
     unknown: 'This text cannot be edited here.'
     correct_unchanged: 'This is the text as the rider sent it. Change something, or go back to the queue.'
     credit_required: 'Choose whether the Wikipedia credit stays, then approve.'
-    source_required: 'Say where your text comes from: adapted from the Wikipedia article, or your own text.'
+    source_required: "Say where your text comes from: based on the default Wikipedia text, or your own text."
     generic_anchor: "A link says only \"source\", \"link\" or \"here\". Link the words that say what the page is about instead."
     links_unconfirmed: "Some links are not marked \"Checked: OK\": %urls%. Open them yourself and tick the box under the links, or change them."
-    based_on: "Pick a language that has a text to translate from, or \"Not a translation\"."
+    based_on: "Pick a language that has a text to translate from, or \"Original\"."
+    facts_area: "Give the area as a whole number of square kilometres."
+    facts_population: "Give the population as a whole number."
+    facts_year: "Give the year the population was counted, from %min% to %max%."
+    facts_pair: "Give the population together with the year it was counted."
+    facts_ride: "Pick flat, hilly or mountainous."
+    http_link: "Link only https addresses. Change these: %urls%."
+
+# The region editor: figures, geography and history in three steps
+# (PlaceTextController::region(), moderation-and-contribution.md §3.1g).
+region_edit:
+  kicker: "Region"
+  lead: "Anyone signed in can suggest changes to this region's figures and texts. A curator of this region approves each change before it shows."
+  field_lang: "Language of the texts"
+  steps: "Steps"
+  step_figures: "Figures"
+  step_geography: "Geography"
+  step_story: "History, nature and culture"
+  step_figures_p: "Area, population and ride character: the figures at the top of the region page. They are the same in every language."
+  step_geography_p: "Where the region lies, its landscape and neighbours. History, nature and culture go in step 3."
+  step_story_p: "What the land's history, nature and culture tell a rider. Where the region lies goes in step 2."
+  population_source: "Source:"
+  next: "Next: %step%"
+  field_geography: "Geography text"
+  field_geography_hint: "Write the whole text as readers should see it, not only the change. Leave the box empty to keep the current text."
+  field_story: "History, nature and culture text"
+  sent_h_queued: "Sent for review"
+  sent_p_queued: "Thanks. A curator of this region checks your changes; until then readers see the current ones. You get a message when each is decided."
+  sent_h_applied: "Changes live"
+  sent_p_applied: "This lies inside your areas, so your changes show now."
+  sent_live: "live now"
+  sent_waiting: "waiting for a curator"
+  sent_rest: "The rest was not sent:"
+  back: "Back to the region"
+  guide_figures_h: "How to fill it in"
+  guide_figures_area: "Area: leave the field empty to show the area measured from the boundary."
+  guide_figures_population: "Population: the latest official count, with the year it was counted."
+  guide_figures_ride: "Ride character: what most riding in the region is like."
+  guide_geo_whole: "One paragraph, at most %max% characters, without links."
+  guide_geo_what: "Where the region lies and its borders, its ground and relief, what covers the land, and how it rides."
+  guide_geo_out: "Leave out the figures, the history and the culture."
+  guide_more: "The full guide, with an example:"
+  guide_link: "Writing region texts"
+  error:
+    nothing: "Change a figure or one of the texts before you send."
 
 moderate:
   lang_title: "Written in %lang%"
