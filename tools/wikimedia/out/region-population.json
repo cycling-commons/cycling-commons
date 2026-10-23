@@ -1,0 +1,1472 @@
+{
+ "aargau": {
+  "population": 726894,
+  "qid": "Q11972",
+  "year": 2024
+ },
+ "abruzzo": {
+  "population": 1308451,
+  "qid": "Q1284",
+  "year": 2019
+ },
+ "aichi": {
+  "population": 7521192,
+  "qid": "Q80434",
+  "year": 2021
+ },
+ "akita": {
+  "population": 946380,
+  "qid": "Q81863",
+  "year": 2021
+ },
+ "amajyaruguru": {
+  "population": 2038511,
+  "qid": "Q845807",
+  "year": 2022
+ },
+ "amajyepfo": {
+  "population": 3002699,
+  "qid": "Q853162",
+  "year": 2022
+ },
+ "amazonas-co": {
+  "population": 79020,
+  "qid": "Q44724",
+  "year": 2020
+ },
+ "andalucia": {
+  "population": 8619616,
+  "qid": "Q5783",
+  "year": 2024
+ },
+ "antioquia": {
+  "population": 6677930,
+  "qid": "Q123304",
+  "year": 2020
+ },
+ "antofagasta": {
+  "population": 635416,
+  "qid": "Q2118",
+  "year": 2024
+ },
+ "aomori": {
+  "population": 1232303,
+  "qid": "Q71699",
+  "year": 2021
+ },
+ "aragon": {
+  "population": 1347834,
+  "qid": "Q4040",
+  "year": 2024
+ },
+ "arauca": {
+  "population": 294206,
+  "qid": "Q230223",
+  "year": 2020
+ },
+ "arica-y-parinacota": {
+  "population": 244569,
+  "qid": "Q2109",
+  "year": 2024
+ },
+ "asturias": {
+  "population": 1008028,
+  "qid": "Q3934",
+  "year": 2024
+ },
+ "atacama": {
+  "population": 299180,
+  "qid": "Q2120",
+  "year": 2024
+ },
+ "atlantico": {
+  "population": 2722128,
+  "qid": "Q230882",
+  "year": 2020
+ },
+ "auckland": {
+  "population": 1816000,
+  "qid": "Q726917",
+  "year": 2025
+ },
+ "australia": {
+  "population": 27614411,
+  "qid": "Q408",
+  "year": 2025
+ },
+ "australian-capital-territory": {
+  "population": 481700,
+  "qid": "Q3258",
+  "year": 2024
+ },
+ "auvergne-rhone-alpes": {
+  "population": 8205557,
+  "qid": "Q18338206",
+  "year": 2023
+ },
+ "aysen": {
+  "population": 100745,
+  "qid": "Q2181",
+  "year": 2024
+ },
+ "baden-wurttemberg": {
+  "population": 11104040,
+  "qid": "Q985",
+  "year": 2022
+ },
+ "basel-landschaft": {
+  "population": 298837,
+  "qid": "Q12146",
+  "year": 2024
+ },
+ "basel-stadt": {
+  "population": 200031,
+  "qid": "Q12172",
+  "year": 2024
+ },
+ "basilicata": {
+  "population": 547579,
+  "qid": "Q1452",
+  "year": 2020
+ },
+ "bay-of-plenty": {
+  "population": 351500,
+  "qid": "Q2192924",
+  "year": 2025
+ },
+ "bayern": {
+  "population": 13038724,
+  "qid": "Q980",
+  "year": 2022
+ },
+ "belgium": {
+  "population": 11825551,
+  "qid": "Q31",
+  "year": 2025
+ },
+ "berlin": {
+  "population": 3700577,
+  "qid": "Q64",
+  "year": 2025
+ },
+ "bern": {
+  "population": 1063533,
+  "qid": "Q11911",
+  "year": 2024
+ },
+ "biobio": {
+  "population": 1613059,
+  "qid": "Q2170",
+  "year": 2024
+ },
+ "bogota": {
+  "population": 8034649,
+  "qid": "Q2841",
+  "year": 2024
+ },
+ "bolivar-co": {
+  "population": 2180976,
+  "qid": "Q230597",
+  "year": 2020
+ },
+ "bourgogne-franche-comte": {
+  "population": 2802670,
+  "qid": "Q18578267",
+  "year": 2023
+ },
+ "boyaca": {
+  "population": 1242731,
+  "qid": "Q121233",
+  "year": 2020
+ },
+ "brandenburg": {
+  "population": 2534075,
+  "qid": "Q1208",
+  "year": 2022
+ },
+ "bremen": {
+  "population": 693204,
+  "qid": "Q1209",
+  "year": 2022
+ },
+ "bretagne": {
+  "population": 3449370,
+  "qid": "Q12130",
+  "year": 2023
+ },
+ "british-columbia": {
+  "population": 5000879,
+  "qid": "Q1973",
+  "year": 2021
+ },
+ "brussels": {
+  "population": 1255795,
+  "qid": "Q240",
+  "year": 2025
+ },
+ "calabria": {
+  "population": 1947131,
+  "qid": "Q1458",
+  "year": 2019
+ },
+ "caldas": {
+  "population": 1018453,
+  "qid": "Q230607",
+  "year": 2020
+ },
+ "california": {
+  "population": 39538223,
+  "qid": "Q99",
+  "year": 2020
+ },
+ "campania": {
+  "population": 5786373,
+  "qid": "Q1438",
+  "year": 2019
+ },
+ "canada": {
+  "population": 36991981,
+  "qid": "Q16",
+  "year": 2021
+ },
+ "canarias": {
+  "population": 2228862,
+  "qid": "Q5813",
+  "year": 2024
+ },
+ "cantabria": {
+  "population": 591563,
+  "qid": "Q3946",
+  "year": 2024
+ },
+ "canterbury": {
+  "population": 698200,
+  "qid": "Q657004",
+  "year": 2025
+ },
+ "caqueta": {
+  "population": 410521,
+  "qid": "Q13985",
+  "year": 2020
+ },
+ "carlow": {
+  "population": 56875,
+  "qid": "Q181882",
+  "year": 2016
+ },
+ "casanare": {
+  "population": 435195,
+  "qid": "Q13984",
+  "year": 2020
+ },
+ "castilla-la-mancha": {
+  "population": 2098853,
+  "qid": "Q5748",
+  "year": 2024
+ },
+ "castilla-y-leon": {
+  "population": 2388350,
+  "qid": "Q5739",
+  "year": 2024
+ },
+ "catalunya": {
+  "population": 8034743,
+  "qid": "Q5705",
+  "year": 2024
+ },
+ "cauca": {
+  "population": 1491937,
+  "qid": "Q230602",
+  "year": 2020
+ },
+ "cavan": {
+  "population": 73183,
+  "qid": "Q187402",
+  "year": 2011
+ },
+ "centre-val-de-loire": {
+  "population": 2587031,
+  "qid": "Q13947",
+  "year": 2023
+ },
+ "cesar": {
+  "population": 1295387,
+  "qid": "Q234916",
+  "year": 2020
+ },
+ "ceuta": {
+  "population": 83595,
+  "qid": "Q5823",
+  "year": 2025
+ },
+ "chiba": {
+  "population": 6279002,
+  "qid": "Q80011",
+  "year": 2021
+ },
+ "chile": {
+  "population": 19458000,
+  "qid": "Q298",
+  "year": 2021
+ },
+ "choco": {
+  "population": 544767,
+  "qid": "Q230584",
+  "year": 2021
+ },
+ "clare": {
+  "population": 117096,
+  "qid": "Q181862",
+  "year": 2011
+ },
+ "colombia": {
+  "population": 52321152,
+  "qid": "Q739",
+  "year": 2023
+ },
+ "colorado": {
+  "population": 5773714,
+  "qid": "Q1261",
+  "year": 2020
+ },
+ "comunitat-valenciana": {
+  "population": 5316541,
+  "qid": "Q5720",
+  "year": 2024
+ },
+ "coquimbo": {
+  "population": 832864,
+  "qid": "Q2121",
+  "year": 2024
+ },
+ "cordoba-co": {
+  "population": 1828947,
+  "qid": "Q234912",
+  "year": 2020
+ },
+ "cork": {
+  "population": 542196,
+  "qid": "Q162475",
+  "year": 2016
+ },
+ "corse": {
+  "population": 355486,
+  "qid": "Q14112",
+  "year": 2023
+ },
+ "cundinamarca": {
+  "population": 3242999,
+  "qid": "Q232564",
+  "year": 2020
+ },
+ "drenthe": {
+  "population": 491792,
+  "qid": "Q772",
+  "year": 2017
+ },
+ "dublin": {
+  "population": 1270603,
+  "qid": "Q173500",
+  "year": 2011
+ },
+ "eastern-cape": {
+  "population": 7230204,
+  "qid": "Q130840",
+  "year": 2022
+ },
+ "ehime": {
+  "population": 1321580,
+  "qid": "Q123376",
+  "year": 2021
+ },
+ "emilia-romagna": {
+  "population": 4459477,
+  "qid": "Q1263",
+  "year": 2019
+ },
+ "england": {
+  "population": 57106398,
+  "qid": "Q21",
+  "year": 2022
+ },
+ "extremadura": {
+  "population": 1052790,
+  "qid": "Q5777",
+  "year": 2024
+ },
+ "flanders": {
+  "population": 6864766,
+  "qid": "Q9337",
+  "year": 2025
+ },
+ "flevoland": {
+  "population": 399893,
+  "qid": "Q707",
+  "year": 2013
+ },
+ "france": {
+  "population": 68605616,
+  "qid": "Q142",
+  "year": 2025
+ },
+ "free-state": {
+  "population": 2964412,
+  "qid": "Q160284",
+  "year": 2022
+ },
+ "fribourg": {
+  "population": 341537,
+  "qid": "Q12640",
+  "year": 2024
+ },
+ "friesland": {
+  "population": 649944,
+  "qid": "Q770",
+  "year": 2020
+ },
+ "friuli-venezia-giulia": {
+  "population": 1215220,
+  "qid": "Q1250",
+  "year": 2019
+ },
+ "fukui": {
+  "population": 764533,
+  "qid": "Q133879",
+  "year": 2021
+ },
+ "fukuoka": {
+  "population": 5108038,
+  "qid": "Q123258",
+  "year": 2020
+ },
+ "fukushima": {
+  "population": 1825325,
+  "qid": "Q71707",
+  "year": 2021
+ },
+ "galicia": {
+  "population": 2703353,
+  "qid": "Q3908",
+  "year": 2024
+ },
+ "galway": {
+  "population": 277737,
+  "qid": "Q169923",
+  "year": 2022
+ },
+ "gauteng": {
+  "population": 15099422,
+  "qid": "Q133083",
+  "year": 2022
+ },
+ "gelderland": {
+  "population": 2019692,
+  "qid": "Q775",
+  "year": 2013
+ },
+ "geneve": {
+  "population": 524410,
+  "qid": "Q11917",
+  "year": 2024
+ },
+ "germany": {
+  "population": 83467117,
+  "qid": "Q183",
+  "year": 2025
+ },
+ "gifu": {
+  "population": 1975397,
+  "qid": "Q131277",
+  "year": 2020
+ },
+ "gisborne": {
+  "population": 52700,
+  "qid": "Q140246",
+  "year": 2025
+ },
+ "glarus": {
+  "population": 42056,
+  "qid": "Q11922",
+  "year": 2024
+ },
+ "grand-est": {
+  "population": 5563378,
+  "qid": "Q18677983",
+  "year": 2023
+ },
+ "graubunden": {
+  "population": 204888,
+  "qid": "Q11925",
+  "year": 2024
+ },
+ "groningen": {
+  "population": 582728,
+  "qid": "Q752",
+  "year": 2013
+ },
+ "guainia": {
+  "population": 50636,
+  "qid": "Q238645",
+  "year": 2020
+ },
+ "guaviare": {
+  "population": 73081,
+  "qid": "Q272885",
+  "year": 2018
+ },
+ "gunma": {
+  "population": 1934920,
+  "qid": "Q129499",
+  "year": 2021
+ },
+ "hamburg": {
+  "population": 1869473,
+  "qid": "Q1055",
+  "year": 2025
+ },
+ "hauts-de-france": {
+  "population": 5992194,
+  "qid": "Q18677767",
+  "year": 2023
+ },
+ "hawkes-bay": {
+  "population": 179700,
+  "qid": "Q251825",
+  "year": 2025
+ },
+ "hessen": {
+  "population": 6207278,
+  "qid": "Q1199",
+  "year": 2022
+ },
+ "hiroshima": {
+  "population": 2790804,
+  "qid": "Q617375",
+  "year": 2021
+ },
+ "hokkaido": {
+  "population": 5432200,
+  "qid": "Q1037393",
+  "year": 2014
+ },
+ "huila": {
+  "population": 1122622,
+  "qid": "Q234920",
+  "year": 2020
+ },
+ "hyogo": {
+  "population": 5453392,
+  "qid": "Q130290",
+  "year": 2021
+ },
+ "ibaraki": {
+  "population": 2862372,
+  "qid": "Q83273",
+  "year": 2021
+ },
+ "iburasirazuba": {
+  "population": 3563145,
+  "qid": "Q853152",
+  "year": 2022
+ },
+ "iburengerazuba": {
+  "population": 2896484,
+  "qid": "Q737354",
+  "year": 2022
+ },
+ "ile-de-france": {
+  "population": 12463067,
+  "qid": "Q13917",
+  "year": 2023
+ },
+ "illes-balears": {
+  "population": 1221403,
+  "qid": "Q5765",
+  "year": 2024
+ },
+ "ireland": {
+  "population": 5149139,
+  "qid": "Q27",
+  "year": 2022
+ },
+ "ishikawa": {
+  "population": 1132497,
+  "qid": "Q131281",
+  "year": 2020
+ },
+ "italy": {
+  "population": 58850717,
+  "qid": "Q38",
+  "year": 2023
+ },
+ "iwate": {
+  "population": 1205698,
+  "qid": "Q48326",
+  "year": 2021
+ },
+ "japan": {
+  "population": 123802000,
+  "qid": "Q17",
+  "year": 2024
+ },
+ "jura": {
+  "population": 74548,
+  "qid": "Q12755",
+  "year": 2024
+ },
+ "kagawa": {
+  "population": 949358,
+  "qid": "Q161454",
+  "year": 2020
+ },
+ "kagoshima": {
+  "population": 1586435,
+  "qid": "Q15701",
+  "year": 2021
+ },
+ "kanagawa": {
+  "population": 9216009,
+  "qid": "Q127513",
+  "year": 2020
+ },
+ "kerry": {
+  "population": 147707,
+  "qid": "Q184469",
+  "year": 2016
+ },
+ "kigali": {
+  "population": 1745555,
+  "qid": "Q3859",
+  "year": 2022
+ },
+ "kildare": {
+  "population": 222130,
+  "qid": "Q173332",
+  "year": 2016
+ },
+ "kilkenny": {
+  "population": 99232,
+  "qid": "Q180231",
+  "year": 2016
+ },
+ "kochi": {
+  "population": 688870,
+  "qid": "Q134093",
+  "year": 2021
+ },
+ "kumamoto": {
+  "population": 1732644,
+  "qid": "Q130308",
+  "year": 2021
+ },
+ "kwazulu-natal": {
+  "population": 12423907,
+  "qid": "Q81725",
+  "year": 2022
+ },
+ "kyoto": {
+  "population": 2563192,
+  "qid": "Q120730",
+  "year": 2021
+ },
+ "la-araucania": {
+  "population": 1010423,
+  "qid": "Q2176",
+  "year": 2024
+ },
+ "la-guajira": {
+  "population": 965718,
+  "qid": "Q272747",
+  "year": 2020
+ },
+ "la-rioja-es": {
+  "population": 324399,
+  "qid": "Q5727",
+  "year": 2024
+ },
+ "laois": {
+  "population": 67012,
+  "qid": "Q55299",
+  "year": 2016
+ },
+ "lazio": {
+  "population": 5720536,
+  "qid": "Q1282",
+  "year": 2023
+ },
+ "leitrim": {
+  "population": 35199,
+  "qid": "Q107397",
+  "year": 2022
+ },
+ "liguria": {
+  "population": 1550640,
+  "qid": "Q1256",
+  "year": 2019
+ },
+ "limburg-nl": {
+  "population": 1120006,
+  "qid": "Q1093",
+  "year": 2013
+ },
+ "limerick": {
+  "population": 195175,
+  "qid": "Q178283",
+  "year": 2016
+ },
+ "limpopo": {
+  "population": 6572720,
+  "qid": "Q134907",
+  "year": 2022
+ },
+ "lombardia": {
+  "population": 10067494,
+  "qid": "Q1210",
+  "year": 2019
+ },
+ "longford": {
+  "population": 40873,
+  "qid": "Q186220",
+  "year": 2016
+ },
+ "los-lagos": {
+  "population": 890284,
+  "qid": "Q2178",
+  "year": 2024
+ },
+ "los-rios": {
+  "population": 398230,
+  "qid": "Q2177",
+  "year": 2024
+ },
+ "louth": {
+  "population": 128375,
+  "qid": "Q183539",
+  "year": 2016
+ },
+ "luxembourg": {
+  "population": 690959,
+  "qid": "Q32",
+  "year": 2026
+ },
+ "luzern": {
+  "population": 432744,
+  "qid": "Q12121",
+  "year": 2024
+ },
+ "madrid": {
+  "population": 7001715,
+  "qid": "Q5756",
+  "year": 2024
+ },
+ "magallanes": {
+  "population": 166537,
+  "qid": "Q2189",
+  "year": 2024
+ },
+ "magdalena": {
+  "population": 1427026,
+  "qid": "Q199910",
+  "year": 2020
+ },
+ "manawatu-whanganui": {
+  "population": 260700,
+  "qid": "Q139907",
+  "year": 2025
+ },
+ "marche": {
+  "population": 1522608,
+  "qid": "Q1279",
+  "year": 2019
+ },
+ "marlborough": {
+  "population": 50800,
+  "qid": "Q140083",
+  "year": 2025
+ },
+ "maule": {
+  "population": 1123008,
+  "qid": "Q2166",
+  "year": 2024
+ },
+ "mayo": {
+  "population": 130638,
+  "qid": "Q178626",
+  "year": 2011
+ },
+ "meath": {
+  "population": 194942,
+  "qid": "Q183544",
+  "year": 2016
+ },
+ "mecklenburg-vorpommern": {
+  "population": 1570817,
+  "qid": "Q1196",
+  "year": 2022
+ },
+ "melilla": {
+  "population": 86780,
+  "qid": "Q5831",
+  "year": 2025
+ },
+ "meta": {
+  "population": 1062454,
+  "qid": "Q238629",
+  "year": 2020
+ },
+ "mie": {
+  "population": 1768632,
+  "qid": "Q128196",
+  "year": 2020
+ },
+ "miyagi": {
+  "population": 2288456,
+  "qid": "Q47896",
+  "year": 2021
+ },
+ "miyazaki": {
+  "population": 1061032,
+  "qid": "Q130300",
+  "year": 2021
+ },
+ "molise": {
+  "population": 304285,
+  "qid": "Q1443",
+  "year": 2019
+ },
+ "monaghan": {
+  "population": 60483,
+  "qid": "Q184760",
+  "year": 2011
+ },
+ "mpumalanga": {
+  "population": 5143324,
+  "qid": "Q132410",
+  "year": 2022
+ },
+ "murcia": {
+  "population": 1586989,
+  "qid": "Q5772",
+  "year": 2025
+ },
+ "nagano": {
+  "population": 2024073,
+  "qid": "Q127877",
+  "year": 2021
+ },
+ "nagasaki": {
+  "population": 1307309,
+  "qid": "Q169376",
+  "year": 2021
+ },
+ "nara": {
+  "population": 1319305,
+  "qid": "Q131287",
+  "year": 2021
+ },
+ "narino": {
+  "population": 1627589,
+  "qid": "Q230217",
+  "year": 2020
+ },
+ "navarra": {
+  "population": 678338,
+  "qid": "Q4018",
+  "year": 2024
+ },
+ "nelson": {
+  "population": 54300,
+  "qid": "Q1995856",
+  "year": 2025
+ },
+ "netherlands": {
+  "population": 17100715,
+  "qid": "Q29999",
+  "year": 2013
+ },
+ "neuchatel": {
+  "population": 178291,
+  "qid": "Q12738",
+  "year": 2024
+ },
+ "new-south-wales": {
+  "population": 8545100,
+  "qid": "Q3224",
+  "year": 2024
+ },
+ "new-zealand": {
+  "population": 5307800,
+  "qid": "Q664",
+  "year": 2024
+ },
+ "nidwalden": {
+  "population": 45016,
+  "qid": "Q12592",
+  "year": 2024
+ },
+ "niedersachsen": {
+  "population": 7943265,
+  "qid": "Q1197",
+  "year": 2022
+ },
+ "niigata": {
+  "population": 2192319,
+  "qid": "Q132705",
+  "year": 2021
+ },
+ "noord-brabant": {
+  "population": 2256848,
+  "qid": "Q1101",
+  "year": 2015
+ },
+ "noord-holland": {
+  "population": 2813466,
+  "qid": "Q701",
+  "year": 2017
+ },
+ "nordrhein-westfalen": {
+  "population": 17890489,
+  "qid": "Q1198",
+  "year": 2022
+ },
+ "normandie": {
+  "population": 3345842,
+  "qid": "Q18677875",
+  "year": 2023
+ },
+ "norte-de-santander": {
+  "population": 1620318,
+  "qid": "Q233058",
+  "year": 2020
+ },
+ "north-west": {
+  "population": 3804548,
+  "qid": "Q165956",
+  "year": 2022
+ },
+ "northern-cape": {
+  "population": 1355946,
+  "qid": "Q132418",
+  "year": 2022
+ },
+ "northern-ireland": {
+  "population": 1903200,
+  "qid": "Q26",
+  "year": 2021
+ },
+ "northern-territory": {
+  "population": 262200,
+  "qid": "Q3235",
+  "year": 2024
+ },
+ "northland": {
+  "population": 201100,
+  "qid": "Q59596",
+  "year": 2025
+ },
+ "nouvelle-aquitaine": {
+  "population": 6150451,
+  "qid": "Q18678082",
+  "year": 2023
+ },
+ "nuble": {
+  "population": 512289,
+  "qid": "Q24076693",
+  "year": 2024
+ },
+ "o-higgins": {
+  "population": 987228,
+  "qid": "Q2133",
+  "year": 2024
+ },
+ "obwalden": {
+  "population": 39272,
+  "qid": "Q12573",
+  "year": 2024
+ },
+ "occitanie": {
+  "population": 6124653,
+  "qid": "Q18678265",
+  "year": 2023
+ },
+ "offaly": {
+  "population": 78003,
+  "qid": "Q184445",
+  "year": 2016
+ },
+ "oita": {
+  "population": 1121589,
+  "qid": "Q133924",
+  "year": 2021
+ },
+ "okayama": {
+  "population": 1878884,
+  "qid": "Q132936",
+  "year": 2021
+ },
+ "okinawa": {
+  "population": 1460652,
+  "qid": "Q766445",
+  "year": 2021
+ },
+ "osaka": {
+  "population": 8826684,
+  "qid": "Q122723",
+  "year": 2021
+ },
+ "otago": {
+  "population": 253900,
+  "qid": "Q692912",
+  "year": 2025
+ },
+ "overijssel": {
+  "population": 1142360,
+  "qid": "Q773",
+  "year": 2015
+ },
+ "pais-vasco": {
+  "population": 2230452,
+  "qid": "Q3995",
+  "year": 2024
+ },
+ "pays-de-la-loire": {
+  "population": 3907156,
+  "qid": "Q16994",
+  "year": 2023
+ },
+ "piemonte": {
+  "population": 4341375,
+  "qid": "Q1216",
+  "year": 2019
+ },
+ "provence-alpes-cote-d-azur": {
+  "population": 5218960,
+  "qid": "Q15104",
+  "year": 2023
+ },
+ "puglia": {
+  "population": 3866174,
+  "qid": "Q1447",
+  "year": 2025
+ },
+ "putumayo": {
+  "population": 359127,
+  "qid": "Q232953",
+  "year": 2020
+ },
+ "quebec": {
+  "population": 8501833,
+  "qid": "Q176",
+  "year": 2021
+ },
+ "queensland": {
+  "population": 5618800,
+  "qid": "Q36074",
+  "year": 2024
+ },
+ "quindio": {
+  "population": 555401,
+  "qid": "Q13995",
+  "year": 2020
+ },
+ "region-metropolitana": {
+  "population": 7400741,
+  "qid": "Q2131",
+  "year": 2024
+ },
+ "rheinland-pfalz": {
+  "population": 4094169,
+  "qid": "Q1200",
+  "year": 2022
+ },
+ "risaralda": {
+  "population": 961055,
+  "qid": "Q13993",
+  "year": 2020
+ },
+ "roscommon": {
+  "population": 64436,
+  "qid": "Q179437",
+  "year": 2016
+ },
+ "rwanda": {
+  "population": 14569341,
+  "qid": "Q1037",
+  "year": 2025
+ },
+ "saarland": {
+  "population": 1006864,
+  "qid": "Q1201",
+  "year": 2022
+ },
+ "sachsen": {
+  "population": 4089467,
+  "qid": "Q1202",
+  "year": 2023
+ },
+ "sachsen-anhalt": {
+  "population": 2146443,
+  "qid": "Q1206",
+  "year": 2022
+ },
+ "saga": {
+  "population": 809824,
+  "qid": "Q160420",
+  "year": 2021
+ },
+ "saitama": {
+  "population": 7343100,
+  "qid": "Q128186",
+  "year": 2021
+ },
+ "san-andres-y-providencia": {
+  "population": 63692,
+  "qid": "Q26855",
+  "year": 2020
+ },
+ "santander": {
+  "population": 2280908,
+  "qid": "Q235166",
+  "year": 2020
+ },
+ "sardegna": {
+  "population": 1628384,
+  "qid": "Q1462",
+  "year": 2020
+ },
+ "schaffhausen": {
+  "population": 87111,
+  "qid": "Q12697",
+  "year": 2024
+ },
+ "schleswig-holstein": {
+  "population": 2953270,
+  "qid": "Q1194",
+  "year": 2022
+ },
+ "schwyz": {
+  "population": 167403,
+  "qid": "Q12433",
+  "year": 2024
+ },
+ "scotland": {
+  "population": 5404700,
+  "qid": "Q22",
+  "year": 2016
+ },
+ "shiga": {
+  "population": 1411168,
+  "qid": "Q131358",
+  "year": 2021
+ },
+ "shimane": {
+  "population": 664539,
+  "qid": "Q132751",
+  "year": 2021
+ },
+ "shizuoka": {
+  "population": 3609465,
+  "qid": "Q131320",
+  "year": 2021
+ },
+ "sicilia": {
+  "population": 4983478,
+  "qid": "Q1460",
+  "year": 2019
+ },
+ "sligo": {
+  "population": 65393,
+  "qid": "Q179325",
+  "year": 2011
+ },
+ "slovenia": {
+  "population": 2066880,
+  "qid": "Q215",
+  "year": 2018
+ },
+ "solothurn": {
+  "population": 286844,
+  "qid": "Q11929",
+  "year": 2024
+ },
+ "south-africa": {
+  "population": 62027503,
+  "qid": "Q258",
+  "year": 2022
+ },
+ "south-australia": {
+  "population": 1891700,
+  "qid": "Q35715",
+  "year": 2024
+ },
+ "southland": {
+  "population": 104800,
+  "qid": "Q864971",
+  "year": 2025
+ },
+ "spain": {
+  "population": 48592909,
+  "qid": "Q29",
+  "year": 2024
+ },
+ "st-gallen": {
+  "population": 535114,
+  "qid": "Q12746",
+  "year": 2024
+ },
+ "sucre": {
+  "population": 949252,
+  "qid": "Q235188",
+  "year": 2020
+ },
+ "switzerland": {
+  "population": 9104063,
+  "qid": "Q39",
+  "year": 2025
+ },
+ "taranaki": {
+  "population": 130300,
+  "qid": "Q140207",
+  "year": 2025
+ },
+ "tarapaca": {
+  "population": 369806,
+  "qid": "Q2114",
+  "year": 2024
+ },
+ "tasman": {
+  "population": 59900,
+  "qid": "Q666142",
+  "year": 2025
+ },
+ "tasmania": {
+  "population": 539590,
+  "qid": "Q34366",
+  "year": 2020
+ },
+ "thurgau": {
+  "population": 295220,
+  "qid": "Q12713",
+  "year": 2024
+ },
+ "thuringen": {
+  "population": 2110396,
+  "qid": "Q1205",
+  "year": 2022
+ },
+ "ticino": {
+  "population": 358903,
+  "qid": "Q12724",
+  "year": 2024
+ },
+ "tipperary": {
+  "population": 158652,
+  "qid": "Q184618",
+  "year": 2011
+ },
+ "tochigi": {
+  "population": 1927754,
+  "qid": "Q44843",
+  "year": 2021
+ },
+ "tokushima": {
+  "population": 721721,
+  "qid": "Q160734",
+  "year": 2020
+ },
+ "tokyo": {
+  "population": 14264798,
+  "qid": "Q1490",
+  "year": 2022
+ },
+ "tolima": {
+  "population": 1339998,
+  "qid": "Q234501",
+  "year": 2020
+ },
+ "toscana": {
+  "population": 3729641,
+  "qid": "Q1273",
+  "year": 2019
+ },
+ "tottori": {
+  "population": 549925,
+  "qid": "Q133935",
+  "year": 2021
+ },
+ "toyama": {
+  "population": 1031262,
+  "qid": "Q132929",
+  "year": 2021
+ },
+ "trentino-alto-adige": {
+  "population": 1072276,
+  "qid": "Q1237",
+  "year": 2019
+ },
+ "umbria": {
+  "population": 852085,
+  "qid": "Q1280",
+  "year": 2024
+ },
+ "united-kingdom": {
+  "population": 67326569,
+  "qid": "Q145",
+  "year": 2021
+ },
+ "united-states": {
+  "population": 340110988,
+  "qid": "Q30",
+  "year": 2024
+ },
+ "uri": {
+  "population": 37931,
+  "qid": "Q12404",
+  "year": 2024
+ },
+ "utrecht": {
+  "population": 1253672,
+  "qid": "Q776",
+  "year": 2013
+ },
+ "valais": {
+  "population": 365844,
+  "qid": "Q834",
+  "year": 2024
+ },
+ "valle-d-aosta": {
+  "population": 125666,
+  "qid": "Q1222",
+  "year": 2019
+ },
+ "valle-del-cauca": {
+  "population": 4532152,
+  "qid": "Q13990",
+  "year": 2020
+ },
+ "valparaiso": {
+  "population": 1896053,
+  "qid": "Q219458",
+  "year": 2024
+ },
+ "vaud": {
+  "population": 845870,
+  "qid": "Q12771",
+  "year": 2024
+ },
+ "vaupes": {
+  "population": 44712,
+  "qid": "Q234505",
+  "year": 2020
+ },
+ "veneto": {
+  "population": 4869830,
+  "qid": "Q1243",
+  "year": 2021
+ },
+ "vichada": {
+  "population": 112958,
+  "qid": "Q268729",
+  "year": 2020
+ },
+ "victoria": {
+  "population": 7074468,
+  "qid": "Q36687",
+  "year": 2025
+ },
+ "waikato": {
+  "population": 532100,
+  "qid": "Q139918",
+  "year": 2025
+ },
+ "wakayama": {
+  "population": 910687,
+  "qid": "Q131314",
+  "year": 2021
+ },
+ "wales": {
+  "population": 3131640,
+  "qid": "Q25",
+  "year": 2022
+ },
+ "wallonia": {
+  "population": 3704990,
+  "qid": "Q231",
+  "year": 2025
+ },
+ "waterford": {
+  "population": 113795,
+  "qid": "Q184594",
+  "year": 2011
+ },
+ "wellington": {
+  "population": 543400,
+  "qid": "Q856010",
+  "year": 2025
+ },
+ "west-coast": {
+  "population": 34700,
+  "qid": "Q541468",
+  "year": 2025
+ },
+ "western-australia": {
+  "population": 3008700,
+  "qid": "Q3206",
+  "year": 2024
+ },
+ "western-cape": {
+  "population": 7113776,
+  "qid": "Q127167",
+  "year": 2021
+ },
+ "westmeath": {
+  "population": 88396,
+  "qid": "Q182633",
+  "year": 2016
+ },
+ "wexford": {
+  "population": 145273,
+  "qid": "Q184599",
+  "year": 2011
+ },
+ "wicklow": {
+  "population": 142332,
+  "qid": "Q182591",
+  "year": 2016
+ },
+ "yamagata": {
+  "population": 1063231,
+  "qid": "Q125863",
+  "year": 2021
+ },
+ "yamaguchi": {
+  "population": 1336522,
+  "qid": "Q127264",
+  "year": 2021
+ },
+ "yamanashi": {
+  "population": 803963,
+  "qid": "Q132720",
+  "year": 2021
+ },
+ "zeeland": {
+  "population": 386707,
+  "qid": "Q705",
+  "year": 2022
+ },
+ "zug": {
+  "population": 132556,
+  "qid": "Q11933",
+  "year": 2024
+ },
+ "zuid-holland": {
+  "population": 3577032,
+  "qid": "Q694",
+  "year": 2013
+ },
+ "zurich": {
+  "population": 1620020,
+  "qid": "Q11943",
+  "year": 2024
+ }
+}
