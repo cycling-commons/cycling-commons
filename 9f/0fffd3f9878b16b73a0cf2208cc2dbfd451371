@@ -1,0 +1,90 @@
+web/src/Contribution/CatalogContributionService.php
+  s_2d39df76d606c6::t_3528de22d60f89 61,883-887,1105-1107
+web/translations/messages.es.yaml
+  s_2d39df76d606c6::t_0c0e811380e67b 1434-1437
+web/src/Controller/PlaceTextController.php
+  s_2d39df76d606c6::t_319b3b7ed7cdbf 14-15
+  s_e6a1e72d46cd35::t_10720712b46310 385-387
+  s_e6a1e72d46cd35::t_399b1385d5eb83 75
+web/src/Contribution/LimitMessage.php
+  s_2d39df76d606c6::t_aec57b2ffc041e 1-38
+web/src/Contribution/RouteProposalService.php
+  s_2d39df76d606c6::t_3528de22d60f89 58-60,132-134
+  s_2d39df76d606c6::t_0131a2575b9df6 53-54,124-127
+web/src/Community/RouteCommunityService.php
+  s_2d39df76d606c6::t_0131a2575b9df6 128-129
+  s_2d39df76d606c6::t_3528de22d60f89 138-140
+  s_2d39df76d606c6::t_e8db2f30d06423 16
+docs/specs/edit-items/N-climbs.md
+  s_2d39df76d606c6::t_a1a85a52ea5a24 185-186
+docs/specs/moderation-and-contribution.md
+  s_2d39df76d606c6::t_a1a85a52ea5a24 652,655-657
+web/src/Contribution/RoutePhotoService.php
+  s_2d39df76d606c6::t_0131a2575b9df6 53-54
+  s_2d39df76d606c6::t_3528de22d60f89 68-70
+web/translations/messages.de.yaml
+  s_2d39df76d606c6::t_0c0e811380e67b 2393-2396
+web/src/Contribution/LimitReached.php
+  s_2d39df76d606c6::t_831a4c33936652 1-47
+web/translations/messages.en.yaml
+  s_2d39df76d606c6::t_0c0e811380e67b 1424-1427
+web/tests/Contribution/CatalogContributionServiceTest.php
+  s_2d39df76d606c6::t_da2e3ab219152c 19
+  s_2d39df76d606c6::t_488b06ca6323a5 686-692,694-695,697-702,704,706-708
+  s_2d39df76d606c6::t_efad0ac9f8f28a 666-685,693,696,703,705
+  s_e6a1e72d46cd35::t_430a7604ef8c8a 709
+web/config/packages/rate_limiter.yaml
+  s_2d39df76d606c6::t_055712a27847b8 129-136
+docs/specs/security-architecture.md
+  s_2d39df76d606c6::t_a1a85a52ea5a24 600-601,659,669-682
+web/src/Twig/DateDisplayExtension.php
+  s_2d39df76d606c6::t_c19a0f72672fb0 96-114
+web/src/Controller/ContributeController.php
+  s_2d39df76d606c6::t_319b3b7ed7cdbf 25-26,67
+  s_2d39df76d606c6::t_055712a27847b8 356-358,413-415,559-561
+web/tests/Contribution/AddPlaceFlowTest.php
+  s_2d39df76d606c6::t_14d3e466e27c1a 10,13,16
+  s_2d39df76d606c6::t_d027a4605ae9f4 146-186
+  s_e6a1e72d46cd35::t_1c54079d93c07b 187-188
+web/translations/messages.fr.yaml
+  s_2d39df76d606c6::t_0c0e811380e67b 2388-2391
+web/src/Controller/ProposeRouteController.php
+  s_2d39df76d606c6::t_319b3b7ed7cdbf 14-15,57
+  s_2d39df76d606c6::t_055712a27847b8 93-95,189-191,283-285
+web/tests/Moderation/PlaceTextProposalTest.php
+  s_2d39df76d606c6::t_d04fce79b796b4 95-102,106
+  s_2d39df76d606c6::t_191fd638b8eb32 87-94,103-105,107-114
+web/translations/messages.nl.yaml
+  s_2d39df76d606c6::t_0c0e811380e67b 2390-2393
+web/src/Contribution/PlaceTextProposals.php
+  s_e6a1e72d46cd35::t_e0911c10074a23 75,222-223,269-270,315-316,773,776-780
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9f0fffd3f9878b16b73a0cf2208cc2dbfd451371",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_2d39df76d606c6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "27dfa27c-d621-4eaa-8bff-2444730c849d",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_e6a1e72d46cd35": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d113dd9e-8347-4141-9c0b-e3edf1031fc9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
