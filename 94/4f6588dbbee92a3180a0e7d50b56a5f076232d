@@ -1,0 +1,30 @@
+docs/specs/route-planner.md
+  s_b132c4909850ff::t_e87c61240c86dc 716,907-908
+web/tests/js/plan-model.test.mjs
+  s_b132c4909850ff::t_e87c61240c86dc 840-841,1049-1058
+  s_b132c4909850ff::t_beb668641c98f6 869
+  s_b132c4909850ff::t_071d196fd3ee16 1059-1060
+web/assets/map/plan-model.js
+  s_b132c4909850ff::t_e87c61240c86dc 784,798-801,893-894
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "944f6588dbbee92a3180a0e7d50b56a5f076232d",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_b132c4909850ff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c3c831df-6dca-4e42-a804-a10ae200a3e1",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
