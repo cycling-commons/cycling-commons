@@ -9,6 +9,7 @@ namespace App\Weather;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Contracts\HttpClient\Exception\HttpExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
@@ -29,6 +30,10 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * null then also means the cache does not hold it ({@see answers()} tells the
  * two apart).
  *
+ * Every ask that gets this far is counted in ForecastUsage: answered from the
+ * cache, or sent to Open-Meteo with what it counts as there and whether it
+ * failed or was refused (route-planner.md section 8).
+ *
  * @api
  */
 final class Forecast
@@ -38,13 +43,31 @@ final class Forecast
     public const int CACHE_S = 10800;
     private const float TIMEOUT_S = 5.0;
 
+    /** The day's figures asked of Open-Meteo. */
+    private const array DAILY = ['wind_speed_10m_max', 'wind_gusts_10m_max', 'wind_direction_10m_dominant', 'temperature_2m_max', 'precipitation_sum'];
+
+    /** The hour's figures asked of Open-Meteo, for the day's 24 hours. */
+    private const array HOURLY = ['wind_speed_10m', 'wind_gusts_10m', 'wind_direction_10m', 'temperature_2m', 'precipitation', 'relative_humidity_2m', 'dew_point_2m', 'soil_temperature_0cm', 'snowfall', 'weather_code'];
+
     public function __construct(
         private readonly HttpClientInterface $http,
         private readonly CacheItemPoolInterface $cache,
         private readonly LoggerInterface $logger,
         private readonly ClockInterface $clock,
         private readonly string $forecastUrl,
+        private readonly ?ForecastUsage $usage = null,
     ) {
+    }
+
+    /**
+     * What one request counts as against Open-Meteo's limits: a request for
+     * more than 10 figures, or for more than 14 days, counts as more than one
+     * call, in proportion (open-meteo.com/en/pricing). Ours asks 15 figures for
+     * one day: 1.5.
+     */
+    public static function callWeight(): float
+    {
+        return max(1.0, (\count(self::DAILY) + \count(self::HOURLY)) / 10) * max(1.0, 1 / 14);
     }
 
     /** A coordinate to a tenth of a degree: about 10 km, the cell a forecast is for. */
@@ -72,6 +95,7 @@ final class Forecast
         $key = sprintf('forecast4.%s.%s.%s', str_replace(['.', '-'], ['_', 'm'], (string) $lat), str_replace(['.', '-'], ['_', 'm'], (string) $lng), $date);
         $item = $this->cache->getItem($key);
         if ($item->isHit()) {
+            $this->usage?->asked(true);
             /** @var array{date: string, lat: float, lng: float, windKmh: float, gustKmh: float|null, windFromDeg: int, tempMaxC: float, rainMm: float, hours: list<array{windKmh: float, gustKmh: float|null, fromDeg: int, tempC: float, rainMm: float, humidity: int|null, dewC: float|null, groundC: float|null, snowCm: float|null, code: int|null}>|null} $hit */
             $hit = $item->get();
 
@@ -80,7 +104,9 @@ final class Forecast
         if ($cachedOnly) {
             return null;
         }
-        $day = $this->fetch($lat, $lng, $date);
+        $refused = false;
+        $day = $this->fetch($lat, $lng, $date, $refused);
+        $this->usage?->asked(false, self::callWeight(), null === $day, $refused);
         if (null !== $day) {
             $item->set($day);
             $item->expiresAfter(self::CACHE_S);
@@ -104,15 +130,17 @@ final class Forecast
     }
 
     /**
+     * `$refused` comes back true when Open-Meteo answered that we are over its limit (HTTP 429).
+     *
      * @return array{date: string, lat: float, lng: float, windKmh: float, gustKmh: float|null, windFromDeg: int, tempMaxC: float, rainMm: float, hours: list<array{windKmh: float, gustKmh: float|null, fromDeg: int, tempC: float, rainMm: float, humidity: int|null, dewC: float|null, groundC: float|null, snowCm: float|null, code: int|null}>|null}|null
      */
-    private function fetch(float $lat, float $lng, string $date): ?array
+    private function fetch(float $lat, float $lng, string $date, bool &$refused): ?array
     {
         $url = rtrim($this->forecastUrl, '/').'/v1/forecast?'.http_build_query([
             'latitude' => sprintf('%.1f', $lat),
             'longitude' => sprintf('%.1f', $lng),
-            'daily' => 'wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,temperature_2m_max,precipitation_sum',
-            'hourly' => 'wind_speed_10m,wind_gusts_10m,wind_direction_10m,temperature_2m,precipitation,relative_humidity_2m,dew_point_2m,soil_temperature_0cm,snowfall,weather_code',
+            'daily' => implode(',', self::DAILY),
+            'hourly' => implode(',', self::HOURLY),
             'timezone' => 'auto',
             'start_date' => $date,
             'end_date' => $date,
@@ -120,6 +148,7 @@ final class Forecast
         try {
             $data = $this->http->request('GET', $url, ['timeout' => self::TIMEOUT_S, 'max_duration' => self::TIMEOUT_S])->toArray();
         } catch (\Throwable $e) {
+            $refused = $e instanceof HttpExceptionInterface && 429 === $e->getResponse()->getStatusCode();
             $this->logger->warning('forecast lookup failed', ['error' => $e->getMessage()]);
 
             return null;

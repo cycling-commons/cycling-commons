@@ -4509,6 +4509,7 @@ admin:
     unsent_statements: 'Exposiciones de motivos no enviadas'
     moderator_areas: 'Áreas de moderación'
     moderation_activity: 'Actividad de moderación'
+    weather_usage: "Uso del tiempo"
     coverage_runs: "Recolecciones de cobertura"
   action:
     unlock: 'Desbloquear la cuenta'
@@ -4581,6 +4582,43 @@ admin:
     settings_unchanged: 'No ha cambiado nada.'
     settings_reset: 'Ajuste devuelto a su valor por defecto.'
     settings_invalid: 'No se ha guardado nada — revisa los valores marcados abajo.'
+  # The Weather usage page (route-planner.md section 8).
+  weather:
+    lead: "Lo que cuesta el tiempo del planificador de rutas en Open-Meteo, frente a su plan gratuito. Horas en UTC, como las cuenta Open-Meteo."
+    limits_h: "Plan gratuito de Open-Meteo"
+    m_minute: "Minuto de más uso hoy"
+    m_hour: "Esta hora"
+    m_day: "Hoy"
+    m_month: "Este mes"
+    of: "de %limit%"
+    state_fine: "Muy por debajo"
+    state_close: "Se acerca"
+    state_near: "Cerca del límite"
+    weight_note: "Cada solicitud pide 15 valores a Open-Meteo, así que allí cuenta como %w% llamadas. Los límites cuentan por dirección de servidor; estas cifras suman los dos servidores web."
+    today_h: "Hoy"
+    t_asked: "Previsiones pedidas"
+    t_cache: "Desde nuestra caché"
+    t_sent: "Enviadas a Open-Meteo"
+    t_failed: "Fallidas"
+    t_refused: "%n% rechazadas por Open-Meteo"
+    t_limited: "Rechazadas por nuestro límite"
+    range: "Días mostrados"
+    days: "%n% días"
+    empty: "No se pidió ninguna previsión en estos días."
+    c_asks_h: "Previsiones pedidas por día"
+    s_sent: "Enviadas a Open-Meteo"
+    s_cache: "Desde nuestra caché"
+    c_days_h: "Llamadas por día, como las cuenta Open-Meteo"
+    c_hours_h: "Llamadas por hora, las últimas 48 horas"
+    limit_line: "Límite %limit%"
+    limit_far_day: "El plan gratuito permite %limit% al día; el día de más uso aquí contó %max%."
+    limit_far_hour: "El plan gratuito permite %limit% por hora; la hora de más uso aquí contó %max%."
+    tip_asks: "%sent% enviadas a Open-Meteo, %cache% desde nuestra caché"
+    tip_counted: "%n% contadas"
+    table_h: "Por día"
+    col_day: "Día (UTC)"
+    col_counted: "Contadas"
+    col_refused: "Rechazadas por Open-Meteo"
   modactivity:
     lead: 'Contribuciones decididas por mes y por región, últimos 12 meses. Por región y nunca por curador, a propósito: esta vista responde cuánto trabajo se hace y dónde, no quién lo hace. El manual del curador menciona que esta vista existe.'
     empty: 'Nada decidido en los últimos 12 meses.'

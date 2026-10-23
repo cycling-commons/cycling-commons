@@ -1399,7 +1399,10 @@ ride, never near its start or finish and only for a ride of 20 km or more
 (section 4.4), rounded to 0.1° (about 10 km) in the browser, with the date. Open-Meteo sees our server's
 address, that rounded point and the date; nothing about the rider, no
 account, no stops, no line. The answer is cached for three hours under the
-rounded point and the date, and nothing else is kept. Keys, five locales:
+rounded point and the date, and nothing else of the request is kept. What the
+forecast costs is counted per minute (`forecast_usage`, section 8): numbers of
+asks and what became of them, with no point, no date and nothing of the rider,
+so the notice does not change for it. Keys, five locales:
 `privacy.server_services_forecast` (under "Services our server asks") and
 `privacy.change.v6_forecast`. **Not significant**: no personal data is
 processed; it is a new service our server asks, and the notice names every
@@ -1440,6 +1443,44 @@ one of those.
   three hours in the `cache.forecast` pool under the rounded point and the
   date, so a ride dragged around a town costs one request an afternoon.
   Nothing of the rider reaches the service (section 7).
+- **What the forecast costs** is counted in `forecast_usage`
+  (`App\Weather\ForecastUsage`, migration `Version20261023030000`), one row
+  per UTC minute with any ask. Every ask that reaches `Forecast` adds 1 to
+  `asked`, then 1 to `hits` when our cache answers, or 1 to `calls` and the
+  request's weight to `weight` when it goes to Open-Meteo; `failures` counts
+  a request with no usable answer and `refused` one Open-Meteo answered with
+  429. An ask the `plan_weather` limiters refuse adds 1 to `limited` and goes
+  no further. Counts only: no point, no date, nothing of the rider (section
+  7). A failed write is logged and the forecast goes on.
+- **Open-Meteo's free tier** (open-meteo.com/en/pricing, read 2026-10-23):
+  600 calls a minute, 5,000 an hour, 10,000 a day and 300,000 a month, per
+  server address, for non-commercial use only: no ads and no subscriptions.
+  The Commons qualifies while that holds, and the forecast is never passed on
+  through our public API. A request for more than 10 figures, or for more than
+  14 days, counts as more than one call, in proportion: ours asks 15 figures
+  (`DAILY` 5, `HOURLY` 10) for one day, so each request counts as 1.5 calls
+  (`Forecast::callWeight()`). Each web server asks from its own address; the
+  counts add both up, so they read on the safe side.
+- **The admin's Weather usage page** (`/admin/weather-usage`,
+  `admin_weather_usage`, `DashboardController::weatherUsage()`, admin only,
+  read only, menu "Weather usage"). Four meters: the busiest minute today,
+  this hour, today and this month, each against its free-tier limit, with a
+  state in words and an icon, never colour alone: "Well within" under 50 %,
+  "Getting close" from 50 %, "Near the limit" from 80 %. Then today's asks:
+  asked, answered from our cache (with its share), sent to Open-Meteo,
+  failed (with those Open-Meteo refused), refused by our limit. Then 7, 30 or
+  90 days (30 when the query names another number): the asks per day,
+  stacked as sent and from our cache, with a legend; the calls per day as
+  Open-Meteo counts them; the calls per hour for the last 48 hours; and the
+  days as a table, newest first. A chart draws its limit line once its
+  busiest column reaches half the limit; below that a line under the title
+  gives the limit and the busiest figure. Times are UTC, as Open-Meteo
+  counts. The charts are inline SVG from `App\Service\AdminBarChart`: no
+  script and nothing fetched from elsewhere, columns at most 24 px with a
+  4 px rounded top, a scale of four clean steps, each column with the
+  browser's own tooltip. Colours by role in `styles/admin/weather_usage.css`,
+  light and the admin's dark scheme; copy under `admin.weather.*`, five
+  locales.
 
 ## 9. Testing
 
@@ -1490,6 +1531,19 @@ No rider's rows: nothing of a ride is stored, so there is no scope to leak.
   nothing to wait for; its own budget, a spent forecast budget does not stop
   it and a spent cache budget is 429 (`PlanControllerTest`). The wiring pins
   the cache ask as the wait starts and the empty chart while it waits.
+- **PHP, what the forecast costs.** `Forecast::callWeight()` is 1.5, and
+  every ask is counted: a request, a cache hit, a 429 as failed and refused,
+  no answer as failed, a date past the reach not at all (`ForecastTest`).
+  `ForecastUsage`: one row per minute, `now()` in UTC (01:10 in Brussels
+  counts for the day before), the days and the hours oldest first with the
+  empty ones filled, a failed write logged (`ForecastUsageTest`).
+  `POST /map/plan/weather`: a request counted as 1.5 calls, an ask our limit
+  refuses counted (`PlanControllerTest`). The Weather usage page: forbidden
+  to a non-admin, the meters and the empty state, three charts and a row per
+  day, a range we do not offer as 30 days (`WeatherUsagePageTest`).
+  `AdminBarChart`: four clean steps, compact ticks, the stacked segments'
+  2 px gap and rounded top, the limit line only within half of it, at most
+  eight labels (`AdminBarChartTest`).
 - **Copy.** The five locales carry every new key (translations.md).
 
 ## 10. Build order

@@ -4483,6 +4483,7 @@ admin:
     unsent_statements: 'Nicht versandte Begründungen'
     moderator_areas: 'Moderationsgebiete'
     moderation_activity: 'Moderationsaktivität'
+    weather_usage: "Wetternutzung"
     coverage_runs: "Coverage-Läufe"
   action:
     unlock: 'Konto entsperren'
@@ -4555,6 +4556,43 @@ admin:
     settings_unchanged: 'Nichts geändert.'
     settings_reset: 'Einstellung auf den Standardwert zurückgesetzt.'
     settings_invalid: 'Es wurde nichts gespeichert — prüfen Sie die unten markierten Werte.'
+  # The Weather usage page (route-planner.md section 8).
+  weather:
+    lead: "Was das Wetter des Routenplaners bei Open-Meteo kostet, gemessen an dessen kostenlosem Tarif. Zeiten in UTC, wie Open-Meteo zählt."
+    limits_h: "Kostenloser Tarif von Open-Meteo"
+    m_minute: "Stärkste Minute heute"
+    m_hour: "Diese Stunde"
+    m_day: "Heute"
+    m_month: "Dieser Monat"
+    of: "von %limit%"
+    state_fine: "Gut im Rahmen"
+    state_close: "Wird knapp"
+    state_near: "Nahe am Limit"
+    weight_note: "Jede Anfrage verlangt von Open-Meteo 15 Werte und zählt dort deshalb als %w% Aufrufe. Die Limits gelten je Serveradresse; diese Zahlen addieren beide Webserver."
+    today_h: "Heute"
+    t_asked: "Angefragte Vorhersagen"
+    t_cache: "Aus unserem Cache"
+    t_sent: "An Open-Meteo gesendet"
+    t_failed: "Fehlgeschlagen"
+    t_refused: "%n% von Open-Meteo abgelehnt"
+    t_limited: "Von unserem Limit abgelehnt"
+    range: "Angezeigte Tage"
+    days: "%n% Tage"
+    empty: "In diesen Tagen wurde keine Vorhersage angefragt."
+    c_asks_h: "Angefragte Vorhersagen pro Tag"
+    s_sent: "An Open-Meteo gesendet"
+    s_cache: "Aus unserem Cache"
+    c_days_h: "Aufrufe pro Tag, wie Open-Meteo sie zählt"
+    c_hours_h: "Aufrufe pro Stunde, die letzten 48 Stunden"
+    limit_line: "Limit %limit%"
+    limit_far_day: "Der kostenlose Tarif erlaubt %limit% pro Tag; der stärkste Tag hier zählte %max%."
+    limit_far_hour: "Der kostenlose Tarif erlaubt %limit% pro Stunde; die stärkste Stunde hier zählte %max%."
+    tip_asks: "%sent% an Open-Meteo gesendet, %cache% aus unserem Cache"
+    tip_counted: "%n% gezählt"
+    table_h: "Pro Tag"
+    col_day: "Tag (UTC)"
+    col_counted: "Gezählt"
+    col_refused: "Von Open-Meteo abgelehnt"
   modactivity:
     lead: 'Entschiedene Einreichungen pro Monat und Region, letzte 12 Monate. Bewusst pro Region, nie pro Kurator: diese Ansicht beantwortet, wie viel Arbeit anfällt und wo, nicht wer sie macht. Das Kuratoren-Regelwerk nennt diese Ansicht.'
     empty: 'Nichts entschieden in den letzten 12 Monaten.'

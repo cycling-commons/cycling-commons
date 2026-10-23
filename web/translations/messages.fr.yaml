@@ -4478,6 +4478,7 @@ admin:
     unsent_statements: 'Exposés des motifs non envoyés'
     moderator_areas: 'Zones de modération'
     moderation_activity: 'Activité de modération'
+    weather_usage: "Usage de la météo"
     coverage_runs: "Récoltes de couverture"
   action:
     unlock: 'Déverrouiller le compte'
@@ -4550,6 +4551,43 @@ admin:
     settings_unchanged: 'Aucun changement.'
     settings_reset: 'Réglage remis à sa valeur par défaut.'
     settings_invalid: 'Rien n’a été enregistré — vérifiez les valeurs signalées ci-dessous.'
+  # The Weather usage page (route-planner.md section 8).
+  weather:
+    lead: "Ce que coûte la météo du planificateur d’itinéraires chez Open-Meteo, face à son offre gratuite. Heures en UTC, comme les compte Open-Meteo."
+    limits_h: "Offre gratuite d’Open-Meteo"
+    m_minute: "Minute la plus chargée aujourd’hui"
+    m_hour: "Cette heure"
+    m_day: "Aujourd’hui"
+    m_month: "Ce mois-ci"
+    of: "sur %limit%"
+    state_fine: "Largement dans la limite"
+    state_close: "On s’en approche"
+    state_near: "Près de la limite"
+    weight_note: "Chaque requête demande 15 valeurs à Open-Meteo et y compte donc pour %w% appels. Les limites comptent par adresse de serveur ; ces chiffres additionnent les deux serveurs web."
+    today_h: "Aujourd’hui"
+    t_asked: "Prévisions demandées"
+    t_cache: "Servies par notre cache"
+    t_sent: "Envoyées à Open-Meteo"
+    t_failed: "Échouées"
+    t_refused: "%n% refusées par Open-Meteo"
+    t_limited: "Refusées par notre limite"
+    range: "Jours affichés"
+    days: "%n% jours"
+    empty: "Aucune prévision demandée pendant ces jours."
+    c_asks_h: "Prévisions demandées par jour"
+    s_sent: "Envoyées à Open-Meteo"
+    s_cache: "Servies par notre cache"
+    c_days_h: "Appels par jour, comptés comme chez Open-Meteo"
+    c_hours_h: "Appels par heure, les 48 dernières heures"
+    limit_line: "Limite %limit%"
+    limit_far_day: "L’offre gratuite permet %limit% par jour ; le jour le plus chargé ici a compté %max%."
+    limit_far_hour: "L’offre gratuite permet %limit% par heure ; l’heure la plus chargée ici a compté %max%."
+    tip_asks: "%sent% envoyées à Open-Meteo, %cache% servies par notre cache"
+    tip_counted: "%n% comptés"
+    table_h: "Par jour"
+    col_day: "Jour (UTC)"
+    col_counted: "Comptés"
+    col_refused: "Refusées par Open-Meteo"
   modactivity:
     lead: "Contributions tranchées par mois et par région, sur les 12 derniers mois. Par région, jamais par curateur, à dessein : cette vue répond à la question du volume de travail et de sa localisation, pas de qui le fait. Le manuel du curateur mentionne son existence."
     empty: 'Rien de tranché sur les 12 derniers mois.'

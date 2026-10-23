@@ -646,7 +646,9 @@ runs have an ID column, a curator application shows `#<id>` on its row, a
 withheld photo shows its `media_upload` UUID, and the moderator-areas and
 coverage-run pages name the key in their title. An escalated submission
 already reads "SUB-<id>". The country requests' area table has no key: an
-area there is free text, not a row.
+area there is free text, not a row. Nor has the weather usage table
+(route-planner.md section 8): a row there is a day added up from its
+minutes.
 
 ### 6.1 Support actions
 

@@ -7,10 +7,13 @@ declare(strict_types=1);
 namespace App\Tests\Weather;
 
 use App\Weather\Forecast;
+use App\Weather\ForecastUsage;
+use Doctrine\DBAL\Connection;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
+use Symfony\Component\Clock\MockClock;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 
@@ -18,8 +21,9 @@ use Symfony\Component\HttpClient\Response\MockResponse;
  * The forecast behind a planned ride's date (docs/specs/route-planner.md
  * section 4.4 and 8): the point rounded to a tenth of a degree before the
  * request, one request for two asks of the same rounded point and date,
- * null past the service's reach, with no service, and with no answer; an ask
- * of the cache only never a request.
+ * null past the service's reach, with no service, and with no answer; every
+ * ask that reaches the service counted, a request as the 1.5 calls Open-Meteo
+ * counts it as; an ask of the cache only never a request.
  */
 final class ForecastTest extends TestCase
 {
@@ -36,7 +40,7 @@ final class ForecastTest extends TestCase
         };
     }
 
-    private function forecast(?MockResponse $response, string $url = 'https://forecast.test'): Forecast
+    private function forecast(?MockResponse $response, string $url = 'https://forecast.test', ?ForecastUsage $usage = null): Forecast
     {
         $http = new MockHttpClient(function (string $method, string $u) use ($response): MockResponse {
             $this->asked[] = $u;
@@ -44,7 +48,7 @@ final class ForecastTest extends TestCase
             return $response ?? new MockResponse('', ['error' => 'Could not resolve host']);
         });
 
-        return new Forecast($http, new ArrayAdapter(), new NullLogger(), $this->clock(), $url);
+        return new Forecast($http, new ArrayAdapter(), new NullLogger(), $this->clock(), $url, $usage);
     }
 
     private static function day(): MockResponse
@@ -149,6 +153,34 @@ final class ForecastTest extends TestCase
         self::assertCount(0, $this->asked);
         self::assertNull($this->forecast(null)->forDay(50.5, 5.9, '2026-10-18'));
         self::assertNull($this->forecast(new MockResponse('{"daily":{"time":[]}}'))->forDay(50.5, 5.9, '2026-10-18'));
+    }
+
+    public function testEveryAskIsCountedAndARequestCountsAsOneAndAHalfCalls(): void
+    {
+        self::assertSame(1.5, Forecast::callWeight(), '15 figures for one day');
+        $writes = [];
+        $db = $this->createStub(Connection::class);
+        $db->method('executeStatement')->willReturnCallback(static function (string $sql, array $params) use (&$writes): int {
+            unset($params['at']);
+            $writes[] = $params;
+
+            return 1;
+        });
+        $usage = new ForecastUsage($db, new NullLogger(), new MockClock('2026-10-15 09:00:00 UTC'));
+
+        $f = $this->forecast(self::day(), usage: $usage);
+        $f->forDay(50.5, 5.9, '2026-10-18');
+        $f->forDay(50.5, 5.9, '2026-10-18');
+        $this->forecast(new MockResponse('', ['http_code' => 429]), usage: $usage)->forDay(50.5, 5.9, '2026-10-18');
+        $this->forecast(null, usage: $usage)->forDay(50.5, 5.9, '2026-10-18');
+        $this->forecast(self::day(), usage: $usage)->forDay(50.5, 5.9, '2026-11-02');
+
+        self::assertSame([
+            ['asked' => 1, 'hits' => 0, 'calls' => 1, 'weight' => 1.5, 'failures' => 0, 'refused' => 0],
+            ['asked' => 1, 'hits' => 1, 'calls' => 0, 'weight' => 0.0, 'failures' => 0, 'refused' => 0],
+            ['asked' => 1, 'hits' => 0, 'calls' => 1, 'weight' => 1.5, 'failures' => 1, 'refused' => 1],
+            ['asked' => 1, 'hits' => 0, 'calls' => 1, 'weight' => 1.5, 'failures' => 1, 'refused' => 0],
+        ], $writes, 'a date past the reach is never asked, so never counted');
     }
 
     public function testAnAskOfTheCacheOnlyNeverReachesTheService(): void

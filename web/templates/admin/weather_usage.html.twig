@@ -1,0 +1,150 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+   What the route planner's weather costs at Open-Meteo, against its free tier
+   (route-planner.md section 8): four meters (busiest minute today, this hour,
+   today, this month), today's asks and what became of them, then the last
+   days and the last 48 hours as columns, and the days as a table. Counts only,
+   from forecast_usage (App\Weather\ForecastUsage); times in UTC.
+
+   The charts are inline SVG built by App\Service\AdminBarChart: no script and
+   nothing fetched from elsewhere. Each column's band carries a <title>, the
+   browser's own tooltip; the table holds every figure. Colours by role in
+   styles/admin/weather_usage.css, light and the admin's dark scheme.
+#}
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block head_stylesheets %}
+  {{ parent() }}
+  <link rel="stylesheet" href="{{ asset('styles/admin/weather_usage.css') }}">
+{% endblock %}
+
+{% block content_title %}{{ 'admin.menu.weather_usage'|trans }}{% endblock %}
+
+{% macro chart(c, tips, title_id) %}
+  <svg class="wu-chart" viewBox="0 0 {{ c.width }} {{ c.height }}" role="img" aria-labelledby="{{ title_id }}">
+    {% for t in c.ticks %}
+      <line class="wu-grid" x1="{{ c.plot.x }}" x2="{{ c.plot.x + c.plot.w }}" y1="{{ t.y }}" y2="{{ t.y }}"/>
+      <text class="wu-tick" x="{{ c.plot.x - 6 }}" y="{{ t.y }}" text-anchor="end" dominant-baseline="middle">{{ t.label }}</text>
+    {% endfor %}
+    {% for b in c.bars %}
+      <g class="wu-band">
+        <title>{{ tips[b.index] }}</title>
+        <rect class="wu-hit" x="{{ b.bx }}" y="{{ c.plot.y }}" width="{{ b.bw }}" height="{{ c.plot.h }}"/>
+        {% for s in b.segments %}<path class="wu-s-{{ s.series }}" d="{{ s.d }}"/>{% endfor %}
+      </g>
+    {% endfor %}
+    {% if c.limit %}
+      <line class="wu-limit" x1="{{ c.plot.x }}" x2="{{ c.plot.x + c.plot.w }}" y1="{{ c.limit.y }}" y2="{{ c.limit.y }}"/>
+      <text class="wu-limit-label" x="{{ c.plot.x + c.plot.w }}" y="{{ c.limit.y - 5 }}" text-anchor="end">{{ 'admin.weather.limit_line'|trans({'%limit%': c.limit.value|number_format(0, '.', ',')}) }}</text>
+    {% endif %}
+    {% for l in c.xLabels %}
+      <text class="wu-x" x="{{ l.x }}" y="{{ c.height - 8 }}" text-anchor="middle">{{ l.text }}</text>
+    {% endfor %}
+  </svg>
+{% endmacro %}
+
+{% block main %}
+<div class="wu col-xl-10">
+  <p class="text-muted">{{ 'admin.weather.lead'|trans }}</p>
+
+  <h6 class="wu-h">{{ 'admin.weather.limits_h'|trans }}</h6>
+  <div class="wu-meters">
+    {% for m in [
+      {key: 'minute', used: now.peakMinute, limit: limits.minute},
+      {key: 'hour', used: now.hour, limit: limits.hour},
+      {key: 'day', used: now.day, limit: limits.day},
+      {key: 'month', used: now.month, limit: limits.month},
+    ] %}
+      {% set pct = m.limit > 0 ? min(100, m.used / m.limit * 100) : 0 %}
+      {% set level = pct >= 80 ? 'near' : (pct >= 50 ? 'close' : 'fine') %}
+      <div class="wu-meter wu-{{ level }}">
+        <div class="wu-meter-label">{{ ('admin.weather.m_' ~ m.key)|trans }}</div>
+        <div class="wu-meter-value">{{ m.used|number_format(m.used == m.used|round ? 0 : 1, '.', ',') }} <span>{{ 'admin.weather.of'|trans({'%limit%': m.limit|number_format(0, '.', ',')}) }}</span></div>
+        <svg class="wu-track" viewBox="0 0 100 6" preserveAspectRatio="none" aria-hidden="true">
+          <rect class="wu-track-bg" width="100" height="6" rx="3"/>
+          {% if pct > 0 %}<rect class="wu-track-fill" width="{{ max(pct, 1)|round(1) }}" height="6" rx="3"/>{% endif %}
+        </svg>
+        <div class="wu-state"><i class="fa {{ level == 'near' ? 'fa-circle-exclamation' : (level == 'close' ? 'fa-triangle-exclamation' : 'fa-circle-check') }}" aria-hidden="true"></i> {{ ('admin.weather.state_' ~ level)|trans }} · {{ pct|number_format(pct < 10 ? 1 : 0, '.', ',') }} %</div>
+      </div>
+    {% endfor %}
+  </div>
+  <p class="wu-note">{{ 'admin.weather.weight_note'|trans({'%w%': weight|number_format(1, '.', ',')}) }}</p>
+
+  <h6 class="wu-h">{{ 'admin.weather.today_h'|trans }}</h6>
+  <div class="wu-tiles">
+    <div class="wu-tile"><div class="wu-tile-label">{{ 'admin.weather.t_asked'|trans }}</div><div class="wu-tile-value">{{ now.asked|number_format(0, '.', ',') }}</div></div>
+    <div class="wu-tile"><div class="wu-tile-label">{{ 'admin.weather.t_cache'|trans }}</div><div class="wu-tile-value">{{ now.hits|number_format(0, '.', ',') }}{% if now.asked > 0 %} <span>{{ (now.hits / now.asked * 100)|number_format(0) }} %</span>{% endif %}</div></div>
+    <div class="wu-tile"><div class="wu-tile-label">{{ 'admin.weather.t_sent'|trans }}</div><div class="wu-tile-value">{{ now.calls|number_format(0, '.', ',') }}</div></div>
+    <div class="wu-tile"><div class="wu-tile-label">{{ 'admin.weather.t_failed'|trans }}</div><div class="wu-tile-value">{{ now.failures|number_format(0, '.', ',') }}{% if now.refused > 0 %} <span>{{ 'admin.weather.t_refused'|trans({'%n%': now.refused}) }}</span>{% endif %}</div></div>
+    <div class="wu-tile"><div class="wu-tile-label">{{ 'admin.weather.t_limited'|trans }}</div><div class="wu-tile-value">{{ now.limited|number_format(0, '.', ',') }}</div></div>
+  </div>
+
+  <div class="wu-range" role="group" aria-label="{{ 'admin.weather.range'|trans }}">
+    <span class="text-muted small">{{ 'admin.weather.range'|trans }}</span>
+    {% for d in [7, 30, 90] %}
+      <a class="btn btn-sm {{ d == days ? 'btn-primary' : 'btn-outline-secondary' }}" href="{{ path('admin_weather_usage', {days: d}) }}"{% if d == days %} aria-current="true"{% endif %}>{{ 'admin.weather.days'|trans({'%n%': d}) }}</a>
+    {% endfor %}
+  </div>
+
+  {% if daily|reduce((carry, r) => carry + r.asked + r.limited, 0) == 0 %}
+    <p class="text-muted">{{ 'admin.weather.empty'|trans }}</p>
+  {% else %}
+    <section class="wu-card">
+      <h6 id="wu-asks-h" class="wu-card-h">{{ 'admin.weather.c_asks_h'|trans }}</h6>
+      <ul class="wu-legend">
+        <li><span class="wu-key wu-s-sent" aria-hidden="true"></span>{{ 'admin.weather.s_sent'|trans }}</li>
+        <li><span class="wu-key wu-s-cache" aria-hidden="true"></span>{{ 'admin.weather.s_cache'|trans }}</li>
+      </ul>
+      {% set tips = [] %}
+      {% for r in daily %}{% set tips = tips|merge([dayLabels[loop.index0] ~ ': ' ~ 'admin.weather.tip_asks'|trans({'%sent%': r.calls, '%cache%': r.hits})]) %}{% endfor %}
+      {{ _self.chart(askChart, tips, 'wu-asks-h') }}
+    </section>
+
+    <section class="wu-card">
+      <h6 id="wu-days-h" class="wu-card-h">{{ 'admin.weather.c_days_h'|trans }}</h6>
+      {% if not dayChart.limit %}<p class="wu-sub">{{ 'admin.weather.limit_far_day'|trans({'%limit%': limits.day|number_format(0, '.', ','), '%max%': dayChart.max|number_format(1, '.', ',')}) }}</p>{% endif %}
+      {% set tips = [] %}
+      {% for r in daily %}{% set tips = tips|merge([dayLabels[loop.index0] ~ ': ' ~ 'admin.weather.tip_counted'|trans({'%n%': r.weight|number_format(1, '.', ',')})]) %}{% endfor %}
+      {{ _self.chart(dayChart, tips, 'wu-days-h') }}
+    </section>
+
+    <section class="wu-card">
+      <h6 id="wu-hours-h" class="wu-card-h">{{ 'admin.weather.c_hours_h'|trans }}</h6>
+      {% if not hourChart.limit %}<p class="wu-sub">{{ 'admin.weather.limit_far_hour'|trans({'%limit%': limits.hour|number_format(0, '.', ','), '%max%': hourChart.max|number_format(1, '.', ',')}) }}</p>{% endif %}
+      {% set tips = [] %}
+      {% for r in hourly %}{% set tips = tips|merge([(r.at|cc_date(true)) ~ ', ' ~ hourLabels[loop.index0] ~ ' UTC: ' ~ 'admin.weather.tip_counted'|trans({'%n%': r.weight|number_format(1, '.', ',')})]) %}{% endfor %}
+      {{ _self.chart(hourChart, tips, 'wu-hours-h') }}
+    </section>
+
+    <h6 class="wu-h">{{ 'admin.weather.table_h'|trans }}</h6>
+    <table class="table table-sm wu-table">
+      <thead>
+        <tr>
+          <th>{{ 'admin.weather.col_day'|trans }}</th>
+          <th class="text-end">{{ 'admin.weather.t_asked'|trans }}</th>
+          <th class="text-end">{{ 'admin.weather.s_cache'|trans }}</th>
+          <th class="text-end">{{ 'admin.weather.s_sent'|trans }}</th>
+          <th class="text-end">{{ 'admin.weather.col_counted'|trans }}</th>
+          <th class="text-end">{{ 'admin.weather.t_failed'|trans }}</th>
+          <th class="text-end">{{ 'admin.weather.col_refused'|trans }}</th>
+          <th class="text-end">{{ 'admin.weather.t_limited'|trans }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in daily|reverse %}
+          <tr>
+            <td><time datetime="{{ r.at }}">{{ r.at|cc_date(true) }}</time></td>
+            <td class="text-end">{{ r.asked|number_format(0, '.', ',') }}</td>
+            <td class="text-end">{{ r.hits|number_format(0, '.', ',') }}</td>
+            <td class="text-end">{{ r.calls|number_format(0, '.', ',') }}</td>
+            <td class="text-end">{{ r.weight|number_format(1, '.', ',') }}</td>
+            <td class="text-end">{{ r.failures|number_format(0, '.', ',') }}</td>
+            <td class="text-end">{{ r.refused|number_format(0, '.', ',') }}</td>
+            <td class="text-end">{{ r.limited|number_format(0, '.', ',') }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</div>
+{% endblock %}

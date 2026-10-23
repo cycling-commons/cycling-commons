@@ -1,0 +1,56 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* The admin's Weather usage page (admin/weather_usage.html.twig): meters,
+   tiles and inline SVG columns, coloured by role. Light first; the admin's
+   dark scheme (.ea-dark-scheme) gets its own steps of the same hues, chosen
+   for the dark surface. Series: blue for requests sent to Open-Meteo and for
+   what it counted, aqua for answers from our cache. Meter fills carry their
+   state (blue fine, amber close, red near), always with an icon and a word. */
+.wu{--wu-sent:#2a78d6;--wu-cache:#1baf7a;--wu-ink:#0b0b0b;--wu-ink-2:#52514e;--wu-grid:#e6e5e1;
+  --wu-track:#cde2fb;--wu-fine:#2a78d6;--wu-close:#fab219;--wu-near:#d03b3b;--wu-card:#fcfcfb;--wu-edge:#e6e5e1}
+.ea-dark-scheme .wu{--wu-sent:#3987e5;--wu-cache:#199e70;--wu-ink:#f0efec;--wu-ink-2:#c3c2b7;--wu-grid:#383835;
+  --wu-track:#104281;--wu-fine:#3987e5;--wu-card:#1a1a19;--wu-edge:#383835}
+
+.wu-h{margin:1.6rem 0 .7rem;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--wu-ink-2)}
+.wu-note,.wu-sub{font-size:.85rem;color:var(--wu-ink-2);margin:.5rem 0 0}
+
+/* The four meters against Open-Meteo's free tier. */
+.wu-meters{display:grid;grid-template-columns:repeat(auto-fill,minmax(12rem,1fr));gap:.8rem}
+.wu-meter{padding:.8rem .9rem;border:1px solid var(--wu-edge);border-radius:6px;background:var(--wu-card)}
+.wu-meter-label,.wu-tile-label{font-size:.8rem;color:var(--wu-ink-2)}
+.wu-meter-value{font-size:1.45rem;font-weight:600;color:var(--wu-ink);font-variant-numeric:tabular-nums;margin:.15rem 0 .45rem}
+.wu-meter-value span{font-size:.85rem;font-weight:400;color:var(--wu-ink-2)}
+.wu-track{display:block;width:100%;height:6px}
+.wu-track-bg{fill:var(--wu-track)}
+.wu-fine .wu-track-fill{fill:var(--wu-fine)}
+.wu-close .wu-track-fill{fill:var(--wu-close)}
+.wu-near .wu-track-fill{fill:var(--wu-near)}
+.wu-state{font-size:.8rem;color:var(--wu-ink-2);margin-top:.45rem}
+.wu-close .wu-state i{color:var(--wu-close)}
+.wu-near .wu-state i{color:var(--wu-near)}
+
+/* Today's asks. */
+.wu-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(10rem,1fr));gap:.8rem}
+.wu-tile{padding:.7rem .9rem;border:1px solid var(--wu-edge);border-radius:6px;background:var(--wu-card)}
+.wu-tile-value{font-size:1.3rem;font-weight:600;color:var(--wu-ink)}
+.wu-tile-value span{font-size:.8rem;font-weight:400;color:var(--wu-ink-2)}
+
+/* The range, one row above the charts. */
+.wu-range{display:flex;align-items:center;flex-wrap:wrap;gap:.4rem;margin:1.6rem 0 .8rem}
+
+/* The charts. */
+.wu-card{margin:0 0 1rem;padding:.9rem 1rem .6rem;border:1px solid var(--wu-edge);border-radius:6px;background:var(--wu-card)}
+.wu-card-h{margin:0 0 .3rem;font-size:.9rem;font-weight:600;color:var(--wu-ink)}
+.wu-legend{display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;list-style:none;margin:.2rem 0 .3rem;padding:0;font-size:.8rem;color:var(--wu-ink-2)}
+.wu-legend li{display:flex;align-items:center;gap:.4rem}
+.wu-key{display:inline-block;width:10px;height:10px;border-radius:2px}
+.wu-key.wu-s-sent{background:var(--wu-sent)}
+.wu-key.wu-s-cache{background:var(--wu-cache)}
+.wu-chart{display:block;width:100%;height:auto;margin-top:.4rem}
+.wu-grid{stroke:var(--wu-grid);stroke-width:1}
+.wu-tick,.wu-x,.wu-limit-label{font-size:11px;fill:var(--wu-ink-2);font-variant-numeric:tabular-nums}
+.wu-chart path.wu-s-sent,.wu-chart path.wu-s-counted{fill:var(--wu-sent)}
+.wu-chart path.wu-s-cache{fill:var(--wu-cache)}
+.wu-hit{fill:transparent}
+.wu-band:hover .wu-hit{fill:var(--wu-grid);fill-opacity:.45}
+.wu-limit{stroke:var(--wu-ink-2);stroke-width:1}
+.wu-table td,.wu-table th{font-variant-numeric:tabular-nums}

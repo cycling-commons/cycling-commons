@@ -16,6 +16,8 @@ use App\Elevation\RouteSnapper;
 use App\Entity\User;
 use App\Tests\Coverage\CoverageSchema;
 use App\Weather\Forecast;
+use App\Weather\ForecastUsage;
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 use Psr\Log\NullLogger;
@@ -481,6 +483,14 @@ final class PlanControllerTest extends WebTestCase
         return ['lat' => 50.4825, 'lng' => 5.8630, 'date' => (new \DateTimeImmutable('tomorrow'))->format('Y-m-d')];
     }
 
+    /** @return array{calls: int, weight: float, limited: int} */
+    private static function usage(): array
+    {
+        $row = static::getContainer()->get(Connection::class)->fetchAssociative('SELECT COALESCE(SUM(calls), 0) AS calls, COALESCE(SUM(weight), 0) AS weight, COALESCE(SUM(limited), 0) AS limited FROM forecast_usage');
+
+        return ['calls' => (int) ($row['calls'] ?? 0), 'weight' => (float) ($row['weight'] ?? 0), 'limited' => (int) ($row['limited'] ?? 0)];
+    }
+
     public function testTheForecastNeedsTheTokenAndAWellFormedAsk(): void
     {
         $client = static::createClient();
@@ -514,7 +524,8 @@ final class PlanControllerTest extends WebTestCase
                 'time' => [self::weatherAsk()['date']], 'wind_speed_10m_max' => [28.1], 'wind_direction_10m_dominant' => [225], 'temperature_2m_max' => [31.4], 'precipitation_sum' => [6.2],
             ]]));
         });
-        static::getContainer()->set(Forecast::class, new Forecast($http, new ArrayAdapter(), new NullLogger(), static::getContainer()->get(ClockInterface::class), 'https://forecast.test'));
+        static::getContainer()->set(Forecast::class, new Forecast($http, new ArrayAdapter(), new NullLogger(), static::getContainer()->get(ClockInterface::class), 'https://forecast.test', static::getContainer()->get(ForecastUsage::class)));
+        $before = self::usage();
 
         self::post($client, '/map/plan/weather', 'plan-weather', self::weatherAsk());
 
@@ -523,6 +534,8 @@ final class PlanControllerTest extends WebTestCase
         self::assertCount(1, $asked);
         self::assertStringContainsString('latitude=50.5&longitude=5.9', $asked[0], 'the point leaves our server rounded to a tenth of a degree');
         self::assertStringNotContainsString('50.48', $asked[0]);
+        $after = self::usage();
+        self::assertSame([1, 1.5], [$after['calls'] - $before['calls'], $after['weight'] - $before['weight']], 'the request is counted as Open-Meteo counts it');
     }
 
     public function testWithoutAForecastServiceAnAskOfOurCacheHasNothingToWaitFor(): void
@@ -596,8 +609,10 @@ final class PlanControllerTest extends WebTestCase
             self::assertTrue($limiter->consume()->isAccepted());
         }
 
+        $before = self::usage();
         self::post($client, '/map/plan/weather', 'plan-weather', self::weatherAsk());
 
         self::assertResponseStatusCodeSame(429);
+        self::assertSame(1, self::usage()['limited'] - $before['limited'], 'an ask our limit refuses is counted');
     }
 }

@@ -16,6 +16,7 @@ use App\Elevation\RouteSnapper;
 use App\Entity\User;
 use App\Security\PseudonymousKey;
 use App\Weather\Forecast;
+use App\Weather\ForecastUsage;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -530,6 +531,7 @@ final class PlanController extends AbstractController
     public function weather(
         Request $request,
         Forecast $forecast,
+        ForecastUsage $usage,
         RateLimiterFactoryInterface $planWeatherLimiter,
         RateLimiterFactoryInterface $planWeatherAnonLimiter,
         RateLimiterFactoryInterface $planWeatherCachedLimiter,
@@ -558,6 +560,9 @@ final class PlanController extends AbstractController
             return new JsonResponse(null === $day && $forecast->answers($date) ? ['forecast' => null, 'uncached' => true] : ['forecast' => $day]);
         }
         if (!$this->spend($request, $planWeatherLimiter, $planWeatherAnonLimiter, $secret)) {
+            // Counted for the admin's Weather usage page (route-planner.md section 8).
+            $usage->limited();
+
             return new JsonResponse(['error' => 'rate_limited'], 429);
         }
 

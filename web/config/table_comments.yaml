@@ -138,6 +138,11 @@ tables:
     job_run: >-
         Last good run of each daily console job; the admin dashboard warns when one is late.
 
+    # Hand-written migration (Version20261023030000). Written by App\Weather\ForecastUsage.
+    forecast_usage: >-
+        What the planner's weather costs, one row per minute with any ask: asks, answers from our cache,
+        requests to Open-Meteo and what they count as there, failures, refusals by Open-Meteo and by our
+        own limit. Counts only, no point, no date, no rider (route-planner.md 8).
     pow_spent: >-
         One row per spent proof-of-work challenge (its sha256), inserted in one statement so
         a solution works once on either web host; rows go once their challenge has expired.

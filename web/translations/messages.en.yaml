@@ -4500,6 +4500,7 @@ admin:
     unsent_statements: 'Unsent statements'
     moderator_areas: 'Moderator areas'
     moderation_activity: 'Moderation activity'
+    weather_usage: "Weather usage"
     coverage_runs: "Coverage runs"
   action:
     unlock: 'Unlock account'
@@ -4572,6 +4573,43 @@ admin:
     settings_unchanged: 'Nothing changed.'
     settings_reset: 'Setting reset to its default.'
     settings_invalid: 'Nothing was saved — check the values marked below.'
+  # The Weather usage page (route-planner.md section 8).
+  weather:
+    lead: "What the route planner's weather costs at Open-Meteo, set against its free tier. Times are UTC, as Open-Meteo counts them."
+    limits_h: "Open-Meteo's free tier"
+    m_minute: "Busiest minute today"
+    m_hour: "This hour"
+    m_day: "Today"
+    m_month: "This month"
+    of: "of %limit%"
+    state_fine: "Well within"
+    state_close: "Getting close"
+    state_near: "Near the limit"
+    weight_note: "Each request asks Open-Meteo for 15 figures, so it counts there as %w% calls. The limits count per server address; these figures add up both web servers."
+    today_h: "Today"
+    t_asked: "Forecasts asked"
+    t_cache: "Answered from our cache"
+    t_sent: "Sent to Open-Meteo"
+    t_failed: "Failed"
+    t_refused: "%n% refused by Open-Meteo"
+    t_limited: "Refused by our limit"
+    range: "Days shown"
+    days: "%n% days"
+    empty: "No forecast was asked in these days."
+    c_asks_h: "Forecasts asked per day"
+    s_sent: "Sent to Open-Meteo"
+    s_cache: "From our cache"
+    c_days_h: "Calls per day, as Open-Meteo counts them"
+    c_hours_h: "Calls per hour, the last 48 hours"
+    limit_line: "Limit %limit%"
+    limit_far_day: "The free tier allows %limit% a day; the busiest day here counted %max%."
+    limit_far_hour: "The free tier allows %limit% an hour; the busiest hour here counted %max%."
+    tip_asks: "%sent% sent to Open-Meteo, %cache% from our cache"
+    tip_counted: "%n% counted"
+    table_h: "Per day"
+    col_day: "Day (UTC)"
+    col_counted: "Counted"
+    col_refused: "Refused by Open-Meteo"
   modactivity:
     lead: 'Decided submissions per month and per region, last 12 months. Deliberately per region, never per curator: this view answers how much work is being done and where, not who does it. The curator rulebook says this view exists.'
     empty: 'Nothing decided in the last 12 months.'

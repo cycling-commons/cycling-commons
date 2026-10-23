@@ -27,11 +27,14 @@ use App\Ops\DailyJobs;
 use App\Ops\JobHealth;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
+use App\Service\AdminBarChart;
 use App\Service\AdminDashboardStats;
 use App\Service\AdminQueueCounts;
 use App\Settings\SettingsRegistry;
 use App\Settings\SystemSettings;
 use App\Settings\SystemSettingsWriter;
+use App\Weather\Forecast;
+use App\Weather\ForecastUsage;
 use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
@@ -129,6 +132,7 @@ final class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.moderator_areas'), 'fa fa-map-location-dot', 'admin_moderator_areas_overview');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.moderation_activity'), 'fa fa-chart-column', 'admin_moderation_activity');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.coverage_runs'), 'fa fa-list-check', 'admin_coverage_runs');
+        yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.weather_usage'), 'fa fa-cloud-sun', 'admin_weather_usage');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.escalated'), 'fa fa-shield-halved', 'admin_escalated');
         // Account statements of reasons whose email did not go out (account-and-auth.md §6.8).
         $unsent = $this->unsentStatements->count();
@@ -561,6 +565,42 @@ final class DashboardController extends AbstractDashboardController
      *
      * @see docs/specs/account-and-auth.md §7
      */
+    /**
+     * What the route planner's weather costs at Open-Meteo, against its free
+     * tier (route-planner.md section 8): where the busiest minute today, this
+     * hour, today and this month stand, today's asks and what became of them,
+     * and the last days and hours as columns, with a table of the days.
+     * Read-only; times in UTC, as Open-Meteo counts.
+     */
+    #[AdminRoute('/weather-usage', 'weather_usage', options: ['methods' => ['GET']])]
+    public function weatherUsage(Request $request, ForecastUsage $usage): Response
+    {
+        $days = $request->query->getInt('days');
+        $days = \in_array($days, [7, 30, 90], true) ? $days : 30;
+        $daily = $usage->days($days);
+        $hourly = $usage->hours(48);
+        $dayFormat = new \IntlDateFormatter($request->getLocale(), \IntlDateFormatter::NONE, \IntlDateFormatter::NONE, 'UTC', null, 'd MMM');
+        $dayLabels = array_map(static fn (array $r): string => (string) $dayFormat->format(new \DateTimeImmutable($r['at'].' 00:00:00 UTC')), $daily);
+        $hourLabels = array_map(static fn (array $r): string => substr($r['at'], 11, 5), $hourly);
+
+        return $this->render('admin/weather_usage.html.twig', [
+            'days' => $days,
+            'now' => $usage->now(),
+            'limits' => ['minute' => ForecastUsage::LIMIT_MINUTE, 'hour' => ForecastUsage::LIMIT_HOUR, 'day' => ForecastUsage::LIMIT_DAY, 'month' => ForecastUsage::LIMIT_MONTH],
+            'weight' => Forecast::callWeight(),
+            'daily' => $daily,
+            'dayLabels' => $dayLabels,
+            'hourly' => $hourly,
+            'hourLabels' => $hourLabels,
+            'askChart' => AdminBarChart::build($dayLabels, [
+                'sent' => array_map(static fn (array $r): float => (float) $r['calls'], $daily),
+                'cache' => array_map(static fn (array $r): float => (float) $r['hits'], $daily),
+            ]),
+            'dayChart' => AdminBarChart::build($dayLabels, ['counted' => array_map(static fn (array $r): float => $r['weight'], $daily)], ForecastUsage::LIMIT_DAY),
+            'hourChart' => AdminBarChart::build($hourLabels, ['counted' => array_map(static fn (array $r): float => $r['weight'], $hourly)], ForecastUsage::LIMIT_HOUR),
+        ]);
+    }
+
     #[AdminRoute('/moderation-activity', 'moderation_activity', options: ['methods' => ['GET']])]
     public function moderationActivity(EntityManagerInterface $em): Response
     {
