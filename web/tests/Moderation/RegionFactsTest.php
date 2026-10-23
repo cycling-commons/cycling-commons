@@ -74,19 +74,25 @@ final class RegionFactsTest extends WebTestCase
         $db = static::getContainer()->get(Connection::class);
         $db->executeStatement('UPDATE region SET context = :c WHERE id = :id', ['c' => '{"en": {"title": "Pfacts A", "extract": "Pfacts A is a province with a long history.", "url": "https://en.wikipedia.org/wiki/Pfacts_A"}}', 'id' => $a->getId()]);
 
-        // The Wikipedia summary is not always geography: it is about the region.
+        // The Wikipedia summary is not always geography: it is about the
+        // region, and a Geography section of its own follows it.
         $crawler = $client->request('GET', '/regions/pfacts-a');
-        $about = $crawler->filter('.rg-about:not(.rg-story)');
-        self::assertSame('About Pfacts A', $about->filter('.kicker')->text());
-        self::assertSame('Write about the geography of this region', $about->filter('.rg-about-write a')->text(), 'the same plain link as an empty history text');
-        self::assertSame('/regions/pfacts-a/text', $about->filter('.rg-about-write a')->attr('href'));
+        self::assertSame(['About Pfacts A', 'Geography', 'History, nature and culture'], $crawler->filter('.rbody-main > .rg-about > .kicker')->each(static fn ($k): string => $k->text()));
+        $geo = $crawler->filter('.rg-about.rg-geo');
+        self::assertSame('Write about the geography of this region', $geo->filter('.rg-about-write a')->text(), 'the same plain link as an empty history text');
+        self::assertSame('/regions/pfacts-a/text', $geo->filter('.rg-about-write a')->attr('href'));
+        // Under all the texts, quietly: an invitation to make it a page worth riding to.
+        $invite = $crawler->filter('.rbody-main > aside.rg-invite');
+        self::assertSame('Do you know Pfacts A?', $invite->filter('.rg-invite-h')->text());
+        self::assertSame('Write about Pfacts A', $invite->filter('a')->text());
+        self::assertCount(0, $invite->filter('.btn'), 'a plain link, no button');
 
         // A text written here is the geography text, and asks for nothing.
         $db->executeStatement('UPDATE region SET context_curated = :c WHERE id = :id', ['c' => '{"en": {"text": "Pfacts A lies on the sea.", "derived": false, "userId": null, "approvedBy": null, "submissionId": null, "at": "2026-10-23T00:00:00+00:00"}}', 'id' => $a->getId()]);
         $crawler = $client->request('GET', '/regions/pfacts-a');
-        $about = $crawler->filter('.rg-about:not(.rg-story)');
-        self::assertSame('Geography', $about->filter('.kicker')->text());
-        self::assertCount(0, $about->filter('.rg-about-write'));
+        self::assertSame(['Geography', 'History, nature and culture'], $crawler->filter('.rbody-main > .rg-about > .kicker')->each(static fn ($k): string => $k->text()));
+        self::assertCount(0, $crawler->filter('.rg-about:not(.rg-story) .rg-about-write'));
+        self::assertCount(0, $crawler->filter('.rg-invite'));
     }
 
     public function testARidersFiguresWaitForACuratorThenShowAndARevokeTakesThemBack(): void

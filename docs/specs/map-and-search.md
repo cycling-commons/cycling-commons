@@ -963,11 +963,16 @@ languages.
   **An automatic text is about the region, and asks for a geography text
   (2026-10-23).** The Wikipedia lead is the article's opening summary, which
   is not always about geography: while it stands, its kicker reads "About
-  {region}", and only a text written here is headed "Geography". Under its
-  credit line, the same plain link as an empty history text, "Write about
-  the geography of this region", opens the region editor at the geography
-  step ([moderation-and-contribution.md](moderation-and-contribution.md)
-  §3.1g). Pinned by `RegionFactsTest`.
+  {region}", and a "Geography" section of its own follows it, holding the
+  same plain link as an empty history text, "Write about the geography of
+  this region", to the region editor's geography step
+  ([moderation-and-contribution.md](moderation-and-contribution.md) §3.1g).
+  A text written here is the Geography section itself. While nobody has
+  written either text, the page ends its texts with a quiet invitation
+  under a thin rule: "Do you know {region}?", "This page was put together
+  from open data. Make it an invitation to ride here: how the region
+  rides, what riders see on the way, and the story its land tells.", and
+  the plain link "Write about {region}". Pinned by `RegionFactsTest`.
 
   **Then the same three figures as `/coverage`**, in a second row, in the same
   order and under the same labels: reference items on file, verified items,

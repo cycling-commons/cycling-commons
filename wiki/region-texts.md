@@ -35,8 +35,10 @@ For another region, use the last part of its page address in place of
 `drenthe`. The region page also opens the editor:
 
 - Where the region has only the automatic text from Wikipedia, headed
-  **About** and the region's name, a link under it reads **Write about the
-  geography of this region**.
+  **About** and the region's name, a **Geography** section follows it with
+  the link **Write about the geography of this region**.
+- A region page nobody has written yet ends with **Do you know Zeeland?**
+  and the link **Write about Zeeland**.
 - The figures at the top end in a pencil, **Edit these figures**.
 - A text that exists ends in a pencil, **Edit this text**.
 - A region without a geography text shows **Write about the geography of this

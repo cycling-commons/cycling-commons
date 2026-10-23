@@ -122,8 +122,9 @@
 <div class="rbody-cols">
 <div class="rbody-main">
 {# The automatic text is the Wikipedia article's opening summary, which is
-   not always about geography: it is headed "About {region}", and only a
-   text written here is headed "Geography". #}
+   not always about geography: it is headed "About {region}", and a
+   "Geography" section of its own follows it, asking for a geography text
+   written here. A text written here is the Geography section itself. #}
 {% set automatic = region.context and not (region.context.curated|default(false)) %}
 <div class="rg-about">
   <div class="kicker">{{ automatic ? 'region.about_auto_h'|trans({'%region%': cc_region_label(region.slug)}) : 'region.about_h'|trans }}</div>
@@ -168,13 +169,18 @@
     {% if region.context.basedOnName|default(null) %}
       <p class="rg-translated">{{ 'region.translated_from'|trans({'%lang%': region.context.basedOnName}) }}{% if region.context.outdated %} {{ 'region.original_changed'|trans }}{% endif %}</p>
     {% endif %}
-  {% endif %}
-  {# No text written here: the same plain link as an empty history text,
-     under the automatic text where there is one (§3.1g). #}
-  {% if not region.context or automatic %}
+  {% else %}
     <p class="rg-about-write"><a href="{{ path('region_text', {slug: region.slug}) }}">{{ 'region.about_write'|trans }}</a></p>
   {% endif %}
 </div>
+{# Under an automatic text, the Geography section with the same plain link
+   as an empty history text (§3.1g). #}
+{% if automatic %}
+<div class="rg-about rg-geo">
+  <div class="kicker">{% trans %}region.about_h{% endtrans %}</div>
+  <p class="rg-about-write"><a href="{{ path('region_text', {slug: region.slug}) }}">{{ 'region.about_write'|trans }}</a></p>
+</div>
+{% endif %}
 
 {# "History, nature and culture": what the land is about, beside the
    geographic lead above (RegionStory, moderation-and-contribution.md
@@ -218,6 +224,16 @@
     <p class="rg-about-write"><a href="{{ path('region_story', {slug: region.slug}) }}">{{ 'region.story_write'|trans }}</a></p>
   {% endif %}
 </div>
+{# A page nobody has written yet (an automatic text or none, and no history
+   text) says so under all its texts, quietly, and asks those who know the
+   region to make it an invitation to ride there. #}
+{% if not (region.context.curated|default(false)) and not region.story %}
+  {% set name = cc_region_label(region.slug) %}
+  <aside class="rg-invite">
+    <p class="rg-invite-h">{{ 'region.invite_h'|trans({'%region%': name}) }}</p>
+    <p>{{ 'region.invite_p'|trans }} <a href="{{ path('region_text', {slug: region.slug}) }}">{{ 'region.invite_cta'|trans({'%region%': name}) }}</a></p>
+  </aside>
+{% endif %}
 </div>
 
 <aside class="rbody-side">
