@@ -1158,12 +1158,14 @@ label.
 `refresh_cadence` is monthly. `refresh_cadence` is a label the desk and the
 credits show; nothing in this repository schedules a run. The refresh runs
 from a monthly systemd timer on the worker host, kept with the other worker
-timers outside this repository: a template service `cc-provider@.service`
-whose instance is the provider key runs
-`tools/provider-run.sh --worker-dir <worker env dir> --write <key>`, and
-`cc-provider@wallonie-pivot.timer` starts it on the 3rd of each month at
-04:30 Europe/Brussels. The same template serves any other register row by
-its own timer.
+timers outside this repository, one job per environment. Each runs
+`tools/provider-run.sh --worker-dir /opt/workers/cyclingcommons-<env> --write wallonie-pivot`
+on the host, not in a container, with 45 minutes to finish:
+`cc-staging-provider-wallonie-pivot` on the 3rd of each month at 06:10, and
+`cc-prod-provider-wallonie-pivot` on the 5th at 05:40 (Europe/Amsterdam), two
+days later, so a problem the staging run shows can be fixed first. A failed
+run fails the environment's jobs check in Healthchecks. Another register row
+gets its own pair of jobs.
 
 ## 11. First real-world test: the Dutch drinking-water taps
 
