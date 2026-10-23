@@ -1,0 +1,58 @@
+docs/specs/route-planner.md
+  s_e6a1e72d46cd35::t_8b8ea33c009ace 821,823-827
+  s_e6a1e72d46cd35::t_ae00a5239984f1 1557-1559
+  s_e6a1e72d46cd35::t_453459ca3c9c67 414-417,822
+  s_e6a1e72d46cd35::t_b5a1170fe6c648 170-172,1166-1171
+web/assets/map/plan.js
+  s_e6a1e72d46cd35::t_59c12eb711fa4a 1532-1534,1537,1539
+web/templates/map/index.html.twig
+  s_e6a1e72d46cd35::t_8b8ea33c009ace 550-555
+web/translations/messages.nl.yaml
+  s_e6a1e72d46cd35::t_8b8ea33c009ace 1490
+docs/specs/map-and-search.md
+  s_e6a1e72d46cd35::t_c89b1341b28d2d 402-403
+web/tests/js/plan-wiring.test.cjs
+  s_e6a1e72d46cd35::t_453459ca3c9c67 974,981-982
+  s_e6a1e72d46cd35::t_770642c23df681 457-459,1025,1027-1028
+  s_e6a1e72d46cd35::t_8b8ea33c009ace 835-838
+  s_e6a1e72d46cd35::t_4b6574772b8a4a 977-979
+  s_e6a1e72d46cd35::t_51af9cc4c0047c 839,1029-1030
+  s_e6a1e72d46cd35::t_c394bef52ff839 131,1026
+  s_e6a1e72d46cd35::t_c832913034804d 840
+web/translations/messages.es.yaml
+  s_e6a1e72d46cd35::t_8b8ea33c009ace 2091
+web/assets/styles/map.css
+  s_e6a1e72d46cd35::t_4b6574772b8a4a 2122-2123
+  s_e6a1e72d46cd35::t_59c12eb711fa4a 2176-2178,2182
+  s_e6a1e72d46cd35::t_453459ca3c9c67 2353-2354
+  s_e6a1e72d46cd35::t_8b8ea33c009ace 2210-2211
+web/translations/messages.de.yaml
+  s_e6a1e72d46cd35::t_8b8ea33c009ace 1493
+web/assets/map/map-init.js
+  s_e6a1e72d46cd35::t_59c12eb711fa4a 173-177
+web/translations/messages.en.yaml
+  s_e6a1e72d46cd35::t_8b8ea33c009ace 2084
+web/translations/messages.fr.yaml
+  s_e6a1e72d46cd35::t_8b8ea33c009ace 1488
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1ac78cae42e5a8b5227e3b3243bf17966aaabcb9",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_e6a1e72d46cd35": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d113dd9e-8347-4141-9c0b-e3edf1031fc9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
