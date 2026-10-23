@@ -62,6 +62,29 @@ final class WebsiteCheckerTest extends TestCase
         self::assertSame(WebsiteVerdict::DEAD, $this->checker(new MockResponse('', ['error' => 'Could not resolve host: nowhere.test']))->check('https://nowhere.test/')->verdict);
     }
 
+    public function testAtMostConcurrencyRequestsAreOpenAtOnce(): void
+    {
+        // A provider ingest hands over thousands of hosts in one call; a socket
+        // each ran a staging worker out of open files (EMFILE) on 2026-10-23.
+        $open = 0;
+        $peak = 0;
+        $http = new MockHttpClient(static function () use (&$open, &$peak): MockResponse {
+            $peak = max($peak, ++$open);
+
+            return new MockResponse((static function () use (&$open): \Generator {
+                yield '<html><title>Gîte</title></html>';
+                --$open;
+            })(), ['http_code' => 200]);
+        });
+        $urls = array_map(static fn (int $i): string => sprintf('https://site%d.test/', $i), range(1, 3 * WebsiteChecker::CONCURRENCY + 1));
+
+        $verdicts = (new WebsiteChecker($http, new NullLogger()))->checkMany($urls);
+
+        self::assertCount(\count($urls), $verdicts);
+        self::assertSame(WebsiteVerdict::LIVE, $verdicts['https://site61.test/']->verdict);
+        self::assertSame(WebsiteChecker::CONCURRENCY, $peak);
+    }
+
     public function testAnAddressWithoutAHostIsNotFetched(): void
     {
         $checker = $this->checker(new MockResponse('never', ['http_code' => 200]));

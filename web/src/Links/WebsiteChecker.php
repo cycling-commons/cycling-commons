@@ -47,13 +47,33 @@ final class WebsiteChecker
     public function checkMany(array $urls): array
     {
         $out = [];
-        /** @var array<string, ResponseInterface> $responses url => response */
-        $responses = [];
+        $fetch = [];
         foreach (array_values(array_unique($urls)) as $url) {
             if (null === WebsiteVerdict::hostOf($url)) {
                 $out[$url] = WebsiteVerdict::unfetchable();
                 continue;
             }
+            $fetch[] = $url;
+        }
+        // Every request in flight holds a socket; a provider's thousands of hosts at once exhaust the open-file limit.
+        foreach (array_chunk($fetch, self::CONCURRENCY) as $batch) {
+            $out += $this->checkBatch($batch);
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param list<string> $urls
+     *
+     * @return array<string, WebsiteVerdict> url => verdict
+     */
+    private function checkBatch(array $urls): array
+    {
+        $out = [];
+        /** @var array<string, ResponseInterface> $responses url => response */
+        $responses = [];
+        foreach ($urls as $url) {
             try {
                 $responses[$url] = $this->http->request('GET', $url, [
                     'headers' => ['User-Agent' => self::USER_AGENT, 'Accept' => 'text/html,*/*;q=0.5'],

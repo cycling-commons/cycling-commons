@@ -69,7 +69,10 @@ rule; `App\Links\WebsiteChecker` fetches and applies it.
    at. The API's `/v1/contributions` runs the same gate.
 3. **A provider's records**, at ingest (`app:providers:harvest`,
    `ProviderHarvest`): the run's websites go through the same gate, one fetch
-   per host, and a `dead` or `parked` one is left out of the row and counted
+   per host, twenty at a time as in the sweep (`WebsiteChecker::CONCURRENCY`),
+   each twenty read before the next go out: a register hands over thousands
+   of hosts in one run (about 2,900 for PIVOT), and every fetch in flight
+   holds one open file on the worker. A `dead` or `parked` one is left out of the row and counted
    in the run's summary ("websites dropped"), never stored to be hidden
    later. The place itself is never refused. An email address in a website
    field, anything with an `@` before the path (PIVOT lists
