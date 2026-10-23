@@ -1,0 +1,51 @@
+web/src/Moderation/TextCreditUndecidedException.php
+  s_2d39df76d606c6::t_65840db7758043 19
+web/src/Moderation/TextLinksUnconfirmedException.php
+  s_2d39df76d606c6::t_65840db7758043 18
+web/src/Moderation/AlreadyDecidedException.php
+  s_2d39df76d606c6::t_65840db7758043 14
+web/src/Moderation/OutOfScopeException.php
+  s_2d39df76d606c6::t_65840db7758043 16
+web/src/Moderation/DecisionRefusal.php
+  s_2d39df76d606c6::t_c97963e1702d15 1-20
+web/src/Moderation/ModerationService.php
+  s_2d39df76d606c6::t_4cdc3323f0f843 75-106,126
+  s_2d39df76d606c6::t_8f299f67cfe679 74
+web/src/Moderation/OsmUnansweredException.php
+  s_2d39df76d606c6::t_65840db7758043 17
+docs/specs/moderation-and-contribution.md
+  s_e6a1e72d46cd35::t_d0f5fd403aa928 1239-1246,2115
+web/tests/Moderation/PlaceTextProposalTest.php
+  s_e6a1e72d46cd35::t_efde41760c8def 1022-1023
+web/tests/Moderation/RegionStoryProposalTest.php
+  s_e6a1e72d46cd35::t_b10599cdc664e5 339-340
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1b3cb18121d46c17dda2863ae02491c02a41de6b",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_2d39df76d606c6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "27dfa27c-d621-4eaa-8bff-2444730c849d",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_e6a1e72d46cd35": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d113dd9e-8347-4141-9c0b-e3edf1031fc9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
