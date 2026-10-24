@@ -1,0 +1,38 @@
+web/tests/Moderation/ModerateScopeGuardTest.php
+  s_72d2f8b5000c68::t_f74fbda2dfb68f 382,386,389,391-393
+web/templates/account/_shell_chrome.html.twig
+  s_72d2f8b5000c68::t_f74fbda2dfb68f 108-110,112
+web/tests/Provider/ModerateProvidersTest.php
+  s_72d2f8b5000c68::t_f74fbda2dfb68f 24,30-35,38,75,92,234
+  s_72d2f8b5000c68::t_256b118bfb535e 19,41
+docs/specs/data-provider-hierarchy.md
+  s_72d2f8b5000c68::t_4b85f65c1c88c8 132,931
+  s_72d2f8b5000c68::t_4fc6eba0862ed7 884,886-888,892,1009,1047
+web/src/Controller/ModerateProvidersController.php
+  s_72d2f8b5000c68::t_f74fbda2dfb68f 26-28,49
+docs/specs/account-and-auth.md
+  s_72d2f8b5000c68::t_4fc6eba0862ed7 1259-1260
+docs/specs/credits-page.md
+  s_72d2f8b5000c68::t_4fc6eba0862ed7 411-412,436
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c8cfb0e379503e07436f8561a54d1352655d4bed",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_72d2f8b5000c68": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c67130f0-70da-407a-8112-8b69473e80fd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
