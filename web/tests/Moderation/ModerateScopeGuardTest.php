@@ -379,16 +379,18 @@ final class ModerateScopeGuardTest extends WebTestCase
         $client = static::createClient();
         $region = $this->seedRegion('wallonia', 'Wallonia', 'BE');
 
-        $curator = $this->curator('guard-label-providers@example.com');
+        $curator = $this->curator('guard-label-traffic@example.com');
         $this->assignRegion($curator, (int) $region->getId());
         $client->loginUser($curator);
 
-        $crawler = $client->request('GET', '/moderate/providers');
+        $crawler = $client->request('GET', '/moderate/traffic');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.dtabs-modlabel .dtabs-scope.dtabs-scope--off', 'Wallonia');
-        // Providers sits under More, which is lit while it is on screen.
+        // Traffic sits under More, which is lit while it is on screen.
         self::assertCount(1, $crawler->filter('.dtabs-more-btn.on'));
-        self::assertCount(1, $crawler->filter('.dtabs-more-dd a.on[href$="/moderate/providers"]'));
+        self::assertCount(1, $crawler->filter('.dtabs-more-dd a.on[href$="/moderate/traffic"]'));
+        // The Providers desk is an admin's: a curator has no link to it.
+        self::assertCount(0, $crawler->filter('.dtabs-more-dd a[href$="/moderate/providers"]'));
     }
 
     public function testModeratorBarShowsAllAreasForUnassignedCurator(): void

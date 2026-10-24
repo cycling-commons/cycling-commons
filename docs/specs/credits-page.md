@@ -408,8 +408,8 @@ are curator-entered, which is an escaping surface on a public page.
 
 `App\Provider` owns checking that on the way in: `ProviderRegistry` trims each
 field and refuses to enable a provider whose licence requires an attribution
-while the attribution is empty. Entry is restricted to curators
-(`ROLE_CURATOR` on `/moderate/providers`), so this is trusted-but-checked input
+while the attribution is empty. Entry is restricted to admins
+(`ROLE_ADMIN` on `/moderate/providers`), so this is trusted-but-checked input
 rather than public input. The credits template prints the strings with Twig's
 auto-escaping and adds no sanitiser of its own, so a link written into an
 attribution shows as text. Allowing markup there would be a
@@ -433,7 +433,7 @@ Two columns carry it and the renderer prefers the first:
 | Column | Holds | Used by |
 |--------|-------|---------|
 | `blurb_key` | a message key, e.g. `credits.osm_p` | seeded rows, which therefore keep every existing translation |
-| `blurb` | free English text | a provider a curator adds at `/moderate/providers` |
+| `blurb` | free English text | a provider an admin adds at `/moderate/providers` |
 
 A curator's `blurb` shows in English in every locale. The design for
 translating it: register it as a `translation_entry` under a synthetic key

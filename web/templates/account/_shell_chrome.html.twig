@@ -105,8 +105,11 @@
        curated-by-default flag. No badge: nothing queues here. #}
     <a href="{{ path('moderate_regions') }}" class="{{ active == 'moderate_regions' ? 'on' : '' }}">{{ 'nav.regions'|trans }}</a>
     {# Providers desk: who we take data from, and what we owe them
-       (data-provider-hierarchy.md §8). No badge: nothing queues here. #}
+       (data-provider-hierarchy.md §8). Admins only. No badge: nothing
+       queues here. #}
+    {% if is_granted('ROLE_ADMIN') %}
     <a href="{{ path('moderate_providers') }}" class="{{ active == 'moderate_providers' ? 'on' : '' }}">{{ 'provider.desk.title'|trans }}</a>
+    {% endif %}
     {# The rulebook, moderators-only (it used to be a public wiki page). #}
     <a href="{{ path('moderate_rulebook') }}" class="{{ active == 'moderate_rulebook' ? 'on' : '' }}">{{ 'nav.rulebook'|trans }}</a>
     {# The marker grammar, every rung drawn by the map's own rules, checked by

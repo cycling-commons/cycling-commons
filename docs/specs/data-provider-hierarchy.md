@@ -129,7 +129,7 @@ Three rules that do not change and must be restated here because a registry
 makes them easy to break:
 
 1. **Rider rows always win.** `manual`, `user` and `scout` sit above every
-   registry row and are not expressible as one. A curator cannot give a provider
+   registry row and are not expressible as one. An admin cannot give a provider
    a rank that outranks a rider's own contribution.
 2. **The order is bookkeeping, not quality** (catalog-data-model.md §5a). It
    answers "which of these two records of one place is ours to keep", never
@@ -881,13 +881,15 @@ the publisher as the method, in all five catalogues. The payload carries every
 credited provider, which includes a paused one whose rows are still served
 (§9).
 
-## 8. The curator desk
+## 8. The providers desk
 
-`/moderate/providers`, `ROLE_CURATOR`, under More on the moderation bar. One list, one form
+`/moderate/providers`, `ROLE_ADMIN`, under More on the moderation bar, where
+only an admin sees its link: a provider's rank and licence hold for every
+region, so no curator's area covers them (a curator gets 403). One list, one form
 per provider, following the desks that already exist rather than inventing a
 shape (moderation-and-contribution.md §5).
 
-What a curator can do: add a provider, edit its citation and licence fields, set
+What an admin can do: add a provider, edit its citation and licence fields, set
 its rank and match radius, enable and disable it, run a refresh, and read the
 last run's counts and errors.
 
@@ -926,7 +928,7 @@ rather than a sentence, so a curator reads it in their own language.
 Adding a provider is not on the form. Every field a new row needs is editable
 on an existing one, and a new row is seeded by migration.
 
-What a curator **cannot** do, enforced server-side by `ProviderRegistry`:
+What an admin **cannot** do, enforced server-side by `ProviderRegistry`:
 
 - Delete or re-rank a `system` row (OSM, Wikidata).
 - Delete a provider whose rows are on the map (pause it instead: that keeps
@@ -1004,7 +1006,7 @@ The module's names, in one place:
 | Entity | `App\Provider\Entity\DataProvider` |
 | Registry service (read, write, validate) | `App\Provider\ProviderRegistry` |
 | Rank resolution for the duplicate guard | `App\Provider\ProviderRank` |
-| Curator desk controller | `App\Controller\ModerateProvidersController` |
+| Providers desk controller (admins) | `App\Controller\ModerateProvidersController` |
 | Route | `moderate_providers` at `/moderate/providers` |
 | Credits Twig function | `credited_providers()`, `App\Twig\ProviderCreditsExtension` |
 | Map citation payload | `App\Provider\ProviderCitations` |
@@ -1042,7 +1044,7 @@ Two columns carry it, and the renderer prefers the first:
 | column | for | behaviour |
 | --- | --- | --- |
 | `blurb_key` | the seeded rows and anything added in git | a message key, e.g. `credits.osm_p`. Rendered with `trans`, so **every existing translation survives untouched.** |
-| `blurb` | rows a curator adds at `/moderate/providers` | free English text, held in the registry |
+| `blurb` | rows an admin adds at `/moderate/providers` | free English text, held in the registry |
 
 Every seeded row (`osm`, `wikidata`, `wallonie-pivot` and the datasets
 `Version20260904140000` moved into the registry) carries the message key the

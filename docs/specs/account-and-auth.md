@@ -1256,7 +1256,8 @@ Admin (ochre, one "Admin panel" link). `atlas.css` and the map's own copy in
   fits a laptop screen; More is lit while one of them is on screen. Example:
   a curator for Wallonia sees "MODERATION / Wallonia" on
   `/moderate/submissions`, and only "MODERATION" with a lit More on
-  `/moderate/providers`.
+  `/moderate/traffic`. The Providers link under More shows to admins only
+  (data-provider-hierarchy.md §8).
 - Dashboard **Contributions pane** renders the user's real submissions
   (every status but `trashed`: a rejected or withdrawn one stays as long as
   the account, and one in the curators' Trash never renders, see

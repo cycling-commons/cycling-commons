@@ -23,7 +23,9 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
- * Curator Providers desk: who we take data from, and what we owe them.
+ * Providers desk: who we take data from, and what we owe them. Admins only:
+ * a provider's rank and licence hold for every region, so no curator's area
+ * covers them.
  *
  * Until this existed the registry could only be changed by a migration, which
  * meant every new dataset was a deploy. A provider's rank decides which of two
@@ -44,7 +46,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * @api
  */
 #[Route(LocalePrefix::PATHS)]
-#[IsGranted('ROLE_CURATOR')]
+#[IsGranted('ROLE_ADMIN')]
 final class ModerateProvidersController extends AbstractController
 {
     private const string CSRF_TOKEN_ID = 'provider-edit';

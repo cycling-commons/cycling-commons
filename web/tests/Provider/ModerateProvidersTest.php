@@ -16,24 +16,29 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * The curator Providers desk, and what it refuses
+ * The admin Providers desk, and what it refuses
  * (data-provider-hierarchy.md §8).
  */
 final class ModerateProvidersTest extends WebTestCase
 {
-    public function testTheDeskNeedsACurator(): void
+    public function testTheDeskNeedsAnAdmin(): void
     {
         $client = static::createClient();
         $client->loginUser($this->user('provider-desk-rider@example.com'));
-
         $client->request('GET', '/moderate/providers');
         self::assertResponseStatusCodeSame(403);
+
+        $client->loginUser($this->user('provider-desk-curator-only@example.com', ['ROLE_CURATOR']));
+        $client->request('GET', '/moderate/providers');
+        self::assertResponseStatusCodeSame(403, 'a curator does not reach it');
+        $client->request('POST', '/moderate/providers/1', ['_token' => 'x']);
+        self::assertResponseStatusCodeSame(403, 'nor saves through it');
     }
 
-    public function testACuratorSeesEveryProviderWithItsState(): void
+    public function testAnAdminSeesEveryProviderWithItsState(): void
     {
         $client = static::createClient();
-        $client->loginUser($this->user('provider-desk-curator@example.com', ['ROLE_CURATOR']));
+        $client->loginUser($this->user('provider-desk-admin@example.com', ['ROLE_ADMIN']));
 
         $crawler = $client->request('GET', '/moderate/providers');
         self::assertResponseIsSuccessful();
@@ -67,7 +72,7 @@ final class ModerateProvidersTest extends WebTestCase
     public function testTheDeskShowsTheCategorysDefaultsWithoutCondition(): void
     {
         $client = static::createClient();
-        $client->loginUser($this->user('provider-desk-defaults@example.com', ['ROLE_CURATOR']));
+        $client->loginUser($this->user('provider-desk-defaults@example.com', ['ROLE_ADMIN']));
 
         $crawler = $client->request('GET', '/moderate/providers');
         self::assertResponseIsSuccessful();
@@ -84,7 +89,7 @@ final class ModerateProvidersTest extends WebTestCase
     public function testTheDeskSavesDefaultsThroughTheRegistry(): void
     {
         $client = static::createClient();
-        $client->loginUser($this->user('provider-desk-defaults-save@example.com', ['ROLE_CURATOR']));
+        $client->loginUser($this->user('provider-desk-defaults-save@example.com', ['ROLE_ADMIN']));
         $crawler = $client->request('GET', '/moderate/providers');
         $id = (int) $this->connection()->fetchOne("SELECT id FROM data_provider WHERE provider_key = 'rivm-drinkwater'");
 
@@ -226,7 +231,7 @@ final class ModerateProvidersTest extends WebTestCase
 
     private function actor(): User
     {
-        return $this->user('provider-actor-'.bin2hex(random_bytes(4)).'@example.com', ['ROLE_CURATOR']);
+        return $this->user('provider-actor-'.bin2hex(random_bytes(4)).'@example.com', ['ROLE_ADMIN']);
     }
 
     /** @param list<string> $roles */
