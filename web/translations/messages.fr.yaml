@@ -2759,7 +2759,7 @@ place_text:
   sent_h_queued: 'Envoyé pour vérification'
   sent_p_queued: 'Merci. Un curateur de cette région vérifie votre texte ; d’ici là, les lecteurs voient le texte actuel. Vous recevez un message quand il est décidé.'
   sent_h_applied: 'Texte mis à jour'
-  sent_p_applied: 'Ceci se trouve dans vos zones, votre texte s’affiche donc dès maintenant.'
+  sent_p_applied: "Vous êtes curateur ici : ceci se trouve dans vos zones. Votre texte n’a donc besoin de l’approbation d’aucun autre curateur et s’affiche dès maintenant."
   sent_ref: 'Votre référence : %ref%'
   facts_area: "Superficie en km²"
   facts_area_measured: "Mesurée d’après la limite de la région : %km2% km²."
@@ -2830,7 +2830,7 @@ region_edit:
   sent_h_queued: "Envoyé pour vérification"
   sent_p_queued: "Merci. Un curateur de cette région vérifie vos modifications ; d’ici là, les lecteurs voient la version actuelle. Vous recevez un message quand chacune est décidée."
   sent_h_applied: "Modifications en ligne"
-  sent_p_applied: "Ceci se trouve dans vos zones, vos modifications s’affichent donc dès maintenant."
+  sent_p_applied: "Vous êtes curateur ici : ceci se trouve dans vos zones. Vos modifications n’ont donc besoin de l’approbation d’aucun autre curateur et s’affichent dès maintenant."
   sent_live: "en ligne"
   sent_waiting: "attend un curateur"
   sent_rest: "Le reste n’a pas été envoyé :"

@@ -2785,7 +2785,7 @@ place_text:
   sent_h_queued: 'Enviado para revisión'
   sent_p_queued: 'Gracias. Un curador de esta región revisa tu texto; hasta entonces los lectores ven el actual. Recibirás un mensaje cuando se decida.'
   sent_h_applied: 'Texto actualizado'
-  sent_p_applied: 'Esto está dentro de tus zonas, así que tu texto ya se muestra.'
+  sent_p_applied: "Eres curador aquí: esto está dentro de tus zonas. Así que tu texto no necesita la aprobación de otro curador y ya se muestra."
   sent_ref: 'Tu referencia: %ref%'
   facts_area: "Superficie en km²"
   facts_area_measured: "Medida según el límite de la región: %km2% km²."
@@ -2856,7 +2856,7 @@ region_edit:
   sent_h_queued: "Enviado para revisión"
   sent_p_queued: "Gracias. Un curador de esta región revisa tus cambios; hasta entonces los lectores ven los actuales. Recibirás un mensaje cuando se decida cada uno."
   sent_h_applied: "Cambios publicados"
-  sent_p_applied: "Esto está dentro de tus zonas, así que tus cambios ya se muestran."
+  sent_p_applied: "Eres curador aquí: esto está dentro de tus zonas. Así que tus cambios no necesitan la aprobación de otro curador y ya se muestran."
   sent_live: "publicado"
   sent_waiting: "espera a un curador"
   sent_rest: "El resto no se envió:"

@@ -2764,7 +2764,7 @@ place_text:
   sent_h_queued: 'Zur Prüfung gesendet'
   sent_p_queued: 'Danke. Ein Kurator dieser Region prüft deinen Text; bis dahin sehen Leser den jetzigen. Du bekommst eine Nachricht, sobald entschieden ist.'
   sent_h_applied: 'Text aktualisiert'
-  sent_p_applied: 'Das liegt in deinen Gebieten, also erscheint dein Text jetzt.'
+  sent_p_applied: "Du bist hier Kurator: Das liegt in deinen Gebieten. Dein Text braucht also keine Freigabe durch einen anderen Kurator und erscheint jetzt."
   sent_ref: 'Deine Referenz: %ref%'
   facts_area: "Fläche in km²"
   facts_area_measured: "Gemessen an der Grenze der Region: %km2% km²."
@@ -2835,7 +2835,7 @@ region_edit:
   sent_h_queued: "Zur Prüfung gesendet"
   sent_p_queued: "Danke. Ein Kurator dieser Region prüft deine Änderungen; bis dahin sehen Leser die jetzigen. Du bekommst eine Nachricht, sobald über jede entschieden ist."
   sent_h_applied: "Änderungen online"
-  sent_p_applied: "Das liegt in deinen Gebieten, also erscheinen deine Änderungen jetzt."
+  sent_p_applied: "Du bist hier Kurator: Das liegt in deinen Gebieten. Deine Änderungen brauchen also keine Freigabe durch einen anderen Kurator und erscheinen jetzt."
   sent_live: "jetzt online"
   sent_waiting: "wartet auf einen Kurator"
   sent_rest: "Der Rest wurde nicht gesendet:"

@@ -2778,7 +2778,7 @@ place_text:
   sent_h_queued: 'Sent for review'
   sent_p_queued: 'Thanks. A curator of this region checks your text; until then readers see the current one. You get a message when it is decided.'
   sent_h_applied: 'Text updated'
-  sent_p_applied: 'This lies inside your areas, so your text shows now.'
+  sent_p_applied: "You are a curator here: this lies inside your areas. So your text needs no other curator's approval and shows now."
   sent_ref: 'Your reference: %ref%'
   facts_area: "Area in km²"
   facts_area_measured: "Measured from the region's boundary: %km2% km²."
@@ -2849,7 +2849,7 @@ region_edit:
   sent_h_queued: "Sent for review"
   sent_p_queued: "Thanks. A curator of this region checks your changes; until then readers see the current ones. You get a message when each is decided."
   sent_h_applied: "Changes live"
-  sent_p_applied: "This lies inside your areas, so your changes show now."
+  sent_p_applied: "You are a curator here: this lies inside your areas. So your changes need no other curator's approval and show now."
   sent_live: "live now"
   sent_waiting: "waiting for a curator"
   sent_rest: "The rest was not sent:"

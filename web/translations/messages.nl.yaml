@@ -2763,7 +2763,7 @@ place_text:
   sent_h_queued: 'Verstuurd ter controle'
   sent_p_queued: 'Bedankt. Een regiobeheerder van deze regio bekijkt je tekst; tot dan zien lezers de huidige. Je krijgt een bericht zodra er is beslist.'
   sent_h_applied: 'Tekst bijgewerkt'
-  sent_p_applied: 'Dit ligt binnen jouw gebieden, dus je tekst staat er nu.'
+  sent_p_applied: "Je bent hier regiobeheerder: dit ligt binnen jouw gebieden. Je tekst hoeft dus niet door een andere regiobeheerder te worden goedgekeurd en staat er nu."
   sent_ref: 'Je referentie: %ref%'
   facts_area: "Oppervlakte in km²"
   facts_area_measured: "Gemeten aan de grens van de regio: %km2% km²."
@@ -2834,7 +2834,7 @@ region_edit:
   sent_h_queued: "Verstuurd ter controle"
   sent_p_queued: "Bedankt. Een regiobeheerder van deze regio bekijkt je wijzigingen; tot dan zien lezers de huidige. Je krijgt een bericht zodra over elke wijziging is beslist."
   sent_h_applied: "Wijzigingen staan erop"
-  sent_p_applied: "Dit ligt binnen jouw gebieden, dus je wijzigingen staan er nu."
+  sent_p_applied: "Je bent hier regiobeheerder: dit ligt binnen jouw gebieden. Je wijzigingen hoeven dus niet door een andere regiobeheerder te worden goedgekeurd en staan er nu."
   sent_live: "staat er nu"
   sent_waiting: "wacht op een regiobeheerder"
   sent_rest: "De rest is niet verstuurd:"
