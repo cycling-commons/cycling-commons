@@ -1,0 +1,29 @@
+web/tests/js/race-calendar.test.cjs
+  s_72d2f8b5000c68::t_46819086c8849a 51-52,55,62
+  s_72d2f8b5000c68::t_ed4f7cd5e8126d 65-71
+web/assets/data/races.js
+  s_72d2f8b5000c68::t_f24ae8a9799e70 23-24
+  s_72d2f8b5000c68::t_89017d55861bb8 3-4,9,16,18-19,22
+  s_72d2f8b5000c68::t_5f49be3b51c58c 5-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "60c6c653b8282a9384fbf998c72e834d2956a144",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_72d2f8b5000c68": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c67130f0-70da-407a-8112-8b69473e80fd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
