@@ -1,0 +1,83 @@
+web/src/Catalog/RegionLead.php
+  s_72d2f8b5000c68::t_f28dc8b3d79884 56,130-138
+  s_72d2f8b5000c68::t_890bbe69db328c 16-20,27-29,45-48,62
+  s_72d2f8b5000c68::t_89ae7fff861fa6 139-140
+web/src/Contribution/PlaceText.php
+  s_72d2f8b5000c68::t_20ca93067ab65d 104-113
+web/assets/contribute/place-text.js
+  s_72d2f8b5000c68::t_91ffffba44cc1b 183-186,209-211,213-214,220-226,312,457
+  s_72d2f8b5000c68::t_814ff9bcd24495 42,44-45,110-111
+  s_72d2f8b5000c68::t_2ad0f5a76e4fe9 227-272,274-311,313-342,344-351,353-386,388-395,397-413,416-435,438-448,450-456
+web/translations/messages.nl.yaml
+  s_72d2f8b5000c68::t_16958a07d49cf8 2846,5097-5098
+web/src/Controller/ModerateRegionsController.php
+  s_72d2f8b5000c68::t_99cbd2eec4c697 289-294
+  s_72d2f8b5000c68::t_7286661e2a8163 13,15,240-241,246,273-275,320-338
+  s_72d2f8b5000c68::t_8f485338854a9f 295,339-340
+web/templates/contribute/place_text.html.twig
+  s_72d2f8b5000c68::t_34ff7e549e2a77 31-32,123
+  s_72d2f8b5000c68::t_4b651d1e08b73f 81-83,122,126
+wiki/region-texts.md
+  s_72d2f8b5000c68::t_938f2da128dcf1 79-84
+web/translations/messages.fr.yaml
+  s_72d2f8b5000c68::t_16958a07d49cf8 2842,5093-5094
+web/templates/pages/_story_parts.html.twig
+  s_72d2f8b5000c68::t_17858398451a51 3-4,6
+web/src/Contribution/PlaceTextProposals.php
+  s_72d2f8b5000c68::t_20ca93067ab65d 60-62,273-276,285,287,303-304,309-311,317,319,358,362,365,373,375,659-661,663,668,963-966,978,983-986,988,990,994,1007,1030
+web/translations/messages.en.yaml
+  s_72d2f8b5000c68::t_16958a07d49cf8 2861,5115-5116
+web/translations/messages.es.yaml
+  s_72d2f8b5000c68::t_16958a07d49cf8 2868,5124-5125
+web/tests/Moderation/RegionStoryProposalTest.php
+  s_72d2f8b5000c68::t_e93513232c4ce5 116
+  s_72d2f8b5000c68::t_9d4de589c1be6a 108,111-113,490
+  s_72d2f8b5000c68::t_7e50103f2ee095 122
+web/templates/contribute/_linked_text_editor.html.twig
+  s_72d2f8b5000c68::t_fc15ba1c6762f4 3-18,22-35,45-82,84-89
+  s_72d2f8b5000c68::t_4b651d1e08b73f 19-21,83
+  s_72d2f8b5000c68::t_814ff9bcd24495 41
+web/src/Moderation/PlaceTextWriter.php
+  s_72d2f8b5000c68::t_20ca93067ab65d 173,182
+web/templates/pages/region.html.twig
+  s_72d2f8b5000c68::t_6205a1f7ce3ed5 132-133
+web/tests/Moderation/RegionGeographyLinkTest.php
+  s_72d2f8b5000c68::t_ba6603de9efb50 160
+  s_72d2f8b5000c68::t_de25da1350d112 1-159,161-287
+web/templates/contribute/region_edit.html.twig
+  s_72d2f8b5000c68::t_34ff7e549e2a77 20-21,159-163,181-186,188,196,227,230
+  s_72d2f8b5000c68::t_814ff9bcd24495 187
+web/translations/messages.de.yaml
+  s_72d2f8b5000c68::t_16958a07d49cf8 2847,5098-5099
+web/templates/contribute/_link_howto_items.html.twig
+  s_72d2f8b5000c68::t_663380f0b90af7 1-13
+web/src/Controller/PlaceTextController.php
+  s_72d2f8b5000c68::t_53a1b73bafbbd9 209-210,242,261,299-300,313,516-517,532-537
+web/tests/Moderation/RegionAboutTextTest.php
+  s_72d2f8b5000c68::t_2751db1ec6594d 10,13,18,21-22
+  s_72d2f8b5000c68::t_638ebb0e31603e 362-406
+  s_72d2f8b5000c68::t_7c1a660e1b5668 361
+docs/specs/moderation-and-contribution.md
+  s_72d2f8b5000c68::t_598af435c76398 791-821,1136-1137,1361
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "56e102049e2e9eb8b70498fb079d186b1c69d051",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_72d2f8b5000c68": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c67130f0-70da-407a-8112-8b69473e80fd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
