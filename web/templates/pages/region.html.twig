@@ -129,7 +129,8 @@
 <div class="rg-about">
   <div class="kicker">{{ automatic ? 'region.about_auto_h'|trans({'%region%': cc_region_label(region.slug)}) : 'region.about_h'|trans }}</div>
   {% if region.context %}
-    <p class="rg-about-text">{{ region.context.text }}</p>
+    {# A text written here links its sources in place, as the history text does. #}
+    <p class="rg-about-text">{{ include('pages/_story_parts.html.twig', {parts: region.context.parts}) }}</p>
     {# Three credit lines, because three things can be true and only one of
        them at a time. A curator who ADAPTED the article keeps the CC BY-SA
        citation - the licence follows a derivative - but the line must say the

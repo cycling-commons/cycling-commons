@@ -2839,7 +2839,7 @@ region_edit:
   guide_figures_area: "Superficie : laissez le champ vide pour afficher la superficie mesurée d’après la limite."
   guide_figures_population: "Population : le dernier recensement officiel, avec son année."
   guide_figures_ride: "Relief : à quoi ressemblent la plupart des sorties dans la région."
-  guide_geo_whole: "Un seul paragraphe, %max% caractères au plus, sans liens."
+  guide_geo_whole: "Un seul paragraphe, %max% caractères au plus. Les adresses des liens ne comptent pas."
   guide_geo_what: "Où se trouve la région et ses limites, son sol et son relief, ce qui couvre le terrain, et comment on y roule."
   guide_geo_out: "Laissez de côté les chiffres, l’histoire et la culture."
   guide_more: "Le guide complet, avec un exemple :"
@@ -5090,7 +5090,8 @@ moderate_regions:
     save: "Enregistrer le texte"
     back: "Retour au bureau des régions"
     flash_saved: "Le texte de la région est enregistré."
-    flash_too_long: "C'est trop long pour un chapeau. Restez sous 1200 caractères."
+    flash_too_long: "C'est trop long pour un chapeau. Restez sous 1200 caractères. Les adresses des liens ne comptent pas."
+    flash_links: "Certains liens ne sont pas marqués « Vérifié : OK » : %urls%. Changez-les, ou écrivez le texte dans l'éditeur de la région, où vous pouvez confirmer que vous les avez ouverts."
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
 # improve.receipt.* group stays separate.

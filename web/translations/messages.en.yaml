@@ -2858,7 +2858,7 @@ region_edit:
   guide_figures_area: "Area: leave the field empty to show the area measured from the boundary."
   guide_figures_population: "Population: the latest official count, with the year it was counted."
   guide_figures_ride: "Ride character: what most riding in the region is like."
-  guide_geo_whole: "One paragraph, at most %max% characters, without links."
+  guide_geo_whole: "One paragraph, at most %max% characters. Link addresses do not count."
   guide_geo_what: "Where the region lies and its borders, its ground and relief, what covers the land, and how it rides."
   guide_geo_out: "Leave out the figures, the history and the culture."
   guide_more: "The full guide, with an example:"
@@ -5112,7 +5112,8 @@ moderate_regions:
     save: "Save the text"
     back: "Back to the regions desk"
     flash_saved: "The region text is saved."
-    flash_too_long: "That is too long for a lead. Keep it under 1200 characters."
+    flash_too_long: "That is too long for a lead. Keep it under 1200 characters. Link addresses do not count."
+    flash_links: "Some links are not marked \"Checked: OK\": %urls%. Change them, or write the text in the region editor, where you can confirm that you opened them."
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
 # improve.receipt.* group stays separate.

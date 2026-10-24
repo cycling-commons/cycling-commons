@@ -17,7 +17,8 @@
 
   The figures hold in every language; each field starts from the figure as
   it stands. The geography box starts empty beside the current text, so the
-  rider writes their version beside it. The history box starts from the
+  rider writes their version beside it. Both text boxes link their sources
+  in place (_linked_text_editor.html.twig). The history box starts from the
   current text of the chosen language, or, for a language without one,
   empty under another language's text to translate from. The language
   select drives both (place-text.js).
@@ -155,9 +156,11 @@
         </section>
 
         {# 2. The geography text (§3.1b): the box starts empty beside the
-           current text. "Where your text comes from" is asked for a language
-           with a Wikipedia article, and required only while the box holds a
-           text (place-text.js); the server asks it of a text only. #}
+           current text, and links its sources in place as the history text
+           does, checked as it is written. "Where your text comes from" is
+           asked for a language with a Wikipedia article, and required only
+           while the box holds a text (place-text.js); the server asks it of
+           a text only. #}
         <section class="pt-step pt-section" id="pt-step-geography" role="tabpanel" aria-labelledby="pt-tab-geography" data-step-panel="geography"
                  data-texts="{{ texts|json_encode }}" data-articles="{{ articles|json_encode }}">
           <h2 class="pt-step-h"><span class="pt-tab-n">2</span> {{ 'region_edit.step_geography'|trans }}</h2>
@@ -175,13 +178,14 @@
             <blockquote id="pt-current-text" class="pt-current-text"{{ current is empty ? ' hidden' }}>{{ current }}</blockquote>
             <p class="chint pt-current-none" id="pt-current-none"{{ current is not empty ? ' hidden' }}>{{ 'place_text.current_none'|trans }}</p>
           </figure>
-          <div class="cfield">
-            <label for="pt-text">{{ 'region_edit.field_geography'|trans }}</label>
-            <textarea id="pt-text" class="pt-box" name="text" maxlength="{{ max }}" aria-describedby="pt-text-hint pt-text-count">{{ text }}</textarea>
-            <p class="chint pt-count" id="pt-text-count" aria-live="polite" data-max="{{ max }}"
-               data-words="{{ 'place_text.count'|trans({'%count%': '%count%', '%max%': max}) }}">{{ 'place_text.count'|trans({'%count%': text|length, '%max%': max}) }}</p>
-            <p class="chint" id="pt-text-hint">{{ 'region_edit.field_geography_hint'|trans }}</p>
-          </div>
+          {# Its own tick: each text's links are confirmed apart. #}
+          {{ include('contribute/_linked_text_editor.html.twig', {
+            box_id: 'pt-text', box_name: 'text', label: 'region_edit.field_geography', value: text, required: false,
+            max: max, raw_max: raw_max, generic_anchors: generic_anchors, error: error, rows: 8,
+            link_check_csrf_id: link_check_csrf_id, count_id: 'pt-text-count', hint_id: 'pt-text-hint',
+            confirm_name: 'text_links_confirmed', links_asked: error == 'place_text.error.links_unconfirmed' and step == 'geography',
+            paragraphs: false, howto: false, hint: 'region_edit.field_geography_hint',
+          }) }}
           <aside class="pt-howto pt-guide">
             {{ _self.guide('https://wiki.cyclingcommons.org/region-texts/#the-geography-text') }}
             <p class="pt-howto-h">{{ 'place_text.howto_h'|trans }}</p>
@@ -189,6 +193,7 @@
               <li>{{ 'region_edit.guide_geo_whole'|trans({'%max%': max|number_format(0, '.', ',')}) }}</li>
               <li>{{ 'region_edit.guide_geo_what'|trans }}</li>
               <li>{{ 'region_edit.guide_geo_out'|trans }}</li>
+              {{ include('contribute/_link_howto_items.html.twig') }}
             </ol>
           </aside>
           {% set has_article = articles[lang] ?? false %}
@@ -219,9 +224,10 @@
             <figcaption class="pt-translate-h" id="pt-translate-h" data-words="{{ 'place_text.translate_h'|trans({'%lang%': '%lang%'}) }}">{{ from ? 'place_text.translate_h'|trans({'%lang%': langs[from] ?? from}) }}</figcaption>
             <blockquote class="pt-translate-text" id="pt-translate-text">{{ from ? stories[from] ?? '' }}</blockquote>
           </figure>
-          {{ include('contribute/_story_editor.html.twig', {
+          {{ include('contribute/_linked_text_editor.html.twig', {
             box_id: 'pt-story', box_name: 'story', label: 'region_edit.field_story', value: story, required: false,
             max: story_max, raw_max: story_raw_max, generic_anchors: generic_anchors, error: error,
+            links_asked: error == 'place_text.error.links_unconfirmed' and step == 'story',
             link_check_csrf_id: link_check_csrf_id, count_id: 'pt-story-count', hint_id: 'pt-story-hint',
             guide_href: 'https://wiki.cyclingcommons.org/region-texts/#the-history-nature-and-culture-text',
           }) }}

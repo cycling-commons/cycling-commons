@@ -105,21 +105,21 @@ final class RegionStoryProposalTest extends WebTestCase
         self::assertSame('', $crawler->filter('textarea#pt-story')->text('', false), 'no text yet, so the box starts empty');
         self::assertCount(0, $crawler->filter('textarea[name=sources]'), 'no sources box: the text cites in place');
         // The link editor: hidden until its script runs, fed the words the server refuses.
-        self::assertCount(1, $crawler->filter('#pt-linkbar[hidden] #pt-link-open'));
+        self::assertCount(1, $crawler->filter('#pt-story-linkbar[hidden] #pt-story-link-open'));
         self::assertCount(1, $crawler->filter('#pt-step-story .pt-hl-wrap > textarea#pt-story[data-links]'));
         self::assertContains('click here', json_decode((string) $crawler->filter('textarea#pt-story')->attr('data-generic'), true, 512, \JSON_THROW_ON_ERROR));
-        self::assertCount(1, $crawler->filter('#pt-links[hidden] ol#pt-links-list'));
-        self::assertSame('/regions/links/check', $crawler->filter('#pt-links')->attr('data-check-url'), 'links are checked as they appear');
-        self::assertNotEmpty($crawler->filter('#pt-links')->attr('data-check-token'));
+        self::assertCount(1, $crawler->filter('#pt-story-links[hidden] ol#pt-story-links-list'));
+        self::assertSame('/regions/links/check', $crawler->filter('#pt-story-links')->attr('data-check-url'), 'links are checked as they appear');
+        self::assertNotEmpty($crawler->filter('#pt-story-links')->attr('data-check-token'));
         // How to write it, with the link example in the box's own tints.
         self::assertSame('How to write it', $crawler->filter('aside.pt-howto#pt-story-hint .pt-howto-h')->text());
-        self::assertSame(['[Defence Line of Amsterdam]', '(https://whc.unesco.org/en/list/759)'], $crawler->filter('.pt-howto-ex mark')->each(static fn ($m): string => $m->text()), 'the example in the page\'s language');
+        self::assertSame(['[Defence Line of Amsterdam]', '(https://whc.unesco.org/en/list/759)'], $crawler->filter('#pt-step-story .pt-howto-ex mark')->each(static fn ($m): string => $m->text()), 'the example in the page\'s language');
         self::assertStringContainsString('at most 2,500 characters. Link addresses do not count.', $crawler->filter('#pt-story-hint li')->first()->text());
         self::assertSame('6000', $crawler->filter('textarea#pt-story')->attr('maxlength'), 'the box holds the addresses too');
         self::assertSame('2500', $crawler->filter('#pt-story-count')->attr('data-max'), 'the count is of what a reader sees');
 
         $crawler = $client->request('GET', '/nl/regions/pstory-a/story?lang=nl');
-        self::assertSame(['[Stelling van Amsterdam]', '(https://www.stelling-amsterdam.nl)'], $crawler->filter('.pt-howto-ex mark')->each(static fn ($m): string => $m->text()));
+        self::assertSame(['[Stelling van Amsterdam]', '(https://www.stelling-amsterdam.nl)'], $crawler->filter('#pt-step-story .pt-howto-ex mark')->each(static fn ($m): string => $m->text()));
         $crawler = $client->request('GET', '/regions/pstory-a/story?lang=en');
         self::assertCount(0, $crawler->filter('#pt-step-story #pt-source'), 'no Wikipedia question');
         self::assertStringStartsWith("What the land's history, nature and culture tell a rider.", $crawler->filter('#pt-step-story .pt-step-p')->text(), 'the step says which text this is');
@@ -487,7 +487,7 @@ final class RegionStoryProposalTest extends WebTestCase
 
         $client->loginUser($this->user('pstory-rider8@example.com', []));
         $crawler = $client->request('GET', '/regions/pstory-a/story?lang=en');
-        $token = (string) $crawler->filter('#pt-links')->attr('data-check-token');
+        $token = (string) $crawler->filter('#pt-story-links')->attr('data-check-token');
         $ask = static function (array $body) use ($client): array {
             $client->request('POST', '/regions/links/check', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode($body, \JSON_THROW_ON_ERROR));
 

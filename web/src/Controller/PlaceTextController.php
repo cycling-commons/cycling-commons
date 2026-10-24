@@ -206,6 +206,8 @@ final class PlaceTextController extends AbstractController
         $raw = $request->request->all('facts');
         $derived = self::sourceAnswer($request);
         $linksConfirmed = $request->request->getBoolean('links_confirmed');
+        // The geography text's own tick: each text's links are confirmed apart.
+        $textLinksConfirmed = $request->request->getBoolean('text_links_confirmed');
         // A send that comes back refused keeps what was written.
         $context['facts_input'] = array_map(static fn (mixed $v): string => \is_string($v) ? $v : '', $raw);
         $context['source'] = match ($derived) {
@@ -237,7 +239,7 @@ final class PlaceTextController extends AbstractController
             }
             $step = self::STEP_GEOGRAPHY;
             if ($sendText) {
-                $proposals->checkRegion($region, $lang, $text, $note, $derived, $basedOn);
+                $proposals->checkRegion($region, $lang, $text, $note, $derived, $basedOn, $textLinksConfirmed);
             }
             $step = self::STEP_STORY;
             if ($sendStory) {
@@ -256,7 +258,7 @@ final class PlaceTextController extends AbstractController
                 $sent[self::STEP_FIGURES] = $proposals->proposeFacts($user, $region, $lang, $facts, $note);
             }
             if ($sendText) {
-                $sent[self::STEP_GEOGRAPHY] = $proposals->proposeRegion($user, $region, $lang, $text, $note, $derived, $basedOn);
+                $sent[self::STEP_GEOGRAPHY] = $proposals->proposeRegion($user, $region, $lang, $text, $note, $derived, $basedOn, $textLinksConfirmed);
             }
             if ($sendStory) {
                 $sent[self::STEP_STORY] = $proposals->proposeStory($user, $region, $lang, $story, $note, $linksConfirmed, $storyBasedOn);
@@ -294,6 +296,8 @@ final class PlaceTextController extends AbstractController
             'error_params' => [],
             'langs' => $this->languages->options(),
             'max' => PlaceText::MAX,
+            // What the geography box may hold: its addresses do not count towards `max`.
+            'raw_max' => RegionLead::RAW_MAX,
             'story_max' => RegionStory::MAX,
             // What the box may hold: a history text's addresses do not count towards `story_max`.
             'story_raw_max' => RegionStory::RAW_MAX,
@@ -306,7 +310,7 @@ final class PlaceTextController extends AbstractController
     }
 
     /**
-     * The history text's live link check (§3.1c): the form posts the links
+     * A region text's live link check (§3.1b, §3.1c): the form posts the links
      * that appear in its box, `{"token": ..., "urls": [...]}`, and gets the
      * same verdicts a send would meet, so a dead, parked or unsafe link shows
      * before the writer sends. Signed-in writers only, with the form's own
@@ -509,7 +513,8 @@ final class PlaceTextController extends AbstractController
      */
     private function form(array $context, string $lang, string $text, ?string $error, int $status = Response::HTTP_OK): Response
     {
-        $story = PlaceText::STORY === ($context['target'] ?? null);
+        $target = $context['target'] ?? null;
+        $story = PlaceText::STORY === $target;
 
         return $this->render('contribute/place_text.html.twig', $context + [
             'correcting' => null,
@@ -524,8 +529,12 @@ final class PlaceTextController extends AbstractController
             'error_params' => [],
             'langs' => $this->languages->options(),
             'max' => $story ? RegionStory::MAX : PlaceText::MAX,
-            // What the box may hold: a history text's addresses do not count towards `max`.
-            'raw_max' => $story ? RegionStory::RAW_MAX : PlaceText::MAX,
+            // What the box may hold: a region text's addresses do not count towards `max`.
+            'raw_max' => match ($target) {
+                PlaceText::STORY => RegionStory::RAW_MAX,
+                PlaceText::REGION => RegionLead::RAW_MAX,
+                default => PlaceText::MAX,
+            },
             // The link words the server refuses, for the editor to mark before a send.
             'generic_anchors' => RegionStory::GENERIC_ANCHORS,
             'note_max' => PlaceText::NOTE_MAX,

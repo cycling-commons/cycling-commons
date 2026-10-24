@@ -10,7 +10,9 @@ use App\Catalog\CuratedReadiness;
 use App\Catalog\OperationalRegions;
 use App\Catalog\RegionLabels;
 use App\Catalog\RegionLead;
+use App\Catalog\RegionStory;
 use App\Contribution\PlaceText;
+use App\Contribution\StoryLinkCheck;
 use App\Contribution\TextVersions;
 use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
@@ -235,12 +237,13 @@ final class ModerateRegionsController extends AbstractController
                     : null,
             ],
             'locales' => $locales,
-            'max_len' => self::ABOUT_MAX,
+            // What a box may hold: a link's address does not count towards the cap.
+            'max_len' => RegionLead::RAW_MAX,
         ]);
     }
 
     #[Route('/moderate/regions/{slug}/about', name: 'moderate_regions_about_save', requirements: ['slug' => '[a-z0-9-]+'], methods: ['POST'])]
-    public function saveAbout(string $slug, Request $request, TextVersions $versions): Response
+    public function saveAbout(string $slug, Request $request, TextVersions $versions, StoryLinkCheck $links, TranslatorInterface $translator): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -267,7 +270,9 @@ final class ModerateRegionsController extends AbstractController
             if ('' === $text) {
                 continue;
             }
-            if (mb_strlen($text) > self::ABOUT_MAX) {
+            // A lead links its sources as the region editor's does (§3.1b):
+            // the cap counts a link's words, not its address.
+            if (RegionStory::readableLength($text) > self::ABOUT_MAX || mb_strlen($text) > RegionLead::RAW_MAX) {
                 $this->addFlash('danger', 'moderate_regions.about.flash_too_long');
 
                 return $this->redirectToRoute('moderate_regions_about', ['slug' => $slug]);
@@ -280,6 +285,13 @@ final class ModerateRegionsController extends AbstractController
             if (null !== $before && $before['text'] === $text && $before['derived'] === $derived && \is_array($stored[$locale] ?? null)) {
                 $curated[$locale] = $stored[$locale];
                 continue;
+            }
+            // New words have their links checked; the words on the page now were checked when they went up.
+            $refused = ($before['text'] ?? null) === $text ? null : $this->linkRefusal($text, $links, $translator);
+            if (null !== $refused) {
+                $this->addFlash('danger', $refused);
+
+                return $this->redirectToRoute('moderate_regions_about', ['slug' => $slug]);
             }
             $curated = RegionLead::withEntry($curated, $locale, $text, $derived, (int) $user->getId(), (int) $user->getId(), null, $now);
         }
@@ -303,6 +315,27 @@ final class ModerateRegionsController extends AbstractController
         $this->addFlash('success', 'moderate_regions.about.flash_saved');
 
         return $this->redirectToRoute('moderate_regions_about', ['slug' => $slug]);
+    }
+
+    /**
+     * Why a lead's links keep it off the page, in words, or null: a link
+     * that names nothing ("here"), one with an http address, or one that is
+     * not plainly fine and no curator confirmed before. The desk has no
+     * tick to confirm one, so it sends the curator to the region editor,
+     * which has (§3.1b).
+     */
+    private function linkRefusal(string $text, StoryLinkCheck $links, TranslatorInterface $translator): ?string
+    {
+        if (null !== RegionStory::genericAnchor($text)) {
+            return $translator->trans('place_text.error.generic_anchor');
+        }
+        $insecure = RegionStory::insecureLinks($text);
+        if ([] !== $insecure) {
+            return $translator->trans('place_text.error.http_link', ['%urls%' => implode(', ', $insecure)]);
+        }
+        $open = $links->open($links->problems($text));
+
+        return [] === $open ? null : $translator->trans('moderate_regions.about.flash_links', ['%urls%' => implode(', ', array_keys($open))]);
     }
 
     /**

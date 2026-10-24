@@ -788,6 +788,37 @@ print, the licence line says the text is published under CC BY-SA 4.0 and
 credited to the writer by public name, else rider handle; no tick box, as for
 place edits (moderation-and-contribution.md §1).
 
+**A region's geography text links its sources** (2026-10-24), as the
+history text does (§3.1c): `[the words that describe it](https://address)`
+links those words, and every link rule of §3.1c holds for it
+(`PlaceText::links()` names the two region targets). The 1,200 characters
+are what a reader sees (a link counts its words,
+`RegionStory::readableLength()`), under a cap of 3,000 stored
+(`RegionLead::RAW_MAX`, the box's `maxlength`); link words name the source
+(`generic_anchor`); only https links (`http_link`); every link is checked
+live as it appears and again on a send; a problem link needs the writer's
+tick and the approving curator's (`_links.writer`, `_links.approved`, the
+drawer's Approve refused as for a history text). The geography tick is its
+own (`text_links_confirmed`), apart from the history text's
+(`links_confirmed`), and a send refused for want of it opens the geography
+step with that tick asked. The geography step and a geography text's
+correction form carry the same link editor as the history text
+(`contribute/_linked_text_editor.html.twig`; every id starts with the
+box's, `pt-text-*` and `pt-story-*`, so two editors share the region
+editor). The text stays one paragraph: the box carries `data-one-line`, so
+its count folds line breaks to spaces as the server does, and its "How to
+write it" adds the three link steps of §3.1c
+(`contribute/_link_howto_items.html.twig`) after "One paragraph, at most
+1,200 characters. Link addresses do not count." The region page shows a
+local lead's links as it shows the history text's (`RegionLead::resolve()`
+gives `parts`, drawn by `pages/_story_parts.html.twig`); a harvested
+Wikipedia lead links nothing. The Regions desk (`moderate_regions_about`)
+holds a curator's lead to the same caps and link rules; it has no tick, so
+a changed lead with a problem link is not saved
+(`moderate_regions.about.flash_links`, naming the addresses), and the
+curator writes it in the region editor, where they can confirm it. A town
+card's text links nothing.
+
 **The row.** `type = text`, `letter = ''`, `item_id` NULL, `title` = the
 town's or region's name, `changes = {"text:<lang>": {was, now}}` (`was` is
 the text readers saw at proposal time), `payload = {target: town|region, ref:
@@ -1102,7 +1133,8 @@ to the region editor's three steps.
   refused (`place_text.error.unchanged`); on the region editor a box left as
   it was, or emptied, sends no history text at all.
 - **The link editor** (the same script, on the form and on the curator's
-  correction form; hidden without script, where the box is a plain box).
+  correction form, and on the geography step, §3.1b; hidden without script,
+  where the box is a plain box).
   "Link the selected words" above the box: select words, press it, give a
   full `https` address, and the words become `[words](address)`. A link
   typed with `http://` gets a red address and "Only https addresses" in
@@ -1326,7 +1358,7 @@ mountain profile (`PlaceText::ICONS`).
   you send.", 422.
 - **One send, every part checked first.** The figures
   (`factChanges()`), then the geography text (`checkRegion()`), then the
-  history text (`checkStory()`, links included) are each checked as their
+  history text (`checkStory()`), links included for both texts are each checked as their
   own proposal would be; a refused part files nothing at all, and the page
   opens at that part's step with the error. Then each changed part is filed
   as its own submission, in step order, decided apart from the others. The

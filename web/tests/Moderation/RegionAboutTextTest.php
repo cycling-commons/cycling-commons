@@ -7,14 +7,19 @@ declare(strict_types=1);
 namespace App\Tests\Moderation;
 
 use App\Catalog\Entity\Region;
+use App\Catalog\Links\SafeBrowsing;
 use App\Catalog\RegionLead;
 use App\Entity\User;
+use App\Links\WebsiteChecker;
 use App\Moderation\Entity\ModeratorArea;
 use App\Routing\ActiveLocales;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
@@ -351,6 +356,52 @@ final class RegionAboutTextTest extends WebTestCase
         ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
         self::assertResponseRedirects();
         self::assertNull($this->stored((int) $region->getId()));
+    }
+
+    /**
+     * A lead links its sources in place, as the region editor's does
+     * (§3.1b): the cap counts a link's words, a link must name its source
+     * and use https, and a link that is not plainly fine keeps the text off
+     * the page, since the desk has no tick to confirm it.
+     */
+    public function testALeadLinksItsSourcesUnderTheSameRules(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $web = new MockHttpClient(static fn (string $method, string $url): MockResponse => str_contains($url, 'dead')
+            ? new MockResponse('', ['error' => 'Could not resolve host: dead.test'])
+            : new MockResponse('<title>Archive</title>', ['http_code' => 200]));
+        static::getContainer()->set(WebsiteChecker::class, new WebsiteChecker($web, new NullLogger()));
+        static::getContainer()->set(SafeBrowsing::class, new SafeBrowsing(new MockHttpClient(static fn (): MockResponse => new MockResponse('{}')), new NullLogger(), 'test-key'));
+        $region = $this->seedRegion('about-links');
+        $curator = $this->curator('about-links@example.com', admin: true);
+        $client->loginUser($curator, 'main');
+        self::assertSame((string) RegionLead::RAW_MAX, $client->request('GET', '/moderate/regions/about-links/about')->filter('textarea#text_en')->attr('maxlength'), 'the box holds the addresses too');
+
+        foreach ([
+            'A ridge, see [here](https://www.staatsbosbeheer.nl).',
+            'A ridge kept by [Staatsbosbeheer](http://www.staatsbosbeheer.nl).',
+            'A ridge behind [the old dike](https://dead.test/dike).',
+        ] as $text) {
+            $client->request('POST', '/moderate/regions/about-links/about', [
+                '_token' => $this->token($client, 'about-links'),
+                'text_en' => $text,
+            ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
+            self::assertResponseRedirects();
+            self::assertNull($this->stored((int) $region->getId()), 'kept off the page: '.$text);
+        }
+        $crawler = $client->followRedirect();
+        self::assertStringContainsString('https://dead.test/dike', $crawler->filter('body')->text(), 'the desk names the link to change');
+
+        // 1,200 characters a reader sees; the address does not count.
+        $text = str_repeat('x', 1200 - \strlen('Kept by Staatsbosbeheer')).'Kept by [Staatsbosbeheer](https://www.staatsbosbeheer.nl/'.str_repeat('p', 200).')';
+        $client->request('POST', '/moderate/regions/about-links/about', [
+            '_token' => $this->token($client, 'about-links'),
+            'text_en' => $text,
+        ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
+        self::assertSame($text, $this->stored((int) $region->getId())['en']['text'] ?? null);
+        $crawler = $client->request('GET', '/regions/about-links');
+        self::assertSame('Staatsbosbeheer', $crawler->filter('.rg-about-text a')->text());
     }
 
     /**

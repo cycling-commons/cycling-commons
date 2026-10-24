@@ -13,11 +13,19 @@ namespace App\Catalog;
  *
  * A local lead is written on the Regions desk by a curator of the region, or
  * proposed by anyone signed in and approved by one (moderation-and-contribution.md §3.1b).
+ *
+ * A local lead cites its sources in place, as the history text does:
+ * `[the words that describe it](https://address)` links those words
+ * ({@see RegionStory::paragraphs()}). It is one paragraph, capped at
+ * PlaceText::MAX characters a reader sees; a harvested lead links nothing.
  */
 final class RegionLead
 {
     /** The locales a lead can be written in: the site's own set. */
     public const array LOCALES = ['en', 'fr', 'nl', 'de', 'es'];
+
+    /** The cap on what is stored, addresses included, so a lead of many links stays bounded. */
+    public const int RAW_MAX = 3000;
 
     /**
      * Reader-locale Wikipedia beats a curator lead in another language. English is last resort.
@@ -34,7 +42,10 @@ final class RegionLead
      *
      * A local lead names its language (`lang`), for its list of changes (§3.1f).
      *
-     * @return array{text: string, url: ?string, title: ?string, curated: bool, adapted: bool, by: ?int, approvedBy: ?int, lang?: string, basedOn?: ?string, outdated?: bool}|null
+     * `parts` is the text as plain text and links, for the page to show;
+     * only a local lead links.
+     *
+     * @return array{text: string, parts: list<array{text: string, href: ?string}>, url: ?string, title: ?string, curated: bool, adapted: bool, by: ?int, approvedBy: ?int, lang?: string, basedOn?: ?string, outdated?: bool}|null
      */
     public static function resolve(?array $wiki, ?array $curated, string $locale): ?array
     {
@@ -42,12 +53,13 @@ final class RegionLead
             $own = self::curatedEntry($curated, $try);
             if (null !== $own) {
                 // Written-from-scratch text gets no citation, even by accident.
-                return $own + ['lang' => $try] + ($own['adapted'] ? self::citationFor($wiki, $try) : ['url' => null, 'title' => null]) + RegionStory::lineage($curated, $try);
+                return $own + ['parts' => self::parts($own['text']), 'lang' => $try] + ($own['adapted'] ? self::citationFor($wiki, $try) : ['url' => null, 'title' => null]) + RegionStory::lineage($curated, $try);
             }
             $harvest = self::wikiEntry($wiki, $try);
             if (null !== $harvest) {
                 return [
                     'text' => $harvest['extract'],
+                    'parts' => [['text' => $harvest['extract'], 'href' => null]],
                     'url' => $harvest['url'],
                     'title' => $harvest['title'],
                     'curated' => false,
@@ -113,6 +125,17 @@ final class RegionLead
         ];
 
         return $curated;
+    }
+
+    /**
+     * A local lead as plain text and links, as one paragraph: a line break
+     * in an older desk text is a space.
+     *
+     * @return list<array{text: string, href: ?string}>
+     */
+    private static function parts(string $text): array
+    {
+        return RegionStory::paragraphs((string) preg_replace('~\s+~u', ' ', $text))[0] ?? [];
     }
 
     /**

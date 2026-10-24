@@ -76,8 +76,12 @@ enjoy?
 - History: when land was drained, wars, treaties.
 - Stories about culture. They belong in the other text.
 
-**Form rules.** The geography text is one paragraph of plain text, without
-links. The box counts the characters and shows the limit. Where a Wikipedia
+**Form rules.** The geography text is one paragraph. The box counts the
+characters a reader sees and shows the limit; link addresses do not count.
+Cite a source where you use it, with the same link rules as the history,
+nature and culture text below: select the words and press **Link the
+selected words**, link only `https` addresses, and link the words that name
+the source. The form checks each link as you type it. Where a Wikipedia
 article about the region exists, the form asks where your text comes from:
 adapted from that article, or your own words. A curator decides on the
 Wikipedia credit when they approve.

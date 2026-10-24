@@ -170,7 +170,7 @@ final readonly class PlaceTextWriter
     }
 
     /**
-     * True when approving this history text still needs the curator's tick:
+     * True when approving this region text still needs the curator's tick:
      * a link in it is not plainly fine (StoryLinkCheck), no curator confirmed
      * it before with that problem, and the approval's confirmation
      * (`_links.approved`) does not cover it.
@@ -179,7 +179,7 @@ final readonly class PlaceTextWriter
     {
         $payload = $submission->getPayload();
         $proposal = PlaceText::fromPayload($payload);
-        if (null === $proposal || PlaceText::STORY !== $proposal['target']) {
+        if (null === $proposal || !PlaceText::links($proposal['target'])) {
             return false;
         }
         $open = $this->links->open($this->links->problems($proposal['text']));

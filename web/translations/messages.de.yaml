@@ -2844,7 +2844,7 @@ region_edit:
   guide_figures_area: "Fläche: Lassen Sie das Feld leer, um die an der Grenze gemessene Fläche zu zeigen."
   guide_figures_population: "Einwohner: die letzte amtliche Zählung, mit dem Jahr der Zählung."
   guide_figures_ride: "Gelände: wie das meiste Radfahren in der Region ist."
-  guide_geo_whole: "Ein Absatz, höchstens %max% Zeichen, ohne Links."
+  guide_geo_whole: "Ein Absatz, höchstens %max% Zeichen. Die Adressen der Links zählen nicht mit."
   guide_geo_what: "Wo die Region liegt und ihre Grenzen, Boden und Relief, was das Land bedeckt, und wie es sich fährt."
   guide_geo_out: "Lassen Sie Zahlen, Geschichte und Kultur weg."
   guide_more: "Die ganze Anleitung, mit einem Beispiel:"
@@ -5095,7 +5095,8 @@ moderate_regions:
     save: "Text speichern"
     back: "Zurück zum Regionen-Schreibtisch"
     flash_saved: "Der Regionstext ist gespeichert."
-    flash_too_long: "Das ist zu lang für einen Vorspann. Bleib unter 1200 Zeichen."
+    flash_too_long: "Das ist zu lang für einen Vorspann. Bleib unter 1200 Zeichen. Die Adressen der Links zählen nicht mit."
+    flash_links: "Einige Links sind nicht als „Geprüft: OK“ markiert: %urls%. Ändere sie, oder schreib den Text im Regionseditor, wo du bestätigen kannst, dass du sie geöffnet hast."
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
 # improve.receipt.* group stays separate.

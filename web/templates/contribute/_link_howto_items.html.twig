@@ -1,0 +1,13 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  How a region text links its sources, as list items for a "How to write
+  it" list (§3.1b, §3.1c). The link example wears the box's own tints,
+  then shows how the page reads it, so the markup is learned by sight; its
+  words and address are messages, so it is in the page's own language.
+#}
+{% set ex_words = 'place_text.howto_ex_words'|trans %}
+<li>{{ 'place_text.howto_cite'|trans }}
+  <code class="pt-howto-ex"><mark class="w">[{{ ex_words }}]</mark><mark class="u">({{ 'place_text.howto_ex_url'|trans }})</mark></code>
+  {{ 'place_text.howto_reads'|trans }} <span class="pt-howto-link">{{ ex_words }}</span></li>
+<li>{{ 'place_text.howto_words'|trans }}</li>
+<li>{{ 'place_text.howto_sites'|trans }}</li>

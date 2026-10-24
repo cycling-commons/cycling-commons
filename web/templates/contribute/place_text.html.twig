@@ -28,8 +28,8 @@
   licence line (addressed to the writer) gives way to the lead saying the
   rider stays credited. There the curator either approves the text in the
   box, with an optional note to the writer, or saves the correction and
-  decides later. A region's history text is corrected in its own editor,
-  links and all (_story_editor.html.twig).
+  decides later. A region's two texts are corrected in their own editor,
+  links and all (_linked_text_editor.html.twig).
 
   Where the language has a Wikipedia article to credit, the correction page
   asks the curator whether that credit stays (`credit`, owner 2026-10-01):
@@ -78,8 +78,9 @@
         <div class="cerr" role="alert">{{ error|trans({'%max%': max}|merge(error_params)) }}</div>
       {% endif %}
 
-      {% set story = target == 'story' %}
-      <form method="post" action="{{ action }}" id="place-text-form" class="pt-section{{ story ? ' pt-story-form' }}"
+      {# A region's two texts link their sources; a town card's text does not. #}
+      {% set linked = target in ['region', 'story'] %}
+      <form method="post" action="{{ action }}" id="place-text-form" class="pt-section{{ linked ? ' pt-story-form' }}"
             data-texts="{{ texts|json_encode }}"
             {% if articles is not null %}data-articles="{{ articles|json_encode }}"{% endif %}>
         <input type="hidden" name="_token" value="{{ csrf_token(csrf_id) }}">
@@ -118,10 +119,11 @@
           <p class="chint pt-current-none" id="pt-current-none"{{ current is not empty ? ' hidden' }}>{{ 'place_text.current_none'|trans }}</p>
         </figure>
 
-        {% if story %}
-          {{ include('contribute/_story_editor.html.twig', {
+        {% if linked %}
+          {{ include('contribute/_linked_text_editor.html.twig', {
             box_id: 'pt-text', box_name: 'text', label: 'place_text.field_text', value: text, required: true,
             max: max, raw_max: raw_max, generic_anchors: generic_anchors, error: error,
+            paragraphs: target == 'story', rows: target == 'story' ? 16 : 8,
             link_check_csrf_id: link_check_csrf_id, count_id: 'pt-text-count', hint_id: 'pt-text-hint',
           }) }}
         {% else %}

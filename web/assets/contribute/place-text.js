@@ -39,9 +39,10 @@
     try { return el.hasAttribute(attr) ? JSON.parse(el.getAttribute(attr) || 'null') : fallback; } catch (e) { return fallback; }
   }
 
-  /* A history text counts what a reader sees: a [words](https://address)
+  /* A region text counts what a reader sees: a [words](https://address)
      link counts its words, and paragraphs are one line apart as stored
-     (RegionStory::readableLength). */
+     (RegionStory::readableLength). A text of one paragraph (data-one-line,
+     the geography text) is stored with its line breaks as spaces. */
   function readable(text) {
     var lines = text.split(/\r\n|\r|\n/).map(function (l) { return l.replace(/\s+/g, ' ').trim(); })
       .filter(function (l) { return l !== ''; });
@@ -106,7 +107,8 @@
     function recount() {
       if (!count) { return; }
       var max = parseInt(count.getAttribute('data-max'), 10) || 0;
-      var n = box.hasAttribute('data-links') ? readable(box.value) : Array.from(box.value).length;
+      var n = !box.hasAttribute('data-links') ? Array.from(box.value).length
+        : readable(box.hasAttribute('data-one-line') ? box.value.replace(/\s+/g, ' ') : box.value);
       count.textContent = (count.getAttribute('data-words') || '%count% / %max%')
         .replace('%count%', String(n)).replace('%max%', String(max));
       count.classList.toggle('is-over', max > 0 && n > max);
@@ -178,9 +180,10 @@
   Array.prototype.forEach.call(document.querySelectorAll('.pt-section[data-texts]'), setup);
 })();
 
-/* The link editor of a history text (textarea[data-links], §3.1c). A text
-   cites its sources as [words](https://address); this makes those easy to
-   place and to see without changing what is sent:
+/* The link editor of a region text (textarea[data-links], §3.1b, §3.1c):
+   the geography and the history text, each in its own .pt-editor, two on
+   the region editor. A text cites its sources as [words](https://address);
+   this makes those easy to place and to see without changing what is sent:
 
    - "Link the selected words": select words in the box, press it, give the
      address, and the words become [words](address). The address must be a
@@ -203,241 +206,255 @@
      red. A check that cannot run (no answer, the hourly limit) says so and
      changes nothing: the send checks again either way.
    - When a link is not plainly fine, the tick under the list appears: the
-     writer confirms they opened it. The send needs it; nothing else does. */
+     writer confirms they opened it. The send needs it; nothing else does.
+     Each text has its own tick; the checks are shared, so an address both
+     texts link is asked once. */
 (function () {
-  var box = document.querySelector('textarea[data-links]');
-  if (!box) { return; }
+  var boxes = document.querySelectorAll('textarea[data-links]');
+  if (boxes.length === 0) { return; }
   var LINK = /\[([^\[\]\n]{1,300})\]\((https?:\/\/[^\s()<>"]+)\)/gi;
-  var generic = [];
-  try { generic = JSON.parse(box.getAttribute('data-generic') || '[]'); } catch (e) { generic = []; }
-
-  var bar = document.getElementById('pt-linkbar');
-  var open = document.getElementById('pt-link-open');
-  var panel = document.getElementById('pt-link-form');
-  var url = document.getElementById('pt-link-url');
-  var insert = document.getElementById('pt-link-insert');
-  var cancel = document.getElementById('pt-link-cancel');
-  var msg = document.getElementById('pt-link-msg');
-  var list = document.getElementById('pt-links');
-  var listH = document.getElementById('pt-links-h');
-  var listOl = document.getElementById('pt-links-list');
-  var confirmBox = document.getElementById('pt-links-ok');
-
-  function isGeneric(words) {
-    var w = words.replace(/[\s.:;,!?()"']+/g, ' ').trim().toLowerCase();
-    return generic.indexOf(w) !== -1;
-  }
-  function esc(t) {
-    return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
-  function say(text) { if (msg) { msg.textContent = text || ''; } }
-
-  /* The layer under the box. */
-  var wrap = box.parentNode;
-  var layer = document.createElement('div');
-  layer.className = 'pt-hl';
-  layer.setAttribute('aria-hidden', 'true');
-  wrap.insertBefore(layer, box);
-  wrap.classList.add('is-on');
-
-  function fitLayer() {
-    var cs = window.getComputedStyle(box);
-    ['fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing', 'wordSpacing', 'tabSize',
-     'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'borderTopWidth', 'borderRightWidth',
-     'borderBottomWidth', 'borderLeftWidth', 'borderRadius', 'textIndent'].forEach(function (k) { layer.style[k] = cs[k]; });
-    layer.style.width = box.offsetWidth + 'px';
-    layer.style.height = box.offsetHeight + 'px';
-    /* The box's scrollbar narrows its text; the layer has none, so it gives the same width up as padding. */
-    var bar = box.offsetWidth - box.clientWidth - parseFloat(cs.borderLeftWidth) - parseFloat(cs.borderRightWidth);
-    layer.style.paddingRight = (parseFloat(cs.paddingRight) + Math.max(0, bar)) + 'px';
-    layer.scrollTop = box.scrollTop;
-  }
-
-  function draw() {
-    var text = box.value;
-    var html = '';
-    var at = 0;
-    var links = [];
-    var m;
-    LINK.lastIndex = 0;
-    while ((m = LINK.exec(text)) !== null) {
-      var bad = isGeneric(m[1]);
-      var insecure = !/^https:/i.test(m[2]);
-      html += esc(text.slice(at, m.index))
-        + '<mark class="w' + (bad ? ' bad' : '') + '">' + esc('[' + m[1] + ']') + '</mark>'
-        + '<mark class="u' + (insecure || refused(m[2]) ? ' bad' : '') + '">' + esc('(' + m[2] + ')') + '</mark>';
-      at = m.index + m[0].length;
-      links.push({ words: m[1], href: m[2], bad: bad, insecure: insecure });
-    }
-    /* A last line break needs a character after it, or the layer ends one line short. */
-    layer.innerHTML = html + esc(text.slice(at)) + '\n ';
-    layer.scrollTop = box.scrollTop;
-    drawList(links);
-    askLater(links);
-  }
 
   /* Live link checks: url -> {site, safety, refused, confirmed} | 'checking' | 'failed'. */
   var checks = {};
   var limited = false;
-  var timer = null;
-  function refused(href) {
-    var c = checks[href];
-    return !!(c && typeof c === 'object' && c.refused);
-  }
-  function askLater(links) {
-    if (!list || !list.getAttribute('data-check-url') || limited) { return; }
-    var todo = links.filter(function (l) { return !l.insecure; }).map(function (l) { return l.href; })
-      .filter(function (h, i, all) { return all.indexOf(h) === i && checks[h] === undefined; });
-    if (todo.length === 0) { return; }
-    clearTimeout(timer);
-    timer = setTimeout(function () { ask(todo.slice(0, 20)); }, 700);
-  }
-  function ask(urls) {
-    urls.forEach(function (u) { checks[u] = 'checking'; });
-    draw();
-    fetch(list.getAttribute('data-check-url'), {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ token: list.getAttribute('data-check-token'), urls: urls })
-    }).then(function (r) {
-      if (r.status === 429) { limited = true; }
-      return r.ok ? r.json() : null;
-    }).then(function (data) {
-      var got = (data && data.links) || {};
-      urls.forEach(function (u) { checks[u] = got[u] && typeof got[u] === 'object' ? got[u] : 'failed'; });
-      draw();
-    }).catch(function () {
-      urls.forEach(function (u) { checks[u] = 'failed'; });
-      draw();
-    });
-  }
-  /* A link's state in words, and its class: ok, wait, warn or bad. */
-  function stateOf(href) {
-    var c = checks[href];
-    var say = function (k) { return list.getAttribute('data-st-' + k) || ''; };
-    if (!/^https:/i.test(href)) { return { cls: 'bad', text: say('http') }; }
-    if (c === undefined) { return limited ? { cls: 'warn', text: say('limit') } : { cls: 'wait', text: say('checking') }; }
-    if (c === 'checking') { return { cls: 'wait', text: say('checking') }; }
-    if (c === 'failed') { return { cls: 'warn', text: limited ? say('limit') : say('unknown') }; }
-    /* A curator confirmed it before, with the problem it has now: no tick needed for it. */
-    if (c.confirmed) { return { cls: 'ok', text: say('confirmed') }; }
-    if (c.refused) { return { cls: 'bad', text: say(c.refused) }; }
-    if (c.site === 'unknown' || c.safety === 'unknown') { return { cls: 'warn', text: say('unknown') }; }
-    return { cls: 'ok', text: say('ok') };
-  }
+  /* Every editor redraws when an answer comes in: the other may link the same address. */
+  var redraws = [];
+  function redrawAll() { redraws.forEach(function (f) { f(); }); }
 
-  function drawList(links) {
-    /* The tick appears once a link is checked and not plainly fine (or a
-       send came back for it); it never blocks while checks are running. */
-    if (confirmBox) {
-      /* A tick cannot let an http link through, so it does not ask for one. */
-      var unclear = links.some(function (l) { var c = stateOf(l.href).cls; return !l.insecure && (c === 'warn' || c === 'bad'); });
-      confirmBox.hidden = !unclear && !confirmBox.classList.contains('is-asked');
+  Array.prototype.forEach.call(boxes, setup);
+
+  function setup(box) {
+    var editor = box.closest('.pt-editor') || box.parentNode.parentNode;
+    function find(sel) { return editor.querySelector(sel); }
+    var generic = [];
+    try { generic = JSON.parse(box.getAttribute('data-generic') || '[]'); } catch (e) { generic = []; }
+
+    var bar = find('.pt-linkbar');
+    var open = find('.pt-link-open');
+    var panel = find('.pt-link-form');
+    var url = find('.pt-link-url');
+    var insert = find('.pt-link-insert');
+    var cancel = find('.pt-link-cancel');
+    var msg = find('.pt-link-msg');
+    var list = find('.pt-links');
+    var listH = find('.pt-links-h');
+    var listOl = find('.pt-links ol');
+    var confirmBox = find('.pt-links-ok');
+
+    function isGeneric(words) {
+      var w = words.replace(/[\s.:;,!?()"']+/g, ' ').trim().toLowerCase();
+      return generic.indexOf(w) !== -1;
     }
-    if (!list || !listH || !listOl) { return; }
-    list.hidden = links.length === 0;
-    listH.textContent = (list.getAttribute('data-h') || '%count%').replace('%count%', String(links.length));
-    listOl.innerHTML = '';
-    links.forEach(function (l) {
-      var li = document.createElement('li');
-      if (l.bad) { li.className = 'is-bad'; }
-      var w = document.createElement('span');
-      w.className = 'pt-links-w';
-      w.textContent = l.words;
-      var a = document.createElement('a');
-      a.href = l.href;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.textContent = l.insecure ? l.href : l.href.replace(/^https:\/\//i, '').replace(/\/$/, '');
-      var st = stateOf(l.href);
-      var chip = document.createElement('span');
-      chip.className = 'pt-links-st is-' + st.cls;
-      chip.textContent = st.text;
-      if (st.cls === 'bad') { li.className = 'is-bad'; }
-      li.appendChild(w);
-      li.appendChild(document.createTextNode(' → '));
-      li.appendChild(a);
-      li.appendChild(document.createTextNode(' '));
-      li.appendChild(chip);
-      if (l.bad) {
-        var note = document.createElement('span');
-        note.className = 'pt-links-bad';
-        note.textContent = ' ' + (list.getAttribute('data-generic-note') || '');
-        li.appendChild(note);
+    function esc(t) {
+      return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function say(text) { if (msg) { msg.textContent = text || ''; } }
+
+    /* The layer under the box. */
+    var wrap = box.parentNode;
+    var layer = document.createElement('div');
+    layer.className = 'pt-hl';
+    layer.setAttribute('aria-hidden', 'true');
+    wrap.insertBefore(layer, box);
+    wrap.classList.add('is-on');
+
+    function fitLayer() {
+      var cs = window.getComputedStyle(box);
+      ['fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing', 'wordSpacing', 'tabSize',
+       'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'borderTopWidth', 'borderRightWidth',
+       'borderBottomWidth', 'borderLeftWidth', 'borderRadius', 'textIndent'].forEach(function (k) { layer.style[k] = cs[k]; });
+      layer.style.width = box.offsetWidth + 'px';
+      layer.style.height = box.offsetHeight + 'px';
+      /* The box's scrollbar narrows its text; the layer has none, so it gives the same width up as padding. */
+      var bar = box.offsetWidth - box.clientWidth - parseFloat(cs.borderLeftWidth) - parseFloat(cs.borderRightWidth);
+      layer.style.paddingRight = (parseFloat(cs.paddingRight) + Math.max(0, bar)) + 'px';
+      layer.scrollTop = box.scrollTop;
+    }
+
+    function draw() {
+      var text = box.value;
+      var html = '';
+      var at = 0;
+      var links = [];
+      var m;
+      LINK.lastIndex = 0;
+      while ((m = LINK.exec(text)) !== null) {
+        var bad = isGeneric(m[1]);
+        var insecure = !/^https:/i.test(m[2]);
+        html += esc(text.slice(at, m.index))
+          + '<mark class="w' + (bad ? ' bad' : '') + '">' + esc('[' + m[1] + ']') + '</mark>'
+          + '<mark class="u' + (insecure || refused(m[2]) ? ' bad' : '') + '">' + esc('(' + m[2] + ')') + '</mark>';
+        at = m.index + m[0].length;
+        links.push({ words: m[1], href: m[2], bad: bad, insecure: insecure });
       }
-      listOl.appendChild(li);
-    });
-  }
-
-  /* "Link the selected words". */
-  var sel = null;
-  function closePanel() {
-    if (!panel || !open) { return; }
-    panel.hidden = true;
-    open.hidden = false;
-    open.setAttribute('aria-expanded', 'false');
-    sel = null;
-  }
-  function openPanel() {
-    var a = box.selectionStart, b = box.selectionEnd;
-    var words = box.value.slice(a, b);
-    if (a === b || words.trim() === '' || /[\[\]\n]/.test(words)) {
-      say(msg ? msg.getAttribute('data-select') : '');
-      box.focus();
-      return;
+      /* A last line break needs a character after it, or the layer ends one line short. */
+      layer.innerHTML = html + esc(text.slice(at)) + '\n ';
+      layer.scrollTop = box.scrollTop;
+      drawList(links);
+      askLater(links);
     }
-    /* Leave the spaces around the selection outside the link. */
-    a += words.length - words.replace(/^\s+/, '').length;
-    b -= words.length - words.replace(/\s+$/, '').length;
-    sel = { start: a, end: b, words: box.value.slice(a, b) };
-    say((msg && msg.getAttribute('data-for') || '%words%').replace('%words%', sel.words));
-    panel.hidden = false;
-    open.hidden = true;
-    open.setAttribute('aria-expanded', 'true');
-    url.value = '';
-    url.focus();
-  }
-  function insertLink() {
-    if (!sel) { closePanel(); return; }
-    var href = url.value.trim();
-    if (!/^https:\/\/[^\s()<>"]+\.[^\s()<>"]+$/i.test(href)) {
-      say(msg ? msg.getAttribute('data-bad-url') : '');
+
+    var timer = null;
+    function refused(href) {
+      var c = checks[href];
+      return !!(c && typeof c === 'object' && c.refused);
+    }
+    function askLater(links) {
+      if (!list || !list.getAttribute('data-check-url') || limited) { return; }
+      var todo = links.filter(function (l) { return !l.insecure; }).map(function (l) { return l.href; })
+        .filter(function (h, i, all) { return all.indexOf(h) === i && checks[h] === undefined; });
+      if (todo.length === 0) { return; }
+      clearTimeout(timer);
+      timer = setTimeout(function () { ask(todo.slice(0, 20)); }, 700);
+    }
+    function ask(urls) {
+      urls.forEach(function (u) { checks[u] = 'checking'; });
+      redrawAll();
+      fetch(list.getAttribute('data-check-url'), {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ token: list.getAttribute('data-check-token'), urls: urls })
+      }).then(function (r) {
+        if (r.status === 429) { limited = true; }
+        return r.ok ? r.json() : null;
+      }).then(function (data) {
+        var got = (data && data.links) || {};
+        urls.forEach(function (u) { checks[u] = got[u] && typeof got[u] === 'object' ? got[u] : 'failed'; });
+        redrawAll();
+      }).catch(function () {
+        urls.forEach(function (u) { checks[u] = 'failed'; });
+        redrawAll();
+      });
+    }
+    /* A link's state in words, and its class: ok, wait, warn or bad. */
+    function stateOf(href) {
+      var c = checks[href];
+      var say = function (k) { return list.getAttribute('data-st-' + k) || ''; };
+      if (!/^https:/i.test(href)) { return { cls: 'bad', text: say('http') }; }
+      if (c === undefined) { return limited ? { cls: 'warn', text: say('limit') } : { cls: 'wait', text: say('checking') }; }
+      if (c === 'checking') { return { cls: 'wait', text: say('checking') }; }
+      if (c === 'failed') { return { cls: 'warn', text: limited ? say('limit') : say('unknown') }; }
+      /* A curator confirmed it before, with the problem it has now: no tick needed for it. */
+      if (c.confirmed) { return { cls: 'ok', text: say('confirmed') }; }
+      if (c.refused) { return { cls: 'bad', text: say(c.refused) }; }
+      if (c.site === 'unknown' || c.safety === 'unknown') { return { cls: 'warn', text: say('unknown') }; }
+      return { cls: 'ok', text: say('ok') };
+    }
+
+    function drawList(links) {
+      /* The tick appears once a link is checked and not plainly fine (or a
+         send came back for it); it never blocks while checks are running. */
+      if (confirmBox) {
+        /* A tick cannot let an http link through, so it does not ask for one. */
+        var unclear = links.some(function (l) { var c = stateOf(l.href).cls; return !l.insecure && (c === 'warn' || c === 'bad'); });
+        confirmBox.hidden = !unclear && !confirmBox.classList.contains('is-asked');
+      }
+      if (!list || !listH || !listOl) { return; }
+      list.hidden = links.length === 0;
+      listH.textContent = (list.getAttribute('data-h') || '%count%').replace('%count%', String(links.length));
+      listOl.innerHTML = '';
+      links.forEach(function (l) {
+        var li = document.createElement('li');
+        if (l.bad) { li.className = 'is-bad'; }
+        var w = document.createElement('span');
+        w.className = 'pt-links-w';
+        w.textContent = l.words;
+        var a = document.createElement('a');
+        a.href = l.href;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.textContent = l.insecure ? l.href : l.href.replace(/^https:\/\//i, '').replace(/\/$/, '');
+        var st = stateOf(l.href);
+        var chip = document.createElement('span');
+        chip.className = 'pt-links-st is-' + st.cls;
+        chip.textContent = st.text;
+        if (st.cls === 'bad') { li.className = 'is-bad'; }
+        li.appendChild(w);
+        li.appendChild(document.createTextNode(' → '));
+        li.appendChild(a);
+        li.appendChild(document.createTextNode(' '));
+        li.appendChild(chip);
+        if (l.bad) {
+          var note = document.createElement('span');
+          note.className = 'pt-links-bad';
+          note.textContent = ' ' + (list.getAttribute('data-generic-note') || '');
+          li.appendChild(note);
+        }
+        listOl.appendChild(li);
+      });
+    }
+
+    /* "Link the selected words". */
+    var sel = null;
+    function closePanel() {
+      if (!panel || !open) { return; }
+      panel.hidden = true;
+      open.hidden = false;
+      open.setAttribute('aria-expanded', 'false');
+      sel = null;
+    }
+    function openPanel() {
+      var a = box.selectionStart, b = box.selectionEnd;
+      var words = box.value.slice(a, b);
+      if (a === b || words.trim() === '' || /[\[\]\n]/.test(words)) {
+        say(msg ? msg.getAttribute('data-select') : '');
+        box.focus();
+        return;
+      }
+      /* Leave the spaces around the selection outside the link. */
+      a += words.length - words.replace(/^\s+/, '').length;
+      b -= words.length - words.replace(/\s+$/, '').length;
+      sel = { start: a, end: b, words: box.value.slice(a, b) };
+      say((msg && msg.getAttribute('data-for') || '%words%').replace('%words%', sel.words));
+      panel.hidden = false;
+      open.hidden = true;
+      open.setAttribute('aria-expanded', 'true');
+      url.value = '';
       url.focus();
-      return;
     }
-    var link = '[' + sel.words + '](' + href + ')';
-    box.focus();
-    box.setSelectionRange(sel.start, sel.end);
-    var done = false;
-    try { done = document.execCommand('insertText', false, link); } catch (e) { done = false; }
-    if (!done) {
-      box.value = box.value.slice(0, sel.start) + link + box.value.slice(sel.end);
-      box.setSelectionRange(sel.start + link.length, sel.start + link.length);
-      box.dispatchEvent(new Event('input'));
+    function insertLink() {
+      if (!sel) { closePanel(); return; }
+      var href = url.value.trim();
+      if (!/^https:\/\/[^\s()<>"]+\.[^\s()<>"]+$/i.test(href)) {
+        say(msg ? msg.getAttribute('data-bad-url') : '');
+        url.focus();
+        return;
+      }
+      var link = '[' + sel.words + '](' + href + ')';
+      box.focus();
+      box.setSelectionRange(sel.start, sel.end);
+      var done = false;
+      try { done = document.execCommand('insertText', false, link); } catch (e) { done = false; }
+      if (!done) {
+        box.value = box.value.slice(0, sel.start) + link + box.value.slice(sel.end);
+        box.setSelectionRange(sel.start + link.length, sel.start + link.length);
+        box.dispatchEvent(new Event('input'));
+      }
+      say('');
+      closePanel();
     }
-    say('');
-    closePanel();
-  }
 
-  if (bar && open && panel && url && insert && cancel) {
-    bar.hidden = false;
-    open.addEventListener('click', openPanel);
-    insert.addEventListener('click', insertLink);
-    cancel.addEventListener('click', function () { say(''); closePanel(); box.focus(); });
-    /* Enter in the address field adds the link; it must never send the form. */
-    url.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') { e.preventDefault(); insertLink(); }
-      if (e.key === 'Escape') { e.preventDefault(); say(''); closePanel(); box.focus(); }
-    });
-  }
+    if (bar && open && panel && url && insert && cancel) {
+      bar.hidden = false;
+      open.addEventListener('click', openPanel);
+      insert.addEventListener('click', insertLink);
+      cancel.addEventListener('click', function () { say(''); closePanel(); box.focus(); });
+      /* Enter in the address field adds the link; it must never send the form. */
+      url.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); insertLink(); }
+        if (e.key === 'Escape') { e.preventDefault(); say(''); closePanel(); box.focus(); }
+      });
+    }
 
-  box.addEventListener('input', draw);
-  box.addEventListener('scroll', function () { layer.scrollTop = box.scrollTop; });
-  if (window.ResizeObserver) { new ResizeObserver(fitLayer).observe(box); }
-  window.addEventListener('resize', fitLayer);
-  fitLayer();
-  draw();
+    box.addEventListener('input', draw);
+    box.addEventListener('scroll', function () { layer.scrollTop = box.scrollTop; });
+    if (window.ResizeObserver) { new ResizeObserver(fitLayer).observe(box); }
+    window.addEventListener('resize', fitLayer);
+    redraws.push(draw);
+    fitLayer();
+    draw();
+  }
 })();
 
 /* The region editor's steps as tabs (region_edit.html.twig, §3.1g): one

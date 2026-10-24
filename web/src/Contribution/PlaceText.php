@@ -101,6 +101,16 @@ final class PlaceText
         };
     }
 
+    /**
+     * Whether a target's text links its sources in place
+     * (`[words](https://address)`): a region's geography and history texts
+     * do, a town card's text does not.
+     */
+    public static function links(string $target): bool
+    {
+        return self::REGION === $target || self::STORY === $target;
+    }
+
     /** The `changes` key for one language's text: `text:nl`, or `story:nl` for a region's history text. */
     public static function changeKey(string $lang, string $target = self::TOWN): string
     {

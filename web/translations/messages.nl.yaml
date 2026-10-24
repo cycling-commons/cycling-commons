@@ -2843,7 +2843,7 @@ region_edit:
   guide_figures_area: "Oppervlakte: laat het veld leeg om de oppervlakte te tonen die aan de grens is gemeten."
   guide_figures_population: "Inwoners: de laatste officiële telling, met het jaar van de telling."
   guide_figures_ride: "Terrein: hoe het meeste fietsen in de regio is."
-  guide_geo_whole: "Eén alinea, hoogstens %max% tekens, zonder links."
+  guide_geo_whole: "Eén alinea, hoogstens %max% tekens. Webadressen van links tellen niet mee."
   guide_geo_what: "Waar de regio ligt en haar grenzen, de bodem en het reliëf, wat het land bedekt, en hoe het fietst."
   guide_geo_out: "Laat de cijfers, de geschiedenis en de cultuur weg."
   guide_more: "De volledige gids, met een voorbeeld:"
@@ -5094,7 +5094,8 @@ moderate_regions:
     save: "Tekst opslaan"
     back: "Terug naar de regiobalie"
     flash_saved: "De regiotekst is opgeslagen."
-    flash_too_long: "Dat is te lang voor een inleiding. Houd het onder 1200 tekens."
+    flash_too_long: "Dat is te lang voor een inleiding. Houd het onder 1200 tekens. Webadressen van links tellen niet mee."
+    flash_links: "Sommige links zijn niet gemarkeerd als \"Gecontroleerd: OK\": %urls%. Wijzig ze, of schrijf de tekst in de regio-editor, waar je kunt bevestigen dat je ze hebt geopend."
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
 # improve.receipt.* group stays separate.

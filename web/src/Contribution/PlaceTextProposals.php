@@ -57,7 +57,9 @@ use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
  *
  * A region's "History, nature and culture" text (target `story`) runs the
  * same way: one proposal per language, written fresh or translated, its
- * sources linked in the text, and no Wikipedia question.
+ * sources linked in the text, and no Wikipedia question. A region's
+ * geography text links its sources the same way, and its links are checked
+ * the same way; a town card's text links nothing.
  *
  * A region's figures (target `facts`: area, population with its year, ride
  * character) are sent on the geography form, beside its text or alone, as
@@ -268,7 +270,10 @@ final readonly class PlaceTextProposals
 
     /**
      * `$derived` is the writer's answer to where the text comes from, as for
-     * a town ({@see self::proposeTown()}).
+     * a town ({@see self::proposeTown()}). Its links are checked as a
+     * history text's are ({@see self::proposeStory()}): `$linksConfirmed` is
+     * the writer's tick for the ones that are not plainly fine, kept on the
+     * payload (`_links.writer`).
      *
      * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
      *
@@ -277,9 +282,9 @@ final readonly class PlaceTextProposals
      * @throws PlaceTextRefused on text the form must send back
      * @throws LimitReached     past the contribution rate limit
      */
-    public function proposeRegion(User $by, array $region, string $lang, string $text, string $note, ?bool $derived, ?string $basedOn = null): array
+    public function proposeRegion(User $by, array $region, string $lang, string $text, string $note, ?bool $derived, ?string $basedOn = null, bool $linksConfirmed = false): array
     {
-        ['lang' => $lang, 'text' => $text, 'note' => $note, 'based' => $based, 'derived' => $derived, 'was' => $was] = $this->regionChecked($region, $lang, $text, $note, $derived, $basedOn);
+        ['lang' => $lang, 'text' => $text, 'note' => $note, 'based' => $based, 'derived' => $derived, 'was' => $was, 'problems' => $problems, 'earlier' => $earlier] = $this->regionChecked($region, $lang, $text, $note, $derived, $basedOn, $linksConfirmed);
         $this->consumeRateLimit($by);
 
         $point = $this->db->fetchOne('SELECT ST_AsGeoJSON(ST_PointOnSurface(geom)) FROM region WHERE id = :id', ['id' => $region['id']]);
@@ -295,21 +300,23 @@ final readonly class PlaceTextProposals
             'text' => $text,
             'derived' => $derived,
             'details' => ['note' => $note],
-        ] + self::basedOnPayload($based), [PlaceText::changeKey($lang) => self::pair($was, $text)], mb_substr($region['name'], 0, 200), $point, $region['countryCode'], $region['id']);
+        ] + ([] === $problems ? [] : ['_links' => ['writer' => StoryLinkCheck::confirmation($by, $problems, $earlier)]])
+          + self::basedOnPayload($based), [PlaceText::changeKey($lang) => self::pair($was, $text)], mb_substr($region['name'], 0, 200), $point, $region['countryCode'], $region['id']);
     }
 
     /**
      * Whether a geography text would be refused, checked exactly as
-     * {@see self::proposeRegion()} checks it, without filing it: the region
-     * page's one send checks every part before it files any (§3.1g).
+     * {@see self::proposeRegion()} checks it, links included, without filing
+     * it: the region page's one send checks every part before it files any
+     * (§3.1g).
      *
      * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
      *
      * @throws PlaceTextRefused
      */
-    public function checkRegion(array $region, string $lang, string $text, string $note, ?bool $derived, ?string $basedOn = null): void
+    public function checkRegion(array $region, string $lang, string $text, string $note, ?bool $derived, ?string $basedOn = null, bool $linksConfirmed = false): void
     {
-        $this->regionChecked($region, $lang, $text, $note, $derived, $basedOn);
+        $this->regionChecked($region, $lang, $text, $note, $derived, $basedOn, $linksConfirmed);
     }
 
     /**
@@ -348,14 +355,14 @@ final readonly class PlaceTextProposals
      *
      * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
      *
-     * @return array{lang: string, text: string, note: string, based: array{lang: string, at: ?string, sub: ?int}|null, derived: bool, was: string}
+     * @return array{lang: string, text: string, note: string, based: array{lang: string, at: ?string, sub: ?int}|null, derived: bool, was: string, problems: array<string, string>, earlier: list<string>}
      *
      * @throws PlaceTextRefused
      */
-    private function regionChecked(array $region, string $lang, string $text, string $note, ?bool $derived, ?string $basedOn): array
+    private function regionChecked(array $region, string $lang, string $text, string $note, ?bool $derived, ?string $basedOn, bool $linksConfirmed): array
     {
         $this->assertServed($lang);
-        [$lang, $text, $note] = $this->checked($lang, $text, $note);
+        [$lang, $text, $note] = $this->checked($lang, $text, $note, PlaceText::REGION);
         // What it translates, checked before it costs a send (§3.1e).
         $based = $this->lineage->basedOn(PlaceText::REGION, (string) $region['id'], $lang, (string) $basedOn);
         $derived = self::sourceAnswered(RegionLead::hasSource($region['wiki'], $lang), $derived);
@@ -363,8 +370,9 @@ final readonly class PlaceTextProposals
         if ($current['text'] === $text && $current['derived'] === $derived) {
             throw new PlaceTextRefused('place_text.error.unchanged');
         }
+        [$problems, $earlier] = $this->linkProblems($text, $linksConfirmed);
 
-        return ['lang' => $lang, 'text' => $text, 'note' => $note, 'based' => $based, 'derived' => $derived, 'was' => $current['text']];
+        return ['lang' => $lang, 'text' => $text, 'note' => $note, 'based' => $based, 'derived' => $derived, 'was' => $current['text'], 'problems' => $problems, 'earlier' => $earlier];
     }
 
     /**
@@ -648,15 +656,16 @@ final readonly class PlaceTextProposals
             throw new PlaceTextRefused('place_text.error.credit_required');
         }
         $derived = $canDerive && true === $credit;
-        // A history text's links that are not plainly fine need the curator's own tick too.
-        [$problems, $earlier] = PlaceText::STORY === $proposal['target'] ? $this->linkProblems($text, $linksConfirmed) : [[], []];
+        // A region text's links that are not plainly fine need the curator's own tick too.
+        $linked = PlaceText::links($proposal['target']);
+        [$problems, $earlier] = $linked ? $this->linkProblems($text, $linksConfirmed) : [[], []];
 
-        return $this->em->wrapInTransaction(function () use ($submission, $curator, $proposal, $text, $derived, $note, $problems, $earlier): Submission {
+        return $this->em->wrapInTransaction(function () use ($submission, $curator, $proposal, $text, $derived, $note, $linked, $problems, $earlier): Submission {
             if ($text !== $proposal['text']) {
                 $this->correct($submission, $curator, $text);
             }
             $this->recordCredit($submission, $curator, $derived);
-            if (PlaceText::STORY === $proposal['target']) {
+            if ($linked) {
                 $this->recordLinks($submission, $curator, $problems, $earlier);
             }
 
@@ -951,7 +960,10 @@ final readonly class PlaceTextProposals
 
     /**
      * A history text keeps its paragraphs and has its own cap; the other
-     * texts are one paragraph.
+     * texts are one paragraph. A region's two texts link their sources:
+     * their cap counts what a reader sees, a link's words and not its
+     * address, under a cap on what is stored, and a link must name what it
+     * points to and use https (§3.1b, §3.1c).
      *
      * @return array{0: string, 1: string, 2: string} language, text, note
      *
@@ -963,21 +975,23 @@ final readonly class PlaceTextProposals
             throw new PlaceTextRefused('place_text.error.lang');
         }
         $story = PlaceText::STORY === $target;
+        $linked = PlaceText::links($target);
         $text = $story ? RegionStory::normaliseText($text) : PlaceText::normalise($text);
         if ('' === $text) {
             throw new PlaceTextRefused('place_text.error.empty');
         }
-        $tooLong = $story
-            ? RegionStory::readableLength($text) > RegionStory::MAX || mb_strlen($text) > RegionStory::RAW_MAX
-            : mb_strlen($text) > PlaceText::MAX;
+        $max = $story ? RegionStory::MAX : PlaceText::MAX;
+        $tooLong = $linked
+            ? RegionStory::readableLength($text) > $max || mb_strlen($text) > ($story ? RegionStory::RAW_MAX : RegionLead::RAW_MAX)
+            : mb_strlen($text) > $max;
         if ($tooLong) {
-            throw new PlaceTextRefused('place_text.error.too_long', ['%max%' => (string) ($story ? RegionStory::MAX : PlaceText::MAX)]);
+            throw new PlaceTextRefused('place_text.error.too_long', ['%max%' => (string) $max]);
         }
-        if ($story && null !== RegionStory::genericAnchor($text)) {
+        if ($linked && null !== RegionStory::genericAnchor($text)) {
             throw new PlaceTextRefused('place_text.error.generic_anchor');
         }
         // Only https addresses link (§3.1c).
-        $insecure = $story ? RegionStory::insecureLinks($text) : [];
+        $insecure = $linked ? RegionStory::insecureLinks($text) : [];
         if ([] !== $insecure) {
             throw new PlaceTextRefused('place_text.error.http_link', ['%urls%' => implode(', ', $insecure)]);
         }
@@ -990,7 +1004,7 @@ final readonly class PlaceTextProposals
     }
 
     /**
-     * The links of a history text that are not plainly fine, and whether the
+     * The links of a region text that are not plainly fine, and whether the
      * one sending or approving it confirmed them by hand
      * (moderation-and-contribution.md §3.1c). A link a curator already
      * confirmed with the same problem needs no new tick (StoryLinkCheck::open()).
@@ -1013,7 +1027,7 @@ final readonly class PlaceTextProposals
     }
 
     /**
-     * The approving curator's confirmation of a history text's problem links,
+     * The approving curator's confirmation of a region text's problem links,
      * on the payload (`_links.approved`), inside the approval's transaction;
      * none when every link checked out. `$earlier` names the ones a curator
      * had confirmed before.
