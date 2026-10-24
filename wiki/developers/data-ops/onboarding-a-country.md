@@ -149,6 +149,42 @@ their own language, and is never told twice. Only requests made before the count
 a later request asks for more inside a country that is already on the map. The same moment, the
 country appears under "Next release" on "What's new", until the next release names it.
 
+## The regions' Wikipedia text and population
+
+The steps above leave a new country's region pages without the two things fetched at build time:
+the Wikipedia text (`region.context`) and the population with the year it was counted
+(`region.facts_harvest`). Both are files a person reviews and commits, never fetched by the site
+itself, so they follow the country by hand, once its regions exist:
+
+1. Build both files from a database that holds the new regions; the slugs and ISO codes come from
+   its `region` table. A run without `--iso` asks Wikidata again for every region, so older counts
+   are brought up to date in the same pass:
+
+    <!-- CODE-ILLUSTRATIVE build the region text and population files for every region -->
+    ```bash
+    python3 tools/wikimedia/region_context.py --dsn postgresql://cc:cc@localhost:5433/cyclingcommons
+    python3 tools/wikimedia/region_population.py --dsn postgresql://cc:cc@localhost:5433/cyclingcommons
+    ```
+
+    A run with `--iso DK-84 --iso DK-85` asks only for those regions and adds them to the committed
+    file.
+
+2. Review the changes in `tools/wikimedia/out/region-context.json` and
+   `tools/wikimedia/out/region-population.json`, then commit them. The end of a run names every
+   region Wikidata had nothing for; that region stays without the figure.
+3. With the release deployed, on staging and then on production, copy both files into the app
+   container and import them:
+
+    <!-- CODE-ILLUSTRATIVE import the region text and population files -->
+    ```bash
+    php bin/console app:regions:import-context /tmp/region-context.json
+    php bin/console app:regions:import-population /tmp/region-population.json
+    ```
+
+Each import writes its own column only. A text or figure a person sets on the region editor stays,
+and the page shows it over the fetched one. Nothing refreshes the counts on a schedule: a full run of
+step 1 before a release keeps them current.
+
 ## Fixing a label
 
 Region and country labels are rows (`region.labels`, `country.labels`), so the in-site translation
@@ -174,6 +210,8 @@ planner and the coverage commands read the tables the migrations create.
 - **Curators.** A new country's regions start without curators; `/join/<cc>` switches to the curator
   form once regions exist. Until somebody is scoped, the country is live on the map and invisible in
   moderation.
+- **The regions' Wikipedia text and population.** Build-time files, see
+  *The regions' Wikipedia text and population* above.
 - **A new UI language.** Onboarding Denmark does not add Danish.
 - **Official data providers.** Separate, per-licence work.
 - **Part of a country.** The planner plans a whole country at one level. The two US states and two
