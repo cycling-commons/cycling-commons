@@ -61,6 +61,28 @@ final class ReleaseNotes
      */
     public const array RELEASES = [
         [
+            'version' => '0.9.11-beta',
+            'date' => '2026-10-24',
+            'sections' => [
+                'public' => [
+                    'changelog.v0911_region_links',
+                    'changelog.v0911_region_editor',
+                    'changelog.v0911_translations',
+                    'changelog.v0911_tough',
+                ],
+                'curator' => [
+                    'changelog.v0911_curator_desk',
+                ],
+            ],
+            'kinds' => [
+                'changelog.v0911_region_links' => 'improved',
+                'changelog.v0911_region_editor' => 'improved',
+                'changelog.v0911_translations' => 'improved',
+                'changelog.v0911_tough' => 'improved',
+                'changelog.v0911_curator_desk' => 'improved',
+            ],
+        ],
+        [
             'version' => '0.9.10-beta',
             'date' => '2026-10-23',
             'sections' => [
