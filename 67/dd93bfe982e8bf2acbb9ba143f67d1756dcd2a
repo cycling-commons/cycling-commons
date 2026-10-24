@@ -1,0 +1,49 @@
+web/translations/messages.de.yaml
+  s_72d2f8b5000c68::t_4d8920c2c356eb 2762
+web/translations/messages.nl.yaml
+  s_72d2f8b5000c68::t_4d8920c2c356eb 2761
+web/tests/Moderation/PlaceTextProposalTest.php
+  s_72d2f8b5000c68::t_4d8920c2c356eb 462-463,581-582
+wiki/region-texts.md
+  s_72d2f8b5000c68::t_4d8920c2c356eb 25
+web/tests/Moderation/RegionGeographyLinkTest.php
+  s_72d2f8b5000c68::t_4d8920c2c356eb 160-161
+web/src/Controller/PlaceTextController.php
+  s_72d2f8b5000c68::t_4d8920c2c356eb 74-76,198-201,278,281-296
+web/translations/messages.es.yaml
+  s_72d2f8b5000c68::t_4d8920c2c356eb 2783
+web/translations/messages.fr.yaml
+  s_72d2f8b5000c68::t_4d8920c2c356eb 2757
+web/tests/Moderation/RegionFactsTest.php
+  s_72d2f8b5000c68::t_4d8920c2c356eb 133-134,268-273,300
+docs/specs/moderation-and-contribution.md
+  s_72d2f8b5000c68::t_4d8920c2c356eb 785,1335,1370-1377
+web/translations/messages.en.yaml
+  s_72d2f8b5000c68::t_4d8920c2c356eb 2776
+web/tests/Moderation/TextLineageTest.php
+  s_72d2f8b5000c68::t_4d8920c2c356eb 166-167
+web/templates/contribute/region_edit.html.twig
+  s_72d2f8b5000c68::t_4d8920c2c356eb 12,48,50-52,272-289
+  s_72d2f8b5000c68::t_2672bb3e627bae 290-292
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "67dd93bfe982e8bf2acbb9ba143f67d1756dcd2a",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_72d2f8b5000c68": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c67130f0-70da-407a-8112-8b69473e80fd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
