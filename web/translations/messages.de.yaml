@@ -2759,7 +2759,7 @@ place_text:
   field_note: 'Notiz für den Kurator (optional)'
   field_note_hint: 'Woher deine Angaben stammen, oder was du geändert hast und warum.'
   licence: 'Dein Text wird unter <b>CC BY-SA 4.0</b> veröffentlicht. Nach der Freigabe wird er dir zugeschrieben: mit deinem Namen, wenn dein Profil öffentlich ist, sonst mit deinem Fahrernamen.'
-  submit: 'Senden'
+  submit: 'Speichern'
   cancel: 'Abbrechen'
   sent_h_queued: 'Zur Prüfung gesendet'
   sent_p_queued: 'Danke. Ein Kurator dieser Region prüft deinen Text; bis dahin sehen Leser den jetzigen. Du bekommst eine Nachricht, sobald entschieden ist.'

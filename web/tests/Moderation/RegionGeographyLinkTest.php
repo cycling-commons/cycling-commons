@@ -157,7 +157,8 @@ final class RegionGeographyLinkTest extends WebTestCase
         self::assertCount(1, $crawler->filter('#pt-text-links-ok.is-asked:not([hidden])'), 'the geography tick is asked');
         self::assertCount(1, $crawler->filter('#pt-story-links-ok[hidden]'), 'the history tick is not');
         $client->submit($crawler->filter('#place-text-form')->form(['lang' => 'en', 'text' => $text, 'text_links_confirmed' => '1']));
-        self::assertResponseIsSuccessful();
+        self::assertResponseRedirects();
+        $client->followRedirect();
 
         $sub = $this->latestText((int) $rider->getId());
         self::assertSame(SubmissionStatus::Pending, $sub->getStatus());

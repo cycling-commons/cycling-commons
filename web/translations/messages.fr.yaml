@@ -2754,7 +2754,7 @@ place_text:
   field_note: 'Note pour le curateur (facultatif)'
   field_note_hint: 'D’où viennent vos informations, ou ce que vous avez changé et pourquoi.'
   licence: 'Votre texte est publié sous <b>CC BY-SA 4.0</b>. Une fois approuvé, il vous est crédité : par votre nom si votre profil est public, sinon par votre pseudonyme de cycliste.'
-  submit: 'Envoyer'
+  submit: 'Enregistrer'
   cancel: 'Annuler'
   sent_h_queued: 'Envoyé pour vérification'
   sent_p_queued: 'Merci. Un curateur de cette région vérifie votre texte ; d’ici là, les lecteurs voient le texte actuel. Vous recevez un message quand il est décidé.'

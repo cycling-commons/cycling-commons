@@ -2780,7 +2780,7 @@ place_text:
   field_note: 'Nota para el curador (opcional)'
   field_note_hint: 'De dónde viene tu información, o qué cambiaste y por qué.'
   licence: 'Tu texto se publica bajo <b>CC BY-SA 4.0</b>. Una vez aprobado se te atribuye: con tu nombre si tu perfil es público, si no con tu alias de ciclista.'
-  submit: 'Enviar'
+  submit: 'Guardar'
   cancel: 'Cancelar'
   sent_h_queued: 'Enviado para revisión'
   sent_p_queued: 'Gracias. Un curador de esta región revisa tu texto; hasta entonces los lectores ven el actual. Recibirás un mensaje cuando se decida.'

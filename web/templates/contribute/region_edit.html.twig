@@ -9,7 +9,7 @@
   a curator writes it inside their own area.
 
   The steps are tabs (place-text.js): one shows at a time, "Next" moves on,
-  and the note and Send sit outside them, so a send may change one part or
+  and the note and Save sit outside them, so a send may change one part or
   all three. The language of the texts shows on the two text steps only.
   Without script all three show, one under the other, the language first.
   `step` opens the page at a step: the region page's pencils open the text
@@ -45,20 +45,11 @@
 <section class="pad"><div class="wrap">
   <div class="reppage">
     {% if sent is not null %}
-      {% set live = sent|filter(r => not r.applied) is empty %}
-      <div class="csent" role="status">
-        <h2>{{ (live ? 'region_edit.sent_h_applied' : 'region_edit.sent_h_queued')|trans }}</h2>
-        <p>{{ (live ? 'region_edit.sent_p_applied' : 'region_edit.sent_p_queued')|trans }}</p>
-        <ul class="pt-sent-list">
-          {% for step, r in sent %}
-            <li><b>{{ ('region_edit.step_' ~ step)|trans }}</b> · {{ 'place_text.sent_ref'|trans({'%ref%': r.reference}) }} · {{ (r.applied ? 'region_edit.sent_live' : 'region_edit.sent_waiting')|trans }}</li>
-          {% endfor %}
-        </ul>
-        {% if rest %}<div class="cerr" role="alert">{{ 'region_edit.sent_rest'|trans }} {{ rest.key|trans(rest.params) }}</div>{% endif %}
-        <p><a href="{{ back }}">{{ 'region_edit.back'|trans }}</a> &middot;
-           <a href="{{ path('profile') }}">{{ 'place_text.follow'|trans }}</a></p>
-      </div>
+      {{ _self.saved(sent, rest, back) }}
     {% else %}
+      {# A save from the figures or the geography opens the next step, with
+         what it filed above the form (PlaceTextController::regionSubmit()). #}
+      {% for saved in app.flashes('region_saved') %}{{ _self.saved(saved.sent, saved.rest, back) }}{% endfor %}
       {% if error %}
         <div class="cerr" role="alert">{{ error|trans({'%max%': step == 'story' ? story_max : max}|merge(error_params)) }}</div>
       {% endif %}
@@ -275,6 +266,27 @@
       {% endfor %}
     </select>
     <p class="chint" id="{{ id }}-hint">{{ 'place_text.field_based_on_hint'|trans }}</p>
+  </div>
+{% endmacro %}
+
+{#
+  What a save filed: each part with its reference and whether it is live,
+  and the part a rate limit stopped. On the sent page after a save from the
+  last step, and above the next step after a save from an earlier one.
+#}
+{% macro saved(sent, rest, back) %}
+  {% set live = sent|filter(r => not r.applied) is empty %}
+  <div class="csent" role="status">
+    <h2>{{ (live ? 'region_edit.sent_h_applied' : 'region_edit.sent_h_queued')|trans }}</h2>
+    <p>{{ (live ? 'region_edit.sent_p_applied' : 'region_edit.sent_p_queued')|trans }}</p>
+    <ul class="pt-sent-list">
+      {% for step, r in sent %}
+        <li><b>{{ ('region_edit.step_' ~ step)|trans }}</b> · {{ 'place_text.sent_ref'|trans({'%ref%': r.reference}) }} · {{ (r.applied ? 'region_edit.sent_live' : 'region_edit.sent_waiting')|trans }}</li>
+      {% endfor %}
+    </ul>
+    {% if rest %}<div class="cerr" role="alert">{{ 'region_edit.sent_rest'|trans }} {{ rest.key|trans(rest.params) }}</div>{% endif %}
+    <p><a href="{{ back }}">{{ 'region_edit.back'|trans }}</a> &middot;
+       <a href="{{ path('profile') }}">{{ 'place_text.follow'|trans }}</a></p>
   </div>
 {% endmacro %}
 

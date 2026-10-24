@@ -130,7 +130,8 @@ final class RegionFactsTest extends WebTestCase
             'lang' => 'en', 'text' => '', 'note' => 'From the province.',
             'facts[area]' => '2,633', 'facts[population]' => '494 000', 'facts[year]' => '2024', 'facts[ride]' => 'flat',
         ]));
-        self::assertResponseIsSuccessful();
+        self::assertResponseRedirects();
+        $client->followRedirect();
         self::assertSelectorTextContains('.csent h2', 'Sent for review');
         self::assertSame(1, $client->getCrawler()->filter('.pt-sent-list li')->count(), 'one part sent');
         self::assertSelectorTextContains('.pt-sent-list li', 'Figures');
@@ -264,7 +265,12 @@ final class RegionFactsTest extends WebTestCase
         $client->submit($crawler->filter('#place-text-form')->form([
             'lang' => 'en', 'text' => 'Low land by the sea.', 'facts[ride]' => 'flat',
         ]));
-        self::assertResponseIsSuccessful();
+        // A save from the geography opens the next step, under what it filed.
+        self::assertResponseRedirects('/regions/pfacts-b/edit?step=story&lang=en');
+        $crawler = $client->followRedirect();
+        self::assertSame('true', $crawler->filter('#pt-tab-story')->attr('aria-selected'));
+        self::assertSame('story', $crawler->filter('input[name=step]')->attr('value'));
+        self::assertSelectorTextContains('.csent h2', 'Sent for review');
         self::assertSame(['Figures', 'Geography'], $client->getCrawler()->filter('.pt-sent-list li b')->each(static fn ($b): string => $b->text()), 'the text and the figures each have a reference');
 
         /** @var EntityManagerInterface $em */
@@ -291,7 +297,7 @@ final class RegionFactsTest extends WebTestCase
         // A second send while the first waits adds to it.
         $crawler = $client->request('GET', '/regions/pfacts-b/text?lang=nl');
         $client->submit($crawler->filter('#place-text-form')->form(['lang' => 'nl', 'text' => '', 'facts[population]' => '1200', 'facts[year]' => '2023']));
-        self::assertResponseIsSuccessful();
+        self::assertResponseRedirects('/regions/pfacts-b/edit?step=story&lang=nl', null, 'the next step, in the language of the texts');
         $em->clear();
         $facts = $em->getRepository(Submission::class)->findBy(['userId' => $rider->getId(), 'type' => SubmissionType::Text], ['id' => 'ASC']);
         self::assertCount(2, $facts, 'amended, not filed again');

@@ -22,7 +22,7 @@ area shows at once.
 
 Both texts and the region's figures are on one page, the region editor. It
 has three steps: **1 Figures**, **2 Geography** and **3 History, nature and
-culture**. Change one step or all three, then press **Send** once. Each part
+culture**. Change one step or all three, then press **Save** once. Each part
 you change goes to the curator as its own proposal.
 
 | Opens the region editor at | Address, for Drenthe |

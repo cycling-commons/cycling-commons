@@ -459,7 +459,8 @@ final class PlaceTextProposalTest extends WebTestCase
         self::assertStringContainsString('Say where your text comes from', (string) $client->getResponse()->getContent());
 
         $client->submit($client->getCrawler()->filter('#place-text-form')->form(['lang' => 'en', 'text' => 'Ptext A is hilly.', 'derived' => 'own']));
-        self::assertResponseIsSuccessful();
+        self::assertResponseRedirects();
+        $client->followRedirect();
         self::assertFalse($this->latestText((int) $rider->getId())->getPayload()['derived'] ?? null);
         $crawler = $client->request('GET', '/regions/ptext-a/text?lang=en');
         $client->submit($crawler->filter('#place-text-form')->form(['lang' => 'en', 'text' => 'Ptext A is hilly, after the article.', 'derived' => 'adapted']));
@@ -577,7 +578,8 @@ final class PlaceTextProposalTest extends WebTestCase
         $client->submit($crawler->filter('#place-text-form')->form([
             'lang' => 'en', 'text' => 'Ptext A is flat and windy.', 'note' => 'I live here.', 'derived' => 'adapted',
         ]));
-        self::assertResponseIsSuccessful();
+        self::assertResponseRedirects();
+        $client->followRedirect();
 
         $sub = $this->latestText((int) $rider->getId());
         self::assertSame($a->getId(), $sub->getRegionId());

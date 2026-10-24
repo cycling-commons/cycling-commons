@@ -2773,7 +2773,7 @@ place_text:
   field_note: 'Note for the curator (optional)'
   field_note_hint: 'Where your information comes from, or what you changed and why.'
   licence: 'Your text is published under <b>CC BY-SA 4.0</b>. Once approved it is credited to you: by your name if your profile is public, otherwise by your rider handle.'
-  submit: 'Send'
+  submit: 'Save'
   cancel: 'Cancel'
   sent_h_queued: 'Sent for review'
   sent_p_queued: 'Thanks. A curator of this region checks your text; until then readers see the current one. You get a message when it is decided.'

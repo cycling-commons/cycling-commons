@@ -163,7 +163,8 @@ final class TextLineageTest extends WebTestCase
 
         // Sent without an answer, it takes the original's credit.
         $client->submit($crawler->filter('#place-text-form')->form(['lang' => 'nl', 'based_on' => 'en', 'text' => 'Lin A is vlak, naar het artikel.']));
-        self::assertResponseIsSuccessful();
+        self::assertResponseRedirects();
+        $client->followRedirect();
         $nl = $this->latest((int) $translator->getId());
         self::assertSame('en', $nl->getPayload()['_basedOn']['lang']);
         self::assertTrue($nl->getPayload()['derived'], 'the original is adapted from Wikipedia, so is its translation');

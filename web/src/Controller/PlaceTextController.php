@@ -71,6 +71,9 @@ final class PlaceTextController extends AbstractController
     private const string STEP_STORY = 'story';
     private const array STEPS = [self::STEP_FIGURES, self::STEP_GEOGRAPHY, self::STEP_STORY];
 
+    /** The flash that carries what a save filed to the step it opens next (region_edit.html.twig reads it). */
+    private const string SAVED_FLASH = 'region_saved';
+
     /** The two answers to "Where your text comes from", as the form sends them. */
     private const string SOURCE_ADAPTED = 'adapted';
 
@@ -192,8 +195,10 @@ final class PlaceTextController extends AbstractController
      * the box holds one, the history text when it differs from what readers
      * see. Every part is checked first, so a refused part files nothing; the
      * page then opens at that part's step. Filed parts are listed with their
-     * references. Should the rate limit stop a later part, the parts already
-     * filed are listed, and the rest is named as not sent.
+     * references: above the next step, which the editor opens after a save
+     * from the figures or the geography, or on the sent page after a save
+     * from the history step. Should the rate limit stop a later part, the
+     * parts already filed are listed, and the rest is named as not sent.
      *
      * @param array<string, mixed>                                                                                                                                                                                                                      $context
      * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
@@ -270,10 +275,25 @@ final class PlaceTextController extends AbstractController
             $rest = ['key' => $e->key(), 'params' => $this->limitMessage->params($e)];
         }
 
-        return $this->render('contribute/region_edit.html.twig', $context + [
+        $saved = [
             'sent' => array_map(static fn (array $r): array => ['reference' => SubmissionRef::of($r['submission']), 'applied' => $r['applied']], $sent),
             'rest' => $rest,
-        ]);
+        ];
+        // Saved from a step with one after it: that next step opens, under
+        // what was saved, so the writer goes on without coming back. From
+        // the last step, the sent page.
+        $next = match ($context['step']) {
+            self::STEP_FIGURES => self::STEP_GEOGRAPHY,
+            self::STEP_GEOGRAPHY => self::STEP_STORY,
+            default => null,
+        };
+        if (null !== $next) {
+            $this->addFlash(self::SAVED_FLASH, $saved);
+
+            return $this->redirectToRoute('region_edit', ['slug' => $region['slug'], 'step' => $next, 'lang' => $lang]);
+        }
+
+        return $this->render('contribute/region_edit.html.twig', $context + $saved);
     }
 
     /**

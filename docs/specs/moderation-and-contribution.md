@@ -782,7 +782,7 @@ never block the send. A send without an answer where there is an article is
 refused (`place_text.error.source_required`, "Say where your text comes
 from: adapted from the Wikipedia article, or your own text.", 422, nothing
 filed, the words and the answer kept in the form). The answer is the
-writer's claim only, shown to the approving curator as a hint. Send and Cancel sit side by side as a primary and a
+writer's claim only, shown to the approving curator as a hint. Save (`place_text.submit`) and Cancel sit side by side as a primary and a
 secondary button of one height (`.btn-p`, `.btn-g`); below them, in small
 print, the licence line says the text is published under CC BY-SA 4.0 and
 credited to the writer by public name, else rider handle; no tick box, as for
@@ -1332,7 +1332,7 @@ mountain profile (`PlaceText::ICONS`).
   culture" (§3.1c). With script the steps are tabs (`place-text.js`): one
   shows at a time, arrow keys move between the tabs, and "Next: ..." moves
   on; without it the three follow one another under their headings. The
-  note, Send and the licence sit outside the steps, so one send may change
+  note, Save and the licence sit outside the steps, so one send may change
   one part or all three. The language select ("Language of the texts")
   sits under the tabs and shows on the two text steps only: the figures
   have no language (`data-step-for`).
@@ -1367,10 +1367,14 @@ mountain profile (`PlaceText::ICONS`).
   history text (`checkStory()`), links included for both texts are each checked as their
   own proposal would be; a refused part files nothing at all, and the page
   opens at that part's step with the error. Then each changed part is filed
-  as its own submission, in step order, decided apart from the others. The
-  sent page lists each part with its reference and "live now" or "waiting
-  for a curator", under "Sent for review" (or "Changes live" when all
-  applied at once). Should the rate limit stop a later part, the filed parts
+  as its own submission, in step order, decided apart from the others.
+  What was filed lists each part with its reference and "live now" or
+  "waiting for a curator", under "Sent for review" (or "Changes live" when
+  all applied at once). A save from the figures or the geography step
+  opens the next step (a redirect to `region_edit` with `step` and `lang`),
+  with that list above the form (flash `region_saved`), so the writer goes
+  on without opening the editor again; a save from the history step, the
+  last, shows the list on a page of its own. Should the rate limit stop a later part, the filed parts
   are listed and the rest is named as not sent.
 - **Checks** (`PlaceTextProposals::factChanges()`, before anything is
   filed): an area from 1 to 20,000,000 (`facts_area`), a population from 0
