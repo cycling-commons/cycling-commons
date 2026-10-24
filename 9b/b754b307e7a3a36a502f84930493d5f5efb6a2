@@ -1,0 +1,40 @@
+web/templates/contribute/region_edit.html.twig
+  s_72d2f8b5000c68::t_518ed076c718ea 175-178,180,203
+web/assets/contribute/place-text.js
+  s_72d2f8b5000c68::t_518ed076c718ea 31-35,75,104-113,120-129,191,193-201
+web/src/Contribution/PlaceTextProposals.php
+  s_72d2f8b5000c68::t_518ed076c718ea 244-247,357-358,372-375,661-663,667,702-710
+  s_72d2f8b5000c68::t_00c4254bc92b3c 711-712
+web/src/Moderation/PlaceTextWriter.php
+  s_72d2f8b5000c68::t_518ed076c718ea 13,163-164,171
+web/templates/contribute/place_text.html.twig
+  s_72d2f8b5000c68::t_518ed076c718ea 115-118,120,151
+web/tests/Moderation/TextLineageTest.php
+  s_72d2f8b5000c68::t_518ed076c718ea 17,126-187
+  s_72d2f8b5000c68::t_9932ae8e020906 188-189
+docs/specs/moderation-and-contribution.md
+  s_72d2f8b5000c68::t_518ed076c718ea 1208-1214
+web/src/Controller/PlaceTextController.php
+  s_72d2f8b5000c68::t_518ed076c718ea 452-454
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9bb754b307e7a3a36a502f84930493d5f5efb6a2",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_72d2f8b5000c68": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c67130f0-70da-407a-8112-8b69473e80fd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
