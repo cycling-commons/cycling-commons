@@ -1,25 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Active-event calendar for .cc-coord / hero theme. Classics before stage races
-// so a classic inside a Grand Tour window still wins. Gravel Worlds 2026 is
-// confirmed (owner 2026-10-13); the other Worlds and Unbound dates are
-// placeholders.
+// so a classic inside a Grand Tour window still wins. Every 2026 date and
+// finish is checked against the organisers (2026-10-25); a window covers
+// the race days, not the days around them. A race with another finish in
+// another year is an entry of its own (cx-worlds-2027, Oostende).
 (function () {
   const RACES = [
-    {key:'cx-worlds', name:'UCI Cyclocross Worlds', rainbow:true, icon:'🌈', finish:{label:'FINISH · HULST', lat:51.28, lng:4.05}, windows:[['2026-01-31','2026-02-01']]},
+    {key:'cx-worlds', name:'UCI Cyclocross Worlds', rainbow:true, icon:'🌈', finish:{label:'FINISH · HULST', lat:51.28, lng:4.05}, windows:[['2026-01-30','2026-02-01']]},
     {key:'sanremo', name:'Milano–Sanremo', outer:'#7DD3FC', inner:'#0369A1', icon:'🌊', finish:{label:'FINISH · SANREMO', lat:43.82, lng:7.78}, windows:[['2026-03-21','2026-03-21']]},
     {key:'flanders',name:'Tour of Flanders',outer:'#FFE066', inner:'#C99A2E', icon:'🦁', finish:{label:'FINISH · OUDENAARDE', lat:50.85, lng:3.61}, windows:[['2026-04-05','2026-04-05']]},
     {key:'roubaix', name:'Paris–Roubaix',  outer:'#D7261E', inner:'#6E726B', icon:'🪨', finish:{label:'FINISH · ROUBAIX', lat:50.69, lng:3.18}, windows:[['2026-04-12','2026-04-12']]},
     {key:'amstel',  name:'Amstel Gold Race',outer:'#FCD34D',inner:'#D98A2B', icon:'🍺', finish:{label:'FINISH · VALKENBURG', lat:50.86, lng:5.83}, windows:[['2026-04-19','2026-04-19']]},
     {key:'liege',   name:'Liège–Bastogne–Liège',outer:'#93C5FD',inner:'#3D5BCC',icon:'🌧️',finish:{label:'FINISH · LIÈGE', lat:50.63, lng:5.57}, windows:[['2026-04-26','2026-04-26']]},
     {key:'unbound', name:'Unbound Gravel', outer:'#D6B98C', inner:'#8A5A2B', icon:'🌾', finish:{label:'FINISH · EMPORIA, KS', lat:38.40, lng:-96.18}, windows:[['2026-05-30','2026-05-30']]},
-    {key:'giro',    name:'Giro d’Italia', outer:'#F06EAA', inner:'#C0397A', icon:'🌸', finish:{label:'FINISH · ROMA', lat:41.90, lng:12.50}, windows:[['2026-05-09','2026-05-31']]},
+    {key:'giro',    name:'Giro d’Italia', outer:'#F06EAA', inner:'#C0397A', icon:'🌸', finish:{label:'FINISH · ROMA', lat:41.90, lng:12.50}, windows:[['2026-05-08','2026-05-31']]},
     {key:'tour',    name:'Tour de France', outer:'#F4D03F', inner:'#C9A227', icon:'🟡', finish:{label:'FINISH · PARIS', lat:48.87, lng:2.29}, windows:[['2026-07-04','2026-07-26']]},
-    {key:'mtb-worlds',name:'UCI MTB Worlds', rainbow:true, icon:'🌈', finish:{label:'FINISH · CRANS-MONTANA', lat:46.31, lng:7.48}, windows:[['2026-08-29','2026-09-06']]},
-    {key:'vuelta',  name:'Vuelta a España',outer:'#E8332A', inner:'#8C0B14', icon:'🔴', finish:{label:'FINISH · MADRID', lat:40.42, lng:-3.70}, windows:[['2026-08-22','2026-09-13']]},
+    {key:'mtb-worlds',name:'UCI MTB Worlds', rainbow:true, icon:'🌈', finish:{label:'FINISH · VAL DI SOLE', lat:46.31, lng:10.86}, windows:[['2026-08-26','2026-08-30']]},
+    {key:'vuelta',  name:'Vuelta a España',outer:'#E8332A', inner:'#8C0B14', icon:'🔴', finish:{label:'FINISH · GRANADA', lat:37.18, lng:-3.60}, windows:[['2026-08-22','2026-09-13']]},
     {key:'road-worlds',name:'UCI Road Worlds', rainbow:true, icon:'🌈', finish:{label:'FINISH · MONTRÉAL', lat:45.50, lng:-73.57}, windows:[['2026-09-20','2026-09-27']]},
     {key:'lombardia',name:'Il Lombardia',  outer:'#FCA5A5', inner:'#B91C1C', icon:'🍂', finish:{label:'FINISH · COMO', lat:45.81, lng:9.08}, windows:[['2026-10-10','2026-10-10']]},
-    {key:'gravel-worlds',name:'UCI Gravel Worlds', rainbow:true, icon:'🌈', finish:{label:'FINISH · NICE', lat:43.70, lng:7.27}, windows:[['2026-10-10','2026-10-11']]},
-    {key:'track-worlds',name:'UCI Track Worlds', rainbow:true, icon:'🌈', finish:{label:'FINISH · SANTIAGO', lat:-33.45, lng:-70.67}, windows:[['2026-10-20','2026-10-25']]}
+    {key:'gravel-worlds',name:'UCI Gravel Worlds', rainbow:true, icon:'🌈', finish:{label:'FINISH · NANNUP', lat:-33.98, lng:115.76}, windows:[['2026-10-10','2026-10-11']]},
+    {key:'track-worlds',name:'UCI Track Worlds', rainbow:true, icon:'🌈', finish:{label:'FINISH · SHANGHAI', lat:31.23, lng:121.47}, windows:[['2026-10-14','2026-10-18']]},
+    {key:'cx-worlds-2027', name:'UCI Cyclocross Worlds', rainbow:true, icon:'🌈', finish:{label:'FINISH · OOSTENDE', lat:51.22, lng:2.92}, windows:[['2027-01-29','2027-01-31']]}
   ];
   const RAINBOW = ['#0B4EA2', '#E2001A', '#141414', '#FFE500', '#009A44'];
   // What the header coordinate shows when no race is on: a famous climb from

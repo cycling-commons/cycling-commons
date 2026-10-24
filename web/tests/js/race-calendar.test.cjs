@@ -48,17 +48,24 @@ test('between races the next one is named but not on, so the header keeps its ow
 
 test('with no race on, the coordinate is a famous climb, the same one all day', () => {
   const { placeFor, DEFAULT_PLACES } = global.window.CC;
-  const morning = (() => { global.Date = class extends RealDate { constructor(...a) { super(...(a.length ? a : ['2026-10-13T00:05:00'])); } }; try { return placeFor(new Date()); } finally { global.Date = RealDate; } })();
-  const night = (() => { global.Date = class extends RealDate { constructor(...a) { super(...(a.length ? a : ['2026-10-13T23:55:00'])); } }; try { return placeFor(new Date()); } finally { global.Date = RealDate; } })();
+  const morning = (() => { global.Date = class extends RealDate { constructor(...a) { super(...(a.length ? a : ['2026-10-21T00:05:00'])); } }; try { return placeFor(new Date()); } finally { global.Date = RealDate; } })();
+  const night = (() => { global.Date = class extends RealDate { constructor(...a) { super(...(a.length ? a : ['2026-10-21T23:55:00'])); } }; try { return placeFor(new Date()); } finally { global.Date = RealDate; } })();
   assert.ok(DEFAULT_PLACES.includes(morning));
   assert.equal(morning, night);
-  const next = (() => { global.Date = class extends RealDate { constructor(...a) { super(...(a.length ? a : ['2026-10-14T12:00:00'])); } }; try { return placeFor(new Date()); } finally { global.Date = RealDate; } })();
+  const next = (() => { global.Date = class extends RealDate { constructor(...a) { super(...(a.length ? a : ['2026-10-22T12:00:00'])); } }; try { return placeFor(new Date()); } finally { global.Date = RealDate; } })();
   assert.notEqual(next, morning);
 });
 
 test('on a race day, the coordinate is that race\'s finish', () => {
   global.Date = class extends RealDate { constructor(...a) { super(...(a.length ? a : ['2026-10-11T12:00:00'])); } };
   try {
-    assert.equal(global.window.CC.placeFor(new Date()).label, 'FINISH · NICE');
+    assert.equal(global.window.CC.placeFor(new Date()).label, 'FINISH · NANNUP');
   } finally { global.Date = RealDate; }
+});
+
+test('after the last race of the year, the next one is the cyclocross Worlds in Oostende', () => {
+  assert.equal(at('2026-10-25T12:00:00').status, 'next');
+  assert.equal(at('2026-10-25T12:00:00').r.finish.label, 'FINISH · OOSTENDE');
+  assert.equal(at('2027-01-30T12:00:00').status, 'on');
+  assert.equal(at('2027-02-01T12:00:00').status, 'next');
 });
