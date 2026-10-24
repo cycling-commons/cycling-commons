@@ -1205,7 +1205,13 @@ from, and its translator is told when that original changes (owner
   why it cannot be picked. The town form asks it only when there is an original to pick.
   Picking an original shows its text above the box, captioned "To
   translate from ({language})". On the history step, the language shown to
-  translate from is chosen already. Not on a curator's correction form: the
+  translate from is chosen already. While a translation is picked, the form does not
+  show "Where your text comes from" (hidden and disabled), nor the current
+  text when it is only the Wikipedia text (no text written here in that
+  language). A translation takes its original's Wikipedia credit: `derived`
+  is the original's at the send (`PlaceTextProposals::isTranslation()`), so
+  neither the writer nor the approving curator is asked (no credit fieldset
+  on the correction form, `creditUndecided()` false, Approve on the drawer). Not on a curator's correction form: the
   writer said it. A
   language with no local text, or the text's own, is refused
   (`place_text.error.based_on`, "Pick a language that has a text to

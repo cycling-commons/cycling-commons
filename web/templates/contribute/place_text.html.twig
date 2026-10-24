@@ -112,8 +112,12 @@
           </div>
         {% endif %}
 
+        {# A translation takes its original's Wikipedia credit (§3.1e): while one
+           is picked, the Wikipedia text and "Where your text comes from" are not
+           shown; a text written here in this language still is. #}
+        {% set translating = based_on is not empty %}
         {% set current = texts[lang] ?? '' %}
-        <figure class="pt-current" id="pt-current">
+        <figure class="pt-current" id="pt-current"{{ translating and originals[lang] is not defined ? ' hidden' }}>
           <figcaption>{{ 'place_text.current_h'|trans }}</figcaption>
           <blockquote id="pt-current-text" class="pt-current-text"{{ current is empty ? ' hidden' }}>{{ current }}</blockquote>
           <p class="chint pt-current-none" id="pt-current-none"{{ current is not empty ? ' hidden' }}>{{ 'place_text.current_none'|trans }}</p>
@@ -144,7 +148,7 @@
            Not shown when a curator corrects a proposal (`articles` null):
            their own credit choice decides there. #}
         {% if articles is not null %}
-          {% set has_article = articles[lang] ?? false %}
+          {% set has_article = (articles[lang] ?? false) and not translating %}
           <fieldset class="cpick pt-pick pt-source" id="pt-source"{{ not has_article ? ' hidden disabled' }}>
             <legend>{{ 'place_text.field_source'|trans }} <span class="req" aria-hidden="true">*</span></legend>
             <label class="cinline" for="pt-source-adapted">

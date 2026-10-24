@@ -10,6 +10,7 @@ use App\Catalog\Entity\Submission;
 use App\Catalog\RegionLead;
 use App\Catalog\RegionStory;
 use App\Contribution\PlaceText;
+use App\Contribution\PlaceTextProposals;
 use App\Contribution\StoryLinkCheck;
 use App\Contribution\TextLineage;
 use App\Contribution\TextVersions;
@@ -159,14 +160,15 @@ final readonly class PlaceTextWriter
     /**
      * True when approving this Text submission still needs the curator's
      * decision on the Wikipedia credit: its language has an article to credit
-     * and no curator has recorded the decision (`_credit`) on it.
+     * and no curator has recorded the decision (`_credit`) on it. A
+     * translation needs none: its credit is its original's (§3.1e).
      */
     public function creditUndecided(Submission $submission): bool
     {
         $payload = $submission->getPayload();
         $proposal = PlaceText::fromPayload($payload);
 
-        return null !== $proposal && !\is_array($payload['_credit'] ?? null) && $this->hasSource($proposal);
+        return null !== $proposal && !\is_array($payload['_credit'] ?? null) && !PlaceTextProposals::isTranslation($submission) && $this->hasSource($proposal);
     }
 
     /**

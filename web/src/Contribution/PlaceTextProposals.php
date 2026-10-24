@@ -241,7 +241,10 @@ final readonly class PlaceTextProposals
         [$lang, $text, $note] = $this->checked($lang, $text, $note);
         // What it translates, checked before it costs a send (§3.1e).
         $based = $this->lineage->basedOn(PlaceText::TOWN, $osmRef, $lang, (string) $basedOn);
-        $derived = self::sourceAnswered($this->towns->hasArticle($osmRef, $lang), $derived);
+        // A translation takes its original's credit; no question is asked of it.
+        $derived = null !== $based
+            ? $this->currentTown($osmRef, $based['lang'])['derived']
+            : self::sourceAnswered($this->towns->hasArticle($osmRef, $lang), $derived);
 
         $where = $this->places->locate($osmRef);
         if (null === $where) {
@@ -351,7 +354,8 @@ final readonly class PlaceTextProposals
     /**
      * A geography text as a send checks it: the words and note
      * ({@see self::checked()}), what it translates (§3.1e), the writer's
-     * answer on the Wikipedia article, and that it changes what readers see.
+     * answer on the Wikipedia article (a translation's is its original's),
+     * that it changes what readers see, and its links.
      *
      * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
      *
@@ -365,7 +369,10 @@ final readonly class PlaceTextProposals
         [$lang, $text, $note] = $this->checked($lang, $text, $note, PlaceText::REGION);
         // What it translates, checked before it costs a send (§3.1e).
         $based = $this->lineage->basedOn(PlaceText::REGION, (string) $region['id'], $lang, (string) $basedOn);
-        $derived = self::sourceAnswered(RegionLead::hasSource($region['wiki'], $lang), $derived);
+        // A translation takes its original's credit; no question is asked of it.
+        $derived = null !== $based
+            ? $this->currentRegionText($region, $based['lang'])['derived']
+            : self::sourceAnswered(RegionLead::hasSource($region['wiki'], $lang), $derived);
         $current = $this->currentRegionText($region, $lang);
         if ($current['text'] === $text && $current['derived'] === $derived) {
             throw new PlaceTextRefused('place_text.error.unchanged');
@@ -651,11 +658,13 @@ final readonly class PlaceTextProposals
         if (mb_strlen($note) > self::REPLY_MAX) {
             throw new PlaceTextRefused('moderate.error.note_too_long');
         }
-        $canDerive = $this->liveText($proposal)['canDerive'];
+        // A translation's credit is its original's, set when it was sent: no decision to take.
+        $translation = self::isTranslation($submission);
+        $canDerive = !$translation && $this->liveText($proposal)['canDerive'];
         if ($canDerive && null === $credit) {
             throw new PlaceTextRefused('place_text.error.credit_required');
         }
-        $derived = $canDerive && true === $credit;
+        $derived = $translation ? $proposal['derived'] : $canDerive && true === $credit;
         // A region text's links that are not plainly fine need the curator's own tick too.
         $linked = PlaceText::links($proposal['target']);
         [$problems, $earlier] = $linked ? $this->linkProblems($text, $linksConfirmed) : [[], []];
@@ -688,6 +697,17 @@ final readonly class PlaceTextProposals
         }
 
         return \is_bool($payload['derived'] ?? null) ? $payload['derived'] : null;
+    }
+
+    /**
+     * Whether a Text submission translates another language's text
+     * (`_basedOn`, §3.1e). Its Wikipedia credit is its original's, taken
+     * when it was sent, so neither the writer nor the approving curator is
+     * asked about it.
+     */
+    public static function isTranslation(Submission $submission): bool
+    {
+        return \is_array($submission->getPayload()['_basedOn'] ?? null);
     }
 
     /**

@@ -449,8 +449,9 @@ final class PlaceTextController extends AbstractController
             'texts' => [$lang => $live['text']],
             // The writer's own answer is not a field here: the curator's credit choice decides.
             'articles' => null,
-            // The decision Approve needs, only where there is an article to credit.
-            'credit' => $live['canDerive'] ? ['claim' => PlaceTextProposals::writerClaim($submission), 'choice' => null] : null,
+            // The decision Approve needs, only where there is an article to
+            // credit; a translation's credit is its original's.
+            'credit' => $live['canDerive'] && !PlaceTextProposals::isTranslation($submission) ? ['claim' => PlaceTextProposals::writerClaim($submission), 'choice' => null] : null,
             // The proposal's own language, served or not: it is stored data,
             // and a proposal filed before its language was switched off is
             // still decided here.

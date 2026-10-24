@@ -14,6 +14,7 @@ use App\Entity\User;
 use App\Messaging\Entity\UserMessage;
 use App\Messaging\UserMessageKind;
 use App\Moderation\Entity\ModeratorArea;
+use App\Moderation\ModerationService;
 use App\Tests\Town\FakeTownPointSource;
 use App\Town\TownPlaceRepository;
 use App\Town\TownPointSource;
@@ -120,6 +121,70 @@ final class TextLineageTest extends WebTestCase
         self::assertCount(1, $told);
         self::assertStringStartsWith('/town/node/999990777/text?', (string) ($told[0]->getBodyParams()['%url%'] ?? ''));
         self::assertStringContainsString('lang=nl', (string) ($told[0]->getBodyParams()['%url%'] ?? ''));
+    }
+
+    /**
+     * A translation takes its original's Wikipedia credit: the writer is not
+     * asked where it comes from, nor is the approving curator, and the form
+     * shows neither that question nor the Wikipedia text while a
+     * translation is picked.
+     */
+    public function testAGeographyTranslationTakesItsOriginalsCredit(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        [$region, $curator] = $this->scene();
+        $this->db()->executeStatement('UPDATE region SET context = CAST(:c AS jsonb) WHERE id = :id', [
+            'c' => '{"en":{"title":"Lin A","extract":"Wikipedia says Lin A.","url":"https://en.wikipedia.org/wiki/Lin_A"},"nl":{"title":"Lin A","extract":"Wikipedia zegt Lin A.","url":"https://nl.wikipedia.org/wiki/Lin_A"}}',
+            'id' => $region->getId(),
+        ]);
+        $writer = $this->user('lin-geo-writer@example.com', []);
+        $translator = $this->user('lin-geo-translator@example.com', []);
+
+        // The English original, adapted from the article.
+        $en = $this->proposals()->proposeRegion($writer, $this->info(), 'en', 'Lin A is flat, after the article.', '', true)['submission'];
+        $this->proposals()->approve($this->fresh($en), $curator, 'Lin A is flat, after the article.', true, '');
+
+        // Not a translation: the question and the Wikipedia text show.
+        $client->loginUser($translator);
+        $crawler = $client->request('GET', '/regions/lin-a/text?lang=nl');
+        self::assertNull($crawler->filter('#pt-source')->attr('hidden'));
+        self::assertNull($crawler->filter('#pt-current')->attr('hidden'));
+        self::assertSame('Wikipedia zegt Lin A.', $crawler->filter('#pt-current-text')->text());
+
+        // A translation sent back keeps neither on show.
+        $client->submit($crawler->filter('#place-text-form')->form(['lang' => 'nl', 'based_on' => 'en', 'text' => 'Lin A is vlak, zie [hier](https://lin.test/).']));
+        self::assertResponseStatusCodeSame(422);
+        $crawler = $client->getCrawler();
+        self::assertNotNull($crawler->filter('#pt-source')->attr('hidden'), 'no question for a translation');
+        self::assertNotNull($crawler->filter('#pt-source')->attr('disabled'));
+        self::assertNotNull($crawler->filter('#pt-current')->attr('hidden'), 'nor the Wikipedia text it replaces');
+        self::assertSame('Lin A is flat, after the article.', $crawler->filter('#pt-geo-translate blockquote')->text(), 'the original shows, to translate from');
+
+        // Sent without an answer, it takes the original's credit.
+        $client->submit($crawler->filter('#place-text-form')->form(['lang' => 'nl', 'based_on' => 'en', 'text' => 'Lin A is vlak, naar het artikel.']));
+        self::assertResponseIsSuccessful();
+        $nl = $this->latest((int) $translator->getId());
+        self::assertSame('en', $nl->getPayload()['_basedOn']['lang']);
+        self::assertTrue($nl->getPayload()['derived'], 'the original is adapted from Wikipedia, so is its translation');
+
+        // The curator is not asked about the credit either: no fieldset on the form, Approve on the drawer.
+        $client->loginUser($curator);
+        $crawler = $client->request('GET', '/moderate/text/'.$nl->getId());
+        self::assertCount(0, $crawler->filter('#pt-credit'));
+        /** @var ModerationService $moderation */
+        $moderation = static::getContainer()->get(ModerationService::class);
+        $moderation->decide((int) $nl->getId(), 'approve', $curator, null);
+        /** @var array<string, array<string, mixed>> $curated */
+        $curated = json_decode((string) $this->db()->fetchOne('SELECT context_curated FROM region WHERE id = :id', ['id' => $region->getId()]), true, 512, \JSON_THROW_ON_ERROR);
+        self::assertSame('Lin A is vlak, naar het artikel.', $curated['nl']['text']);
+        self::assertTrue($curated['nl']['derived']);
+
+        // A translation of a text written fresh is written fresh too.
+        $en2 = $this->proposals()->proposeRegion($writer, $this->info(), 'en', 'Lin A is flat and windy.', '', false)['submission'];
+        $this->proposals()->approve($this->fresh($en2), $curator, 'Lin A is flat and windy.', false, '');
+        $nl2 = $this->proposals()->proposeRegion($translator, $this->info(), 'nl', 'Lin A is vlak en winderig.', '', null, 'en')['submission'];
+        self::assertFalse($nl2->getPayload()['derived']);
     }
 
     /** @return array{0: Region, 1: User} */

@@ -28,7 +28,11 @@
 
    "This text is a translation of" (§3.1e) offers the languages with a text
    written here. Picking one shows its text above the box, to translate
-   from; "Not a translation" hides it.
+   from; "Not a translation" hides it. A translation takes its original's
+   Wikipedia credit, so while one is picked "Where your text comes from" is
+   hidden and disabled, and so is the current text when it is only the
+   Wikipedia text (no text written here in that language): there is
+   nothing in it to keep.
 
    A file rather than an inline block, so the page carries no CSP nonce. */
 (function () {
@@ -68,6 +72,7 @@
     var translateH = section.querySelector('.pt-translate-h');
     var translateText = section.querySelector('.pt-translate-text');
     var basedOn = section.querySelector('.pt-based-on');
+    var currentFig = section.querySelector('.pt-current:not(.pt-translate)');
 
     function textOf(lang) { return typeof texts[lang] === 'string' ? texts[lang] : ''; }
 
@@ -96,12 +101,32 @@
 
     var start = startOf(select.value);
 
+    /* A translation is being written. */
+    function translating() { return !!basedOn && basedOn.value !== ''; }
+
+    /* Whether a language holds a text written here: its option in the
+       original select, not marked as having none. */
+    function local(lang) {
+      var o = basedOn ? basedOn.querySelector('option[value="' + lang + '"]') : null;
+      return !!o && !o.hasAttribute('data-none');
+    }
+
     function showCurrent(lang) {
       if (!quote || !none) { return; }
       var t = textOf(lang);
       quote.textContent = t;
       quote.hidden = t === '';
       none.hidden = t !== '';
+      if (currentFig) { currentFig.hidden = translating() && !local(lang); }
+    }
+
+    /* "Where your text comes from": asked where there is an article to
+       adapt, never of a translation. */
+    function syncSource(lang) {
+      if (!articles || !source) { return; }
+      var asked = articles[lang] === true && !translating();
+      source.hidden = !asked;
+      source.disabled = !asked;
     }
 
     function recount() {
@@ -163,13 +188,17 @@
       }
       showOriginal();
       showCurrent(lang);
-      if (articles && source) {
-        var asked = articles[lang] === true;
-        source.hidden = !asked;
-        source.disabled = !asked;
-      }
+      syncSource(lang);
     });
-    if (basedOn) { basedOn.addEventListener('change', showOriginal); }
+    if (basedOn) {
+      basedOn.addEventListener('change', function () {
+        showOriginal();
+        if (!story) {
+          showCurrent(select.value);
+          syncSource(select.value);
+        }
+      });
+    }
     box.addEventListener('input', recount);
     box.addEventListener('input', sourceRequired);
     syncBasedOn(select.value);
