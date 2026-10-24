@@ -1,0 +1,25 @@
+wiki/developers/data-ops/onboarding-a-country.md
+  s_72d2f8b5000c68::t_c487dc7eac180a 152-187
+  s_72d2f8b5000c68::t_09bcd5699e6499 213-214
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "adb55583e373d0561b8a9a4dce8801fcc5382b97",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_72d2f8b5000c68": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c67130f0-70da-407a-8112-8b69473e80fd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
