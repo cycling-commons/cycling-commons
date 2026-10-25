@@ -1,0 +1,13 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  A post's one image (App\Blog\BlogIllustrations), by name. Only a known name
+  is used, so a stored value never becomes a template or file path.
+  A drawing is decoration: the title and text say what the post is about, so a
+  screen reader skips it. An image file carries information and has alt text.
+#}
+{% set images = constant('App\\Blog\\BlogIllustrations::IMAGES') %}
+{% if name in constant('App\\Blog\\BlogIllustrations::NAMES')|keys %}
+  <figure class="{{ class }}" aria-hidden="true">{% include 'blog/illustrations/' ~ name ~ '.svg.twig' %}</figure>
+{% elseif name in images|keys %}
+  <figure class="{{ class }}"><img src="{{ asset(images[name][0]) }}" width="{{ images[name][1] }}" height="{{ images[name][2] }}" alt="{{ ('blog.image_alt.' ~ name)|trans }}" {{ lazy ? 'loading="lazy"' : '' }} decoding="async"></figure>
+{% endif %}

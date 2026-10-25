@@ -1,0 +1,17 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+<svg viewBox="0 0 680 240" xmlns="http://www.w3.org/2000/svg" focusable="false">
+  {% include 'blog/illustrations/_ground.svg.twig' %}
+  <path d="M0 226 C160 214 300 220 420 222 C530 224 600 214 680 216" fill="none" stroke="var(--paper)" stroke-width="8" stroke-linecap="round" opacity=".9"/>
+  {# Three signs along the road: water, food, a bed. #}
+  {% for x in [170, 340, 510] %}
+    <path d="M{{ x }} 218 L{{ x }} 150" stroke="var(--ink)" stroke-width="3" opacity=".7"/>
+    <circle cx="{{ x }}" cy="118" r="38" fill="var(--paper)" stroke="var(--clay)" stroke-width="4"/>
+  {% endfor %}
+  <path d="M170 92 C160 108 154 116 154 124 A16 16 0 0 0 186 124 C186 116 180 108 170 92Z" fill="#3E7C9A"/>
+  {# A fork with three tines, and a knife with a solid blade. #}
+  <path d="M323 96 L323 108 C323 115 327 118 332 118 C337 118 341 115 341 108 L341 96 M332 96 L332 110 M332 118 L332 142" fill="none" stroke="var(--spruce)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M349 94 C359 100 362 114 357 124 L349 124Z" fill="var(--spruce)"/>
+  <path d="M350 124 L350 142" stroke="var(--spruce)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M488 136 L488 104 M488 124 L532 124 L532 136 M496 116 L532 116 C532 108 526 106 518 106 L508 106" fill="none" stroke="var(--spruce)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="499" cy="112" r="5" fill="var(--spruce)"/>
+</svg>

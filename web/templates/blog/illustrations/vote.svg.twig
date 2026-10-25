@@ -1,0 +1,15 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+<svg viewBox="0 0 680 240" xmlns="http://www.w3.org/2000/svg" focusable="false">
+  {% include 'blog/illustrations/_ground_back.svg.twig' %}
+  <rect x="232" y="128" width="72" height="92" fill="var(--spruce-lift)"/>
+  <rect x="304" y="96" width="72" height="124" fill="var(--spruce)"/>
+  <rect x="376" y="146" width="72" height="74" fill="var(--spruce-lift)"/>
+  <text x="340" y="160" text-anchor="middle" font-family="var(--mono)" font-size="30" fill="var(--paper)">1</text>
+  <text x="268" y="180" text-anchor="middle" font-family="var(--mono)" font-size="24" fill="var(--paper)">2</text>
+  <text x="412" y="190" text-anchor="middle" font-family="var(--mono)" font-size="22" fill="var(--paper)">3</text>
+  {% for s in [[340, 64, 22], [268, 100, 15], [412, 120, 13]] %}
+    {% set cx, cy, r = s[0], s[1], s[2] %}
+    <path d="M{{ cx }} {{ cy - r }} L{{ cx + r * 0.29 }} {{ cy - r * 0.4 }} L{{ cx + r * 0.95 }} {{ cy - r * 0.31 }} L{{ cx + r * 0.47 }} {{ cy + r * 0.15 }} L{{ cx + r * 0.59 }} {{ cy + r * 0.81 }} L{{ cx }} {{ cy + r * 0.5 }} L{{ cx - r * 0.59 }} {{ cy + r * 0.81 }} L{{ cx - r * 0.47 }} {{ cy + r * 0.15 }} L{{ cx - r * 0.95 }} {{ cy - r * 0.31 }} L{{ cx - r * 0.29 }} {{ cy - r * 0.4 }}Z" fill="{{ loop.first ? 'var(--trail)' : 'var(--clay)' }}"/>
+  {% endfor %}
+  {% include 'blog/illustrations/_ground_front.svg.twig' %}
+</svg>

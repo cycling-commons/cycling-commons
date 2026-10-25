@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Blog\Entity;
 
+use App\Blog\BlogIllustrations;
 use App\Blog\BlogStatus;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -16,8 +17,9 @@ use Doctrine\ORM\Mapping as ORM;
  * **The body is the same restricted markdown the bug desk uses**
  * ({@see \App\Support\BugMarkdown}). Not a decision made to save work: it means
  * no second sanitiser profile, no second set of allowed tags, and no second
- * place to get wrong. It also means a post cannot embed an image or a link,
- * which for a first blog is a feature: the posts that matter are prose.
+ * place to get wrong. A link is the one rule added on top
+ * ({@see \App\Twig\BlogBodyExtension}); a post opens with a drawing by name
+ * ({@see $illustration}), never an uploaded image.
  *
  * **A Dutch post is a post, not a translation.** Locale is a column and each
  * row stands alone, so a Dutch-only post is possible and normal.
@@ -57,6 +59,10 @@ class BlogPost
 
     #[ORM\Column(type: Types::TEXT)]
     private string $body;
+
+    /** A name in {@see BlogIllustrations::NAMES}, or null for none. */
+    #[ORM\Column(length: 40, nullable: true)]
+    private ?string $illustration = null;
 
     #[ORM\Column(length: 16, enumType: BlogStatus::class)]
     private BlogStatus $status = BlogStatus::Draft;
@@ -141,6 +147,18 @@ class BlogPost
     {
         $lede = null === $lede ? null : trim($lede);
         $this->lede = null !== $lede && '' !== $lede ? mb_substr($lede, 0, self::LEDE_MAX) : null;
+        $this->touch();
+    }
+
+    public function getIllustration(): ?string
+    {
+        return $this->illustration;
+    }
+
+    /** An unknown name is no drawing, never a template path. */
+    public function setIllustration(?string $illustration): void
+    {
+        $this->illustration = BlogIllustrations::known($illustration) ? $illustration : null;
         $this->touch();
     }
 

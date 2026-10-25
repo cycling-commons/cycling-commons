@@ -1,0 +1,63 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+<svg viewBox="0 0 680 240" xmlns="http://www.w3.org/2000/svg" focusable="false">
+  {% include 'blog/illustrations/_ground.svg.twig' %}
+  <circle cx="586" cy="56" r="22" fill="var(--trail)" opacity=".85"/>
+  {# Seen as a rider sees it: the road wide at our feet, narrowing as it winds
+     back over the hill; the pins smaller the further away they stand. #}
+  <path d="M150 240 C210 224 262 214 310 206 C366 196 404 182 438 166 L444 166 C414 184 384 200 346 212 C306 224 296 232 300 240Z" fill="var(--paper)"/>
+  {# The centre line, halfway between the two edges: each dash shorter and thinner
+     as the road narrows into the distance. #}
+  <g stroke="var(--trail)" stroke-linecap="round">
+  <path d="M225.0 240.0 L238.0 234.7" stroke-width="3.00"/>
+  <path d="M247.4 231.3 L256.7 228.1" stroke-width="2.11"/>
+  <path d="M263.3 225.9 L270.6 223.7" stroke-width="1.62"/>
+  <path d="M275.8 222.2 L281.8 220.5" stroke-width="1.33"/>
+  <path d="M286.0 219.3 L291.2 218.0" stroke-width="1.14"/>
+  <path d="M294.9 217.0 L299.4 215.8" stroke-width="1.01"/>
+  <path d="M302.7 215.0 L306.8 214.0" stroke-width="0.91"/>
+  <path d="M309.8 213.3 L313.6 212.3" stroke-width="0.84"/>
+  <path d="M316.3 211.7 L319.9 210.9" stroke-width="0.79"/>
+  <path d="M322.5 210.3 L325.9 209.5" stroke-width="0.75"/>
+  <path d="M328.4 208.9 L331.7 208.1" stroke-width="0.73"/>
+  <path d="M334.1 207.5 L337.1 206.8" stroke-width="0.68"/>
+  <path d="M339.4 206.2 L342.3 205.4" stroke-width="0.64"/>
+  <path d="M344.3 204.9 L347.1 204.1" stroke-width="0.61"/>
+  <path d="M349.0 203.6 L351.6 202.8" stroke-width="0.60"/>
+  <path d="M353.5 202.3 L355.9 201.6" stroke-width="0.60"/>
+  <path d="M357.6 201.1 L359.9 200.4" stroke-width="0.60"/>
+  <path d="M361.6 199.8 L363.8 199.2" stroke-width="0.60"/>
+  <path d="M365.3 198.7 L367.4 198.0" stroke-width="0.60"/>
+  <path d="M368.8 197.5 L370.8 196.8" stroke-width="0.60"/>
+  <path d="M372.2 196.4 L374.1 195.7" stroke-width="0.60"/>
+  <path d="M375.4 195.2 L377.2 194.6" stroke-width="0.60"/>
+  <path d="M378.5 194.1 L380.2 193.5" stroke-width="0.60"/>
+  <path d="M381.5 193.0 L383.1 192.4" stroke-width="0.60"/>
+  <path d="M384.4 192.0 L386.0 191.4" stroke-width="0.60"/>
+  <path d="M387.3 190.9 L388.8 190.3" stroke-width="0.60"/>
+  <path d="M390.1 189.8 L391.5 189.2" stroke-width="0.60"/>
+  <path d="M392.8 188.7 L394.3 188.1" stroke-width="0.60"/>
+  <path d="M395.6 187.5 L397.1 186.9" stroke-width="0.60"/>
+  <path d="M398.4 186.4 L399.9 185.8" stroke-width="0.60"/>
+  <path d="M401.2 185.2 L402.6 184.6" stroke-width="0.60"/>
+  <path d="M403.9 184.0 L405.4 183.4" stroke-width="0.60"/>
+  <path d="M406.7 182.8 L408.1 182.2" stroke-width="0.60"/>
+  <path d="M409.4 181.6 L410.9 180.9" stroke-width="0.60"/>
+  <path d="M412.1 180.4 L413.6 179.7" stroke-width="0.60"/>
+  <path d="M414.8 179.1 L416.3 178.4" stroke-width="0.60"/>
+  <path d="M417.6 177.8 L419.0 177.1" stroke-width="0.60"/>
+  <path d="M420.3 176.5 L421.7 175.8" stroke-width="0.60"/>
+  <path d="M423.0 175.2 L424.4 174.5" stroke-width="0.60"/>
+  <path d="M425.7 173.9 L427.1 173.2" stroke-width="0.60"/>
+  <path d="M428.3 172.5 L429.8 171.8" stroke-width="0.60"/>
+  <path d="M431.0 171.2 L432.4 170.5" stroke-width="0.60"/>
+  <path d="M433.7 169.8 L435.1 169.1" stroke-width="0.60"/>
+  <path d="M436.4 168.4 L437.8 167.7" stroke-width="0.60"/>
+  <path d="M439.0 167.1 L440.4 166.3" stroke-width="0.60"/>
+  </g>
+  {% for p in [[268, 214, 1], [390, 190, 0.72], [520, 165, 0.5]] %}
+    <g transform="translate({{ p[0] }} {{ p[1] }}) scale({{ p[2] }})">
+      <path d="M0 0 C-4 -12 -14 -18 -14 -28 A14 14 0 1 1 14 -28 C14 -18 4 -12 0 0Z" fill="var(--clay)"/>
+      <circle cy="-28" r="5" fill="var(--paper)"/>
+    </g>
+  {% endfor %}
+</svg>

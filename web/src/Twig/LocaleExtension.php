@@ -22,6 +22,9 @@ use Twig\TwigFunction;
  */
 final class LocaleExtension extends AbstractExtension
 {
+    /** The request attribute a page sets to name its route parameters per language: locale => parameters. */
+    public const string PARAMS_ATTRIBUTE = '_locale_params';
+
     public function __construct(
         private readonly RouterInterface $router,
         private readonly RequestStack $requestStack,
@@ -64,6 +67,11 @@ final class LocaleExtension extends AbstractExtension
      * engine as a page of their own. `localized` is true only when the paths
      * differ.
      *
+     * A page whose path differs per language beyond its prefix names its own
+     * parameters per language in the request attribute
+     * {@see self::PARAMS_ATTRIBUTE} (a blog post: each language's version has
+     * its own slug); a language it does not name keeps the page's own.
+     *
      * @return array{localized: bool, urls: array<string, string>, paths: array<string, string>}
      */
     public function localeAlternates(): array
@@ -84,6 +92,9 @@ final class LocaleExtension extends AbstractExtension
         $params = $request->attributes->get('_route_params', []);
         unset($params['_locale']);
 
+        $perLocale = $request->attributes->get(self::PARAMS_ATTRIBUTE);
+        $perLocale = \is_array($perLocale) ? $perLocale : [];
+
         $query = $request->query->all();
         unset($query['_locale']);
         $suffix = [] === $query ? '' : '?'.http_build_query($query);
@@ -98,7 +109,8 @@ final class LocaleExtension extends AbstractExtension
                 try {
                     // A route default that is not a path variable comes back
                     // as a query string; the path is everything before it.
-                    $paths[$locale] = explode('?', $this->router->generate($route, $params), 2)[0];
+                    $own = \is_array($perLocale[$locale] ?? null) ? $perLocale[$locale] + $params : $params;
+                    $paths[$locale] = explode('?', $this->router->generate($route, $own), 2)[0];
                 } catch (\Throwable) {
                 }
             }

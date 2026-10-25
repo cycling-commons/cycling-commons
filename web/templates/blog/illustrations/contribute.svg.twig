@@ -1,0 +1,10 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+<svg viewBox="0 0 680 240" xmlns="http://www.w3.org/2000/svg" focusable="false">
+  {% include 'blog/illustrations/_ground.svg.twig' %}
+  {% for p in [[170, 150, 0.6], [520, 140, 0.6], [250, 176, 0.45], [450, 178, 0.45]] %}
+    <circle cx="{{ p[0] }}" cy="{{ p[1] }}" r="{{ 12 * p[2] / 0.6 }}" fill="var(--clay)" opacity=".75"/>
+  {% endfor %}
+  <path d="M340 196 C332 170 300 146 300 106 A40 40 0 1 1 380 106 C380 146 348 170 340 196Z" fill="var(--trail)"/>
+  <circle cx="340" cy="106" r="26" fill="var(--paper)"/>
+  <path d="M340 92 L340 120 M326 106 L354 106" stroke="var(--spruce)" stroke-width="6" stroke-linecap="round"/>
+</svg>

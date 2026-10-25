@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Admin;
 
+use App\Blog\BlogIllustrations;
 use App\Blog\BlogLocales;
 use App\Blog\BlogStatus;
 use App\Blog\Entity\BlogPost;
@@ -97,8 +98,13 @@ final class BlogPostCrudController extends AbstractCrudController
 
         yield TextareaField::new('body')
             ->setNumOfRows(22)
-            ->setHelp('Markdown: **bold**, *italic*, `code`, ``` blocks, and lists. No images or links.')
+            ->setHelp('Markdown: **bold**, *italic*, `code`, ``` blocks, lists, and links as [words](/map) or [words](https://...). A bold line on its own is a section title.')
             ->hideOnIndex();
+
+        yield ChoiceField::new('illustration')
+            ->setChoices(BlogIllustrations::choices())
+            ->setRequired(false)
+            ->setHelp('The one image the post opens with, on the post and on the index: a drawing, or an image file from the repository. Optional.');
 
         yield ChoiceField::new('status')
             ->setChoices(array_combine(

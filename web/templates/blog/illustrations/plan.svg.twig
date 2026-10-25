@@ -1,0 +1,49 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+<svg viewBox="0 0 680 240" xmlns="http://www.w3.org/2000/svg" focusable="false">
+  {# Day at A, dark by B: the planner says when a ride runs into the night. #}
+  <linearGradient id="bill-dusk" x1="0" x2="1" y1="0" y2="0">
+    <stop offset="0" stop-color="var(--paper-deep)"/>
+    <stop offset=".5" stop-color="var(--paper-deep)"/>
+    <stop offset="1" stop-color="#26323F"/>
+  </linearGradient>
+  <rect width="680" height="240" fill="url(#bill-dusk)"/>
+  <path d="M606 34 A18 18 0 1 0 624 62 A14 14 0 1 1 606 34Z" fill="var(--paper)"/>
+  <circle cx="560" cy="40" r="2" fill="var(--paper)"/>
+  <circle cx="648" cy="96" r="1.6" fill="var(--paper)"/>
+  {# The climb's profile, filled, with the route riding along its top. #}
+  <path d="M60 200 L60 176 C130 174 170 168 220 150 C270 132 300 84 360 72 C410 64 430 104 470 124 C520 146 570 160 620 166 L620 200Z" fill="var(--spruce-lift)" opacity=".8"/>
+  <path d="M60 200 L620 200" stroke="var(--spruce)" stroke-width="2"/>
+  {% for x in [160, 260, 360, 460, 560] %}<path d="M{{ x }} 200 L{{ x }} 206" stroke="var(--spruce)" stroke-width="2"/>{% endfor %}
+  <path d="M60 176 C130 174 170 168 220 150 C270 132 300 84 360 72 C410 64 430 104 470 124 C520 146 570 160 620 166" fill="none" stroke="var(--trail)" stroke-width="4" stroke-linecap="round"/>
+  {# Wind coming down the mountain from the top, into the rider's face. #}
+  {% for w in [[318, 52, 238, 92], [298, 80, 218, 118], [262, 112, 196, 142]] %}
+    <path d="M{{ w[0] }} {{ w[1] }} C{{ w[0] - 26 }} {{ w[1] + 4 }} {{ w[2] + 34 }} {{ w[3] - 16 }} {{ w[2] }} {{ w[3] }}" fill="none" stroke="var(--spruce-lift)" stroke-width="3" stroke-linecap="round"/>
+    <path d="M{{ w[2] + 4 }} {{ w[3] - 11 }} L{{ w[2] }} {{ w[3] }} L{{ w[2] + 11 }} {{ w[3] + 2 }}" fill="none" stroke="var(--spruce-lift)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  {% endfor %}
+  {# A rider on a road bike just past A, low on the drops. #}
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke="var(--ink)" stroke-width="2.5">
+      <circle cx="92" cy="162" r="10.5"/>
+      <circle cx="130" cy="160" r="10.5"/>
+      <path d="M92 162 L106 163 L101 146 Z M101 146 L124 145 L106 163 M124 145 L130 160"/>
+      <path d="M97 144 L106 144"/>
+      <path d="M124 145 L131 144 C135 144 135 150 131 151"/>
+    </g>
+    <g stroke="var(--clay)" stroke-width="3.5">
+      <path d="M102 140 L120 129"/>
+      <path d="M120 129 L129 143"/>
+      <path d="M102 140 L113 151 L109 168"/>
+      <path d="M102 140 L106 153 L101 160" opacity=".6"/>
+    </g>
+  </g>
+  <circle cx="123" cy="123.5" r="4.8" fill="var(--clay)"/>
+  <circle cx="60" cy="176" r="16" fill="var(--spruce)"/>
+  <text x="60" y="182" text-anchor="middle" font-family="var(--mono)" font-size="16" fill="var(--paper)">A</text>
+  <circle cx="620" cy="166" r="16" fill="var(--clay)"/>
+  <text x="620" y="172" text-anchor="middle" font-family="var(--mono)" font-size="16" fill="var(--paper)">B</text>
+  {# A water stop on the way down. #}
+  <path d="M470 92 C462 104 458 110 458 116 A12 12 0 0 0 482 116 C482 110 478 104 470 92Z" fill="#3E7C9A"/>
+  {# The summit flag blows the way the wind goes. #}
+  <path d="M360 72 L360 40" stroke="var(--clay)" stroke-width="2"/>
+  <path d="M360 40 L336 47 L360 54Z" fill="var(--clay)"/>
+</svg>

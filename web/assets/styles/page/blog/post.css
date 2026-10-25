@@ -26,6 +26,13 @@
 .bmeta{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;color:#6d7060;margin:0 0 1.4rem}
 .bbody{font-size:1.02rem;line-height:1.75;color:#2f3227}
 .bbody p{margin:0 0 1.1rem}
+/* The opening paragraph: larger, in the spruce of the brand, so the post
+   starts with its point. */
+.bbody > p:first-child{font-size:1.16rem;line-height:1.6;color:var(--spruce-lift)}
+/* A section title (|blog_headings): close above its text, well clear of the
+   text before it. */
+.bbody .bh{font-family:var(--serif);font-size:1.22rem;font-weight:600;line-height:1.3;color:var(--spruce);margin:2rem 0 .3rem}
+.bbody .bh:first-child{margin-top:0}
 .bbody ul,.bbody ol{margin:0 0 1.1rem;padding-left:1.4rem}
 .bbody li{margin:.3rem 0}
 .bbody code{background:rgba(20,22,14,.07);border-radius:3px;padding:.1em .35em;font-size:.9em}
@@ -36,3 +43,6 @@
 .bother a{color:var(--clay)}
 .bback{margin-top:1.2rem;font-size:.9rem}
 .bback a{color:var(--clay)}
+/* The post's one image, always first, the post's own width. */
+.bill{margin:0 0 1.4rem;border-radius:8px;overflow:hidden;line-height:0}
+.bill svg,.bill img{display:block;width:100%;height:auto}

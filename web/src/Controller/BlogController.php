@@ -9,8 +9,10 @@ namespace App\Controller;
 use App\Blog\BlogLocales;
 use App\Blog\BlogRepository;
 use App\Pagination\Pager;
+use App\Routing\ActiveLocales;
 use App\Routing\LocalePrefix;
 use App\Routing\LocalizedPath;
+use App\Twig\LocaleExtension;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -37,7 +39,7 @@ final class BlogController extends AbstractController
 {
     private const int PER_PAGE = 10;
 
-    public function __construct(private readonly BlogRepository $posts)
+    public function __construct(private readonly BlogRepository $posts, private readonly ActiveLocales $activeLocales)
     {
     }
 
@@ -74,22 +76,43 @@ final class BlogController extends AbstractController
     {
         $written = BlogLocales::resolve($request->getLocale());
 
-        $post = $this->posts->publishedBySlug($slug, $written);
-        if (null === $post && BlogLocales::FALLBACK !== $written) {
-            // A Dutch reader following a link to an English-only post should
-            // read it, not meet a 404 for a page that plainly exists.
-            $post = $this->posts->publishedBySlug($slug, BlogLocales::FALLBACK);
+        // A reader following a link to a post in another language reads it,
+        // not a 404 for a page that plainly exists: the reader's language
+        // first, then every language the blog is written in.
+        $post = null;
+        foreach (array_unique([$written, BlogLocales::FALLBACK, ...BlogLocales::WRITTEN]) as $locale) {
+            $post ??= $this->posts->publishedBySlug($slug, $locale);
         }
         if (null === $post) {
             throw $this->createNotFoundException();
         }
+
+        // Each language the blog is written in, its own version of this post.
+        $siblings = $this->posts->siblings($post);
+        $versions = [$post->getLocale() => $post];
+        foreach ($siblings as $sibling) {
+            $versions[$sibling->getLocale()] ??= $sibling;
+        }
+        // A reader whose language has its own version reads that one: an
+        // English address under /nl/ opens the Dutch post.
+        if ($post->getLocale() !== $written && isset($versions[$written])) {
+            return $this->redirectToRoute('blog_post', ['slug' => $versions[$written]->getSlug()]);
+        }
+        // The language menu and the hreflang lines name each language's own
+        // version: the one that language reads (BlogLocales::resolve()), else
+        // this post.
+        $params = [];
+        foreach ($this->activeLocales->all() as $locale) {
+            $params[$locale] = ['slug' => ($versions[BlogLocales::resolve($locale)] ?? $post)->getSlug()];
+        }
+        $request->attributes->set(LocaleExtension::PARAMS_ATTRIBUTE, $params);
 
         return $this->render('blog/post.html.twig', [
             'page_title' => 'blog.meta_title',
             'page_description' => 'blog.meta_description',
             'nav_active' => 'blog',
             'post' => $post,
-            'siblings' => $this->posts->siblings($post),
+            'siblings' => $siblings,
             // The archive, beside the post. A reader who finished one is the
             // likeliest person on the site to read a second.
             'others' => $this->posts->othersThan($post, $written),

@@ -4,9 +4,9 @@
 
   The body goes through `|bug_markdown`, which is the SAME restricted markdown
   the bug desk renders: escape first, six rules, sanitise after. Deliberately
-  not a second profile. It also means a post cannot embed an image or an
-  external link, which for a first blog is a feature rather than a limit: the
-  posts worth writing are prose.
+  not a second profile. Two rules sit on top of it (|blog_headings,
+  |blog_links); the post's one image is chosen by name, never written in the
+  body (blog/_illustration.html.twig).
 #}
 {% extends 'base.html.twig' %}
 
@@ -25,6 +25,8 @@
 <section class="pad"><div class="wrap">
   <div class="blogwrap">
   <div class="blogpage">
+    {% include 'blog/_illustration.html.twig' with {name: post.illustration, class: 'bill', lazy: false} only %}
+
     <p class="bmeta">
       <time datetime="{{ post.publishedAt|date('Y-m-d') }}">{{ post.publishedAt|cc_date }}</time>
       {# The language it was WRITTEN in, which is not always the one the reader
@@ -34,7 +36,10 @@
 
     {% if post.lede %}<p class="blede">{{ post.lede }}</p>{% endif %}
 
-    <div class="bbody">{{ post.body|bug_markdown(constant('App\\Blog\\Entity\\BlogPost::BODY_MAX')) }}</div>
+    {# A bold line on its own is a section title (|blog_headings), [words](/path)
+       is a link (|blog_links), and the first paragraph reads as the post's
+       opening (post.css). #}
+    <div class="bbody">{{ post.body|bug_markdown(constant('App\\Blog\\Entity\\BlogPost::BODY_MAX'))|blog_headings|blog_links }}</div>
 
     {% if siblings is not empty %}
       <p class="bother">{{ 'blog.also_in'|trans }}

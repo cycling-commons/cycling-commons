@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Blog;
 
+use App\Blog\BlogIllustrations;
 use App\Blog\BlogLocales;
 use App\Blog\BlogStatus;
 use App\Blog\Entity\BlogPost;
@@ -131,6 +132,100 @@ final class BlogTest extends WebTestCase
         self::assertCount(1, $page->filter('.bbody strong'), 'the markdown is rendered, not printed');
     }
 
+    /** A bold line on its own is a section title; bold inside a sentence stays bold. */
+    public function testABoldLineOnItsOwnIsASectionTitle(): void
+    {
+        $client = $this->client();
+        $post = new BlogPost('with-titles', 'en', 'Titles', "Opening words.\n\n**Why we build it**\n\nA **bold** word in a sentence.\n\n**<b>typed</b> title**");
+        $post->setStatus(BlogStatus::Published);
+        $this->em()->persist($post);
+        $this->em()->flush();
+
+        $page = $client->request('GET', '/blog/with-titles');
+
+        self::assertSame(['Why we build it', '<b>typed</b> title'], $page->filter('.bbody h2.bh')->each(static fn ($h): string => $h->text()), 'markup a writer types stays text, in a title too');
+        self::assertSame('bold', $page->filter('.bbody p strong')->first()->text(), 'bold inside a sentence stays bold');
+        self::assertCount(0, $page->filter('.bbody b'), 'no element from it');
+        self::assertSame('Opening words.', $page->filter('.bbody > p')->first()->text(), 'the opening paragraph comes first');
+    }
+
+    /** [words](address) is a link: a site path in the same tab, https elsewhere in a new one, nothing else. */
+    public function testALinkIsARealLinkAndOnlyASafeOne(): void
+    {
+        $client = $this->client();
+        $body = "Start on [the map](/map), under *Plan a ride*.\n\n"
+            ."Read [the licence](https://opendatacommons.org/licenses/odbl/1-0/) and [our terms](https://cyclingcommons.org/licenses).\n\n"
+            ."Not these: [bad](javascript:alert(1)), [other](//evil.test/x), [quote](/x\"onclick=\"alert(1)), [plain](http://example.test).\n\n"
+            .'Typed as code: `[the map](/map)`';
+        $post = new BlogPost('with-links', 'en', 'Links', $body);
+        $post->setStatus(BlogStatus::Published);
+        $this->em()->persist($post);
+        $this->em()->flush();
+
+        $page = $client->request('GET', '/blog/with-links');
+
+        self::assertSame([
+            ['the map', '/map', null, null],
+            ['the licence', 'https://opendatacommons.org/licenses/odbl/1-0/', '_blank', 'noopener'],
+            ['our terms', 'https://cyclingcommons.org/licenses', null, null],
+        ], $page->filter('.bbody a')->each(static fn ($a): array => [$a->text(), $a->attr('href'), $a->attr('target'), $a->attr('rel')]));
+        self::assertStringContainsString('[quote](/x"onclick="alert(1))', $page->filter('.bbody')->text(), 'a typed quote never reaches an address');
+        self::assertStringContainsString('[bad](javascript:alert(1))', $page->filter('.bbody')->text(), 'any other scheme stays text');
+        self::assertStringContainsString('[plain](http://example.test)', $page->filter('.bbody')->text());
+        self::assertSame('[the map](/map)', $page->filter('.bbody code')->text(), 'code stays what a reader types');
+    }
+
+    /** One image per post, first on the post and beside it on the index; a drawing is hidden from screen readers. */
+    public function testAPostOpensWithItsOneDrawing(): void
+    {
+        $client = $this->client();
+        $post = new BlogPost('with-drawing', 'en', 'Drawn', 'Words.');
+        $post->setIllustration('plan');
+        $post->setStatus(BlogStatus::Published);
+        $plain = new BlogPost('without-drawing', 'en', 'Plain', 'Words.');
+        $plain->setStatus(BlogStatus::Published);
+        $this->em()->persist($post);
+        $this->em()->persist($plain);
+        $this->em()->flush();
+
+        $page = $client->request('GET', '/blog/with-drawing');
+
+        self::assertCount(1, $page->filter('figure.bill svg'));
+        self::assertSame('true', $page->filter('figure.bill')->attr('aria-hidden'));
+        self::assertSame('bill', $page->filter('.blogpage > *')->first()->attr('class'), 'the image comes first, always in the same place');
+        self::assertCount(0, $client->request('GET', '/blog/without-drawing')->filter('figure.bill'));
+        $index = $client->request('GET', '/blog');
+        self::assertCount(1, $index->filter('.bp--ill figure.bthumb svg'), 'the index shows it beside the title');
+    }
+
+    /** A name that is no drawing or image is stored as none, so it never reaches a template path. */
+    public function testAnUnknownIllustrationIsNone(): void
+    {
+        $post = new BlogPost('odd', 'en', 'Odd', 'Words.');
+        $post->setIllustration('../../base');
+        self::assertNull($post->getIllustration());
+        $post->setIllustration('vote');
+        self::assertSame('vote', $post->getIllustration());
+        $post->setIllustration(null);
+        self::assertNull($post->getIllustration());
+    }
+
+    /** Every drawing in the list has its template, and every image file exists with alt text in each language. */
+    public function testEveryIllustrationRenders(): void
+    {
+        $client = $this->client();
+        foreach (array_keys(BlogIllustrations::NAMES + BlogIllustrations::images()) as $i => $name) {
+            $post = new BlogPost('ill-'.$i, 'en', 'Ill '.$i, 'Words.');
+            $post->setIllustration($name);
+            $post->setStatus(BlogStatus::Published);
+            $this->em()->persist($post);
+            $this->em()->flush();
+            $page = $client->request('GET', '/blog/ill-'.$i);
+            self::assertResponseIsSuccessful($name);
+            self::assertCount(1, $page->filter('figure.bill svg, figure.bill img[alt]:not([alt=""])'), $name);
+        }
+    }
+
     /** The same restricted markdown the bug desk uses: no script, ever. */
     public function testAPostCannotCarryMarkup(): void
     {
@@ -222,6 +317,31 @@ final class BlogTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('Only in English', $page->text());
+    }
+
+    /**
+     * A post with a Dutch version: the language menu and the hreflang lines
+     * name each language's own version, and an address of the other version
+     * leads the reader to theirs.
+     */
+    public function testThePostInAnotherLanguageIsItsOwnVersion(): void
+    {
+        $client = $this->client();
+        $en = $this->post('cc-is-online', 'en', 'Online now');
+        $nl = $this->post('cc-staat-online', 'nl', 'Nu online');
+        $nl->setTranslationOf($en->getId());
+        $this->em()->flush();
+
+        $page = $client->request('GET', '/blog/cc-is-online');
+        self::assertResponseIsSuccessful();
+        self::assertStringEndsWith('/nl/blog/cc-staat-online', (string) $page->filter('link[rel=alternate][hreflang=nl]')->attr('href'));
+        self::assertStringEndsWith('/blog/cc-is-online', (string) $page->filter('link[rel=alternate][hreflang=en]')->attr('href'));
+        self::assertSame('/i18n/nl?to=/nl/blog/cc-staat-online', $page->filter('#cc-lang-dd a[href^="/i18n/nl"]')->attr('href'), 'the language menu opens the Dutch version');
+
+        $client->request('GET', '/nl/blog/cc-is-online');
+        self::assertResponseRedirects('/nl/blog/cc-staat-online', null, 'a Dutch reader of the English address reads the Dutch post');
+        $client->request('GET', '/blog/cc-staat-online');
+        self::assertResponseRedirects('/blog/cc-is-online', null, 'and an English reader of the Dutch address the English one');
     }
 
     // -- publishing -------------------------------------------------------

@@ -11,6 +11,11 @@ the site IS (`/about`, `/terms`) or a machine-generated list of what changed
 this month and what we think about it", which is the only writing that turns a
 tool into a thing people follow.
 
+**Writing one.** [../blog-post-prompt.md](../blog-post-prompt.md) is the
+prompt every post is written with, by a person or a model: who reads it, how
+it sounds, its shape and the markup below. English first; the Dutch post
+follows to the same rules.
+
 ## 2. What a post is
 
 `App\Blog\Entity\BlogPost`, `Version20260829090000`.
@@ -23,9 +28,39 @@ went live. Nothing else.
 bullet lists, numbered lists. Not a shortcut: it means no second sanitiser
 profile, no second allowlist and no second place to get wrong. It also means a
 post cannot embed an image or an external link, which for a first blog is a
-feature rather than a limit. A body holds up to 20000 characters
+feature rather than a limit; the one exception is the link rule below. A body holds up to 20000 characters
 (`BlogPost::BODY_MAX`), and the post page passes that limit to the renderer,
 so all of it is published; a bug report keeps the renderer's own 8000.
+
+**A bold line on its own is a section title** (`|blog_headings`,
+`App\Twig\BlogBodyExtension`, 2026-10-25): a paragraph that is one bold
+line and nothing else becomes `<h2 class="bh">`, close above the text it
+heads. It runs on the renderer's sanitised output and only renames the tags
+around plain text, so the markdown keeps its six rules and its one
+allowlist. The post's first paragraph is its opening: larger, in the
+brand's spruce (`post.css`).
+
+**A link is `[words](address)`** (`|blog_links`, `App\Twig\BlogBodyExtension`):
+the address is a path on the site (`/map`, `/nl/licenties`), opened in the
+same tab, or an `https://` address, opened in a new tab with
+`rel="noopener"`; an `https://cyclingcommons.org` address counts as the site.
+Any other scheme, `http://` and `//host` stay text, and so does a link inside
+code. Like the titles, it runs on the sanitised output, so a quote a writer
+types arrives as an entity and cannot leave the `href`. Every address in a post
+is written as a link with words that say where it goes, never as a bare
+address (`docs/blog-post-prompt.md`).
+
+**One image per post, always in the same place** (`blog_post.illustration`,
+`App\Blog\BlogIllustrations`, `Version20261025030000`): the first thing in
+the post, the post's own width, and beside the title on the index. A post
+names it in the admin; it is never written in the body. It is either a
+drawing (an SVG in `templates/blog/illustrations/`, coloured with the site's
+tokens, hidden from screen readers because the title and text carry the
+meaning) or an image file in `assets/images/blog/`, such as a screenshot of a
+real route, with alt text `blog.image_alt.<name>` in every language. Both live
+in the repository: nothing is uploaded, so no image is decoded on a web host,
+and a new image file reaches production with a deploy. An unknown name is
+stored as none, so a stored value never becomes a template or file path.
 
 **Two statuses**, `BlogStatus`. Draft or published. Scheduling, review states
 and expiry are all real and all somebody's second problem.
@@ -62,6 +97,16 @@ link to an English-only post reads it rather than meeting a 404.
 **A Dutch post is a post, not a translation.** Locale is a column and each row
 stands alone, so a Dutch-only post is normal. `translation_of` links a pair
 when one exists, and a post that has a sibling offers it.
+
+**Each language reads its own version** (2026-10-25). The language menu and
+the hreflang lines of a post name, per language, the version that language
+reads (`BlogLocales::resolve()`): Dutch the Dutch sibling, French, German and
+Spanish the English one, else the post itself. The post sets them per
+language in a request attribute (`LocaleExtension::PARAMS_ATTRIBUTE`), as a
+slug differs per version. An address of the other version leads a reader to
+theirs: `/nl/blog/<english slug>` redirects to the Dutch sibling, and an
+English address of a Dutch slug to the English one. A post with no version in
+the reader's language is read as it is.
 
 Widening this is a one-line change plus the copy to fill it. The constraint is
 people, not code.
@@ -122,11 +167,13 @@ act. The author is whoever was signed in.
 * **Comments.** There is a contact form, a bug form and a report route, all of
   which reach a person. A comment thread is a moderation surface, and
   `one-way-to-moderate` says a new content type does not get new mechanics.
-* **Images in a post.** The restricted markdown has no image rule, so this
-  would mean the media pipeline, alt text, and a second sanitiser profile.
+* **Images inside the body, and uploaded images.** A post has its one image
+  (§2); an image anywhere else in the text, or one uploaded through the admin,
+  would mean the media pipeline and an image rule in the markdown.
 * **Categories and tags.** With four posts they are furniture.
 * **Scheduling.** Publish is a person deciding it is finished.
 
 ## 8. Deploy prerequisite
 
-`Version20260829090000` creates `blog_post`. Nothing else.
+`Version20260829090000` creates `blog_post`; `Version20261025030000` adds
+`illustration`.

@@ -48,11 +48,16 @@
       <div class="bempty">{{ 'blog.empty'|trans }}</div>
     {% else %}
       {% for post in posts %}
-        <article class="bp">
+        <article class="bp{{ post.illustration ? ' bp--ill' : '' }}">
+          {% if post.illustration %}
+            <a class="bp-ill" href="{{ path('blog_post', {slug: post.slug}) }}" tabindex="-1" aria-hidden="true">{% include 'blog/_illustration.html.twig' with {name: post.illustration, class: 'bthumb', lazy: true} only %}</a>
+          {% endif %}
+          <div class="bp-text">
           <h2><a href="{{ path('blog_post', {slug: post.slug}) }}">{{ post.title }}</a></h2>
           <div class="when"><time datetime="{{ post.publishedAt|date('Y-m-d') }}">{{ post.publishedAt|cc_date }}</time></div>
           {% if post.lede %}<p>{{ post.lede }}</p>{% endif %}
           <p class="more"><a href="{{ path('blog_post', {slug: post.slug}) }}">{{ 'blog.read'|trans }}</a></p>
+          </div>
         </article>
       {% endfor %}
 
