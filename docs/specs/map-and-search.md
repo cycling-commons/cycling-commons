@@ -696,7 +696,13 @@ languages.
     the region passes the readiness count above, so it is earned rather than
     declared.
   - **Who looks after it** — `curated` with its own curator, `countrywide`
-    when only a country-scoped moderator covers it, else nothing.
+    when only a country-scoped moderator covers it, else nothing. An admin
+    never counts (`App\Catalog\RegionCover`, 2026-10-25): an admin moderates
+    every area with or without a row there, so their rows would make every
+    country read as covered and hide the call for curators. The region page
+    names no admin among its curators, and the rider's curating invitation
+    (`ProfileController::curatingContext()`) reads the same rule. Moderation
+    scopes still read every row.
 
   They are two axes because `curated_default` does not mean "a curator
   maintains this region", and one ladder would make true things unsayable in

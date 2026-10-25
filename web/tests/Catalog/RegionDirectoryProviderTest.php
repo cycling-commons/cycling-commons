@@ -117,6 +117,44 @@ final class RegionDirectoryProviderTest extends KernelTestCase
         self::assertSame('countrywide', $bySlug['utrecht-t']['stewardship']);
     }
 
+    /**
+     * An admin moderates every area with or without a row there: their rows
+     * are no cover, so a country they hold still asks for curators, and the
+     * region page names nobody for it.
+     */
+    public function testAnAdminsAreasAreNoCover(): void
+    {
+        self::bootKernel();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $wal = $this->seedRegion('wallonia-t', 'BE', 4);
+        $this->seedRegion('utrecht-t', 'NL', 4);
+
+        $admin = (new User())->setEmail('steward-admin-t@example.test');
+        $admin->setPassword('x');
+        $admin->setDisplayName('Owner');
+        $admin->setRoles(['ROLE_ADMIN']);
+        $em->persist($admin);
+        $em->flush();
+        $em->persist(new ModeratorArea((int) $admin->getId(), $wal, null));
+        $em->persist(new ModeratorArea((int) $admin->getId(), null, 'NL'));
+        $em->flush();
+
+        $provider = static::getContainer()->get(RegionDirectoryProvider::class);
+        $bySlug = [];
+        foreach ($provider->directory('en') as $country) {
+            foreach ($country['regions'] as $region) {
+                $bySlug[$region['slug']] = $region;
+            }
+        }
+        self::assertSame('none', $bySlug['wallonia-t']['stewardship']);
+        self::assertSame('none', $bySlug['utrecht-t']['stewardship']);
+
+        $page = $provider->region('utrecht-t', 'en');
+        self::assertNotNull($page);
+        self::assertSame('none', $page['stewardship']);
+        self::assertSame([], $page['curators'], 'the region page names nobody');
+    }
+
     public function testDetailByKindAndOperationalGate(): void
     {
         self::bootKernel();

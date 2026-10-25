@@ -37,8 +37,8 @@ final class RegionDirectoryProvider
     private const REGION_SELECT = '
         SELECT r.id, r.slug, r.area_km2, r.facts, r.facts_harvest, r.country_code, r.default_map_mode,
                r.context, r.context_curated, r.story,
-               EXISTS (SELECT 1 FROM moderator_area ma WHERE ma.region_id = r.id)              AS curator_local,
-               EXISTS (SELECT 1 FROM moderator_area ma WHERE ma.country_code = r.country_code) AS curator_national,
+               {local} AS curator_local,
+               {national} AS curator_national,
                (SELECT COUNT(*) FROM item i WHERE i.region_id = r.id AND i.state = \'verified\') AS items_verified,
                (SELECT COUNT(*) FROM recommended_route rr WHERE rr.region_id = r.id AND rr.state IN %s) AS routes,
                wc.name AS country_name_en
@@ -48,8 +48,8 @@ final class RegionDirectoryProvider
 
     private const BASE_SELECT = '
         SELECT r.id, r.slug, r.area_km2, r.facts, r.facts_harvest, r.country_code, r.default_map_mode,
-               EXISTS (SELECT 1 FROM moderator_area ma WHERE ma.region_id = r.id)              AS curator_local,
-               EXISTS (SELECT 1 FROM moderator_area ma WHERE ma.country_code = r.country_code) AS curator_national,
+               {local} AS curator_local,
+               {national} AS curator_national,
                COALESCE(iv.n, 0) AS items_verified,
                COALESCE(rt.n, 0) AS routes,
                wc.name AS country_name_en, COALESCE(cont.name, \'\') AS continent_name,
@@ -63,11 +63,17 @@ final class RegionDirectoryProvider
                    WHERE state IN %s GROUP BY region_id) rt ON rt.region_id = r.id
         WHERE r.geom IS NOT NULL AND r.country_code <> \'\'';
 
+    /** A SELECT above with its served states and who counts as looking after a region (RegionCover). */
+    private static function select(string $sql): string
+    {
+        return strtr(sprintf($sql, ItemState::servedSqlTuple()), ['{local}' => RegionCover::localSql('r'), '{national}' => RegionCover::nationalSql('r')]);
+    }
+
     /** @return list<array<string, mixed>> */
     public function directory(string $locale): array
     {
         $rows = $this->db->fetchAllAssociative(
-            sprintf(self::BASE_SELECT, ItemState::servedSqlTuple())
+            self::select(self::BASE_SELECT)
             .' AND '.OperationalRegions::predicate('r')
             .' ORDER BY continent_name, country_name_en, r.slug',
         );
@@ -126,8 +132,8 @@ final class RegionDirectoryProvider
                     CASE WHEN ma.region_id IS NOT NULL THEN 'local' ELSE 'country' END AS scope
                FROM moderator_area ma
                JOIN users u ON u.id = ma.user_id
-              WHERE ma.region_id = :rid OR ma.country_code = :cc
-           ORDER BY scope, u.display_name",
+              WHERE (ma.region_id = :rid OR ma.country_code = :cc) AND ".RegionCover::counted('ma').'
+           ORDER BY scope, u.display_name',
             ['rid' => $regionId, 'cc' => $countryCode],
         );
 
@@ -156,7 +162,7 @@ final class RegionDirectoryProvider
     public function region(string $slug, string $locale): ?array
     {
         $row = $this->db->fetchAssociative(
-            sprintf(self::REGION_SELECT, ItemState::servedSqlTuple())
+            self::select(self::REGION_SELECT)
             .' AND r.slug = :slug AND '.OperationalRegions::predicate('r'),
             ['slug' => $slug],
         );

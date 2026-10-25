@@ -9,6 +9,7 @@ use App\Catalog\BikeType;
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\Submission;
 use App\Catalog\ItemType;
+use App\Catalog\RegionCover;
 use App\Catalog\Season;
 use App\Catalog\SubmissionStatus;
 use App\Contribution\PlaceText;
@@ -365,6 +366,7 @@ final class ProfileController extends AbstractController
 
     /**
      * Curator cover where the rider is: region and country reported separately.
+     * An admin's areas are no cover (RegionCover).
      *
      * @see docs/specs/account-and-auth.md (The curating invitation on the landing pane)
      *
@@ -376,9 +378,7 @@ final class ProfileController extends AbstractController
         if ([] !== $ids) {
             // docs/specs/map-and-search.md §4.5 — first id contains the base point.
             $row = $db->fetchAssociative(
-                'SELECT r.slug,
-                        EXISTS (SELECT 1 FROM moderator_area ma WHERE ma.region_id = r.id)                AS local,
-                        EXISTS (SELECT 1 FROM moderator_area ma WHERE ma.country_code = r.country_code)   AS national
+                'SELECT r.slug, '.RegionCover::localSql('r').' AS local, '.RegionCover::nationalSql('r').' AS national
                    FROM region r WHERE r.id = :id',
                 ['id' => $ids[0]],
             );
@@ -396,10 +396,11 @@ final class ProfileController extends AbstractController
         $country = $user->getCountry();
         if (null !== $country) {
             $covered = (bool) $db->fetchOne(
-                'SELECT EXISTS (SELECT 1 FROM moderator_area WHERE country_code = :cc)
+                // An admin's areas are no cover (RegionCover).
+                'SELECT EXISTS (SELECT 1 FROM moderator_area ma WHERE ma.country_code = :cc AND '.RegionCover::counted('ma').')
                      OR EXISTS (SELECT 1 FROM moderator_area ma
                                   JOIN region r ON r.id = ma.region_id
-                                 WHERE r.country_code = :cc)',
+                                 WHERE r.country_code = :cc AND '.RegionCover::counted('ma').')',
                 ['cc' => $country->getIso2()],
             );
 
