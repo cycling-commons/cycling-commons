@@ -46,6 +46,7 @@ from .tiles import (TILE_PROFILE, artifact_bounds, build_gaps_pmtiles, build_pmt
                     build_roadpieces_pmtiles, build_routes_pmtiles, build_surface_pmtiles, export_geojsonl,
                     verify_pmtiles)
 from .tracker import RunTracker
+from . import water
 from . import way_surface
 
 GEOFABRIK_BASE = "https://download.geofabrik.de"
@@ -1165,6 +1166,7 @@ def main(argv=None) -> int:
                   "exiting", file=sys.stderr)
             return 2
         ensure_schema(conn)
+        water.ensure_schema(conn)
         tracker = RunTracker(conn)
         if args.run_id is not None:
             tracker.attach(args.run_id)
@@ -1181,6 +1183,7 @@ def main(argv=None) -> int:
                               for letter, spec in contract.letters.items() if spec.exclude_tag_values}
         run_started = time.monotonic()
         timings: list[tuple[str, float, bool]] = []
+        lakes_loaded = False
         for region in ([] if args.tiles_only else regions):
             region_started = time.monotonic()
             try:
@@ -1225,6 +1228,16 @@ def main(argv=None) -> int:
                     st.detail = json.dumps({"previous": result.previous,
                                             "dropped": result.dropped})
                 tracker.record(region, "parse", parse_seconds[0])
+                # The big lakes, for the region pages' drawings (map-and-search.md §4.6).
+                # Their own failure: the points above are loaded either way.
+                try:
+                    with tracker.step(region, "water") as st:
+                        kept = water.load_water(conn, pbf, workdir, region)
+                        st.rows = kept
+                        st.detail = "unchanged" if kept is None else None
+                    lakes_loaded = lakes_loaded or kept is not None
+                except Exception as exc:  # noqa: BLE001 - last week's lakes keep serving
+                    print(f"[coverage] {region}: lakes FAILED - {exc}", file=sys.stderr)
                 elapsed = time.monotonic() - region_started
                 timings.append((region, elapsed, True))
                 print(f"[coverage] {region}: loaded/updated {result.inserted} rows "
@@ -1237,6 +1250,10 @@ def main(argv=None) -> int:
                 # region that dies after 40 minutes failed differently from one
                 # that dies in two seconds.
                 print(f"[coverage] {region}: FAILED after {_dur(elapsed)} — {exc}", file=sys.stderr)
+
+        if lakes_loaded:
+            with tracker.step(None, "silhouettes"):
+                water.refresh_silhouettes(conn)
 
         loaded = sum(1 for (_r, _e, good) in timings if good)
         run_status = "ok" if not failed else "partial" if loaded else "failed"

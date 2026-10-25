@@ -542,6 +542,7 @@ def test_main_records_a_step_row_per_stage(monkeypatch, tmp_path):
         ("dev/bad", "near_way", "ok"), ("dev/bad", "load", "failed"),
         ("dev/ok", "download", "ok"), ("dev/ok", "filter", "ok"),
         ("dev/ok", "near_way", "ok"), ("dev/ok", "load", "ok"), ("dev/ok", "parse", "ok"),
+        ("dev/ok", "water", "ok"), (None, "silhouettes", "ok"),
         (None, "export", "ok"), (None, "tippecanoe", "ok"), (None, "upload", "ok"),
     ]
     by_key = {(p[1], p[2]): p for p in steps}

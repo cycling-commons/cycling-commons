@@ -25,6 +25,13 @@ def _no_shared_pbf_dir(monkeypatch):
     monkeypatch.delenv("COVERAGE_PBF_DIR", raising=False)
 
 
+@pytest.fixture(autouse=True)
+def _no_lake_harvest(monkeypatch):
+    """The harvest tests fake their PBFs: the lake step (coverage/water.py) reads none."""
+    from coverage import water
+    monkeypatch.setattr(water, "load_water", lambda conn, pbf, workdir, extract: 0)
+
+
 @pytest.fixture(scope="session")
 def contract():
     return load_contract()

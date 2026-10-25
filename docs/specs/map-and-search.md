@@ -923,6 +923,20 @@ languages.
   `Version20261022030000`. The map's region registry and the globe keep the
   lighter `outline`.
 
+  **The drawing leaves the big lakes out (2026-10-25).** Administrative areas
+  count inland water as land: the Dutch provinces share the IJsselmeer and
+  the Markermeer between them. The harvest keeps every lake of 20 km² or more
+  (`coverage_water`, coverage-provider.md §3 step 4b), and the silhouette is
+  drawn from `region_land(geom)`, the shape minus those lakes (the shape as
+  it is without the table, without a lake, or when the cut fails). A lake on
+  a shape's edge cuts the edge back to the shore; a lake inside it is a hole,
+  kept from the same 1.5 units across as a part, and drawn by the even-odd
+  fill. The pipeline draws every silhouette again after a harvest changed
+  any lakes, through `region_silhouettes_refresh()` (`Version20261025010000`),
+  whose body is `RegionDerivations::silhouetteSql()`; a change to that SQL
+  ships a migration that defines the function again
+  (`RegionSilhouetteLakesTest` fails until it does). Region geometry,
+  membership and areas keep the water.
   **Layout (2026-10-20).** From 760 px wide the hero has two columns: the
   title, figures, curators and buttons on the left, the country outline with
   the region filled on the right at up to 300 px wide (4:3). Narrower, the

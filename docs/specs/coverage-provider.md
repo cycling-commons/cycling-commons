@@ -407,6 +407,21 @@ Per region in `COVERAGE_REGIONS`, independently:
    cluster config) and holds a session advisory lock (`run.py`,
    `COVERAGE_ADVISORY_LOCK_KEY`), so a second run exits 2 rather than loading
    alongside it.
+4b. **Lakes** (`pipeline/coverage/water.py`, step `water`, 2026-10-25): the
+   extract's standing water of 20 km² or more (`natural=water` with
+   `water=lake`, `reservoir`, `lagoon` or no `water=*`, and
+   `landuse=reservoir`), assembled by `osmium export`, simplified to about
+   50 m and swapped per extract into the pipeline-owned `coverage_water`.
+   Nothing reads it but the region pages' drawings (map-and-search.md
+   §4.6). `coverage_water_extract` keeps what each extract's lakes were read
+   from (the PBF's identity and the rules), so an unchanged extract is
+   skipped (`detail` "unchanged"; a full read of the Netherlands takes about
+   80 s and keeps 11 lakes, the IJsselmeer and the Markermeer among them).
+   A failure here is the step's own: the region's points are loaded either
+   way and last week's lakes keep serving. When any extract's lakes changed,
+   the run calls the app's `region_silhouettes_refresh()` once, after the
+   last region (step `silhouettes`, about 20 s for every region), when the app
+   has it.
 
 After all regions, once per run:
 

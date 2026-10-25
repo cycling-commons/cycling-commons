@@ -44,6 +44,14 @@ final class RegionDerivations
      * The Netherlands keeps about 1,000 points and its Wadden islands,
      * Germany about 1,800. Its own column, so the map's region registry and
      * the globe keep the lighter outline they download.
+     *
+     * The big lakes the harvest keeps (`coverage_water`) are left out, through
+     * `region_land()`, which returns the shape as it is when there is no lake
+     * table or the cut fails. A lake inside the shape is a hole, kept from the
+     * same 1.5 units across as a part. The pipeline runs this same SQL through
+     * `region_silhouettes_refresh()` after a harvest: a change here ships a
+     * migration that defines that function again
+     * (RegionSilhouettesFunctionTest holds the two together).
      */
     public static function silhouetteSql(): string
     {
@@ -188,17 +196,21 @@ final class RegionDerivations
                     FROM (
                         SELECT unnest(ARRAY[ST_X(p.geom), ST_Y(p.geom)]) AS v,
                                (p.path[1] * 2) + generate_series(0, 1) AS o
-                        FROM ST_DumpPoints(ST_ExteriorRing(z.g)) p
+                        FROM ST_DumpPoints(ST_ExteriorRing(rg.geom)) p
                     ) pt
                 ) AS ring
                 FROM (
                     SELECT ST_SimplifyPreserveTopology(d.geom, f.unit * {step}) AS g,
                            GREATEST((ST_XMax(d.geom) - ST_XMin(d.geom)) * f.k, ST_YMax(d.geom) - ST_YMin(d.geom)) / f.unit AS drawn
-                    FROM ST_Dump(r.geom) d
+                    FROM ST_Dump(region_land(r.geom)) d
                 ) z
+                CROSS JOIN LATERAL ST_DumpRings(z.g) rg
                 WHERE z.g IS NOT NULL
                   AND GeometryType(z.g) = 'POLYGON'
                   AND z.drawn >= {min_part}
+                  -- The outer ring always; a hole (a lake) from the same size as a part.
+                  AND (rg.path[1] = 0
+                       OR GREATEST((ST_XMax(rg.geom) - ST_XMin(rg.geom)) * f.k, ST_YMax(rg.geom) - ST_YMin(rg.geom)) / f.unit >= {min_part})
             ) rings
         ), '[]'::json)::jsonb
         FROM f
