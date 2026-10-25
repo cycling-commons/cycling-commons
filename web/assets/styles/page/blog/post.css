@@ -16,6 +16,20 @@
   color:#6d7060;margin-top:.2rem}
 .blogside .sall{margin:1rem 0 0;font-size:.88rem}
 .blogside .sall a{color:var(--clay);font-size:.88rem}
+/* The invitation, above the archive: a soft panel with a trail-coloured
+   edge, so it reads as the one thing in the column that asks for something. */
+.blogside .sneed{margin:0 0 2rem;padding:1rem 1.1rem 1.1rem;background:#F7F1E5;
+  border-left:3px solid var(--trail);border-radius:0 8px 8px 0}
+.blogside .sill{margin:0 0 .9rem;border-radius:6px;overflow:hidden;line-height:0}
+.blogside .sill svg{display:block;width:100%;height:auto}
+.blogside .sneed h2{font-family:var(--serif);font-size:1.2rem;font-weight:600;letter-spacing:0;
+  text-transform:none;line-height:1.25;color:var(--spruce);margin:0 0 .45rem}
+.blogside .sneed p{margin:0;font-size:.92rem;line-height:1.5;color:#2f3227}
+.blogside .sneed .sall{margin-top:.8rem}
+.blogside .sneed .sall a{display:inline;font-weight:600;font-size:.95rem;color:var(--clay);
+  text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.blogside .sneed .sall a::after{content:" \2192"}
+.blogside .sneed .sall a:hover{color:var(--spruce)}
 /* One column below the point where a 680px post and a 15rem rail stop
    fitting side by side. The archive follows the post rather than preceding
    it: on a phone somebody came to read this one. */

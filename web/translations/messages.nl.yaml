@@ -16,6 +16,11 @@ blog:
   also_in: 'Ook in:'
   status.draft: 'Concept'
   status.published: 'Gepubliceerd'
+  side.title: 'Cycling Commons heeft je nodig'
+  side.contribute_text: 'De kaart groeit met wat fietsers weten: een kraan, een klim, een slaapplek. Bevestig wat er nog is, en laat me weten wat ontbreekt.'
+  side.contribute_link: 'Voeg toe wat jij weet'
+  side.help_text: 'Code, een regio om te cureren, vertalingen, foto''s of een paar uur per maand: er is plek voor elk.'
+  side.help_link: 'Zo help je mee'
 
 nav:
   tagline: 'OPEN ATLAS — EST. 2026'

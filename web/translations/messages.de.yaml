@@ -16,6 +16,11 @@ blog:
   also_in: 'Auch auf:'
   status.draft: 'Entwurf'
   status.published: 'Veröffentlicht'
+  side.title: 'Cycling Commons braucht dich'
+  side.contribute_text: 'Die Karte wächst mit dem, was Radfahrende wissen: ein Wasserhahn, ein Anstieg, ein Schlafplatz. Bestätige, was noch da ist, und sag mir, was fehlt.'
+  side.contribute_link: 'Füge hinzu, was du weißt'
+  side.help_text: 'Code, eine Region zum Kuratieren, Übersetzungen, Fotos oder ein paar Stunden im Monat: Für alles gibt es Platz.'
+  side.help_link: 'So kannst du helfen'
 
 nav:
   tagline: 'OPEN ATLAS — EST. 2026'

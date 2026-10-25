@@ -8,6 +8,7 @@ namespace App\Tests\Blog;
 
 use App\Blog\BlogIllustrations;
 use App\Blog\BlogLocales;
+use App\Blog\BlogSideCall;
 use App\Blog\BlogStatus;
 use App\Blog\Entity\BlogPost;
 use Doctrine\ORM\EntityManagerInterface;
@@ -342,6 +343,64 @@ final class BlogTest extends WebTestCase
         self::assertResponseRedirects('/nl/blog/cc-staat-online', null, 'a Dutch reader of the English address reads the Dutch post');
         $client->request('GET', '/blog/cc-staat-online');
         self::assertResponseRedirects('/blog/cc-is-online', null, 'and an English reader of the Dutch address the English one');
+    }
+
+    // -- the invitation beside a post ---------------------------------------
+
+    public function testAPostInvitesToTheHelpPostInTheReadersLanguage(): void
+    {
+        $client = $this->client();
+        $en = $this->post(BlogSideCall::HELP_SLUG, 'en', 'Help build it');
+        $nl = $this->post('bouw-mee', 'nl', 'Bouw mee');
+        $nl->setTranslationOf($en->getId());
+        $this->em()->flush();
+        $this->post('plan-a-ride', 'en', 'Plan a ride');
+        $this->post('plan-een-rit', 'nl', 'Plan een rit');
+
+        $page = $client->request('GET', '/blog/plan-a-ride');
+        self::assertSame('/blog/'.BlogSideCall::HELP_SLUG, $page->filter('.sneed a')->attr('href'));
+
+        $page = $client->request('GET', '/nl/blog/plan-een-rit');
+        self::assertSame('/nl/blog/bouw-mee', $page->filter('.sneed a')->attr('href'), 'a Dutch reader gets the Dutch help post');
+    }
+
+    /** The help post never points at itself, in either language. */
+    public function testTheHelpPostInvitesToContribute(): void
+    {
+        $client = $this->client();
+        $en = $this->post(BlogSideCall::HELP_SLUG, 'en', 'Help build it');
+        $nl = $this->post('bouw-mee', 'nl', 'Bouw mee');
+        $nl->setTranslationOf($en->getId());
+        $this->em()->flush();
+
+        $page = $client->request('GET', '/blog/'.BlogSideCall::HELP_SLUG);
+        self::assertSame('/contribute', $page->filter('.sneed a')->attr('href'));
+
+        $page = $client->request('GET', '/nl/blog/bouw-mee');
+        self::assertSame('/nl/contribute', $page->filter('.sneed a')->attr('href'));
+    }
+
+    public function testAPostCanAskToContributeInstead(): void
+    {
+        $client = $this->client();
+        $this->post(BlogSideCall::HELP_SLUG, 'en', 'Help build it');
+        $post = $this->post('cc-is-online', 'en', 'Online now');
+        $post->setSideCall(BlogSideCall::Contribute);
+        $this->em()->flush();
+
+        $page = $client->request('GET', '/blog/cc-is-online');
+        self::assertSame('/contribute', $page->filter('.sneed a')->attr('href'));
+    }
+
+    /** No link to a help post that is still a draft: it would be a 404. */
+    public function testAnUnpublishedHelpPostIsNeverLinked(): void
+    {
+        $client = $this->client();
+        $this->post(BlogSideCall::HELP_SLUG, 'en', 'Help build it', published: false);
+        $this->post('plan-a-ride', 'en', 'Plan a ride');
+
+        $page = $client->request('GET', '/blog/plan-a-ride');
+        self::assertSame('/contribute', $page->filter('.sneed a')->attr('href'));
     }
 
     // -- publishing -------------------------------------------------------

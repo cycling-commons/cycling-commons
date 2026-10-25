@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Blog\Entity;
 
 use App\Blog\BlogIllustrations;
+use App\Blog\BlogSideCall;
 use App\Blog\BlogStatus;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -63,6 +64,10 @@ class BlogPost
     /** A name in {@see BlogIllustrations::NAMES}, or null for none. */
     #[ORM\Column(length: 40, nullable: true)]
     private ?string $illustration = null;
+
+    /** What the invitation beside the post asks for. */
+    #[ORM\Column(name: 'side_call', length: 16, enumType: BlogSideCall::class, options: ['default' => 'help'])]
+    private BlogSideCall $sideCall = BlogSideCall::Help;
 
     #[ORM\Column(length: 16, enumType: BlogStatus::class)]
     private BlogStatus $status = BlogStatus::Draft;
@@ -159,6 +164,17 @@ class BlogPost
     public function setIllustration(?string $illustration): void
     {
         $this->illustration = BlogIllustrations::known($illustration) ? $illustration : null;
+        $this->touch();
+    }
+
+    public function getSideCall(): BlogSideCall
+    {
+        return $this->sideCall;
+    }
+
+    public function setSideCall(BlogSideCall $sideCall): void
+    {
+        $this->sideCall = $sideCall;
         $this->touch();
     }
 

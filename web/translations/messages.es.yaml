@@ -16,6 +16,11 @@ blog:
   also_in: 'También en:'
   status.draft: 'Borrador'
   status.published: 'Publicado'
+  side.title: 'Cycling Commons te necesita'
+  side.contribute_text: 'El mapa crece con lo que saben los ciclistas: una fuente, una subida, un sitio para dormir. Confirma lo que sigue ahí y dime lo que falta.'
+  side.contribute_link: 'Añade lo que sabes'
+  side.help_text: 'Código, una región que cuidar, traducciones, fotos o unas horas al mes: hay sitio para todo.'
+  side.help_link: 'Cómo puedes ayudar'
 
 nav:
   tagline: 'ATLAS ABIERTO — DESDE 2026'

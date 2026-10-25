@@ -52,11 +52,26 @@
     <p class="bback"><a href="{{ path('blog') }}">{{ 'blog.back'|trans }}</a></p>
   </div>
 
-  {# The archive, beside the post. Somebody who has just finished one is the
-     likeliest person on the site to read a second, and the index is a click
-     they mostly will not make. #}
-  {% if others is not empty %}
-    <aside class="blogside">
+  <aside class="blogside">
+    {# The invitation: the help post for most posts, "add what you know" for
+       a post to every rider and for the help post itself (BlogSideCall). A
+       small panel with the drawing of what it asks for, and one plain link. #}
+    <div class="sneed">
+      {% include 'blog/_illustration.html.twig' with {name: help_slug ? 'build' : 'contribute', class: 'sill', lazy: false} only %}
+      <h2>{{ 'blog.side.title'|trans }}</h2>
+      {% if help_slug %}
+        <p>{{ 'blog.side.help_text'|trans }}</p>
+        <p class="sall"><a href="{{ path('blog_post', {slug: help_slug}) }}">{{ 'blog.side.help_link'|trans }}</a></p>
+      {% else %}
+        <p>{{ 'blog.side.contribute_text'|trans }}</p>
+        <p class="sall"><a href="{{ path('contribute') }}">{{ 'blog.side.contribute_link'|trans }}</a></p>
+      {% endif %}
+    </div>
+
+    {# The archive, beside the post. Somebody who has just finished one is the
+       likeliest person on the site to read a second, and the index is a click
+       they mostly will not make. #}
+    {% if others is not empty %}
       <h2>{{ 'blog.archive'|trans }}</h2>
       <ol>
         {% for other in others %}
@@ -68,8 +83,8 @@
         {% endfor %}
       </ol>
       <p class="sall"><a href="{{ path('blog') }}">{{ 'blog.back'|trans }}</a></p>
-    </aside>
-  {% endif %}
+    {% endif %}
+  </aside>
   </div>
 </div></section>
 {% endblock %}

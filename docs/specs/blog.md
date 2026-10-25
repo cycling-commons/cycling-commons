@@ -20,8 +20,8 @@ follows to the same rules.
 
 `App\Blog\Entity\BlogPost`, `Version20260829090000`.
 
-Title, slug, locale, an optional lede, a body, a status, and the date it first
-went live. Nothing else.
+Title, slug, locale, an optional lede, a body, an illustration, the invitation
+beside it (§5), a status, and the date it first went live. Nothing else.
 
 **The body is the same restricted markdown the bug desk uses**
 (`App\Support\BugMarkdown`). Six rules: bold, italic, inline code, fenced code,
@@ -151,6 +151,23 @@ one most people look at.
 
 Below 1000px the two columns stack and the archive follows the post rather than
 preceding it. On a phone somebody came to read this one.
+
+### The invitation above the archive
+
+The right column opens with one invitation, *Cycling Commons needs you*: a
+light panel with a trail-coloured left edge, the drawing of what it asks for
+(`build` or `contribute`), a heading, one sentence and one link, above the
+archive (`blog.side.*`). A post chooses it in the admin (`blog_post.side_call`,
+`App\Blog\BlogSideCall`, `Version20261025040000`):
+
+- **help** (the default) links the help post, `help-build-cycling-commons`
+  (`BlogSideCall::HELP_SLUG`), in the reader's language when it has a version
+  there.
+- **contribute** links the contribute page, for a post written to every rider.
+
+The help post itself and its translations always show **contribute**, so the
+link never points at the page it is on; so does every post while the help post
+is not published. The rule is `BlogController::helpSlug()`.
 
 ## 6. Writing one
 

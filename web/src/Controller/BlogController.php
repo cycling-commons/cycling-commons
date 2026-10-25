@@ -8,6 +8,8 @@ namespace App\Controller;
 
 use App\Blog\BlogLocales;
 use App\Blog\BlogRepository;
+use App\Blog\BlogSideCall;
+use App\Blog\Entity\BlogPost;
 use App\Pagination\Pager;
 use App\Routing\ActiveLocales;
 use App\Routing\LocalePrefix;
@@ -116,7 +118,41 @@ final class BlogController extends AbstractController
             // The archive, beside the post. A reader who finished one is the
             // likeliest person on the site to read a second.
             'others' => $this->posts->othersThan($post, $written),
+            // The invitation beside the post: the help post's address, or null
+            // for "add what you know".
+            'help_slug' => $this->helpSlug($post, $siblings, $written),
         ]);
+    }
+
+    /**
+     * The slug of the help post in the reader's language, or null when the
+     * invitation asks for contributions instead: the post asks for that, it
+     * is the help post itself, or the help post is not published.
+     *
+     * @param list<BlogPost> $siblings
+     */
+    private function helpSlug(BlogPost $post, array $siblings, string $written): ?string
+    {
+        if (BlogSideCall::Contribute === $post->getSideCall()) {
+            return null;
+        }
+        $help = $this->posts->publishedBySlug(BlogSideCall::HELP_SLUG, BlogLocales::FALLBACK);
+        if (null === $help) {
+            return null;
+        }
+        $versions = [$help, ...$this->posts->siblings($help)];
+        foreach ($versions as $version) {
+            if ($version->getId() === $post->getId()) {
+                return null;
+            }
+        }
+        foreach ($versions as $version) {
+            if ($version->getLocale() === $written) {
+                return $version->getSlug();
+            }
+        }
+
+        return $help->getSlug();
     }
 
     /**

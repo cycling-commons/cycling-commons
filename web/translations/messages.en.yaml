@@ -16,6 +16,11 @@ blog:
   also_in: 'Also in:'
   status.draft: 'Draft'
   status.published: 'Published'
+  side.title: 'Cycling Commons needs you'
+  side.contribute_text: 'The map grows with what riders know: a tap, a climb, a place to sleep. Confirm what is still there, and tell me what is missing.'
+  side.contribute_link: 'Add what you know'
+  side.help_text: 'Code, a region to curate, translations, photos or a few hours a month: there is a place for each.'
+  side.help_link: 'How you can help'
 
 nav:
   tagline: 'OPEN ATLAS — EST. 2026'

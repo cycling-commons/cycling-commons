@@ -8,6 +8,7 @@ namespace App\Controller\Admin;
 
 use App\Blog\BlogIllustrations;
 use App\Blog\BlogLocales;
+use App\Blog\BlogSideCall;
 use App\Blog\BlogStatus;
 use App\Blog\Entity\BlogPost;
 use App\Entity\User;
@@ -105,6 +106,12 @@ final class BlogPostCrudController extends AbstractCrudController
             ->setChoices(BlogIllustrations::choices())
             ->setRequired(false)
             ->setHelp('The one image the post opens with, on the post and on the index: a drawing, or an image file from the repository. Optional.');
+
+        yield ChoiceField::new('sideCall')
+            ->setLabel('Beside the post')
+            ->setChoices(BlogSideCall::choices())
+            ->setHelp('The invitation in the right-hand column. Most posts link the help post; a post for every rider asks them to add what they know.')
+            ->hideOnIndex();
 
         yield ChoiceField::new('status')
             ->setChoices(array_combine(
