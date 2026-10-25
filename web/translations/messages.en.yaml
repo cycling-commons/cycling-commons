@@ -680,7 +680,7 @@ region:
   by_kind_h: 'What riders find here'
   kind_verified: 'in the Commons'
   kind_coverage: 'on the map'
-  by_kind_note: "<code>In the Commons</code> means a place we look after that riders or a curator have checked: one a rider added here, or an OpenStreetMap place someone improved. <code>On the map</code> is what OpenStreetMap knows is there, drawn underneath. Both are rideable; the first is ours to keep correct."
+  by_kind_note: "<code>In the Commons</code> means a place we look after that riders or a curator have checked: one a rider added here, or an OpenStreetMap place someone improved. <code>On the map</code> is what OpenStreetMap knows is there.<br>Both are rideable; the first is ours to keep correct."
   empty_h: 'Freshly onboarded'
   empty_p: 'This region is on the map, but its commons is still empty. Ride here? Confirm what exists, add what is missing — or volunteer as its curator.'
   back: '← All regions'

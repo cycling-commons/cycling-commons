@@ -680,7 +680,7 @@ region:
   by_kind_h: 'Was Radfahrende hier finden'
   kind_verified: 'im Commons'
   kind_coverage: 'auf der Karte'
-  by_kind_note: "<code>Im Commons</code> heißt: ein Ort, den wir pflegen und den Fahrende oder ein Kurator geprüft haben, von Fahrenden hier eingetragen oder ein Ort aus OpenStreetMap, den jemand verbessert hat. <code>Auf der Karte</code> ist, was OpenStreetMap kennt, darunter gezeichnet. Beides ist befahrbar; das Erste pflegen wir selbst."
+  by_kind_note: "<code>Im Commons</code> heißt: ein Ort, den wir pflegen und den Fahrende oder ein Kurator geprüft haben, von Fahrenden hier eingetragen oder ein Ort aus OpenStreetMap, den jemand verbessert hat. <code>Auf der Karte</code> ist, was OpenStreetMap kennt.<br>Beides ist befahrbar; das Erste pflegen wir selbst."
   empty_h: 'Frisch aufgenommen'
   empty_p: 'Diese Region ist auf der Karte, aber ihr Gemeingut ist noch leer. Fährst du hier? Bestätige, was es gibt, ergänze, was fehlt — oder werde ihr Kurator.'
   back: '← Alle Regionen'

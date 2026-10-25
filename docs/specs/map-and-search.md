@@ -963,8 +963,9 @@ languages.
   title, figures and buttons on the left, the country outline with the
   region filled on the right at up to 300 px wide (4:3), who looks after the
   region under it (2026-10-25). Narrower, the outline floats small beside
-  the title, the figures clear it in two rows of three, and who looks after
-  the region sits above the buttons. Under the hero, from 760 px (a tablet
+  the title, the kicker keeps only the flag and the country (its tier and
+  cover words would wrap there), the figures clear it in two rows of three,
+  and who looks after the region sits above the buttons. Under the hero, from 760 px (a tablet
   held upright, 2026-10-25): the About text and the History text on the
   left, "What riders find here" on the right as one list, 230 px wide, 300 px
   from 980 px; narrower, one column in that order. The back link and the report link run under both columns.

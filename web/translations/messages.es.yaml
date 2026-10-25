@@ -683,7 +683,7 @@ region:
   by_kind_h: 'Qué encuentran aquí los ciclistas'
   kind_verified: 'en el Commons'
   kind_coverage: 'en el mapa'
-  by_kind_note: "<code>En el Commons</code> significa un lugar que cuidamos y que ciclistas o un curador han comprobado: uno que un ciclista añadió aquí, o un lugar de OpenStreetMap que alguien mejoró. <code>En el mapa</code> es lo que OpenStreetMap conoce, dibujado debajo. Ambos se pueden rodar; el primero lo mantenemos nosotros."
+  by_kind_note: "<code>En el Commons</code> significa un lugar que cuidamos y que ciclistas o un curador han comprobado: uno que un ciclista añadió aquí, o un lugar de OpenStreetMap que alguien mejoró. <code>En el mapa</code> es lo que OpenStreetMap conoce.<br>Ambos se pueden rodar; el primero lo mantenemos nosotros."
   empty_h: 'Recién incorporada'
   empty_p: 'Esta región está en el mapa, pero su commons todavía está vacío. ¿Ruedas por aquí? Confirma lo que existe, añade lo que falta — o preséntate como su curador.'
   back: '← Todas las regiones'

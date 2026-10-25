@@ -155,8 +155,10 @@ a.rsteward-name:hover{background:rgba(239,230,212,.16);border-color:rgba(239,230
   .rhero{padding:1.4rem 0 1.8rem}
   .rhero .co{margin-bottom:.6rem}
   .rstats{grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem .9rem;margin-top:.9rem;padding-top:.8rem}
-  /* The kicker's parts wrap whole beside the drawing, never inside a word. */
-  .rhero .co{flex-wrap:wrap;row-gap:.25rem}
+  /* The kicker keeps the flag and the country: its tier and cover words
+     would wrap beside the drawing, and who looks after the region is said
+     in full under the figures. */
+  .rhero .co > span{display:none}
   .rhero .co > *{white-space:nowrap}
   .rstats .s b{font-size:1.2rem}
   .rstats .s span{font-size:.6rem;letter-spacing:.06em}
