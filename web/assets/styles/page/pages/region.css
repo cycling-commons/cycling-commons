@@ -106,6 +106,8 @@ a.rsteward-name:hover{background:rgba(239,230,212,.16);border-color:rgba(239,230
    between the hero and the first header. */
 .rg-about + .rg-about{margin-top:clamp(1.75rem,3.5vw,2.75rem)}
 .rg-about-text{max-width:46rem;font-size:1.02rem;line-height:1.65;margin:.4rem 0 .5rem}
+.rg-about-text p{margin:0 0 .9rem}
+.rg-about-text p:last-child{margin-bottom:0}
 /* The credit line: its type, underlines and ringed icons are text-credit.css's (.tc-line). */
 .rg-about-attrib{color:#5a5d4d}
 /* A region with no text: the one plain link to write one. */

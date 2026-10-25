@@ -778,7 +778,10 @@ fieldset "Where your text comes from" with two radios and no default,
 2026-10-01: "Required one of the 2. Same for the regions."; `name=derived`,
 values `adapted` / `own`). The language select shows it for a language with
 an article and hides and disables it for one without, so its required radios
-never block the send. A send without an answer where there is an article is
+never block the send. On the region editor a language whose geography text
+was written here starts with the answer it was approved with ticked
+(`data-sources`, 2026-10-25), so an edit is not asked again; switching the
+language ticks that language's answer until the writer ticks one. A send without an answer where there is an article is
 refused (`place_text.error.source_required`, "Say where your text comes
 from: adapted from the Wikipedia article, or your own text.", 422, nothing
 filed, the words and the answer kept in the form). The answer is the
@@ -805,11 +808,13 @@ step with that tick asked. The geography step and a geography text's
 correction form carry the same link editor as the history text
 (`contribute/_linked_text_editor.html.twig`; every id starts with the
 box's, `pt-text-*` and `pt-story-*`, so two editors share the region
-editor). The text stays one paragraph: the box carries `data-one-line`, so
-its count folds line breaks to spaces as the server does, and its "How to
-write it" adds the three link steps of §3.1c
-(`contribute/_link_howto_items.html.twig`) after "One paragraph, at most
-1,200 characters. Link addresses do not count." The region page shows a
+editor). The text keeps its paragraphs as the history text does
+(2026-10-25): each line break starts one, stored joined by a blank line
+(`RegionStory::normaliseText()`), and a paragraph break counts as the two
+characters it is stored as. Its "How to write it" adds the link and italics
+steps of §3.1c (`contribute/_link_howto_items.html.twig`) after "At most
+1,200 characters. Start each paragraph on a new line. Link addresses do not
+count." A town card's text stays one paragraph. The region page shows a
 local lead's links as it shows the history text's (`RegionLead::resolve()`
 gives `parts`, drawn by `pages/_story_parts.html.twig`); a harvested
 Wikipedia lead links nothing. The Regions desk (`moderate_regions_about`)
@@ -1053,6 +1058,11 @@ to the region editor's three steps.
   `RegionStory::insecureLinks()`, 422, nothing filed), on a send, a
   correction and an approval alike; the page never links one. A
   translation carries the citations along with the words.
+- **A local word in italics (2026-10-25).** Words in stars, `*keileem*`,
+  read in italics (`<em>`), in this text and in the geography text alike
+  (`RegionStory::EMPHASIS`). The stars hug the words, so "5 * 3 * 2" stays as
+  written, and they count as nothing towards the limit. The form's "How to
+  write it" shows the markup and how it reads (`place_text.howto_italic`).
 - **Link words say what the source is.** A link whose words are only
   "source", "link", "here", "click here" and the like, in any of the five
   languages (`RegionStory::GENERIC_ANCHORS`), is refused

@@ -1,9 +1,10 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
 {#
-  How a region text links its sources, as list items for a "How to write
-  it" list (§3.1b, §3.1c). The link example wears the box's own tints,
-  then shows how the page reads it, so the markup is learned by sight; its
-  words and address are messages, so it is in the page's own language.
+  How a region text links its sources, and puts a local word in italics, as
+  list items for a "How to write it" list (§3.1b, §3.1c). Each example shows
+  the markup (the link in the box's own tints), then how the page reads it,
+  so the markup is learned by sight; its words are messages, so it is in the
+  page's own language.
 #}
 {% set ex_words = 'place_text.howto_ex_words'|trans %}
 <li>{{ 'place_text.howto_cite'|trans }}
@@ -11,3 +12,5 @@
   {{ 'place_text.howto_reads'|trans }} <span class="pt-howto-link">{{ ex_words }}</span></li>
 <li>{{ 'place_text.howto_words'|trans }}</li>
 <li>{{ 'place_text.howto_sites'|trans }}</li>
+<li>{{ 'place_text.howto_italic'|trans }} <code class="pt-howto-ex">*{{ 'place_text.howto_italic_ex'|trans }}*</code>
+  {{ 'place_text.howto_reads'|trans }} <em>{{ 'place_text.howto_italic_ex'|trans }}</em></li>

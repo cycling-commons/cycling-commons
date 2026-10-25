@@ -52,7 +52,7 @@ final class RegionGeographyLinkTest extends WebTestCase
         self::assertResponseIsSuccessful();
         // The geography box: the link editor, hidden until its script runs.
         self::assertCount(1, $crawler->filter('#pt-step-geography #pt-text-linkbar[hidden] #pt-text-link-open'));
-        self::assertCount(1, $crawler->filter('#pt-step-geography .pt-hl-wrap > textarea#pt-text[data-links][data-one-line]'));
+        self::assertCount(1, $crawler->filter('#pt-step-geography .pt-hl-wrap > textarea#pt-text[data-links]'));
         self::assertCount(1, $crawler->filter('#pt-step-geography #pt-text-links[hidden] ol#pt-text-links-list'));
         self::assertSame('/regions/links/check', $crawler->filter('#pt-text-links')->attr('data-check-url'));
         self::assertSame('text_links_confirmed', $crawler->filter('#pt-text-links-confirm')->attr('name'), 'its own tick');
@@ -61,12 +61,12 @@ final class RegionGeographyLinkTest extends WebTestCase
         self::assertSame('Write the whole text as readers should see it, not only the change. Leave the box empty to keep the current text.', $crawler->filter('p#pt-text-hint')->text());
         // Its guide says how to link, with the example in the box's tints.
         $guide = $crawler->filter('#pt-step-geography aside.pt-howto li');
-        self::assertSame('One paragraph, at most 1,200 characters. Link addresses do not count.', $guide->first()->text());
-        self::assertCount(1, $crawler->filter('#pt-step-geography .pt-howto-ex'));
+        self::assertSame('At most 1,200 characters. Start each paragraph on a new line. Link addresses do not count.', $guide->first()->text());
+        self::assertCount(1, $crawler->filter('#pt-step-geography .pt-howto-ex mark.w'), 'the link example');
+        self::assertSame('keileem', $crawler->filter('#pt-step-geography .pt-howto li em')->text(), 'and how italics read');
         // The history box keeps its own editor and tick.
         self::assertCount(1, $crawler->filter('#pt-step-story #pt-story-linkbar #pt-story-link-open'));
         self::assertSame('links_confirmed', $crawler->filter('#pt-story-links-confirm')->attr('name'));
-        self::assertCount(1, $crawler->filter('textarea#pt-story:not([data-one-line])'));
     }
 
     public function testTheRegionPageShowsTheGeographyLinks(): void
@@ -90,6 +90,24 @@ final class RegionGeographyLinkTest extends WebTestCase
         self::assertSame('https://www.staatsbosbeheer.nl', $cited->attr('href'));
         self::assertSame('_blank', $cited->attr('target'));
         self::assertSame('noopener noreferrer', $cited->attr('rel'));
+    }
+
+    public function testTheGeographyTextKeepsItsParagraphs(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        [$a] = $this->twoRegions();
+        $rider = $this->user('pgeo-rider5@example.com', []);
+        $curator = $this->user('pgeo-cur-a5@example.com', ['ROLE_CURATOR'], $a);
+        $region = $this->proposals()->region('pgeo-a');
+        self::assertNotNull($region);
+
+        $sub = $this->proposals()->proposeRegion($rider, $region, 'en', "Pgeo A lies on a ridge.\r\n\r\n\r\nIts   lanes are brick.", '', null)['submission'];
+        self::assertSame("Pgeo A lies on a ridge.\n\nIts lanes are brick.", $sub->getPayload()['text'], 'a paragraph per line, as the history text stores them');
+        $this->moderation()->decide((int) $sub->getId(), 'approve', $curator, null);
+
+        $crawler = $client->request('GET', '/regions/pgeo-a');
+        self::assertSame(['Pgeo A lies on a ridge.', 'Its lanes are brick.'], $crawler->filter('.rg-about:not(.rg-story) .rg-about-text p')->each(static fn ($p): string => $p->text()));
     }
 
     public function testTheCapCountsWhatAReaderSeesAndALinkMustNameItsSource(): void
@@ -182,8 +200,8 @@ final class RegionGeographyLinkTest extends WebTestCase
         $crawler = $client->request('GET', '/moderate/text/'.$sub->getId());
         self::assertResponseIsSuccessful();
         self::assertCount(1, $crawler->filter('#pt-text-linkbar #pt-text-link-open'));
-        self::assertCount(1, $crawler->filter('textarea#pt-text[data-links][data-one-line]'));
-        self::assertCount(0, $crawler->filter('aside#pt-text-hint li')->reduce(static fn ($li): bool => str_contains($li->text(), 'paragraph on a new line')), 'one paragraph: no paragraph step');
+        self::assertCount(1, $crawler->filter('textarea#pt-text[data-links]'));
+        self::assertCount(1, $crawler->filter('aside#pt-text-hint li')->reduce(static fn ($li): bool => str_contains($li->text(), 'paragraph on a new line')), 'a paragraph per line, as in the history text');
 
         $this->proposals()->approve($this->fresh($sub), $curatorA, $text, null, '', true);
         $after = $this->fresh($sub);

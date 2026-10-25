@@ -151,11 +151,15 @@ final class PlaceTextController extends AbstractController
 
         $texts = [];
         $articles = [];
+        $sources = [];
         $stories = [];
         foreach (array_keys($this->languages->options()) as $l) {
             $texts[$l] = $proposals->currentRegionText($region, $l)['text'];
             // "Where your text comes from" is asked only where there is an article to adapt.
             $articles[$l] = RegionLead::hasSource($region['wiki'], $l);
+            // A language with a text written here starts from the answer it was approved with.
+            $own = RegionLead::override($region['curated'], $l);
+            $sources[$l] = null === $own ? null : ($own['derived'] ? self::SOURCE_ADAPTED : self::SOURCE_OWN);
             $stories[$l] = $proposals->currentStory($region, $l);
         }
         // A language without a history text is translated from another: English first.
@@ -176,6 +180,8 @@ final class PlaceTextController extends AbstractController
             'step' => $step,
             'texts' => $texts,
             'articles' => $articles,
+            'sources' => $sources,
+            'source' => $sources[$lang] ?? null,
             'stories' => $stories,
             'translate_from' => $from,
             'story_originals' => $story['originals'],

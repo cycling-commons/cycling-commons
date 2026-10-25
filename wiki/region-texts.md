@@ -76,12 +76,14 @@ enjoy?
 - History: when land was drained, wars, treaties.
 - Stories about culture. They belong in the other text.
 
-**Form rules.** The geography text is one paragraph. The box counts the
-characters a reader sees and shows the limit; link addresses do not count.
+**Form rules.** Start each paragraph of the geography text on a new line.
+The box counts the characters a reader sees and shows the limit; link
+addresses do not count.
 Cite a source where you use it, with the same link rules as the history,
 nature and culture text below: select the words and press **Link the
 selected words**, link only `https` addresses, and link the words that name
-the source. The form checks each link as you type it. Where a Wikipedia
+the source. The form checks each link as you type it. A local word in
+stars, `*keileem*`, shows in italics, as in the history text below. Where a Wikipedia
 article about the region exists, the form asks where your text comes from:
 adapted from that article, or your own words. A curator decides on the
 Wikipedia credit when they approve.
@@ -149,6 +151,10 @@ The [Defence Line of Amsterdam](https://whc.unesco.org/en/list/759) rings the ci
   that you opened the page yourself and that it is the right page.
 - There is no list of sources under the text. The links in the text are the
   sources.
+- Put a local word in stars to show it in italics: `*keileem*` reads as
+  *keileem*. The stars sit right against the word, so a sum such as
+  5 * 3 stays as it is. Use it for a word of the region's own language, not
+  for emphasis.
 
 ## Example: Drenthe
 

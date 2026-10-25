@@ -153,7 +153,7 @@
            while the box holds a text (place-text.js); the server asks it of
            a text only. #}
         <section class="pt-step pt-section" id="pt-step-geography" role="tabpanel" aria-labelledby="pt-tab-geography" data-step-panel="geography"
-                 data-texts="{{ texts|json_encode }}" data-articles="{{ articles|json_encode }}">
+                 data-texts="{{ texts|json_encode }}" data-articles="{{ articles|json_encode }}" data-sources="{{ sources|json_encode }}">
           <h2 class="pt-step-h"><span class="pt-tab-n">2</span> {{ 'region_edit.step_geography'|trans }}</h2>
           <p class="pt-step-p">{{ 'region_edit.step_geography_p'|trans }}</p>
           {{ _self.based_on('pt-based-on', 'based_on', originals, based_on, langs, lang) }}
@@ -176,10 +176,10 @@
           {# Its own tick: each text's links are confirmed apart. #}
           {{ include('contribute/_linked_text_editor.html.twig', {
             box_id: 'pt-text', box_name: 'text', label: 'region_edit.field_geography', value: text, required: false,
-            max: max, raw_max: raw_max, generic_anchors: generic_anchors, error: error, rows: 8,
+            max: max, raw_max: raw_max, generic_anchors: generic_anchors, error: error,
             link_check_csrf_id: link_check_csrf_id, count_id: 'pt-text-count', hint_id: 'pt-text-hint',
             confirm_name: 'text_links_confirmed', links_asked: error == 'place_text.error.links_unconfirmed' and step == 'geography',
-            paragraphs: false, howto: false, hint: 'region_edit.field_geography_hint',
+            rows: 10, howto: false, hint: 'region_edit.field_geography_hint',
           }) }}
           <aside class="pt-howto pt-guide">
             {{ _self.guide('https://wiki.cyclingcommons.org/region-texts/#the-geography-text') }}

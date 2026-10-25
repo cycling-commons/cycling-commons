@@ -467,6 +467,36 @@ final class PlaceTextProposalTest extends WebTestCase
         self::assertTrue($this->latestText((int) $rider->getId())->getPayload()['derived'] ?? null);
     }
 
+    /**
+     * A language whose text was written here starts from the answer it was
+     * approved with, so an edit is not asked again; one without starts with
+     * no answer.
+     */
+    public function testAnEditStartsFromTheAnswerTheTextWasApprovedWith(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        [$a] = $this->twoRegions();
+        /** @var Connection $db */
+        $db = self::getContainer()->get(Connection::class);
+        $db->executeStatement('UPDATE region SET context_curated = CAST(:c AS jsonb) WHERE id = :id', [
+            'c' => json_encode(['en' => ['text' => 'Ptext A is hilly.', 'derived' => false, 'userId' => null, 'approvedBy' => null, 'submissionId' => null, 'at' => '2026-10-25T00:00:00+00:00']], \JSON_THROW_ON_ERROR),
+            'id' => $a->getId(),
+        ]);
+        $client->loginUser($this->user('ptext-rider42@example.com', []));
+
+        $crawler = $client->request('GET', '/regions/ptext-a/text?lang=en');
+        self::assertNotNull($crawler->filter('#pt-source-own')->attr('checked'), 'the answer it was approved with');
+        self::assertNull($crawler->filter('#pt-source-adapted')->attr('checked'));
+        self::assertSame(['en' => 'own', 'fr' => null, 'nl' => null, 'de' => null, 'es' => null], array_intersect_key(
+            json_decode((string) $crawler->filter('#pt-step-geography')->attr('data-sources'), true, 512, \JSON_THROW_ON_ERROR),
+            ['en' => 1, 'fr' => 1, 'nl' => 1, 'de' => 1, 'es' => 1],
+        ), 'the script ticks each language\'s own answer');
+
+        $crawler = $client->request('GET', '/regions/ptext-a/text?lang=nl');
+        self::assertNull($crawler->filter('#pt-source-own')->attr('checked'), 'no text written here in Dutch: no answer yet');
+    }
+
     public function testTheFormShowsTheCurrentTextBesideAnEmptyBoxWithACounter(): void
     {
         $client = static::createClient();

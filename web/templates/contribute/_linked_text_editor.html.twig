@@ -16,9 +16,8 @@
   raw_max, generic_anchors, error, link_check_csrf_id, count_id, hint_id,
   and, optional: guide_href, the wiki guide's address; rows (16);
   confirm_name, the tick's field (links_confirmed); links_asked, whether a
-  send came back for want of the tick (from `error` when left out);
-  paragraphs, whether the text keeps paragraphs (true; the geography text
-  is one); and howto (true). With howto false the page draws its own guide, and `hint`
+  send came back for want of the tick (from `error` when left out); and
+  howto (true). With howto false the page draws its own guide, and `hint`
   (a message key) is the line under the box that hint_id names.
 #}
 {% set links_asked = links_asked ?? error == 'place_text.error.links_unconfirmed' %}
@@ -38,7 +37,7 @@
        data-for="{{ 'place_text.link_for'|trans({'%words%': '%words%'}) }}"></p>
   </div>
   <div class="pt-hl-wrap">
-    <textarea id="{{ box_id }}" class="pt-box" name="{{ box_name }}"{{ required ? ' required' }} maxlength="{{ raw_max }}" rows="{{ rows ?? 16 }}" data-links{{ not (paragraphs ?? true) ? ' data-one-line' }} data-generic="{{ generic_anchors|json_encode }}" aria-describedby="{{ hint_id }} {{ count_id }}">{{ value }}</textarea>
+    <textarea id="{{ box_id }}" class="pt-box" name="{{ box_name }}"{{ required ? ' required' }} maxlength="{{ raw_max }}" rows="{{ rows ?? 16 }}" data-links data-generic="{{ generic_anchors|json_encode }}" aria-describedby="{{ hint_id }} {{ count_id }}">{{ value }}</textarea>
   </div>
   {# Each link's check (website gate + Safe Browsing) as it appears, from
      `story_link_check`: the same verdicts a send meets. #}
@@ -80,7 +79,7 @@
       <p class="pt-howto-h">{{ 'place_text.howto_h'|trans }}</p>
       <ol>
         <li>{{ 'place_text.howto_whole'|trans({'%max%': max|number_format(0, '.', ',')}) }}</li>
-        {% if paragraphs ?? true %}<li>{{ 'place_text.howto_paragraph'|trans }}</li>{% endif %}
+        <li>{{ 'place_text.howto_paragraph'|trans }}</li>
         {{ include('contribute/_link_howto_items.html.twig') }}
       </ol>
     </aside>

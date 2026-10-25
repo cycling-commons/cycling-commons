@@ -44,15 +44,16 @@
   }
 
   /* A region text counts what a reader sees: a [words](https://address)
-     link counts its words, and paragraphs are one line apart as stored
-     (RegionStory::readableLength). A text of one paragraph (data-one-line,
-     the geography text) is stored with its line breaks as spaces. */
+     link counts its words, a *word* in italics its word without the stars,
+     and paragraphs are one line apart as stored
+     (RegionStory::readableLength). */
   function readable(text) {
     var lines = text.split(/\r\n|\r|\n/).map(function (l) { return l.replace(/\s+/g, ' ').trim(); })
       .filter(function (l) { return l !== ''; });
     var n = 0;
     lines.forEach(function (l) {
-      n += Array.from(l.replace(/\[([^\[\]\n]{1,300})\]\((https:\/\/[^\s()<>"]+)\)/gi, function (m, w) { return w.trim() === '' ? m : w.trim(); })).length;
+      n += Array.from(l.replace(/\[([^\[\]\n]{1,300})\]\((https:\/\/[^\s()<>"]+)\)/gi, function (m, w) { return w.trim() === '' ? m : w.trim(); })
+        .replace(/\*(?=\S)([^*\n]{1,100}?)(?<=\S)\*/g, '$1')).length;
     });
     return n + 2 * Math.max(0, lines.length - 1);
   }
@@ -62,6 +63,9 @@
     if (!box) { return; }
     var texts = json(section, 'data-texts', {}) || {};
     var articles = json(section, 'data-articles', null);
+    /* The answer each language's text written here was approved with, ticked for it. */
+    var sources = json(section, 'data-sources', null);
+    var sourceTouched = false;
     var names = json(section, 'data-langs', {}) || {};
     var story = section.hasAttribute('data-story');
     var source = section.querySelector('.pt-source');
@@ -127,13 +131,18 @@
       var asked = articles[lang] === true && !translating();
       source.hidden = !asked;
       source.disabled = !asked;
+      /* Until the writer ticks one, the language's stored answer is the ticked one. */
+      if (sources && !sourceTouched) {
+        Array.prototype.forEach.call(source.querySelectorAll('input[type="radio"]'), function (r) {
+          r.checked = sources[lang] === r.value;
+        });
+      }
     }
 
     function recount() {
       if (!count) { return; }
       var max = parseInt(count.getAttribute('data-max'), 10) || 0;
-      var n = !box.hasAttribute('data-links') ? Array.from(box.value).length
-        : readable(box.hasAttribute('data-one-line') ? box.value.replace(/\s+/g, ' ') : box.value);
+      var n = box.hasAttribute('data-links') ? readable(box.value) : Array.from(box.value).length;
       count.textContent = (count.getAttribute('data-words') || '%count% / %max%')
         .replace('%count%', String(n)).replace('%max%', String(max));
       count.classList.toggle('is-over', max > 0 && n > max);
@@ -201,6 +210,7 @@
     }
     box.addEventListener('input', recount);
     box.addEventListener('input', sourceRequired);
+    if (source) { source.addEventListener('change', function () { sourceTouched = true; }); }
     syncBasedOn(select.value);
     recount();
     sourceRequired();

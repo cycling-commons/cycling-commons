@@ -979,8 +979,9 @@ final readonly class PlaceTextProposals
     }
 
     /**
-     * A history text keeps its paragraphs and has its own cap; the other
-     * texts are one paragraph. A region's two texts link their sources:
+     * A region's two texts keep their paragraphs, and the history text has
+     * its own cap; a town card's text is one paragraph. A region's two texts
+     * link their sources:
      * their cap counts what a reader sees, a link's words and not its
      * address, under a cap on what is stored, and a link must name what it
      * points to and use https (§3.1b, §3.1c).
@@ -996,7 +997,8 @@ final readonly class PlaceTextProposals
         }
         $story = PlaceText::STORY === $target;
         $linked = PlaceText::links($target);
-        $text = $story ? RegionStory::normaliseText($text) : PlaceText::normalise($text);
+        // A region's two texts keep their paragraphs; a town card's text is one.
+        $text = $linked ? RegionStory::normaliseText($text) : PlaceText::normalise($text);
         if ('' === $text) {
             throw new PlaceTextRefused('place_text.error.empty');
         }

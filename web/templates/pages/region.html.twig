@@ -150,8 +150,10 @@
 <div class="rg-about">
   <div class="kicker">{{ automatic ? 'region.about_auto_h'|trans({'%region%': cc_region_label(region.slug)}) : 'region.about_h'|trans }}</div>
   {% if region.context %}
-    {# A text written here links its sources in place, as the history text does. #}
-    <p class="rg-about-text" data-read-more="{{ 'region.read_more'|trans }}">{{ include('pages/_story_parts.html.twig', {parts: region.context.parts}) }}</p>
+    {# A text written here links its sources in place and keeps its paragraphs, as the history text does. #}
+    <div class="rg-about-text" data-read-more="{{ 'region.read_more'|trans }}">
+      {% for p in region.context.paragraphs %}<p>{{ include('pages/_story_parts.html.twig', {parts: p}) }}</p>{% endfor %}
+    </div>
     {# Three credit lines, because three things can be true and only one of
        them at a time. A curator who ADAPTED the article keeps the CC BY-SA
        citation - the licence follows a derivative - but the line must say the

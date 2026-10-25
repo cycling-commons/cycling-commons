@@ -127,7 +127,7 @@
           {{ include('contribute/_linked_text_editor.html.twig', {
             box_id: 'pt-text', box_name: 'text', label: 'place_text.field_text', value: text, required: true,
             max: max, raw_max: raw_max, generic_anchors: generic_anchors, error: error,
-            paragraphs: target == 'story', rows: target == 'story' ? 16 : 8,
+            rows: target == 'story' ? 16 : 10,
             link_check_csrf_id: link_check_csrf_id, count_id: 'pt-text-count', hint_id: 'pt-text-hint',
           }) }}
         {% else %}

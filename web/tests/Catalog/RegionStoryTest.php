@@ -22,18 +22,18 @@ final class RegionStoryTest extends TestCase
 
         self::assertSame("First one.\n\nSecond one.\n\nThird one.", $text);
         self::assertSame([
-            [['text' => 'First one.', 'href' => null]],
-            [['text' => 'Second one.', 'href' => null]],
-            [['text' => 'Third one.', 'href' => null]],
+            [['text' => 'First one.', 'href' => null, 'em' => false]],
+            [['text' => 'Second one.', 'href' => null, 'em' => false]],
+            [['text' => 'Third one.', 'href' => null, 'em' => false]],
         ], RegionStory::paragraphs($text));
     }
 
     public function testTheTextLinksTheWordsThatDescribeTheSource(): void
     {
         self::assertSame([[
-            ['text' => 'The ', 'href' => null],
-            ['text' => 'Stelling van Amsterdam', 'href' => 'https://www.stelling-amsterdam.nl'],
-            ['text' => ' is a ring; [no address](ftp://x.test) and https://bare.test stay text.', 'href' => null],
+            ['text' => 'The ', 'href' => null, 'em' => false],
+            ['text' => 'Stelling van Amsterdam', 'href' => 'https://www.stelling-amsterdam.nl', 'em' => false],
+            ['text' => ' is a ring; [no address](ftp://x.test) and https://bare.test stay text.', 'href' => null, 'em' => false],
         ]], RegionStory::paragraphs('The [Stelling van Amsterdam](https://www.stelling-amsterdam.nl) is a ring; [no address](ftp://x.test) and https://bare.test stay text.'));
     }
 
@@ -42,12 +42,24 @@ final class RegionStoryTest extends TestCase
         $text = 'The [Hunebedcentrum](http://www.hunebedcentrum.nl/) and the [Geopark](https://www.dehondsrug.nl/), and [again](http://www.hunebedcentrum.nl/).';
 
         self::assertSame([[
-            ['text' => 'The [Hunebedcentrum](http://www.hunebedcentrum.nl/) and the ', 'href' => null],
-            ['text' => 'Geopark', 'href' => 'https://www.dehondsrug.nl/'],
-            ['text' => ', and [again](http://www.hunebedcentrum.nl/).', 'href' => null],
+            ['text' => 'The [Hunebedcentrum](http://www.hunebedcentrum.nl/) and the ', 'href' => null, 'em' => false],
+            ['text' => 'Geopark', 'href' => 'https://www.dehondsrug.nl/', 'em' => false],
+            ['text' => ', and [again](http://www.hunebedcentrum.nl/).', 'href' => null, 'em' => false],
         ]], RegionStory::paragraphs($text), 'an http address stays as written');
         self::assertSame(['http://www.hunebedcentrum.nl/'], RegionStory::insecureLinks($text), 'named once, for the writer to change');
         self::assertSame([], RegionStory::insecureLinks('A bare http://x.test address is no link.'));
+    }
+
+    public function testWordsInStarsReadInItalics(): void
+    {
+        self::assertSame([[
+            ['text' => 'Glacial till (', 'href' => null, 'em' => false],
+            ['text' => 'keileem', 'href' => null, 'em' => true],
+            ['text' => ') lies under ', 'href' => null, 'em' => false],
+            ['text' => 'brick lanes', 'href' => null, 'em' => true],
+            ['text' => '; 5 * 3 * 2 and a lone * stay as written.', 'href' => null, 'em' => false],
+        ]], RegionStory::paragraphs('Glacial till (*keileem*) lies under *brick lanes*; 5 * 3 * 2 and a lone * stay as written.'));
+        self::assertSame(\mb_strlen('A keileem ridge.'), RegionStory::readableLength('A *keileem* ridge.'), 'the stars do not count');
     }
 
     public function testTheReadableLengthCountsALinksWordsNotItsAddress(): void
@@ -74,7 +86,7 @@ final class RegionStoryTest extends TestCase
         $en = RegionStory::resolve($story, 'nl');
         self::assertNotNull($en);
         self::assertSame('en', $en['lang']);
-        self::assertSame([[['text' => 'English.', 'href' => null]], [['text' => 'Two.', 'href' => null]]], $en['paragraphs']);
+        self::assertSame([[['text' => 'English.', 'href' => null, 'em' => false]], [['text' => 'Two.', 'href' => null, 'em' => false]]], $en['paragraphs']);
         self::assertSame('de', RegionStory::resolve(['de' => $story['de']], 'fr')['lang'] ?? null, 'any language when there is no English');
         self::assertNull(RegionStory::resolve(['nl' => ['text' => '  ']], 'nl'), 'a blank entry is no text');
         self::assertNull(RegionStory::resolve(null, 'en'));

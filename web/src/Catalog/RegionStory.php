@@ -18,7 +18,9 @@ namespace App\Catalog;
  * The text cites its sources in place: `[the words that describe
  * it](https://address)` links those words. The linked words are the anchor,
  * so they must say what the source is ({@see self::genericAnchor()}). There
- * is no separate list of sources.
+ * is no separate list of sources. A word or a few in stars, `*keileem*`,
+ * read in italics: a local term in the text's own language
+ * ({@see self::EMPHASIS}). The geography text reads both the same way.
  *
  * @api
  */
@@ -33,6 +35,13 @@ final class RegionStory
 
     /** The cap on what is stored, addresses included, so a text of many links stays bounded. */
     public const int RAW_MAX = 6000;
+
+    /**
+     * Words in italics: `*keileem*`. The stars hug the words (no space just
+     * inside them), so a sum such as "5 * 3 * 2" stays as it is, and the
+     * words hold no star or line break.
+     */
+    public const string EMPHASIS = '~\*(?=\S)([^*\n]{1,100}?)(?<=\S)\*~u';
 
     /**
      * Link words that say nothing about the source, in the five site
@@ -60,7 +69,7 @@ final class RegionStory
     /**
      * The stored text as paragraphs, each split into plain text and links.
      *
-     * @return list<list<array{text: string, href: ?string}>>
+     * @return list<list<array{text: string, href: ?string, em: bool}>>
      */
     public static function paragraphs(string $text): array
     {
@@ -155,7 +164,7 @@ final class RegionStory
      * `basedOn` is the language it translates, if any, and `outdated` says
      * that original changed after the translation (§3.1e).
      *
-     * @return array{lang: string, paragraphs: list<list<array{text: string, href: ?string}>>, by: ?int, approvedBy: ?int, basedOn: ?string, outdated: bool}|null
+     * @return array{lang: string, paragraphs: list<list<array{text: string, href: ?string, em: bool}>>, by: ?int, approvedBy: ?int, basedOn: ?string, outdated: bool}|null
      */
     public static function resolve(?array $story, string $locale): ?array
     {
@@ -257,9 +266,10 @@ final class RegionStory
     /**
      * One paragraph as text and links: `[words](https://address)` links the
      * words. Only https addresses link, and only words link: a bare
-     * address, or a link with any other address, stays as written.
+     * address, or a link with any other address, stays as written. Words in
+     * stars outside a link are a part of their own in italics (`em`).
      *
-     * @return list<array{text: string, href: ?string}>
+     * @return list<array{text: string, href: ?string, em: bool}>
      */
     private static function parts(string $line): array
     {
@@ -272,7 +282,7 @@ final class RegionStory
             $at = $offset + \strlen($whole);
             $words = trim($m[1][0]);
             if ('' !== $words && self::isUrl($m[2][0])) {
-                $parts[] = ['text' => $words, 'href' => $m[2][0]];
+                $parts[] = ['text' => $words, 'href' => $m[2][0], 'em' => false];
             } else {
                 self::addText($parts, $whole);
             }
@@ -289,18 +299,31 @@ final class RegionStory
         return false !== filter_var($url, \FILTER_VALIDATE_URL) && \is_string($host) && '' !== $host;
     }
 
-    /** @param list<array{text: string, href: ?string}> $parts */
+    /** @param list<array{text: string, href: ?string, em: bool}> $parts */
     private static function addText(array &$parts, string $text): void
+    {
+        $at = 0;
+        preg_match_all(self::EMPHASIS, $text, $matches, \PREG_SET_ORDER | \PREG_OFFSET_CAPTURE);
+        foreach ($matches as $m) {
+            self::addPlain($parts, substr($text, $at, $m[0][1] - $at));
+            $parts[] = ['text' => $m[1][0], 'href' => null, 'em' => true];
+            $at = $m[0][1] + \strlen($m[0][0]);
+        }
+        self::addPlain($parts, substr($text, $at));
+    }
+
+    /** @param list<array{text: string, href: ?string, em: bool}> $parts */
+    private static function addPlain(array &$parts, string $text): void
     {
         if ('' === $text) {
             return;
         }
         $last = array_key_last($parts);
-        if (null !== $last && null === $parts[$last]['href']) {
+        if (null !== $last && null === $parts[$last]['href'] && !$parts[$last]['em']) {
             $parts[$last]['text'] .= $text;
 
             return;
         }
-        $parts[] = ['text' => $text, 'href' => null];
+        $parts[] = ['text' => $text, 'href' => null, 'em' => false];
     }
 }
