@@ -61,6 +61,24 @@ final class ReleaseNotes
      */
     public const array RELEASES = [
         [
+            'version' => '0.9.12-beta',
+            'date' => '2026-10-25',
+            'sections' => [
+                'public' => [
+                    'changelog.v0912_region_map',
+                    'changelog.v0912_region_page',
+                    'changelog.v0912_region_texts',
+                    'changelog.v0912_fixes',
+                ],
+            ],
+            'kinds' => [
+                'changelog.v0912_region_map' => 'new',
+                'changelog.v0912_region_page' => 'improved',
+                'changelog.v0912_region_texts' => 'improved',
+                'changelog.v0912_fixes' => 'fixed',
+            ],
+        ],
+        [
             'version' => '0.9.11-beta',
             'date' => '2026-10-24',
             'sections' => [
