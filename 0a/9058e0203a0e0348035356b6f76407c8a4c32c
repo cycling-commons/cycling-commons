@@ -1,0 +1,68 @@
+web/tests/js/coverage-notice-wiring.test.mjs
+  s_086f006d5a9290::t_3896d0fdda1d59 33-35,37,40-60,80-81
+web/translations/messages.de.yaml
+  s_086f006d5a9290::t_2104c9ea37f14c 1207-1208
+web/src/Controller/MapController.php
+  s_086f006d5a9290::t_59736cdd907867 867-868
+web/translations/messages.es.yaml
+  s_086f006d5a9290::t_2104c9ea37f14c 1801-1802
+web/src/EventSubscriber/PublicPageCacheSubscriber.php
+  s_086f006d5a9290::t_a77df955aab802 96
+web/translations/messages.nl.yaml
+  s_086f006d5a9290::t_2104c9ea37f14c 1204-1205
+web/assets/map/coverage-notice.js
+  s_086f006d5a9290::t_3d976897714aed 230
+  s_086f006d5a9290::t_f47bcd04189e50 5-7,12-14,29,33-43,49,54,57-63,67,73-81,90-102,209-229
+web/tests/js/coverage-notice.test.mjs
+  s_086f006d5a9290::t_91e359bf60ac39 11,218-280
+  s_086f006d5a9290::t_9e09875fc6cefd 19-20,24,34,42,47,54,96,104,112,121
+docs/specs/map-and-search.md
+  s_086f006d5a9290::t_2104c9ea37f14c 1705-1706
+  s_086f006d5a9290::t_87b8fc5bebeebe 1713-1715
+  s_086f006d5a9290::t_6d873cdf5fa06e 1582,1607-1613,1623-1630,1639-1643,1671-1693,1712
+web/tests/Community/CountryInterestTest.php
+  s_086f006d5a9290::t_ad4ad44133a0e6 338-358
+  s_086f006d5a9290::t_18d42ea94f97bc 337
+web/src/Controller/JoinCountryController.php
+  s_086f006d5a9290::t_9d51a3f6e8caa1 199-220,238,242-244
+web/tests/js/scope.test.cjs
+  s_086f006d5a9290::t_55c19fd0e8a0cc 1388-1414
+web/translations/messages.fr.yaml
+  s_086f006d5a9290::t_2104c9ea37f14c 1202-1203
+web/assets/map/scope.js
+  s_086f006d5a9290::t_ae255187ef6ed8 692-706
+web/templates/pages/join_country.html.twig
+  s_086f006d5a9290::t_9d51a3f6e8caa1 114-116
+web/tests/Controller/UncoveredAreasTest.php
+  s_086f006d5a9290::t_0b04258999876b 1-83
+web/assets/map/scope-ui.js
+  s_086f006d5a9290::t_6a01bc54e4893f 21,343-344,347-349,351-366,370-373,375-383,391,393-394,401-404,414-415,418-424,429-432,434-436,444-457,464-465,467,469-476,479,481-482,489-510,636
+  s_086f006d5a9290::t_540ea6eb19d311 396-398
+  s_086f006d5a9290::t_2104c9ea37f14c 416-417
+  s_086f006d5a9290::t_b85c427df4ceac 395
+web/translations/messages.en.yaml
+  s_086f006d5a9290::t_2104c9ea37f14c 1795-1796
+web/src/Controller/PageController.php
+  s_086f006d5a9290::t_17a75f10f53ef7 246-322
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0a9058e0203a0e0348035356b6f76407c8a4c32c",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_086f006d5a9290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97afd631-7f48-4430-aac8-2c62f5b7a119",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
