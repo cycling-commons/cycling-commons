@@ -19,9 +19,9 @@
       ? 'join.pending_h'|trans
       : (wanted
         ? 'join.headline_curate_region'|trans({'%region%': wanted.name})
-        : 'join.headline_curate'|trans({'%country%': country.name})) }}</h1>
+        : 'join.headline_curate'|trans({'%country%': country_in_text(country.iso2)})) }}</h1>
   {% else %}
-    <h1 class="disp">{{ 'join.headline_request'|trans({'%country%': country.name}) }}</h1>
+    <h1 class="disp">{{ 'join.headline_request'|trans({'%country%': country_in_text(country.iso2)}) }}</h1>
   {% endif %}
 </div></div>
 
@@ -59,7 +59,7 @@
        that had already said it. #}
     {% set asked = regions|filter(r => r.id == pending_app.requested_region_id)|first %}
     <p class="hint" style="margin-top:0">
-      {{ 'join.message.received'|trans({'%scope%': asked ? asked.name : country.name}) }}
+      {{ 'join.message.received'|trans({'%scope%': asked ? asked.name : country_in_text(country.iso2)}) }}
     </p>
   {% else %}
     {# An onboarded country still has parts nobody covers, and until now the
@@ -67,7 +67,7 @@
        asked them to run the place (owner 2026-09-13, "USA we have states at
        the region level"). It is first because it asks least. #}
     <section class="askregion">
-      <h2>{{ 'join.region_ask_h'|trans({'%country%': country.name}) }}</h2>
+      <h2>{{ 'join.region_ask_h'|trans({'%country%': country_in_text(country.iso2)}) }}</h2>
       <p class="hint">{{ 'join.region_ask_p'|trans }}</p>
       <form method="post" data-form="country-interest">
         <input type="hidden" name="form" value="country-interest">

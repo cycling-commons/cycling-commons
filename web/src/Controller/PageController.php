@@ -75,13 +75,9 @@ final class PageController extends AbstractController
      * @see docs/specs/roadmap-and-changelog.md §6b
      */
     #[Route(LocalizedPath::CHANGELOG, name: 'changelog')]
-    public function changelog(Request $request, OnboardedCountries $onboarded, CyclingHistorySwitch $cyclingHistory): Response
+    public function changelog(OnboardedCountries $onboarded, CyclingHistorySwitch $cyclingHistory): Response
     {
-        $locale = $request->getLocale();
-        $upcoming = array_map(
-            static fn (string $cc): string => Countries::exists($cc) ? Countries::getName($cc, $locale) : $cc,
-            $onboarded->liveAfter(ReleaseNotes::latestRelease()['date']),
-        );
+        $upcoming = $onboarded->liveAfter(ReleaseNotes::latestRelease()['date']);
 
         return $this->render('pages/changelog.html.twig', [
             'page_title' => 'meta.changelog_title',

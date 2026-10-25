@@ -36,8 +36,8 @@
           <span class="crel-d">{% trans %}changelog.upcoming_d{% endtrans %}</span>
         </div>
         <h3 class="csec">{{ 'changelog.section_public'|trans }}</h3>
-        {% for name in upcoming_countries %}
-          <div class="cline"><p>{{ 'changelog.country_live'|trans({'%country%': name}) }}</p></div>
+        {% for cc in upcoming_countries %}
+          <div class="cline"><p>{{ 'changelog.country_live'|trans({'%country%': country_in_text(cc, true)}) }}</p></div>
         {% endfor %}
       </div>
     {% endif %}

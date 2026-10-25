@@ -50,7 +50,7 @@
       {% if c.notifiable > 0 %}
         <form method="post" class="creq-notify">
           <input type="hidden" name="_token" value="{{ csrf_token(csrf_token_id) }}">
-          <button type="submit" name="notify" value="{{ c.code }}" class="btn btn-primary">{{ 'admin.country_requests.notify_btn'|trans({'%n%': c.notifiable, '%country%': c.name}) }}</button>
+          <button type="submit" name="notify" value="{{ c.code }}" class="btn btn-primary">{{ 'admin.country_requests.notify_btn'|trans({'%n%': c.notifiable, '%country%': country_in_text(c.code)}) }}</button>
         </form>
       {% endif %}
       {% if c.areas is not empty %}

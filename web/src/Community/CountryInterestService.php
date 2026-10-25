@@ -11,11 +11,11 @@ use App\Entity\User;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
 use App\Support\SupportMailer;
+use App\World\CountryInText;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\Intl\Countries;
 
 /**
  * Country-interest upsert. Counts stay owner-only for v1.
@@ -47,6 +47,7 @@ final class CountryInterestService
         private readonly PublicNoteFilter $notes,
         private readonly SupportMailer $mailer,
         private readonly MessageService $messages,
+        private readonly CountryInText $countryNames,
         #[Autowire('%kernel.default_locale%')]
         private readonly string $defaultLocale,
     ) {
@@ -286,7 +287,7 @@ final class CountryInterestService
                     $rider['id'],
                     $cc,
                     'join.message.country_live',
-                    ['%country%' => Countries::exists($cc) ? Countries::getName($cc, $rider['locale']) : $cc],
+                    ['%country%' => $this->countryNames->name($cc, $rider['locale'], true)],
                 );
             }
 

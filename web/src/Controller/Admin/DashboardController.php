@@ -35,6 +35,7 @@ use App\Settings\SystemSettings;
 use App\Settings\SystemSettingsWriter;
 use App\Weather\Forecast;
 use App\Weather\ForecastUsage;
+use App\World\CountryInText;
 use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
@@ -405,7 +406,7 @@ final class DashboardController extends AbstractDashboardController
      * @see docs/specs/moderation-and-contribution.md §11.1
      */
     #[AdminRoute('/country-requests', 'country_requests', options: ['methods' => ['GET', 'POST']])]
-    public function countryRequests(Request $request, CountryInterestService $interests, TranslatorInterface $translator): Response
+    public function countryRequests(Request $request, CountryInterestService $interests, TranslatorInterface $translator, CountryInText $countryNames): Response
     {
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid(self::COUNTRY_REQUESTS_CSRF_TOKEN_ID, (string) $request->request->get('_token'))) {
@@ -418,7 +419,7 @@ final class DashboardController extends AbstractDashboardController
             $told = $interests->notifyLive($cc);
             $this->addFlash('success', $translator->trans('admin.country_requests.notify_done', [
                 '%n%' => $told,
-                '%country%' => Countries::exists($cc) ? Countries::getName($cc) : $cc,
+                '%country%' => $countryNames->name($cc),
             ]));
 
             return $this->redirectToRoute('admin_country_requests');

@@ -6107,3 +6107,24 @@ text_history:
   by_curators_town: "By our curators"
   revoked: "An approval was taken back: the text from before it is back."
   removed: "The text written here was taken away: the page shows the Wikipedia text again."
+
+# A country's name inside a sentence, where it takes an article (App\World\CountryInText).
+country_in_text:
+  AE: 'the United Arab Emirates'
+  BS: 'the Bahamas'
+  CF: 'the Central African Republic'
+  CK: 'the Cook Islands'
+  DO: 'the Dominican Republic'
+  FK: 'the Falkland Islands'
+  FO: 'the Faroe Islands'
+  GB: 'the UK'
+  GM: 'the Gambia'
+  KM: 'the Comoros'
+  KY: 'the Cayman Islands'
+  MH: 'the Marshall Islands'
+  MV: 'the Maldives'
+  NL: 'the Netherlands'
+  PH: 'the Philippines'
+  SB: 'the Solomon Islands'
+  SC: 'the Seychelles'
+  US: 'the USA'

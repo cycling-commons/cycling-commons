@@ -6089,3 +6089,24 @@ text_history:
   by_curators_town: "Door onze regiobeheerders"
   revoked: "Een goedkeuring is ingetrokken: de tekst van daarvoor staat er weer."
   removed: "De tekst die hier geschreven was, is weggehaald: de pagina toont weer de Wikipedia-tekst."
+
+# A country's name inside a sentence, where it takes an article (App\World\CountryInText).
+country_in_text:
+  AE: 'de Verenigde Arabische Emiraten'
+  BS: 'de Bahama''s'
+  CF: 'de Centraal-Afrikaanse Republiek'
+  CK: 'de Cookeilanden'
+  DO: 'de Dominicaanse Republiek'
+  FK: 'de Falklandeilanden'
+  FO: 'de Faeröer'
+  GB: 'het VK'
+  GM: 'Gambia'
+  KM: 'de Comoren'
+  KY: 'de Kaaimaneilanden'
+  MH: 'de Marshalleilanden'
+  MV: 'de Malediven'
+  NL: 'Nederland'
+  PH: 'de Filipijnen'
+  SB: 'de Salomonseilanden'
+  SC: 'de Seychellen'
+  US: 'de VS'

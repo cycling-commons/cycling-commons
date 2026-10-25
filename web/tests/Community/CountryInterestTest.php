@@ -332,6 +332,8 @@ final class CountryInterestTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSame('Ohio', $crawler->filter('input[name="region_name"]')->attr('value'),
             'a rider who typed it once is not asked to type it again');
+        self::assertStringContainsString('Is your part of the USA missing?', $crawler->filter('h2')->text(),
+            'a country name inside a sentence takes its article');
     }
 
     /**

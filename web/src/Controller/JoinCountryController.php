@@ -14,6 +14,7 @@ use App\Community\InvalidNoteException;
 use App\Entity\User;
 use App\Routing\LocalePrefix;
 use App\Routing\LocalizedPath;
+use App\World\CountryInText;
 use App\World\CuratorScopes;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -53,6 +54,7 @@ final class JoinCountryController extends AbstractController
         RateLimiterFactoryInterface $passwordReauthLimiter,
         UserPasswordHasherInterface $hasher,
         TranslatorInterface $translator,
+        CountryInText $countryNames,
     ): Response {
         /** @var User $user */
         $user = $this->getUser();
@@ -178,7 +180,7 @@ final class JoinCountryController extends AbstractController
                     default => null,
                 };
                 $error = null !== $key
-                    ? $translator->trans($key, ['%country%' => $code])
+                    ? $translator->trans($key, ['%country%' => $countryNames->name($code, null, true)])
                     : $e->getMessage();
             } catch (\DomainException $e) {
                 $error = $e->getMessage();

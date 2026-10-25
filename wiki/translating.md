@@ -70,6 +70,9 @@ blog:
 - **Keep every tag**, such as `<b>` and `</b>`, around the words they mark.
 - **Write an apostrophe twice** inside single quotes: `l''instant` shows as
   *l'instant*.
+- **A country inside a sentence** has its own entry under
+  `country_in_text`, for the countries that take an article: *the USA*,
+  *de VS*. The site puts a capital first when the name opens a sentence.
 - **Every file has the same names as the English one.**
   `web/tools/check-translations.sh` checks it on every pull request.
 

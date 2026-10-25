@@ -251,9 +251,9 @@
         {% elseif curating.state == 'region_none' %}
           {{ 'account.curating_region_none'|trans({'%region%': region}) }}
         {% elseif curating.state == 'country_some' %}
-          {{ 'account.curating_country_some'|trans({'%country%': curating.country}) }}
+          {{ 'account.curating_country_some'|trans({'%country%': country_in_text(curating.country, true)}) }}
         {% elseif curating.state == 'country_none' %}
-          {{ 'account.curating_country_none'|trans({'%country%': curating.country}) }}
+          {{ 'account.curating_country_none'|trans({'%country%': country_in_text(curating.country, true)}) }}
         {% else %}
           {{ 'account.curating_no_area'|trans({'%url%': path('settings')})|rich }}
         {% endif %}

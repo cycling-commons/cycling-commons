@@ -407,7 +407,7 @@ final class ProfileController extends AbstractController
             return [
                 'state' => $covered ? 'country_some' : 'country_none',
                 'slug' => '',
-                'country' => $country->getName(),
+                'country' => $country->getIso2(),
             ];
         }
 

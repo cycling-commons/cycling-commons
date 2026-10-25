@@ -43,6 +43,14 @@ for an **existing** key in those locales only. They may not:
 - change English (a `ROLE_USER` cannot; a curator proposes it, §4.2)
 - submit a locale the app does not enable
 
+**A country's name inside a sentence** is a catalogue string too:
+`country_in_text.<code>` holds the form that reads inside a sentence for the
+countries that take an article ("the USA", "de VS"; `App\World\CountryInText`,
+the Twig function `country_in_text(code, start)`), and every other country
+reads its plain Intl name. French, German and Spanish still hold the plain
+name, as their article changes with the sentence (aux, in den) and waits for
+a native review.
+
 New English keys still land in git first. The parity gate
 (`web/tools/check-translations.sh`) continues to require every locale YAML
 file to have the same key set as English. Overlays (§3) are extra *values* for
