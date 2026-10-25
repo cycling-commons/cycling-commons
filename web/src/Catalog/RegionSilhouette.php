@@ -13,6 +13,10 @@ use Doctrine\DBAL\Connection;
  * (as detailed as this drawing shows, RegionDerivations::silhouetteSql()), else
  * `region.outline` for a row not derived since; not a slippy map.
  *
+ * A region's drawing also carries the country's other regions, each its own
+ * path with its slug, so the page can light one under the pointer and link
+ * it to its own page (map-and-search.md §4.6).
+ *
  * @api
  */
 final class RegionSilhouette
@@ -33,18 +37,41 @@ final class RegionSilhouette
     }
 
     /**
-     * @return array{country: string, region: string, width: float, height: float}|null
-     *                                                                                  null when neither shape is usable, so the template can omit the figure
-     *                                                                                  entirely rather than render an empty box
+     * `others` are the country's other regions at the level its pages are
+     * (OperationalRegions), by slug. Null when neither shape is usable, so
+     * the template can omit the figure entirely rather than render an empty
+     * box.
+     *
+     * @return array{country: string, region: string, others: list<array{slug: string, d: string}>, width: float, height: float}|null
      */
     public function forRegion(int $regionId, string $countryCode): ?array
     {
-        $regionRings = $this->rings('SELECT COALESCE(silhouette, outline) FROM region WHERE id = :id', ['id' => $regionId]);
-        // admin_level=2 for the same country — not LIMIT 1 on country_code (that would pick a province).
-        $countryRings = $this->rings(
-            'SELECT COALESCE(silhouette, outline) FROM region WHERE country_code = :cc AND admin_level = 2 LIMIT 1',
-            ['cc' => $countryCode],
+        // One query for the three shapes: this region, the country's outline
+        // (admin_level=2 for the same country, not any row of it, which could
+        // be a province) and the country's other regions.
+        $rows = $this->db->fetchAllAssociative(
+            'SELECT r.id, r.slug, r.admin_level, COALESCE(r.silhouette, r.outline) AS shape,
+                    (r.geom IS NOT NULL AND '.OperationalRegions::predicate('r').') AS sibling
+               FROM region r
+              WHERE r.id = :id
+                 OR (r.country_code = :cc AND (r.admin_level = 2 OR (r.geom IS NOT NULL AND '.OperationalRegions::predicate('r').')))
+              ORDER BY r.slug',
+            ['id' => $regionId, 'cc' => $countryCode],
         );
+        $regionRings = [];
+        $countryRings = null;
+        $siblings = [];
+        foreach ($rows as $row) {
+            if ((int) $row['id'] === $regionId) {
+                $regionRings = self::decode($row['shape']);
+            } elseif ($row['sibling']) {
+                $siblings[] = $row;
+            }
+            if (2 === (int) $row['admin_level'] && null === $countryRings) {
+                $countryRings = self::decode($row['shape']);
+            }
+        }
+        $countryRings ??= [];
 
         if ([] === $regionRings && [] === $countryRings) {
             return null;
@@ -57,9 +84,18 @@ final class RegionSilhouette
             return null;
         }
 
+        $others = [];
+        foreach ($siblings as $row) {
+            $d = self::path(self::decode($row['shape']), $box);
+            if ('' !== $d) {
+                $others[] = ['slug' => (string) $row['slug'], 'd' => $d];
+            }
+        }
+
         return [
             'country' => self::path($countryRings, $box),
             'region' => self::path($regionRings, $box),
+            'others' => $others,
             'width' => self::W,
             'height' => self::H,
         ];
@@ -92,7 +128,14 @@ final class RegionSilhouette
      */
     private function rings(string $sql, array $params): array
     {
-        $raw = $this->db->fetchOne($sql, $params);
+        return self::decode($this->db->fetchOne($sql, $params));
+    }
+
+    /**
+     * @return list<list<float>> flat [x,y,x,y,…] rings, from a stored shape
+     */
+    private static function decode(mixed $raw): array
+    {
         if (!\is_string($raw)) {
             return [];
         }

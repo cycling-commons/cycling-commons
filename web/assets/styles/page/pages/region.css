@@ -1,8 +1,11 @@
 /* SPDX-License-Identifier: AGPL-3.0-only */
 .rhero .co{display:flex;align-items:center;gap:.5rem;color:var(--glacier);margin-bottom:1rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase}
-.rstats{display:flex;gap:2.4rem;flex-wrap:wrap;margin-top:1.6rem;padding-top:1.4rem;border-top:1px solid rgba(239,230,212,.18)}
-.rstats .s b{font-family:var(--serif);font-size:1.8rem;display:block}
+/* Two rows of three: the land's figures, then the counts. A grid, so each
+   column lines up under the one above it. */
+.rstats{display:grid;grid-template-columns:repeat(3,max-content);gap:1rem 2.4rem;margin-top:1.2rem;padding-top:1.1rem;border-top:1px solid rgba(239,230,212,.18)}
+.rstats .s b{font-family:var(--serif);font-size:1.6rem;line-height:1.15;display:block}
 .rstats .s span{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.6)}
+.rctas{display:flex;gap:.8rem;margin-top:1.4rem;flex-wrap:wrap}
 /* Label on its own line, figures under it. The two-number version outgrew a
    single row: "1 checked · 1483 on the map" beside a label in a 220px column
    wrapped "Water &/food" and ran the count into the next column. Stacking
@@ -34,19 +37,34 @@
 /* A wide screen gives it the hero's right column, beside the title, the
    figures and the buttons, at up to 300 px; a phone floats it small beside
    the title, and the figures clear it. The box is the silhouette's 4:3. */
-.rshape{float:right;margin:0 0 .6rem 1rem}
+/* The right column holds the drawing and, on a wide screen, who looks after
+   the region under it; a phone floats the drawing beside the title and keeps
+   who looks after it above the buttons (.rsteward--main). */
+.rhero-side{float:right;margin:0 0 .6rem 1rem}
+.rshape{margin:0}
 .rshape svg{display:block;width:clamp(104px,26vw,132px);aspect-ratio:4/3;height:auto;overflow:visible}
 .rhero-main .rstats{clear:both}
+.rsteward.rsteward--side{display:none}
 @media(min-width:760px){
   .rhero-cols{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2.5rem;align-items:start}
-  .rshape{float:none;margin:0;grid-column:2;grid-row:1}
-  .rshape svg{width:clamp(200px,26vw,300px)}
+  .rhero-side{float:none;margin:0;grid-column:2;grid-row:1;width:clamp(200px,26vw,300px)}
+  .rshape svg{width:100%}
   .rhero-main{grid-column:1;grid-row:1;min-width:0}
+  .rsteward.rsteward--main{display:none}
+  .rsteward.rsteward--side{display:flex;margin-top:1.2rem;font-size:.84rem}
 }
 .rshape .co-out{fill:rgba(239,230,212,.10);stroke:rgba(239,230,212,.38);stroke-width:.8;
   stroke-linejoin:round;vector-effect:non-scaling-stroke}
 .rshape .rg-in{fill:var(--clay);fill-opacity:.9;stroke:var(--paper);stroke-width:.8;
   stroke-linejoin:round;vector-effect:non-scaling-stroke}
+/* The country's other regions: the land's fill, each border at three
+   quarters of the outline's edge, lit under the pointer, a link to their
+   own page. The outline then keeps its edge only (.co-edge), so water no
+   region covers stays open. */
+.rshape .co-out.co-edge{fill:none}
+.rshape .rg-sib{fill:rgba(239,230,212,.10);stroke:rgba(239,230,212,.285);stroke-width:.8;stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;cursor:pointer;transition:fill .12s,stroke .12s}
+.rshape a:hover .rg-sib{fill:rgba(239,230,212,.26);stroke:rgba(239,230,212,.7)}
 /* Who looks after this region. A quiet line, but a full sentence: the
    question it answers is one a rider asks before trusting anything else here. */
 .rsteward{margin-top:1.5rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem;
@@ -73,12 +91,16 @@ a.rsteward-name:hover{background:rgba(239,230,212,.16);border-color:rgba(239,230
 .rsteward-reach{border-radius:0 999px 999px 0;background:transparent;
   color:rgba(239,230,212,.6);letter-spacing:.08em}
 /* Under the hero: the two texts to read on the left, what riders find here
-   on the right as one list, from 980 px; one column in that order below.
-   The right column is wide enough for a kind's two figures on one line. */
+   on the right as one list, from 760 px (a tablet held upright); one column
+   in that order below. A tablet's right column is narrower; from 980 px it
+   is wide enough for a kind's two figures on one line. */
 .rbody-cols{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(1.75rem,3.5vw,2.75rem)}
-@media(min-width:980px){
-  .rbody-cols{grid-template-columns:minmax(0,1fr) 300px;gap:3.5rem;align-items:start}
+@media(min-width:760px){
+  .rbody-cols{grid-template-columns:minmax(0,1fr) 230px;gap:2rem;align-items:start}
   .rbody-side .kinds{grid-template-columns:minmax(0,1fr)}
+}
+@media(min-width:980px){
+  .rbody-cols{grid-template-columns:minmax(0,1fr) 300px;gap:3.5rem}
 }
 /* About and History are one reading flow: the same clamp between them as
    between the hero and the first header. */
@@ -99,6 +121,17 @@ a.rsteward-name:hover{background:rgba(239,230,212,.16);border-color:rgba(239,230
 /* A source linked in the text: the page's link colour, underlined, so it
    reads as a citation inside the sentence. */
 .rg-story-text a{color:var(--clay);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+/* "Read more" (region/read-more.js): on a phone a text shows three lines,
+   fading out, until the button under it shows the rest. Three of the
+   texts' 1.65 lines; the class only clamps on a phone. */
+.rg-more{display:inline-block;margin:.1rem 0 .5rem;padding:0;border:0;background:none;font:inherit;font-size:.9rem;
+  color:var(--clay);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.rg-more[hidden]{display:none}
+@media(max-width:759px){
+  .rg-about-text.is-clamped,.rg-story-text.is-clamped{max-height:calc(3 * 1.65em);overflow:hidden;
+    -webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent);mask-image:linear-gradient(to bottom,#000 55%,transparent)}
+}
+@media(min-width:760px){.rg-more{display:none}}
 /* The country in the kicker leads to its regions on the list: the kicker's
    own type, with a quiet underline that says it is a link. */
 .rhero .co a.co-link{color:inherit;text-decoration:underline;text-decoration-color:rgba(239,230,212,.35);text-underline-offset:3px}
@@ -106,15 +139,25 @@ a.rsteward-name:hover{background:rgba(239,230,212,.16);border-color:rgba(239,230
 /* What a text translates, and whether its original changed since
    (moderation-and-contribution.md §3.1e): the write link's quiet type. */
 .rg-translated{font-size:.9rem;line-height:1.55;color:#4f5344;margin:.5rem 0 0}
-/* Two rows of figures in the hero: the land (area, population, ride
-   character) above what the Commons holds there. The second row sits close
-   under the first, without a rule of its own. */
-.rstats + .rstats{margin-top:1.1rem;padding-top:0;border-top:0}
-/* The ringed pencil after the land's figures, to the region editor. */
-.rstats .rstats-edit{align-self:center;color:rgba(239,230,212,.7)}
+/* The ringed pencil after the label of the land's last figure, to the region editor. */
+.rstats .rstats-edit{margin-left:.4rem;vertical-align:middle;color:rgba(239,230,212,.7)}
 /* A page nobody has written yet asks to be written, quietly, under all its
    texts: a thin rule, the question in body type, one plain link. */
 .rg-invite{max-width:46rem;margin:clamp(1.75rem,3.5vw,2.75rem) 0 0;padding-top:1rem;border-top:1px solid rgba(20,22,14,.12)}
 .rg-invite p{font-size:.92rem;line-height:1.6;color:#4f5344;margin:.3rem 0 0}
 .rg-invite .rg-invite-h{font-weight:600;color:#3a3d30;margin:0}
 .rg-invite a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+/* A phone: the hero closer around its content, the figures a grid of three
+   in smaller type, so the six take two short rows. */
+@media(max-width:759px){
+  .rhero{padding:1.4rem 0 1.8rem}
+  .rhero .co{margin-bottom:.6rem}
+  .rstats{grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem .9rem;margin-top:.9rem;padding-top:.8rem}
+  /* The kicker's parts wrap whole beside the drawing, never inside a word. */
+  .rhero .co{flex-wrap:wrap;row-gap:.25rem}
+  .rhero .co > *{white-space:nowrap}
+  .rstats .s b{font-size:1.2rem}
+  .rstats .s span{font-size:.6rem;letter-spacing:.06em}
+  .rsteward{margin-top:1rem}
+  .rctas{margin-top:1rem}
+}

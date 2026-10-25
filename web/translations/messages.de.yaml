@@ -666,6 +666,8 @@ region:
   stat_items: 'Geprüfte Einträge'
   stat_area: 'Fläche'
   stat_population: "Einwohner (%year%)"
+  stat_population_unknown: "Einwohner"
+  read_more: "Weiterlesen"
   stat_ride: "Gelände"
   facts_edit: "Diese Zahlen ändern"
   invite_h: "Kennen Sie %region%?"

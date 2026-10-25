@@ -937,13 +937,37 @@ languages.
   ships a migration that defines the function again
   (`RegionSilhouetteLakesTest` fails until it does). Region geometry,
   membership and areas keep the water.
+
+  **The other regions lead to their pages (2026-10-25).** The drawing also
+  carries the country's other regions at the level its pages are
+  (`OperationalRegions`), in the same frame (`RegionSilhouette::forRegion()`
+  `others`, one query for the three shapes), between the outline and this
+  region. Each has the land's fill and a border at three quarters of the
+  outline's edge (`.rg-sib`); the outline then keeps its edge only
+  (`.co-edge`), so a lake no region covers stays open. Under the pointer a
+  region lights (a paper tint and edge, 0.12 s), names itself (an SVG
+  `<title>`, its label in the page's language) and links to its own region
+  page. The figure stays `aria-hidden` and the links are out of the tab
+  order (`tabindex="-1"`): the country link in the kicker leads keyboards
+  and screen readers to the same regions. Pinned by `RegionShapeLinksTest`.
+
+  **Read more on a phone (2026-10-25).** Below 760 px the geography and the
+  history text show three lines, fading out, and a "Read more" button
+  (`region.read_more`) under them that shows the rest
+  (`assets/region/read-more.js`, `data-read-more`). A text of three lines or
+  fewer gets no button. A wider screen, and a page without the script, show
+  the whole text: the script sets the clamp class, and only the phone rule in
+  `region.css` clamps.
+
   **Layout (2026-10-20).** From 760 px wide the hero has two columns: the
-  title, figures, curators and buttons on the left, the country outline with
-  the region filled on the right at up to 300 px wide (4:3). Narrower, the
-  outline floats small beside the title and the figures clear it. Under the
-  hero, from 980 px: the About text and the History text on the left, "What
-  riders find here" on the right as one 300 px list; narrower, one column in
-  that order. The back link and the report link run under both columns.
+  title, figures and buttons on the left, the country outline with the
+  region filled on the right at up to 300 px wide (4:3), who looks after the
+  region under it (2026-10-25). Narrower, the outline floats small beside
+  the title, the figures clear it in two rows of three, and who looks after
+  the region sits above the buttons. Under the hero, from 760 px (a tablet
+  held upright, 2026-10-25): the About text and the History text on the
+  left, "What riders find here" on the right as one list, 230 px wide, 300 px
+  from 980 px; narrower, one column in that order. The back link and the report link run under both columns.
 
   **History, nature and culture (2026-10-20).** Under the About text, a
   second text (`#story`, kicker "History, nature and culture")

@@ -666,6 +666,8 @@ region:
   stat_items: 'Geverifieerde items'
   stat_area: 'Oppervlakte'
   stat_population: "Inwoners (%year%)"
+  stat_population_unknown: "Inwoners"
+  read_more: "Lees meer"
   stat_ride: "Terrein"
   facts_edit: "Deze cijfers wijzigen"
   invite_h: "Ken je %region%?"

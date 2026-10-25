@@ -666,6 +666,8 @@ region:
   stat_items: 'Verified items'
   stat_area: 'Area'
   stat_population: "Population (%year%)"
+  stat_population_unknown: "Population"
+  read_more: "Read more"
   stat_ride: "Ride character"
   facts_edit: "Edit these figures"
   invite_h: "Do you know %region%?"

@@ -47,22 +47,24 @@ final class RegionFactsTest extends WebTestCase
 
         $crawler = $client->request('GET', '/regions/pfacts-a');
         self::assertResponseIsSuccessful();
-        $land = $crawler->filter('.rhero .rstats-land .s');
-        self::assertCount(1, $land, 'only the area, measured from the boundary');
-        self::assertSame('Area', $land->filter('span')->text());
-        self::assertStringContainsString('2,680', $land->filter('b')->text());
-        self::assertCount(0, $crawler->filter('.rhero .rstats:not(.rstats-land) .s span:contains("Area")'), 'the area sits with the land, not the counts');
+        $land = $crawler->filter('.rhero .rstats .s-land');
+        self::assertSame(['Area', 'Population', 'Ride character'], $land->filter('span')->each(static fn ($s): string => $s->text()), 'the three, set or not');
+        $values = $land->filter('b')->each(static fn ($b): string => $b->text());
+        self::assertStringContainsString('2,680', $values[0], 'the area measured from the boundary');
+        self::assertSame(['–', '–'], [$values[1], $values[2]], 'a dash until somebody sets them');
+        self::assertCount(1, $land->eq(2)->filter('a.rstats-edit'), 'the pencil follows the last of them');
+        self::assertCount(0, $crawler->filter('.rhero .rstats .s:not(.s-land) span:contains("Area")'), 'the area sits with the land, not the counts');
 
         $this->setFacts($a, ['area' => ['value' => 2633, 'submissionId' => null, 'at' => '2026-10-23T00:00:00+00:00'], 'population' => ['value' => 494000, 'year' => 2024, 'submissionId' => null, 'at' => '2026-10-23T00:00:00+00:00'], 'ride' => ['value' => 'flat', 'submissionId' => null, 'at' => '2026-10-23T00:00:00+00:00']]);
         $crawler = $client->request('GET', '/regions/pfacts-a');
-        self::assertSame(['Area', 'Population (2024)', 'Ride character'], $crawler->filter('.rhero .rstats-land .s span')->each(static fn ($s): string => $s->text()));
-        $values = $crawler->filter('.rhero .rstats-land .s b')->each(static fn ($b): string => $b->text());
+        self::assertSame(['Area', 'Population (2024)', 'Ride character'], $crawler->filter('.rhero .rstats .s-land span')->each(static fn ($s): string => $s->text()));
+        $values = $crawler->filter('.rhero .rstats .s-land b')->each(static fn ($b): string => $b->text());
         self::assertStringContainsString('2,633', $values[0], 'a stated area over the measured one');
         self::assertSame(['494,000', 'Flat'], [$values[1], $values[2]]);
 
         $crawler = $client->request('GET', '/nl/regios/pfacts-a');
-        self::assertSame(['Oppervlakte', 'Inwoners (2024)', 'Terrein'], $crawler->filter('.rhero .rstats-land .s span')->each(static fn ($s): string => $s->text()));
-        self::assertSame('Vlak', $crawler->filter('.rhero .rstats-land .s b')->last()->text());
+        self::assertSame(['Oppervlakte', 'Inwoners (2024)', 'Terrein'], $crawler->filter('.rhero .rstats .s-land span')->each(static fn ($s): string => $s->text()));
+        self::assertSame('Vlak', $crawler->filter('.rhero .rstats .s-land b')->last()->text());
     }
 
     public function testAnAutomaticTextIsAboutTheRegionAndAsksForAGeographyText(): void
@@ -178,8 +180,8 @@ final class RegionFactsTest extends WebTestCase
         $db->executeStatement('UPDATE region SET facts_harvest = :h WHERE id = :id', ['h' => '{"population": {"value": 491792, "year": 2017, "qid": "Q772"}}', 'id' => $a->getId()]);
 
         $crawler = $client->request('GET', '/regions/pfacts-a');
-        self::assertSame(['Area', 'Population (2017)'], $crawler->filter('.rhero .rstats-land .s span')->each(static fn ($s): string => $s->text()));
-        self::assertSame('491,792', $crawler->filter('.rhero .rstats-land .s b')->last()->text());
+        self::assertSame(['Area', 'Population (2017)', 'Ride character'], $crawler->filter('.rhero .rstats .s-land span')->each(static fn ($s): string => $s->text()));
+        self::assertSame('491,792', $crawler->filter('.rhero .rstats .s-land b')->eq(1)->text());
 
         $client->loginUser($rider);
         $crawler = $client->request('GET', '/regions/pfacts-a/edit');
@@ -195,14 +197,14 @@ final class RegionFactsTest extends WebTestCase
         self::assertEquals(['fact:population' => ['was' => ['value' => 491792, 'year' => 2017], 'now' => ['value' => 502051, 'year' => 2024]]], $sub->getChanges());
         $this->moderation()->decide((int) $sub->getId(), 'approve', $curator, null);
         $crawler = $client->request('GET', '/regions/pfacts-a');
-        self::assertSame('Population (2024)', $crawler->filter('.rhero .rstats-land .s span')->last()->text());
+        self::assertSame('Population (2024)', $crawler->filter('.rhero .rstats .s-land span')->eq(1)->text());
         $crawler = $client->request('GET', '/regions/pfacts-a/edit');
         self::assertCount(0, $crawler->filter('.pt-fact-src'), 'a person\'s count names no source');
 
         static::getContainer()->get(ApprovalRevoker::class)->revoke((int) $sub->getId(), $this->reload($curator), 'Wrong year.');
         self::assertNull($this->stored($a), 'nothing a person set');
         $crawler = $client->request('GET', '/regions/pfacts-a');
-        self::assertSame('Population (2017)', $crawler->filter('.rhero .rstats-land .s span')->last()->text());
+        self::assertSame('Population (2017)', $crawler->filter('.rhero .rstats .s-land span')->eq(1)->text());
     }
 
     public function testARevokeIsRefusedOnceAFigureWasSetSince(): void

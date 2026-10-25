@@ -3,61 +3,23 @@
 {% block head_styles %}
 <link rel="stylesheet" href="{{ asset('styles/page/pages/region.css') }}">
 {% endblock %}
+{# "Read more" under the two texts on a phone (region/read-more.js). #}
+{% block body_scripts %}
+<script src="{{ asset('region/read-more.js') }}" defer></script>
+{% endblock %}
 {% block body %}
 
 <div class="rhero"><div class="wrap rhero-cols">
-  {# Where this region sits in its country. Decorative: the shapes carry no
-     information the text does not, so it is aria-hidden rather than given a
-     label nobody needs read to them. First in the markup so a phone floats
-     it beside the title; a wide screen gives it the hero's right column,
-     beside everything else (region.css). #}
-  {% if silhouette %}
-    <figure class="rshape" aria-hidden="true">
-      <svg viewBox="0 0 {{ silhouette.width }} {{ silhouette.height }}" role="presentation" focusable="false">
-        {% if silhouette.country %}<path class="co-out" d="{{ silhouette.country }}" fill-rule="evenodd"/>{% endif %}
-        {% if silhouette.region %}<path class="rg-in" d="{{ silhouette.region }}" fill-rule="evenodd"/>{% endif %}
-      </svg>
-    </figure>
-  {% endif %}
-  <div class="rhero-main">
-  <div class="co">
-    <img src="{{ asset(region.flag) }}" alt="" width="20" height="15">
-    {# The country leads to its own regions, opened on the list (regions-map.js reads #country-XX). #}
-    <a class="co-link" href="{{ path('regions') }}#country-{{ region.countryCode }}">{{ region.countryName }}</a>
-    <span>· {{ ('regions.tier_' ~ region.tier)|trans }}</span>
-    {% if region.stewardship != 'none' %}<span>· {{ ('regions.status_' ~ region.stewardship)|trans }}</span>{% endif %}
-  </div>
-  <h1 class="disp">{{ cc_region_label(region.slug) }}</h1>
-  {# The land first: its area (stated, else measured from the boundary),
-     its population with the year it was counted, and its ride character,
-     each shown once somebody set it, and the ringed pencil to the region
-     editor's figures (moderation-and-contribution.md §3.1g). #}
-  <div class="rstats rstats-land">
-    {# The label is the noun, not the unit: cc_km2 already appends the suffix. #}
-    {% if region.areaKm2 %}<div class="s"><b>{{ region.areaKm2|cc_km2 }}</b><span>{% trans %}region.stat_area{% endtrans %}</span></div>{% endif %}
-    {% if region.population is not null %}<div class="s"><b>{{ region.population|number_format(0, '.', ',') }}</b><span>{{ 'region.stat_population'|trans({'%year%': region.populationYear}) }}</span></div>{% endif %}
-    {% if region.ride %}<div class="s"><b>{{ ('region.ride_' ~ region.ride)|trans }}</b><span>{% trans %}region.stat_ride{% endtrans %}</span></div>{% endif %}
-    {% set facts_edit = 'region.facts_edit'|trans %}
-    <a class="ring-ico ring-ico--edit rstats-edit" href="{{ path('region_edit', {slug: region.slug}) }}" title="{{ facts_edit }}" aria-label="{{ facts_edit }}">✎</a>
-  </div>
-  {# THE SAME THREE FIGURES AS /coverage, in the same order (owner 2026-08-14).
-     That page opens with reference items, catalog items and routes; a region
-     page that opened with only the last two made the region look like it holds
-     a handful of things when the map there draws thousands. Same labels too,
-     so a reader moving between the two pages is not asked to learn the
-     vocabulary twice. #}
-  <div class="rstats">
-    <div class="s"><b>{{ region.coveragePois|number_format(0, '.', ',') }}</b><span>{% trans %}coverage.kpi_pois{% endtrans %}</span></div>
-    <div class="s"><b>{{ region.itemsVerified }}</b><span>{% trans %}region.stat_items{% endtrans %}</span></div>
-    <div class="s"><b>{{ region.routes }}</b><span>{% trans %}region.stat_routes{% endtrans %}</span></div>
-  </div>
   {# WHO LOOKS AFTER IT, as a sentence (owner: "I do not see if there is a
      curator for the region yet"). The kicker above carries the same fact as a
      single word — CURATED, COUNTRY-WIDE — which does not read as an answer to
      that question, and the `none` case rendered NOTHING at all, so "nobody has
      taken this on" looked identical to a page that had not finished loading.
-     Placed directly above the buttons, so "Volunteer as curator" reads as the
-     reply to it. #}
+     On a wide screen it stands in the right column, under the country
+     drawing; on a phone, which has no such column, directly above the
+     buttons, so "Volunteer as curator" reads as the reply to it. Written
+     once (`steward`), shown in the one place the width gives it
+     (region.css). #}
   {# THE PEOPLE FIRST, THEN THEIR REACH (owner 2026-08-14). Restructured from a
      sentence into chips: a name is a thing you click, and a reach is a
      property of the person, so each curator carries their own reach chip
@@ -65,7 +27,7 @@
      who has not made their profile public is still counted and still shown -
      as "A curator", unlinked - because the fact that somebody looks after this
      region is not theirs to withhold, only their name is. #}
-  <div class="rsteward">
+  {% set steward %}
     <span class="rsteward-h">{% trans %}regions.steward_h{% endtrans %}</span>
     <span class="rsteward-body">
       {% if region.curators is not empty %}
@@ -93,8 +55,67 @@
         <a class="rsteward-cta" href="{{ path('join_country', {cc: region.countryCode}) }}?region={{ region.slug }}">{% trans %}regions.steward_join{% endtrans %}</a>
       {% endif %}
     </span>
+  {% endset %}
+  {# Where this region sits in its country. Decorative: the shapes carry no
+     information the text does not, so it is aria-hidden rather than given a
+     label nobody needs read to them. First in the markup so a phone floats
+     it beside the title; a wide screen gives it the hero's right column,
+     beside everything else, with who looks after the region under it
+     (region.css).
+     The country's other regions lie over the outline, unseen until the
+     pointer is on one: it lights, names itself, and leads to its page. Out
+     of the tab order, as the drawing is aria-hidden; the country link in
+     the kicker leads keyboards and screen readers to the same regions. #}
+  <div class="rhero-side">
+    {% if silhouette %}
+      <figure class="rshape" aria-hidden="true">
+        <svg viewBox="0 0 {{ silhouette.width }} {{ silhouette.height }}" role="presentation" focusable="false">
+          {# With its regions drawn, the land is theirs: the outline keeps its
+             edge only, so water the regions leave out (the IJsselmeer) stays
+             open. #}
+          {% if silhouette.country %}<path class="co-out{{ silhouette.others is not empty ? ' co-edge' }}" d="{{ silhouette.country }}" fill-rule="evenodd"/>{% endif %}
+          {% for o in silhouette.others %}
+            <a href="{{ path('region_detail', {slug: o.slug}) }}" tabindex="-1"><title>{{ cc_region_label(o.slug) }}</title><path class="rg-sib" d="{{ o.d }}" fill-rule="evenodd"/></a>
+          {% endfor %}
+          {% if silhouette.region %}<path class="rg-in" d="{{ silhouette.region }}" fill-rule="evenodd"/>{% endif %}
+        </svg>
+      </figure>
+    {% endif %}
+    <div class="rsteward rsteward--side">{{ steward }}</div>
   </div>
-  <div style="display:flex;gap:.8rem;margin-top:1.8rem;flex-wrap:wrap">
+  <div class="rhero-main">
+  <div class="co">
+    <img src="{{ asset(region.flag) }}" alt="" width="20" height="15">
+    {# The country leads to its own regions, opened on the list (regions-map.js reads #country-XX). #}
+    <a class="co-link" href="{{ path('regions') }}#country-{{ region.countryCode }}">{{ region.countryName }}</a>
+    <span>· {{ ('regions.tier_' ~ region.tier)|trans }}</span>
+    {% if region.stewardship != 'none' %}<span>· {{ ('regions.status_' ~ region.stewardship)|trans }}</span>{% endif %}
+  </div>
+  <h1 class="disp">{{ cc_region_label(region.slug) }}</h1>
+  {# Two rows of three figures (region.css). The land first: its area
+     (stated, else measured from the boundary), its population with the
+     year it was counted, and its ride character, each a dash until
+     somebody sets it; the ringed pencil to the region editor's figures
+     follows the last label (`s-land` marks the land's,
+     moderation-and-contribution.md §3.1g). #}
+  {% set facts_edit = 'region.facts_edit'|trans %}
+  <div class="rstats">
+    {# The label is the noun, not the unit: cc_km2 already appends the suffix. #}
+    <div class="s s-land"><b>{{ region.areaKm2 ? region.areaKm2|cc_km2 : '–' }}</b><span>{% trans %}region.stat_area{% endtrans %}</span></div>
+    <div class="s s-land"><b>{{ region.population is not null ? region.population|number_format(0, '.', ',') : '–' }}</b><span>{{ region.population is not null ? 'region.stat_population'|trans({'%year%': region.populationYear}) : 'region.stat_population_unknown'|trans }}</span></div>
+    <div class="s s-land"><b>{{ region.ride ? ('region.ride_' ~ region.ride)|trans : '–' }}</b><span>{% trans %}region.stat_ride{% endtrans %}</span><a class="ring-ico ring-ico--edit rstats-edit" href="{{ path('region_edit', {slug: region.slug}) }}" title="{{ facts_edit }}" aria-label="{{ facts_edit }}">✎</a></div>
+    {# THEN THE SAME THREE FIGURES AS /coverage, in the same order (owner
+       2026-08-14). That page opens with reference items, catalog items and
+       routes; a region page that opened with only the last two made the
+       region look like it holds a handful of things when the map there draws
+       thousands. Same labels too, so a reader moving between the two pages
+       is not asked to learn the vocabulary twice. #}
+    <div class="s"><b>{{ region.coveragePois|number_format(0, '.', ',') }}</b><span>{% trans %}coverage.kpi_pois{% endtrans %}</span></div>
+    <div class="s"><b>{{ region.itemsVerified }}</b><span>{% trans %}region.stat_items{% endtrans %}</span></div>
+    <div class="s"><b>{{ region.routes }}</b><span>{% trans %}region.stat_routes{% endtrans %}</span></div>
+  </div>
+  <div class="rsteward rsteward--main">{{ steward }}</div>
+  <div class="rctas">
     <a class="btn btn-p" href="{{ path('map') }}?scope=region:{{ region.slug }}">{% trans %}region.cta_map{% endtrans %}</a>
     <a class="btn btn-g" style="border-color:rgba(239,230,212,.4);color:var(--paper)" href="{{ path('join_country', {cc: region.countryCode}) }}?region={{ region.slug }}">{% trans %}region.cta_apply{% endtrans %}</a>
   </div>
@@ -130,7 +151,7 @@
   <div class="kicker">{{ automatic ? 'region.about_auto_h'|trans({'%region%': cc_region_label(region.slug)}) : 'region.about_h'|trans }}</div>
   {% if region.context %}
     {# A text written here links its sources in place, as the history text does. #}
-    <p class="rg-about-text">{{ include('pages/_story_parts.html.twig', {parts: region.context.parts}) }}</p>
+    <p class="rg-about-text" data-read-more="{{ 'region.read_more'|trans }}">{{ include('pages/_story_parts.html.twig', {parts: region.context.parts}) }}</p>
     {# Three credit lines, because three things can be true and only one of
        them at a time. A curator who ADAPTED the article keeps the CC BY-SA
        citation - the licence follows a derivative - but the line must say the
@@ -203,7 +224,7 @@
       <p class="rg-about-write rg-story-lang">{{ 'region.story_other_lang'|trans({'%lang%': story.langName}) }}
         <a href="{{ path('region_story', {slug: region.slug, lang: app.request.locale}) }}">{{ 'region.story_translate'|trans }}</a></p>
     {% endif %}
-    <div class="rg-story-text"{% if other_lang %} lang="{{ story.lang }}"{% endif %}>
+    <div class="rg-story-text" data-read-more="{{ 'region.read_more'|trans }}"{% if other_lang %} lang="{{ story.lang }}"{% endif %}>
       {% for p in story.paragraphs %}<p>{{ include('pages/_story_parts.html.twig', {parts: p}) }}</p>{% endfor %}
     </div>
     {% set rider = story.byRider ? (story.author ?? 'region.about_removed_rider'|trans) : null %}

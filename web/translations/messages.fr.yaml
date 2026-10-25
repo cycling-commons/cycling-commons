@@ -664,6 +664,8 @@ region:
   stat_items: 'Éléments vérifiés'
   stat_area: 'Superficie'
   stat_population: "Population (%year%)"
+  stat_population_unknown: "Population"
+  read_more: "Lire la suite"
   stat_ride: "Relief"
   facts_edit: "Modifier ces chiffres"
   invite_h: "Vous connaissez %region% ?"
