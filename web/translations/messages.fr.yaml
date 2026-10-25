@@ -429,8 +429,8 @@ home:
 join:
   kicker: 'Participer'
   title: 'Construisez le Commons avec nous.'
-  lead1: 'Cycling Commons est construit par les personnes qui l''utilisent — en code, en connaissance locale, et dans tout ce qui les entoure. C''est tôt, c''est ouvert, et il y a de la place pour vous.'
-  lead2: 'Un bien commun ne grandit pas en recrutant ; il grandit quand les gens se montrent. Voici où nous avons besoin de mains.'
+  lead1: 'Cycling Commons est construit par les personnes qui l''utilisent : en code, en connaissance locale, et dans tout ce qui les entoure. C''est tôt, c''est ouvert, et il y a de la place pour vous.'
+  lead2: 'Un bien commun ne grandit pas en recrutant ; il grandit quand les gens se montrent. Voici où il a besoin de mains.'
   skills_kicker: 'Prêtez vos compétences'
   skills_h2: 'Aidez à construire et pérenniser le projet.'
   role1_rk: '01 · CONSTRUIRE'
