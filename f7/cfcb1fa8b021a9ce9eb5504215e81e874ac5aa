@@ -1,0 +1,128 @@
+web/templates/blog/illustrations/contribute.svg.twig
+  s_940037038fa911::t_d68e36c2aaf5cf 1-3,6-10
+  s_940037038fa911::t_9938b76e55a4b0 4-5
+web/migrations/Version20261025030000.php
+  s_940037038fa911::t_21af132823a294 1-36
+web/templates/blog/illustrations/_ground_back.svg.twig
+  s_940037038fa911::t_602a7422b042db 1-5
+web/templates/blog/illustrations/_ground_front.svg.twig
+  s_940037038fa911::t_602a7422b042db 1-3
+web/templates/blog/index.html.twig
+  s_940037038fa911::t_0a2330f026e469 51-55,60
+docs/specs/blog.md
+  s_940037038fa911::t_6f1e6f7fb5c5b0 40-49
+  s_72d2f8b5000c68::t_cef03a0cbc0ade 101-108
+  s_72d2f8b5000c68::t_9081e2c7c39aff 14-18
+  s_940037038fa911::t_3596f9f4e35220 51-62,170
+  s_72d2f8b5000c68::t_854363a94d5bb2 35-39,50
+  s_086f006d5a9290::t_f720f9361f2f86 31,63-64,109-110,171-172,178-179
+web/src/Twig/LocaleExtension.php
+  s_72d2f8b5000c68::t_3be36b1e5b4155 25-27,70-74,95-97,112-113
+web/assets/styles/page/blog/post.css
+  s_72d2f8b5000c68::t_93c3915a4c3773 29-35
+  s_940037038fa911::t_0a2330f026e469 46-48
+web/tests/Blog/BlogTest.php
+  s_72d2f8b5000c68::t_27c9f89028701f 139,146,148
+  s_72d2f8b5000c68::t_3f75cd6afbb33e 322-338,340-346
+  s_940037038fa911::t_517c136d50f996 217
+  s_940037038fa911::t_c167529bf8fca5 159
+  s_940037038fa911::t_06ed45a127183c 9,176-216,218-226
+  s_940037038fa911::t_3db09be67cb47b 152-158,160-170,173-175,227-228
+  s_940037038fa911::t_6ca114785d9d23 171-172
+  s_72d2f8b5000c68::t_16064056135eb8 339
+  s_72d2f8b5000c68::t_dfff57030aa62d 135-138,140-145,147,149-151
+web/src/Blog/Entity/BlogPost.php
+  s_940037038fa911::t_231e2d88425c58 63
+  s_940037038fa911::t_21af132823a294 9,20-22,64-66,153-161
+  s_086f006d5a9290::t_5b3dc41191a0b7 162-164
+web/templates/blog/_illustration.html.twig
+  s_940037038fa911::t_d68e36c2aaf5cf 1-2,7,9-10,13
+  s_940037038fa911::t_0a2330f026e469 3-6,8,11-12
+web/templates/blog/illustrations/stops.svg.twig
+  s_940037038fa911::t_d68e36c2aaf5cf 1-9,15-17
+  s_940037038fa911::t_0a2330f026e469 10
+  s_940037038fa911::t_602a7422b042db 12-14
+  s_940037038fa911::t_837726d79394b4 11
+web/templates/blog/illustrations/region.svg.twig
+  s_940037038fa911::t_d68e36c2aaf5cf 1-15,29
+  s_940037038fa911::t_602a7422b042db 16-28
+web/src/Controller/BlogController.php
+  s_72d2f8b5000c68::t_3be36b1e5b4155 12,15,42,90-109,115
+  s_72d2f8b5000c68::t_174b696594946e 79-84
+web/assets/styles/page/blog/index.css
+  s_940037038fa911::t_0a2330f026e469 21-28
+web/templates/blog/illustrations/plan.svg.twig
+  s_940037038fa911::t_f375212e965428 3-12,18-38,46,48
+  s_940037038fa911::t_2f9751a407d640 39
+  s_940037038fa911::t_0a2330f026e469 45
+  s_940037038fa911::t_d68e36c2aaf5cf 1-2,13-17,40-44,47,49
+web/templates/blog/illustrations/_ground.svg.twig
+  s_940037038fa911::t_d68e36c2aaf5cf 1-2
+  s_940037038fa911::t_602a7422b042db 3-4
+web/templates/blog/illustrations/build.svg.twig
+  s_940037038fa911::t_bd11e488cc2323 15
+  s_940037038fa911::t_cb26288e418682 1-14,16-24
+web/src/Twig/BlogBodyExtension.php
+  s_72d2f8b5000c68::t_ccd31f08dd5e32 1-16,25-32,41,63-69
+  s_940037038fa911::t_f5354a72473a3b 17-24,33-40,42-62
+web/src/Controller/Admin/BlogPostCrudController.php
+  s_940037038fa911::t_21af132823a294 9,101,104,106
+  s_940037038fa911::t_0a2330f026e469 105,107
+  s_086f006d5a9290::t_fd3029a6ab92d3 108
+web/src/Blog/BlogIllustrations.php
+  s_940037038fa911::t_231e2d88425c58 37-41
+  s_940037038fa911::t_0a2330f026e469 10-14,16-19,26,36,42,57-65,67-70
+  s_940037038fa911::t_517c136d50f996 44-53,56,66
+  s_940037038fa911::t_cb26288e418682 34
+  s_940037038fa911::t_21af132823a294 1-9,15,20-25,27-33,35,43,54-55,71-72
+web/templates/blog/post.html.twig
+  s_940037038fa911::t_0a2330f026e469 7-9,28-29
+  s_940037038fa911::t_f5354a72473a3b 42
+  s_940037038fa911::t_c2c5743381898f 39-41
+web/templates/blog/illustrations/vote.svg.twig
+  s_940037038fa911::t_9938b76e55a4b0 12
+  s_940037038fa911::t_602a7422b042db 3-6,14
+  s_940037038fa911::t_d68e36c2aaf5cf 1-2,7-11,13,15
+web/templates/blog/illustrations/online.svg.twig
+  s_940037038fa911::t_711a33940cbac2 8-56
+  s_940037038fa911::t_08fd91f28effbb 5-7,58-61
+  s_940037038fa911::t_d68e36c2aaf5cf 1-4,62-63
+  s_940037038fa911::t_3d4650cd7c6063 57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f7cfcb1fa8b021a9ce9eb5504215e81e874ac5aa",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_086f006d5a9290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97afd631-7f48-4430-aac8-2c62f5b7a119",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_72d2f8b5000c68": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c67130f0-70da-407a-8112-8b69473e80fd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_940037038fa911": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1972bf55-4b23-4057-bc7a-f42d9562c3cf",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
