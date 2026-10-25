@@ -33,7 +33,7 @@ final class RegionUpserter
                        THEN NOW() ELSE region.updated_at END
         SQL;
 
-    public function __construct(private readonly Connection $db)
+    public function __construct(private readonly Connection $db, private readonly RegionLabels $labels)
     {
     }
 
@@ -66,6 +66,8 @@ final class RegionUpserter
             // An empty map never replaces stored labels (a re-import without labels keeps the seeded ones).
             'labels' => null === $labels || [] === $labels ? null : json_encode((object) $labels, \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_UNICODE),
         ]);
+        // A new region, name or label: the pages' kept labels are read again.
+        $this->labels->forget();
     }
 
     /**

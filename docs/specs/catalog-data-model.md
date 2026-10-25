@@ -135,7 +135,10 @@ provenance: `osm` | `overture`) · `active_cap` smallint nullable (declared as a
 per-region override of `route.region_active_cap`, but read by nothing: every
 region uses the global setting, route-domain.md §5.1) · `labels` jsonb
 (display label per locale, added by `Version20261005120000`; `RegionLabels`
-falls back to `en`, then to `name`) · timestamps. `iso_code`, `admin_level`,
+falls back to `en`, then to `name`, and keeps the region and country lists in
+the app cache for an hour: a slug or code missing from the kept list reads the
+table again at once, and `RegionUpserter` and `app:country:label` drop the
+lists after a write) · timestamps. `iso_code`, `admin_level`,
 `source` and `active_cap` were added by `Version20260719140000`. Every region
 write goes through `App\Catalog\RegionUpserter` (the catalog import and country
 onboarding alike), which stamps `country_code`/`iso_code`/`admin_level`/`source`

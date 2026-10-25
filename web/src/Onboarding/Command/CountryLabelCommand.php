@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Onboarding\Command;
 
+use App\Catalog\RegionLabels;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -30,6 +31,7 @@ final class CountryLabelCommand extends Command
         private readonly Connection $db,
         #[Autowire('%kernel.enabled_locales%')]
         private readonly array $locales,
+        private readonly RegionLabels $labels,
     ) {
         parent::__construct();
     }
@@ -64,6 +66,8 @@ final class CountryLabelCommand extends Command
 
             return Command::FAILURE;
         }
+        // The pages read labels from the app cache: drop it, so the new one shows at once.
+        $this->labels->forget();
         $io->success(sprintf('%s %s [%s] = %s', $isCountry ? 'Country' : 'Region', $target, $locale, $text));
 
         return Command::SUCCESS;

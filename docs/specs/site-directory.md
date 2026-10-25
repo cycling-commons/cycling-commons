@@ -124,7 +124,9 @@ same list (owner 2026-09-08: the top row holds "the most important items on
 top", the footer "multiple others, not all", and the directory everything).
 
 - **Header** (`partials/_nav.html.twig`), in markup order: Regions, Coverage,
-  Best of (`best_of`), Blog (only when `blog_has_posts()`), About, then the
+  Best of (`best_of`), Blog (only when `blog_has_posts()`, kept per language in
+  the app cache for five minutes and dropped when a post is saved or deleted),
+  About, then the
   three buttons (Explore the map, Contribute, Get involved), then the account
   chip or Log in, then the language pill. Vote, Developers and Licence are in
   the footer, not the header; Vote is to move up to the header when voting

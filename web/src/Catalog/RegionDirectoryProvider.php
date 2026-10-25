@@ -10,6 +10,8 @@ use App\Moderation\DeskRider;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Intl\Countries;
 use Symfony\Component\Intl\Languages;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 /**
  * Region pages: operational regions grouped by country. Maturity and stewardship are independent facts, not one ladder.
@@ -20,9 +22,29 @@ use Symfony\Component\Intl\Languages;
  */
 final class RegionDirectoryProvider
 {
-    public function __construct(private readonly Connection $db)
+    /** How long "coverage_poi exists" is kept: the pipeline creates the table once, and nothing drops it. */
+    private const int COVERAGE_TABLE_TTL = 600;
+
+    public function __construct(private readonly Connection $db, private readonly CacheInterface $cache)
     {
     }
+
+    /**
+     * One region page's row: the list's columns, counted for this region
+     * alone (the list's joins count every region and keep one), and its two
+     * texts, so the page reads them in the same query.
+     */
+    private const REGION_SELECT = '
+        SELECT r.id, r.slug, r.area_km2, r.facts, r.facts_harvest, r.country_code, r.default_map_mode,
+               r.context, r.context_curated, r.story,
+               EXISTS (SELECT 1 FROM moderator_area ma WHERE ma.region_id = r.id)              AS curator_local,
+               EXISTS (SELECT 1 FROM moderator_area ma WHERE ma.country_code = r.country_code) AS curator_national,
+               (SELECT COUNT(*) FROM item i WHERE i.region_id = r.id AND i.state = \'verified\') AS items_verified,
+               (SELECT COUNT(*) FROM recommended_route rr WHERE rr.region_id = r.id AND rr.state IN %s) AS routes,
+               wc.name AS country_name_en
+        FROM region r
+        JOIN world_country wc ON wc.iso2 = r.country_code
+        WHERE r.geom IS NOT NULL AND r.country_code <> \'\'';
 
     private const BASE_SELECT = '
         SELECT r.id, r.slug, r.area_km2, r.facts, r.facts_harvest, r.country_code, r.default_map_mode,
@@ -79,13 +101,17 @@ final class RegionDirectoryProvider
         return $list;
     }
 
-    /** Does coverage_poi exist? Memoized per request. */
+    /** Does coverage_poi exist? Memoized per request, and kept in the app cache for every request after. */
     private ?bool $coverageTable = null;
 
     private function hasCoverageTable(): bool
     {
         // to_regclass, not Doctrine schema manager — schema_filter hides coverage_poi from tablesExist().
-        return $this->coverageTable ??= null !== $this->db->fetchOne("SELECT to_regclass('public.coverage_poi')");
+        return $this->coverageTable ??= $this->cache->get('region_page.coverage_table', function (ItemInterface $item): bool {
+            $item->expiresAfter(self::COVERAGE_TABLE_TTL);
+
+            return null !== $this->db->fetchOne("SELECT to_regclass('public.coverage_poi')");
+        });
     }
 
     /**
@@ -130,7 +156,7 @@ final class RegionDirectoryProvider
     public function region(string $slug, string $locale): ?array
     {
         $row = $this->db->fetchAssociative(
-            sprintf(self::BASE_SELECT, ItemState::servedSqlTuple())
+            sprintf(self::REGION_SELECT, ItemState::servedSqlTuple())
             .' AND r.slug = :slug AND '.OperationalRegions::predicate('r'),
             ['slug' => $slug],
         );
@@ -140,23 +166,25 @@ final class RegionDirectoryProvider
 
         /* Two numbers per kind, never a sum: verified ≠ coverage_poi. */
         /* SERVED states for "what riders find", not verified-only. Hero/maturity keep the stricter reading. */
-        $verifiedRows = $this->db->fetchAllKeyValue(
-            'SELECT letter, COUNT(*) FROM item WHERE region_id = :id AND state IN '
-            .ItemState::servedSqlTuple().' GROUP BY letter ORDER BY letter',
+        /* One query for both; coverage_poi only once it exists, as a failed SELECT aborts the whole transaction. */
+        $verifiedRows = [];
+        $coverageRows = [];
+        foreach ($this->db->fetchAllAssociative(
+            'SELECT \'v\' AS src, letter, COUNT(*) AS n FROM item WHERE region_id = :id AND state IN '.ItemState::servedSqlTuple().' GROUP BY letter'
+            .($this->hasCoverageTable() ? ' UNION ALL SELECT \'c\', letter, COUNT(*) FROM coverage_poi WHERE region_id = :id GROUP BY letter' : ''),
             ['id' => (int) $row['id']],
-        );
-        /* Probe existence first: a failed SELECT aborts the whole transaction. */
-        $coverageRows = $this->hasCoverageTable()
-            ? $this->db->fetchAllKeyValue(
-                'SELECT letter, COUNT(*) FROM coverage_poi WHERE region_id = :id GROUP BY letter ORDER BY letter',
-                ['id' => (int) $row['id']],
-            )
-            : [];
+        ) as $count) {
+            if ('v' === $count['src']) {
+                $verifiedRows[(string) $count['letter']] = (int) $count['n'];
+            } else {
+                $coverageRows[(string) $count['letter']] = (int) $count['n'];
+            }
+        }
 
         $byKind = [];
         foreach (ItemType::cases() as $type) {
-            $verifiedN = (int) ($verifiedRows[$type->letter()] ?? 0);
-            $coverageN = (int) ($coverageRows[$type->letter()] ?? 0);
+            $verifiedN = $verifiedRows[$type->letter()] ?? 0;
+            $coverageN = $coverageRows[$type->letter()] ?? 0;
             // A kind with neither is absent; coverage-only still belongs.
             if ($verifiedN > 0 || $coverageN > 0) {
                 $byKind[] = [
@@ -171,21 +199,13 @@ final class RegionDirectoryProvider
 
         /* Wikipedia lead for this locale only — the list page never renders it. Attribution must travel with the extract. */
         /* Curator override beats harvest for that locale; RegionLead owns credit. */
-        $ctx = $this->db->fetchAssociative(
-            'SELECT context, context_curated, story FROM region WHERE id = :id',
-            ['id' => (int) $row['id']],
-        );
-        $context = RegionLead::resolve(
-            self::decodeJson(\is_array($ctx) ? $ctx['context'] : null),
-            self::decodeJson(\is_array($ctx) ? $ctx['context_curated'] : null),
-            $locale,
-        );
+        $context = RegionLead::resolve(self::decodeJson($row['context']), self::decodeJson($row['context_curated']), $locale);
         if (null !== $context) {
             $context += $this->leadAuthor($context['by'], $context['approvedBy']);
             $context['basedOnName'] = self::languageName($context['basedOn'] ?? null, $locale);
         }
         /* "History, nature and culture": the reader's language, else English, else any (RegionStory). */
-        $story = RegionStory::resolve(self::decodeJson(\is_array($ctx) ? $ctx['story'] : null), $locale);
+        $story = RegionStory::resolve(self::decodeJson($row['story']), $locale);
         if (null !== $story) {
             $story += $this->leadAuthor($story['by'], $story['approvedBy'])
                 + ['langName' => self::languageName($story['lang'], $locale), 'basedOnName' => self::languageName($story['basedOn'], $locale)];
