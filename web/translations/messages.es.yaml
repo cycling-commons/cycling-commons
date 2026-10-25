@@ -1798,6 +1798,8 @@ map:
   coverage_notice_area: 'Todavía no tenemos datos de Cycling Commons para esta zona. Solo ves el mapa base, sin nuestros grifos de agua, firmes o rutas.'
   coverage_notice_go_country: 'Pídenos cubrir {country}'
   coverage_notice_go_area: 'Pídenos cubrir esta zona'
+  coverage_notice_division: 'Todavía no tenemos datos para {area}.'
+  coverage_notice_go_division: 'Añadir {area}'
   empty_scope_invite: 'Aquí todavía no hay nada curado — ayuda a empezarlo.'
   search_placeholder: 'Un puerto, un pueblo, un mirador…'
   search_placeholder_routes: 'Un puerto, un pueblo, un mirador, una ruta…'

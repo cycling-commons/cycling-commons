@@ -1792,6 +1792,8 @@ map:
   coverage_notice_area: 'We have no Cycling Commons data for this area yet. You see the base map only, without our water taps, road surfaces or routes.'
   coverage_notice_go_country: 'Ask us to cover {country}'
   coverage_notice_go_area: 'Ask us to cover this area'
+  coverage_notice_division: 'We have no data for {area} yet.'
+  coverage_notice_go_division: 'Add {area}'
   empty_scope_invite: 'Nothing curated here yet — help start it.'
   search_placeholder: 'A climb, town, viewpoint…'
   search_placeholder_routes: 'A climb, town, viewpoint, route…'

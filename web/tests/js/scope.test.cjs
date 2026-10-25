@@ -1385,3 +1385,30 @@ test('save stores the scope in force without a change', () => {
   assert.ok(String(store.get('cc-scope')).includes('flanders'), 'the scope in force is stored');
   assert.equal(events.length, 0, 'saving changes nothing on the map');
 });
+
+// ---- liveRegionAt: covered means inside the outline, not the bbox ----
+
+test('liveRegionAt: a point in the bbox but outside the outline is not covered', () => {
+  // An L-shaped region: its bbox is the full square 0..10, its outline leaves
+  // the north-east quarter out, like California's box holding Nevada.
+  const ELL = {
+    id: 9, slug: 'ell', countryCode: 'US', bbox: [0, 0, 10, 10],
+    outline: [[0, 0, 10, 0, 10, 5, 5, 5, 5, 10, 0, 10, 0, 0]],
+  };
+  CCScope.init([ELL], { kind: 'everywhere', regionIds: [], countryCode: null });
+  assert.equal(CCScope.liveRegionAt(2, 2).slug, 'ell');
+  assert.equal(CCScope.liveRegionAt(8, 8), null, 'inside the bbox, outside the outline');
+  assert.equal(CCScope.liveRegionAt(20, 20), null);
+});
+
+test('liveRegionAt: any ring of the outline counts, and no outline falls back to the bbox', () => {
+  const ISLANDS = {
+    id: 10, slug: 'islands', countryCode: 'US', bbox: [0, 0, 10, 2],
+    outline: [[0, 0, 2, 0, 2, 2, 0, 2, 0, 0], [8, 0, 10, 0, 10, 2, 8, 2, 8, 0]],
+  };
+  const PLAIN = { id: 11, slug: 'plain', countryCode: 'US', bbox: [20, 0, 22, 2] };
+  CCScope.init([ISLANDS, PLAIN], { kind: 'everywhere', regionIds: [], countryCode: null });
+  assert.equal(CCScope.liveRegionAt(9, 1).slug, 'islands', 'the second ring is a part, not a hole');
+  assert.equal(CCScope.liveRegionAt(5, 1), null, 'between the two parts');
+  assert.equal(CCScope.liveRegionAt(21, 1).slug, 'plain', 'no outline: the bbox decides');
+});

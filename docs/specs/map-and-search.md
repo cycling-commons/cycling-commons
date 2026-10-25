@@ -1579,7 +1579,7 @@ That expression lives in the database, not in the query: `region.bbox_w`,
 reads every region's shape to compute its box (owner 2026-09-28, the `/best`
 filters).
 
-#### 4.5b Coverage notice: outside every onboarded country
+#### 4.5b Coverage notice: outside every live region
 
 A small bar at the top-centre of the map canvas (`.cc-area-nudge
 .cc-coverage-notice`, `#coverageNotice` in `templates/map/index.html.twig`),
@@ -1604,7 +1604,13 @@ further panning that never re-enters onboarded territory keeps naming that
 same country (and keeps a dismissal), rather than losing the identity on the
 very next `moveend`.
 
-- **State.** `{country: {code, name} | null, dismissed: boolean}`.
+- **Covered.** A point is covered when it lies inside a live region's own
+  outline (`CCScope.liveRegionAt`, the registry's simplified rings, each ring
+  a part and never a hole), never only inside its bbox: California's bbox
+  holds most of Nevada. A region with no usable outline counts by its bbox.
+  `CCScope.countryAt` and `regionOfPoint` stay bbox-based for the chips and
+  the nudge; the banner never uses them.
+- **State.** `{country: {code, name} | null, area: {name} | null, dismissed: boolean}`.
   `initNoticeState()` is the blank excursion a fresh page starts with.
   `evaluateNotice` returns the next state alongside the decision;
   `dismissNotice(state)` is the close button's own transition.
@@ -1614,10 +1620,14 @@ very next `moveend`.
   `noteCoverageSearchHit(countrycode, country)` for a Photon town hit only - a
   catalogue row, a coverage hit or a pasted coordinate is either always inside
   an onboarded region or carries no country to check. The pending hit is
-  consumed once, on the `moveend` the resulting fly lands on, and checked
-  directly against `CC_COVERAGE_COUNTRIES` (upper-case): a country code is
-  exact, so this needs no spatial guess. A valid hit in a non-onboarded
-  country always shows, replacing `state.country` and clearing any prior
+  consumed once, on the `moveend` the resulting fly lands on (it waits there
+  while the shape files below load). The hit counts as covered when the
+  landing point is covered, or lies within the coastal tolerance of a live
+  region in a country with live regions (`CC_COVERAGE_COUNTRIES`): in a
+  country the map partly covers, the country code alone says nothing, so a
+  search for Salt Lake City shows the banner although the United States has
+  live states. A hit that lands in a named area (below) names it. A valid
+  uncovered hit always shows, replacing `state.country` and clearing any prior
   dismissal - a fresh explicit pick is a deliberate action, never read as
   "the same place I already closed this for", whether it repeats the last
   country or names a different one.
@@ -1626,7 +1636,11 @@ very next `moveend`.
   (below), the banner shows - naming `state.country` when an explicit hit
   set one earlier in this same excursion, the generic "this area" text
   otherwise (a pan carries no geocoder, so it never *originates* a country
-  name). Below zoom 7, or within the coastal tolerance, the banner is
+  name). Inside a country the map partly covers, the centre can lie in a
+  named area (below): then the pan names that area and its country, keeps
+  the excursion's dismissal, and renames as the centre crosses into the next
+  area; leaving every named area for land without a name drops both the area
+  and its country. Below zoom 7, or within the coastal tolerance, the banner is
   hidden for that tick only: `state` is left exactly as it was, because
   neither is "covered" - zooming back in, or panning back off the coast,
   resumes the same excursion rather than starting one over.
@@ -1654,6 +1668,29 @@ very next `moveend`.
   near", which would let the banner flash over an onboarded coastline on a
   network hiccup. It is not retried; an explicit hit never depended on it
   in the first place.
+- **Named areas.** `GET /regions/uncovered.json`
+  (`PageController::uncoveredAreas`, on the public cache list): one Feature
+  per held boundary (`world_division`, subtype region) the map does not cover
+  yet, in a country whose live regions sit below country level, with its
+  country (`cc`), ISO code and name. An area whose ISO code a live region
+  carries is left out; a pending region's area stays in, because the map
+  does not show it yet. A country onboarded as one whole region has nothing
+  uncovered, and a country with no live region is not in the file. Shapes
+  are coarse: parts under 0.05 square degrees are dropped unless an area has
+  no larger one, simplified at 0.03°, two decimals; about 90 KB compressed
+  for the United States and Canada. `areaAt(lng, lat, features)`
+  (`coverage-notice.js`) finds the area holding a point, at ±360° too.
+  `scope-ui.js` fetches it together with `/regions/outlines.json`, once and
+  lazily, through one `fetch()` call site; a failed areas fetch only loses
+  the names. The point is tested in the browser: no point the rider looks at
+  or clicks reaches the server. `UncoveredAreasTest` pins that no covered
+  area, and no area of another country, is in the file.
+- **Click.** A click on empty map (the click-to-scope handler, §4.5) outside
+  every live region and outside the coastal tolerance does not scope to a
+  region whose bbox merely holds the point. When the point lies in a named
+  area, the banner names it at any zoom, as an explicit pick: shown even
+  after a dismissal (`coverageClick()` in `scope-ui.js`). A click on
+  uncovered land without a name does nothing.
 - **Dismissal.** `dismissNotice()` sets `state.dismissed`, which survives
   every pan tick unchanged for as long as the excursion continues (the
   centre stays outside onboarded territory, whatever it is near or how far
@@ -1665,12 +1702,17 @@ very next `moveend`.
   selection of a non-onboarded country arrives (above).
 - **Text.** `map.coverage_notice_country` / `map.coverage_notice_area`, the
   button `map.coverage_notice_go_country` / `map.coverage_notice_go_area`.
+  A named area reads `map.coverage_notice_division` ("We have no data for
+  Utah yet."), the button `map.coverage_notice_go_division` ("Add Utah").
   Reached through `MapController::mapI18n`, all five locales.
 - **Button target.** `JoinCountryController::index` (`join_country`, `CountryInterestService`) is where a
   rider records "we want the Commons here" and can offer to curate it - the
   right target, unlike `vote` (the season ballot ranks catalogue rows in the
   operational regions of countries already onboarded, not new ones). A named
-  country links to `join_country` with its code; no country ("this area") links to the plain `join` page
+  country links to `join_country` with its code, and a named area adds
+  `?area=<name>`, which the page types into its area field for the rider
+  and picks in its curator picker (`area_pick`, matched by name without
+  regard to case), so a volunteer is offered that area, not the whole country; no country ("this area") links to the plain `join` page
   (`PageController::join`), which asks for no country at all. Both are
   localized paths (`LocalizedPath::JOIN` / `JOIN_COUNTRY`), generated
   server-side in the template: `join_country`'s needs a `cc` the template

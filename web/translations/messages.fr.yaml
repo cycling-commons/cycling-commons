@@ -1199,6 +1199,8 @@ map:
   coverage_notice_area: "Nous n'avons pas encore de données Cycling Commons pour cette zone. Vous ne voyez que le fond de carte, sans nos points d'eau, revêtements ou itinéraires."
   coverage_notice_go_country: 'Demandez-nous de couvrir {country}'
   coverage_notice_go_area: 'Demandez-nous de couvrir cette zone'
+  coverage_notice_division: 'Nous n''avons pas encore de données pour {area}.'
+  coverage_notice_go_division: 'Ajouter {area}'
   empty_scope_invite: 'Rien n''est encore répertorié ici — aidez à démarrer.'
   search_placeholder: 'Une côte, une ville, un point de vue…'
   search_placeholder_routes: 'Une côte, une ville, un point de vue, un itinéraire…'

@@ -864,6 +864,8 @@ final class MapController extends AbstractController
             'coverageNoticeArea' => $t->trans('map.coverage_notice_area'),
             'coverageNoticeGoCountry' => $t->trans('map.coverage_notice_go_country'),
             'coverageNoticeGoArea' => $t->trans('map.coverage_notice_go_area'),
+            'coverageNoticeDivision' => $t->trans('map.coverage_notice_division'),
+            'coverageNoticeGoDivision' => $t->trans('map.coverage_notice_go_division'),
             'zoomForCoverage' => $t->trans('map.zoom_for_coverage'),
             'pendingFollowsAreas' => $t->trans('map.pending_follows_areas'),
             'pendingYoursAnywhere' => $t->trans('map.pending_yours_anywhere'),

@@ -335,6 +335,28 @@ final class CountryInterestTest extends WebTestCase
     }
 
     /**
+     * The map's "Add Nevada" opens the page with that area named: whoever
+     * offers to curate it is offered that area, not the whole country.
+     */
+    public function testArrivingWithAnAreaPicksItForCuratingToo(): void
+    {
+        $client = static::createClient();
+        $this->seedCountryRegion('US', 'us-pick-test');
+        $this->seedDivision('US', 'US-NV', 'Nevada');
+        $client->loginUser($this->user('join-pick@example.test'), 'main');
+
+        $crawler = $client->request('GET', '/join/US?area=nevada');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame('new:Nevada', $crawler->filter('select[name="region"] option[selected]')->attr('value'),
+            'the named area is the one picked, matched without regard to case');
+
+        $crawler = $client->request('GET', '/join/US');
+        self::assertSame('', $crawler->filter('select[name="region"] option[selected]')->attr('value'),
+            'with no area named, the whole country stays the default');
+    }
+
+    /**
      * Somebody willing to run a place the Commons has not got.
      *
      * Owner 2026-09-13: "If there is a curator that is also a promoter we are

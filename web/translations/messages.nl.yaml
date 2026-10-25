@@ -1201,6 +1201,8 @@ map:
   coverage_notice_area: 'We hebben nog geen Cycling Commons-gegevens voor dit gebied. Je ziet alleen de basiskaart, zonder onze watertappunten, wegdek of routes.'
   coverage_notice_go_country: 'Vraag ons om {country} te dekken'
   coverage_notice_go_area: 'Vraag ons om dit gebied te dekken'
+  coverage_notice_division: 'We hebben nog geen gegevens voor {area}.'
+  coverage_notice_go_division: 'Voeg {area} toe'
   empty_scope_invite: 'Hier is nog niets samengesteld — help het op te starten.'
   search_placeholder: 'Een helling, stad, uitzichtpunt…'
   search_placeholder_routes: 'Een helling, stad, uitzichtpunt, route…'

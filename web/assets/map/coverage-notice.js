@@ -2,13 +2,16 @@
 /* Whether the "not covered yet" banner shows, and what it says
    (docs/specs/map-and-search.md §4.5b). A leaf: no DOM, no map, no CCScope
    import - the decision alone, so it can be tested. The caller (scope-ui.js)
-   resolves onboarded-ness and the coastal-distance question against the
-   region registry and /regions/outlines.json, and passes the answers in.
+   resolves onboarded-ness, the coastal-distance question and the named area
+   against the region registry, /regions/outlines.json and
+   /regions/uncovered.json, and passes the answers in.
 
    State survives across ticks, because panning carries no geocoder: once an
    explicit hit has named a country, further panning that never re-enters
    onboarded territory keeps naming it (and keeps a dismissal), rather than
-   losing that identity on the very next moveend. */
+   losing that identity on the very next moveend. Inside a country the map
+   partly covers, the held area under the centre (Utah) is a name of its own,
+   so a pan there names it. */
 
 // Panning names no country (there is no geocoder for an arbitrary point), so
 // it never fires below this zoom - a rider zoomed out over a whole continent
@@ -23,43 +26,59 @@ export const PAN_MIN_ZOOM = 7;
 // treats a geodesic correction as unwarranted precision for a snap distance.
 export const NEAR_TOLERANCE_DEG = 0.1;
 
-const HIDDEN = { show: false, countryName: null, countryCode: null };
+const HIDDEN = { show: false, countryName: null, countryCode: null, areaName: null };
 
 /** A blank excursion: not currently naming anywhere, not dismissed. */
 export function initNoticeState() {
-  return { country: null, dismissed: false };
+  return { country: null, area: null, dismissed: false };
+}
+
+function decide(s) {
+  if (s.dismissed) return HIDDEN;
+  return {
+    show: true,
+    countryName: s.country ? s.country.name : null,
+    countryCode: s.country ? s.country.code : null,
+    areaName: s.area ? s.area.name : null,
+  };
 }
 
 /**
  * One evaluation tick.
  *
- * @param {{country:?{code:string,name:?string}, dismissed:boolean}} state -
+ * @param {{country:?{code:string,name:?string}, area:?{name:string}, dismissed:boolean}} state -
  *   the previous state (`initNoticeState()` for a fresh page)
  * @param {object} input
  * @param {number} [input.zoom] - current map zoom (ignored when `searchHit` is set)
  * @param {boolean} input.onboardedAt - true when the place in question (the
- *   search hit's country, or the point under the map centre) is onboarded
+ *   search hit or click, or the point under the map centre) is covered
  * @param {boolean} [input.nearOnboarded] - true when the pan centre sits
  *   within the coastal tolerance of an onboarded region (only consulted
- *   while panning; a search hit is a named country, not a coastline)
- * @param {{countryCode:?string, countryName:?string}} [input.searchHit] - set
- *   once, right after an explicit search selection has flown to its target;
- *   absent for a plain pan
- * @returns {{decision:{show:boolean,countryName:?string,countryCode:?string}, state:object}}
+ *   while panning; the caller folds it into `onboardedAt` for a hit)
+ * @param {{countryCode:?string, countryName:?string, areaName:?string}} [input.searchHit] - set
+ *   once for an explicit pick: a search result after its fly has landed, or a
+ *   click on the map; absent for a plain pan
+ * @param {{name:string, countryCode:string, countryName:?string}} [input.area] -
+ *   the uncovered held area under the pan centre, when there is one
+ * @returns {{decision:{show:boolean,countryName:?string,countryCode:?string,areaName:?string}, state:object}}
  */
 export function evaluateNotice(state, input) {
   const cur = state || initNoticeState();
-  const { zoom, onboardedAt, nearOnboarded, searchHit } = input || {};
+  const { zoom, onboardedAt, nearOnboarded, searchHit, area } = input || {};
 
   if (searchHit) {
     const cc = searchHit.countryCode || null;
     if (!cc) return { decision: HIDDEN, state: cur };              // no country: nothing to name, nothing changes
     if (onboardedAt) return { decision: HIDDEN, state: initNoticeState() };  // covered: the excursion (if any) is over
-    // A fresh explicit selection of a non-onboarded country always shows,
-    // whether or not it repeats the country the rider just dismissed - it is
-    // a deliberate new action, not a pan drifting back over old ground.
-    const next = { country: { code: cc.toUpperCase(), name: searchHit.countryName || null }, dismissed: false };
-    return { decision: { show: true, countryName: next.country.name, countryCode: next.country.code }, state: next };
+    // A fresh explicit pick of an uncovered place always shows, whether or
+    // not it repeats the place the rider just dismissed - it is a deliberate
+    // new action, not a pan drifting back over old ground.
+    const next = {
+      country: { code: cc.toUpperCase(), name: searchHit.countryName || null },
+      area: searchHit.areaName ? { name: searchHit.areaName } : null,
+      dismissed: false,
+    };
+    return { decision: decide(next), state: next };
   }
 
   if (onboardedAt) return { decision: HIDDEN, state: initNoticeState() };  // entered onboarded territory: forget the excursion
@@ -68,10 +87,19 @@ export function evaluateNotice(state, input) {
   // country identity and its dismissal) is left exactly as it was, so
   // zooming back in resumes it rather than starting over.
   if (zoom == null || zoom < PAN_MIN_ZOOM || nearOnboarded) return { decision: HIDDEN, state: cur };
-  if (cur.dismissed) return { decision: HIDDEN, state: cur };
-  const name = cur.country ? cur.country.name : null;
-  const code = cur.country ? cur.country.code : null;
-  return { decision: { show: true, countryName: name, countryCode: code }, state: cur };
+  let next = cur;
+  if (area && area.countryCode) {
+    // The centre is in a named area: it names the area and its country, and
+    // keeps the excursion's dismissal.
+    const code = area.countryCode.toUpperCase();
+    const known = cur.country && cur.country.code === code ? cur.country.name : null;
+    next = { country: { code, name: area.countryName || known }, area: { name: area.name }, dismissed: cur.dismissed };
+  } else if (cur.area) {
+    // Out of the named area into land without a name: the area and the
+    // country it came with no longer hold here.
+    next = { country: null, area: null, dismissed: cur.dismissed };
+  }
+  return { decision: decide(next), state: next };
 }
 
 /** Close button: dismiss the current excursion (a no-op state shape change -
@@ -177,4 +205,26 @@ export function distanceToOutlinesDeg(lng, lat, features) {
 /** Whether [lng,lat] sits within NEAR_TOLERANCE_DEG of any onboarded outline. */
 export function isNearOutlines(lng, lat, features) {
   return distanceToOutlinesDeg(lng, lat, features) <= NEAR_TOLERANCE_DEG;
+}
+
+function inGeometry(x, y, geometry) {
+  if (!geometry) return false;
+  if (geometry.type === 'Polygon') return pointInRings(x, y, geometry.coordinates);
+  if (geometry.type === 'MultiPolygon') return (geometry.coordinates || []).some((rings) => pointInRings(x, y, rings));
+  return false;
+}
+
+/**
+ * The uncovered held area that holds [lng,lat], as
+ * `{name, countryCode}`, or null. `features` is /regions/uncovered.json's
+ * `features` array. Tested at ±360 degrees too, like the outlines.
+ */
+export function areaAt(lng, lat, features) {
+  const lngs = [lng, lng + 360, lng - 360];
+  for (const f of features || []) {
+    const p = f && f.properties;
+    if (!p || !p.name || !p.cc) continue;
+    if (lngs.some((lx) => inGeometry(lx, lat, f.geometry))) return { name: p.name, countryCode: p.cc };
+  }
+  return null;
 }

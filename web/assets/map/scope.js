@@ -689,6 +689,21 @@
       return best;
     },
 
+    /** The live region whose outline holds [lng,lat], or null: whether the
+     *  map covers this point (docs/specs/map-and-search.md §4.5b). Unlike
+     *  regionOfPoint, a bbox is not enough: California's box holds most of
+     *  Nevada. Each ring of the simplified outline is one part, never a hole;
+     *  a region with no usable outline counts by its bbox. Sync and pure. */
+    liveRegionAt(lng, lat) {
+      for (const r of regions) {
+        if (!bboxHasPoint(r.bbox, lng, lat)) continue;
+        const rings = Array.isArray(r.outline) ? r.outline.filter((f) => Array.isArray(f) && f.length >= 6) : [];
+        if (!rings.length) return r;
+        if (rings.some((f) => pointInFlatRing(lng, lat, f))) return r;
+      }
+      return null;
+    },
+
     /** Ray-casting point-in-polygon; see the module helper. `rings` is a GeoJSON
      *  Polygon coordinate array (outer + holes). Pure. */
     pointInPolygon(point, rings) { return pointInPolygon(point, rings); },

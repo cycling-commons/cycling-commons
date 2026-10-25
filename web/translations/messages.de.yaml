@@ -1204,6 +1204,8 @@ map:
   coverage_notice_area: 'Wir haben noch keine Cycling-Commons-Daten für dieses Gebiet. Du siehst nur die Basiskarte, ohne unsere Trinkwasserstellen, Straßenbeläge oder Routen.'
   coverage_notice_go_country: 'Bitte uns, {country} abzudecken'
   coverage_notice_go_area: 'Bitte uns, dieses Gebiet abzudecken'
+  coverage_notice_division: 'Wir haben noch keine Daten für {area}.'
+  coverage_notice_go_division: '{area} hinzufügen'
   empty_scope_invite: 'Hier ist noch nichts kuratiert — hilf mit, damit anzufangen.'
   search_placeholder: 'Anstieg, Ort, Aussichtspunkt…'
   search_placeholder_routes: 'Anstieg, Ort, Aussichtspunkt, Route…'

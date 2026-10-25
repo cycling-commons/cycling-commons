@@ -8,7 +8,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   initNoticeState, evaluateNotice, dismissNotice,
-  distanceToOutlinesDeg, isNearOutlines, PAN_MIN_ZOOM,
+  distanceToOutlinesDeg, isNearOutlines, areaAt, PAN_MIN_ZOOM,
 } from '../../assets/map/coverage-notice.js';
 
 test('an explicit search hit in a non-onboarded country shows the banner, named', () => {
@@ -16,12 +16,12 @@ test('an explicit search hit in a non-onboarded country shows the banner, named'
     searchHit: { countryCode: 'pl', countryName: 'Poland' },
     onboardedAt: false,
   });
-  assert.deepEqual(decision, { show: true, countryName: 'Poland', countryCode: 'PL' });
-  assert.deepEqual(state, { country: { code: 'PL', name: 'Poland' }, dismissed: false });
+  assert.deepEqual(decision, { show: true, countryName: 'Poland', countryCode: 'PL', areaName: null });
+  assert.deepEqual(state, { country: { code: 'PL', name: 'Poland' }, area: null, dismissed: false });
 });
 
 test('an explicit search hit in an onboarded country shows nothing and clears the excursion', () => {
-  const dirty = { country: { code: 'PL', name: 'Poland' }, dismissed: true };
+  const dirty = { country: { code: 'PL', name: 'Poland' }, area: null, dismissed: true };
   const { decision, state } = evaluateNotice(dirty, {
     searchHit: { countryCode: 'be', countryName: 'Belgium' },
     onboardedAt: true,
@@ -31,7 +31,7 @@ test('an explicit search hit in an onboarded country shows nothing and clears th
 });
 
 test('a search hit with no country code says nothing and changes nothing', () => {
-  const state0 = { country: { code: 'PL', name: 'Poland' }, dismissed: true };
+  const state0 = { country: { code: 'PL', name: 'Poland' }, area: null, dismissed: true };
   const { decision, state } = evaluateNotice(state0, { searchHit: { countryCode: null, countryName: null }, onboardedAt: false });
   assert.equal(decision.show, false);
   assert.deepEqual(state, state0);
@@ -39,19 +39,19 @@ test('a search hit with no country code says nothing and changes nothing', () =>
 
 test('panning into a non-onboarded area with no prior excursion shows the generic banner at zoom 7', () => {
   const { decision, state } = evaluateNotice(initNoticeState(), { zoom: 7, onboardedAt: false, nearOnboarded: false });
-  assert.deepEqual(decision, { show: true, countryName: null, countryCode: null });
+  assert.deepEqual(decision, { show: true, countryName: null, countryCode: null, areaName: null });
   assert.deepEqual(state, initNoticeState());   // a pan never starts naming a place
 });
 
 test('the same pan at zoom 6 shows nothing, and does not touch the excursion', () => {
-  const state0 = { country: { code: 'PL', name: 'Poland' }, dismissed: false };
+  const state0 = { country: { code: 'PL', name: 'Poland' }, area: null, dismissed: false };
   const { decision, state } = evaluateNotice(state0, { zoom: 6, onboardedAt: false, nearOnboarded: false });
   assert.equal(decision.show, false);
   assert.deepEqual(state, state0);   // too zoomed out is not "covered": the excursion survives
 });
 
 test('panning into an onboarded region shows nothing and clears the excursion', () => {
-  const state0 = { country: { code: 'PL', name: 'Poland' }, dismissed: true };
+  const state0 = { country: { code: 'PL', name: 'Poland' }, area: null, dismissed: true };
   const { decision, state } = evaluateNotice(state0, { zoom: 10, onboardedAt: true, nearOnboarded: false });
   assert.equal(decision.show, false);
   assert.deepEqual(state, initNoticeState());
@@ -93,7 +93,7 @@ test('search, dismiss, pan into onboarded territory, pan out again: shows again 
   assert.deepEqual(r.state, initNoticeState());   // the excursion is over, dismissal included
 
   r = evaluateNotice(r.state, { zoom: 9, onboardedAt: false, nearOnboarded: false });   // left it again
-  assert.deepEqual(r.decision, { show: true, countryName: null, countryCode: null });   // a fresh excursion: generic, not "Poland"
+  assert.deepEqual(r.decision, { show: true, countryName: null, countryCode: null, areaName: null });   // a fresh excursion: generic, not "Poland"
 });
 
 test('a search names a country; a later pan (no new search) keeps naming it', () => {
@@ -101,7 +101,7 @@ test('a search names a country; a later pan (no new search) keeps naming it', ()
   assert.equal(r.decision.countryName, 'Poland');
 
   r = evaluateNotice(r.state, { zoom: 9, onboardedAt: false, nearOnboarded: false });
-  assert.deepEqual(r.decision, { show: true, countryName: 'Poland', countryCode: 'PL' });
+  assert.deepEqual(r.decision, { show: true, countryName: 'Poland', countryCode: 'PL', areaName: null });
 });
 
 test('a new explicit selection of a different country re-arms a dismissed banner', () => {
@@ -109,7 +109,7 @@ test('a new explicit selection of a different country re-arms a dismissed banner
   let state = dismissNotice(r.state);
 
   r = evaluateNotice(state, { searchHit: { countryCode: 'de', countryName: 'Germany' }, onboardedAt: false });
-  assert.deepEqual(r.decision, { show: true, countryName: 'Germany', countryCode: 'DE' });
+  assert.deepEqual(r.decision, { show: true, countryName: 'Germany', countryCode: 'DE', areaName: null });
   assert.equal(r.state.dismissed, false);
 });
 
@@ -118,7 +118,7 @@ test('re-selecting the SAME country after dismissal also shows again: a fresh pi
   let state = dismissNotice(r.state);
 
   r = evaluateNotice(state, { searchHit: { countryCode: 'pl', countryName: 'Poland' }, onboardedAt: false });
-  assert.deepEqual(r.decision, { show: true, countryName: 'Poland', countryCode: 'PL' });
+  assert.deepEqual(r.decision, { show: true, countryName: 'Poland', countryCode: 'PL', areaName: null });
 });
 
 // --- coastal-tolerance geometry, against outline features -----------------
@@ -215,3 +215,66 @@ test('a MultiPolygon whose part has a hole: the enclave is outside that part too
 test('PAN_MIN_ZOOM is exported for callers that reset state at the same threshold', () => {
   assert.equal(typeof PAN_MIN_ZOOM, 'number');
 });
+
+// ---- named areas in a country the map partly covers -----------------------
+
+const UTAH = { name: 'Utah', countryCode: 'US', countryName: 'United States' };
+
+test('a pan into an uncovered area of a partly covered country names the area', () => {
+  const { decision, state } = evaluateNotice(initNoticeState(), { zoom: 8, onboardedAt: false, nearOnboarded: false, area: UTAH });
+  assert.deepEqual(decision, { show: true, countryName: 'United States', countryCode: 'US', areaName: 'Utah' });
+  assert.deepEqual(state, { country: { code: 'US', name: 'United States' }, area: { name: 'Utah' }, dismissed: false });
+});
+
+test('a click on an uncovered area names it at any zoom, and clears a dismissal', () => {
+  const dismissed = { country: { code: 'US', name: 'United States' }, area: { name: 'Utah' }, dismissed: true };
+  const { decision } = evaluateNotice(dismissed, {
+    zoom: 4, onboardedAt: false,
+    searchHit: { countryCode: 'US', countryName: 'United States', areaName: 'Utah' },
+  });
+  assert.deepEqual(decision, { show: true, countryName: 'United States', countryCode: 'US', areaName: 'Utah' });
+});
+
+test('a search hit inside a covered region of the same country hides the banner', () => {
+  const { decision, state } = evaluateNotice(initNoticeState(), {
+    onboardedAt: true, searchHit: { countryCode: 'us', countryName: 'United States' },
+  });
+  assert.equal(decision.show, false);
+  assert.deepEqual(state, initNoticeState());
+});
+
+test('panning on from one named area to the next keeps a dismissal and renames', () => {
+  let r = evaluateNotice(initNoticeState(), { zoom: 8, onboardedAt: false, nearOnboarded: false, area: UTAH });
+  r = { state: dismissNotice(r.state) };
+  r = evaluateNotice(r.state, { zoom: 8, onboardedAt: false, nearOnboarded: false, area: { ...UTAH, name: 'Nevada' } });
+  assert.equal(r.decision.show, false, 'the same excursion stays dismissed');
+  assert.deepEqual(r.state.area, { name: 'Nevada' });
+});
+
+test('leaving a named area for land without a name drops the area and its country', () => {
+  let r = evaluateNotice(initNoticeState(), { zoom: 8, onboardedAt: false, nearOnboarded: false, area: UTAH });
+  r = evaluateNotice(r.state, { zoom: 8, onboardedAt: false, nearOnboarded: false, area: null });
+  assert.deepEqual(r.decision, { show: true, countryName: null, countryCode: null, areaName: null });
+});
+
+test('a pan into an area keeps the country name a search gave when the area has none', () => {
+  let r = evaluateNotice(initNoticeState(), { onboardedAt: false, searchHit: { countryCode: 'us', countryName: 'Verenigde Staten' } });
+  r = evaluateNotice(r.state, { zoom: 8, onboardedAt: false, nearOnboarded: false, area: { name: 'Utah', countryCode: 'US', countryName: null } });
+  assert.equal(r.decision.countryName, 'Verenigde Staten');
+  assert.equal(r.decision.areaName, 'Utah');
+});
+
+test('areaAt finds the area under a point, in a Polygon or a MultiPolygon, and nothing outside', () => {
+  const features = [
+    { properties: { cc: 'US', name: 'Utah' }, geometry: { type: 'Polygon', coordinates: [[[-114, 37], [-109, 37], [-109, 42], [-114, 42], [-114, 37]]] } },
+    { properties: { cc: 'US', name: 'Hawaii' }, geometry: { type: 'MultiPolygon', coordinates: [
+      [[[-156, 19], [-155, 19], [-155, 20], [-156, 20], [-156, 19]]],
+      [[[-158.5, 21], [-157.5, 21], [-157.5, 22], [-158.5, 22], [-158.5, 21]]],
+    ] } },
+  ];
+  assert.deepEqual(areaAt(-111.9, 40.7, features), { name: 'Utah', countryCode: 'US' });
+  assert.deepEqual(areaAt(-158, 21.5, features), { name: 'Hawaii', countryCode: 'US' });
+  assert.equal(areaAt(-100, 40, features), null);
+  assert.equal(areaAt(-111.9, 40.7, null), null, 'no file, no name, no crash');
+});
+

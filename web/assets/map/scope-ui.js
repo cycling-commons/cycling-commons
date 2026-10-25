@@ -18,7 +18,7 @@ import { isPlanning } from './plan-state.js';
 import { corrLayerIds } from './corrections.js';
 import { hitScopeForAll } from './hit-scope.js';
 import { parkTiledOverlays, unparkTiledOverlays } from './tile-park.js';
-import { initNoticeState, evaluateNotice, dismissNotice, isNearOutlines, PAN_MIN_ZOOM } from './coverage-notice.js';
+import { initNoticeState, evaluateNotice, dismissNotice, isNearOutlines, areaAt, PAN_MIN_ZOOM } from './coverage-notice.js';
 
 
 // Region scope (docs/specs/map-and-search.md §4.5): area the map + search
@@ -340,33 +340,47 @@ let _covState = initNoticeState(), _covPendingHit = null, _covShown = false, _co
  *  waiting on is no longer pending. */
 let _nudgeEvaluate = null;
 
-/** Whether the explicit search hit's own country is onboarded - a direct
- *  lookup against CC_COVERAGE_COUNTRIES, since the hit already names its
- *  country and needs no spatial guess. */
+/** Whether a country has any live region at all: a search hit in a country
+ *  the map does not cover is uncovered wherever it lands. */
 function hitCountryOnboarded(cc){ return !!cc && COVERAGE_COUNTRIES.has(String(cc).toUpperCase()); }
 
-/* Onboarded-country outlines (docs/specs/map-and-search.md §4.5b), fetched
-   once and lazily - only the pan branch, when the centre resolves to no
-   onboarded country, ever needs the coastal-tolerance test that consults
-   them. `null` = not yet requested; an array (possibly empty, including on a
-   fetch failure) = settled. Until settled, the pan branch shows nothing
-   rather than guess - never a flash the fetch then contradicts - and the
-   nudge stands down with it (_covPending, above).
+/** Whether the map covers [lng,lat]: inside a live region's own outline,
+ *  never only its bbox (California's box holds most of Nevada). */
+function coveredAt(lng, lat){ return !!(window.CCScope && window.CCScope.liveRegionAt(lng, lat)); }
 
-   A failed fetch still settles to an array (so this never retries), but
-   `_outlinesFailed` marks the pan branch fail-closed for the rest of this
+/* Two shape files (docs/specs/map-and-search.md §4.5b), fetched once and
+   lazily, together, the first time a point outside every live region needs
+   them:
+
+   - /regions/outlines.json, the onboarded-country outlines, for the coastal
+     tolerance: water off an onboarded coast never shows the banner;
+   - /regions/uncovered.json, the held areas the map does not cover yet in
+     the countries it partly covers, for the name (Utah).
+
+   `null` = not yet requested; an array (possibly empty, including on a fetch
+   failure) = settled. Until both settle, nothing shows rather than guess -
+   never a flash the fetch then contradicts - and the nudge stands down with
+   it (_covPending, above).
+
+   A failed outlines fetch still settles to an array (so this never retries),
+   but `_outlinesFailed` marks the decision fail-closed for the rest of this
    page load: reading a broken fetch as "nothing is near" would let the
    banner flash over an onboarded coastline, so a failure reads as "always
    near" instead - the same hidden-and-state-untouched path a real coastal
-   reading takes. An explicit hit never consults this at all. */
-let _outlines = null, _outlinesReq = null, _outlinesFailed = false;
-function ensureOutlines(){
-  if(_outlinesReq) return _outlinesReq;
-  _outlinesReq = fetch('/regions/outlines.json', {headers:{'Accept':'application/json'}})
+   reading takes. A failed areas fetch only loses the names. */
+let _outlines = null, _areas = null, _shapesReq = null, _outlinesFailed = false;
+function loadShape(url){
+  return fetch(url, {headers:{'Accept':'application/json'}})
     .then(r=>r.ok ? r.json() : Promise.reject(new Error(String(r.status))))
-    .then(d=>{ _outlines = Array.isArray(d.features) ? d.features : []; })
-    .catch(()=>{ _outlines = []; _outlinesFailed = true; })
-    .then(()=>{
+    .then(d=>Array.isArray(d.features) ? d.features : []);
+}
+function ensureOutlines(){
+  if(_shapesReq) return _shapesReq;
+  _shapesReq = Promise.all([
+    loadShape('/regions/outlines.json').catch(()=>{ _outlinesFailed = true; return []; }),
+    loadShape('/regions/uncovered.json').catch(()=>[]),
+  ]).then(([outlines, areas])=>{
+      _outlines = outlines; _areas = areas;
       // The decision this tick's evaluate() could not make now can be made:
       // re-run it, then the nudge, in that order - the banner still wins the
       // shared pill (map-and-search.md §4.5b).
@@ -374,14 +388,20 @@ function ensureOutlines(){
       evaluateCoverageNotice();
       if(_nudgeEvaluate) _nudgeEvaluate();
     });
-  return _outlinesReq;
+  return _shapesReq;
 }
+function shapesReady(){ return _outlines !== null; }
+function nearCovered(lng, lat){ return _outlinesFailed ? true : isNearOutlines(lng, lat, _outlines); }
+
+/** The uncovered held area at [lng,lat] (`{name, countryCode}`), or null.
+ *  The banner names the area alone, so no country name is looked up. */
+function uncoveredAreaAt(lng, lat){ return areaAt(lng, lat, _areas); }
 
 /** Called once, right after a search pick, so the next moveend (the fly
- *  landing) evaluates the banner against that hit's own country rather than
- *  the point under the map centre (map-and-search.md §4.5b, point 1). Only
- *  Photon town hits carry a country; a catalogue row, a coordinate paste or a
- *  scope pick are always already inside an onboarded region. */
+ *  landing) evaluates the banner as an explicit pick of that place rather
+ *  than a pan (map-and-search.md §4.5b, point 1). Only Photon town hits
+ *  carry a country; a catalogue row, a coordinate paste or a scope pick are
+ *  always already inside an onboarded region. */
 export function noteCoverageSearchHit(countryCode, countryName){
   if(!countryCode) return;
   _covPendingHit = {countryCode, countryName: countryName || null};
@@ -391,22 +411,29 @@ function renderCoverageNotice(d){
   const el=document.getElementById('coverageNotice');
   if(!el) return;
   if(!d.show){ el.hidden=true; return; }
-  const msg = d.countryName
-    ? tpl(I18N.coverageNoticeCountry||'We have no Cycling Commons data for {country} yet. You see the base map only, without our water taps, road surfaces or routes.', {country:d.countryName})
-    : (I18N.coverageNoticeArea||'We have no Cycling Commons data for this area yet. You see the base map only, without our water taps, road surfaces or routes.');
-  const goLabel = d.countryName
-    ? tpl(I18N.coverageNoticeGoCountry||'Ask us to cover {country}', {country:d.countryName})
-    : (I18N.coverageNoticeGoArea||'Ask us to cover this area');
+  let msg, goLabel;
+  if(d.areaName){
+    msg = tpl(I18N.coverageNoticeDivision||'We have no data for {area} yet.', {area:d.areaName});
+    goLabel = tpl(I18N.coverageNoticeGoDivision||'Add {area}', {area:d.areaName});
+  } else if(d.countryName){
+    msg = tpl(I18N.coverageNoticeCountry||'We have no Cycling Commons data for {country} yet. You see the base map only, without our water taps, road surfaces or routes.', {country:d.countryName});
+    goLabel = tpl(I18N.coverageNoticeGoCountry||'Ask us to cover {country}', {country:d.countryName});
+  } else {
+    msg = I18N.coverageNoticeArea||'We have no Cycling Commons data for this area yet. You see the base map only, without our water taps, road surfaces or routes.';
+    goLabel = I18N.coverageNoticeGoArea||'Ask us to cover this area';
+  }
   const msgEl=el.querySelector('.cc-nudge-msg'); if(msgEl) msgEl.textContent=msg;
   const goEl=el.querySelector('.cc-nudge-go');
   if(goEl){
     goEl.textContent=goLabel;
-    // join_country (a named country) vs the plain join page ("this area") -
-    // both localized paths generated server-side; the template's own
-    // placeholder ("CC") is the only part filled in here.
+    // join_country (a named country, with the area typed in for the rider)
+    // vs the plain join page ("this area") - both localized paths generated
+    // server-side; the template's own placeholder ("CC") is the only part
+    // filled in here.
     const countryTpl=goEl.dataset.joinCountry, areaHref=goEl.dataset.joinArea;
-    if(d.countryCode && countryTpl) goEl.href=countryTpl.replace('CC', d.countryCode);
-    else if(areaHref) goEl.href=areaHref;
+    if(d.countryCode && countryTpl){
+      goEl.href=countryTpl.replace('CC', d.countryCode) + (d.areaName ? '?area='+encodeURIComponent(d.areaName) : '');
+    } else if(areaHref) goEl.href=areaHref;
   }
   el.hidden=false;
 }
@@ -414,37 +441,71 @@ function renderCoverageNotice(d){
 function evaluateCoverageNotice(){
   if(!window.CCScope) return;
   const c=map.getCenter(), zoom=map.getZoom();
-  const cc=window.CCScope.countryAt(c.lat, c.lng);
-  const hit=_covPendingHit; _covPendingHit=null;
-  let near=false;
-  // Below PAN_MIN_ZOOM the pure module hides regardless of `near` (too
-  // zoomed out to be "at" anywhere), so a tick at that zoom needs no
-  // outlines and must never wait on them: a rider who zooms out while the
-  // fetch is still in flight must not keep the nudge suppressed for it.
-  if(!hit && !cc && zoom>=PAN_MIN_ZOOM){
-    // The pan branch needs the coastal tolerance: kick off the lazy fetch
-    // the first time it is asked for, and say nothing (not even a hidden
-    // dismissal-clearing tick) until it settles. The nudge stands down for
-    // the same tick (_covPending, checked in its own evaluate() below).
-    if(_outlines===null){
+  const covered=coveredAt(c.lng, c.lat);
+  const hit=_covPendingHit;
+  let near=false, area=null;
+  // Below PAN_MIN_ZOOM the pure module hides a pan regardless of `near` (too
+  // zoomed out to be "at" anywhere), so a pan tick at that zoom needs no
+  // shapes and must never wait on them: a rider who zooms out while the
+  // fetch is still in flight must not keep the nudge suppressed for it. A
+  // search hit is explicit, and needs them at any zoom.
+  if(!covered && (hit || zoom>=PAN_MIN_ZOOM)){
+    // Kick off the lazy fetch the first time it is asked for, and say
+    // nothing (not even a hidden dismissal-clearing tick) until it settles;
+    // a search hit waits for it. The nudge stands down for the same tick
+    // (_covPending, checked in its own evaluate() below).
+    if(!shapesReady()){
       _covPending=true;
       ensureOutlines();
       renderCoverageNotice({show:false});
       _covShown=false;
       return;
     }
-    near = _outlinesFailed ? true : isNearOutlines(c.lng, c.lat, _outlines);
+    near = nearCovered(c.lng, c.lat);
+    area = uncoveredAreaAt(c.lng, c.lat);
   }
+  _covPendingHit=null;
   _covPending=false;
+  // A hit counts as covered when it lands in a live region, or near one in
+  // its own country (a coastal town just outside a simplified outline). In
+  // a country the map partly covers, its country code alone says nothing.
+  const searchHit = hit ? {
+    countryCode: hit.countryCode,
+    countryName: hit.countryName,
+    areaName: area && area.countryCode === String(hit.countryCode).toUpperCase() ? area.name : null,
+  } : null;
   const {decision, state} = evaluateNotice(_covState, {
     zoom,
-    onboardedAt: hit ? hitCountryOnboarded(hit.countryCode) : !!cc,
+    onboardedAt: hit ? (covered || (hitCountryOnboarded(hit.countryCode) && near)) : covered,
     nearOnboarded: near,
-    searchHit: hit,
+    searchHit,
+    area,
   });
   _covState = state;
   renderCoverageNotice(decision);
   _covShown = decision.show;
+}
+
+/** A click on the map outside every live region and away from its coasts
+ *  (map-and-search.md §4.5b): when the point lies in an uncovered area the
+ *  map knows the name of, the banner names it, at any zoom, as an explicit
+ *  pick. Returns true when the click was outside coverage, so the caller
+ *  does not scope to a region whose bbox merely holds the point. */
+async function coverageClick(lng, lat){
+  if(coveredAt(lng, lat)) return false;
+  await ensureOutlines();
+  if(nearCovered(lng, lat)) return false;
+  const area = uncoveredAreaAt(lng, lat);
+  if(area){
+    const {decision, state} = evaluateNotice(_covState, {
+      onboardedAt: false,
+      searchHit: {countryCode: area.countryCode, countryName: area.countryName, areaName: area.name},
+    });
+    _covState = state;
+    renderCoverageNotice(decision);
+    _covShown = decision.show;
+  }
+  return true;
 }
 
 export function initCoverageNotice(){
@@ -572,6 +633,7 @@ export function initClickToScope(){
       if(isPlanning()) return;
       if(map.queryRenderedFeatures(e.point, {layers:selectableLayers()}).length) return;
       if(!window.CCScope) return;
+      if(await coverageClick(e.lngLat.lng, e.lngLat.lat)) return;
       const r=await window.CCScope.regionOfPointPrecise(e.lngLat.lng, e.lngLat.lat);
       if(!r) return;
       // Same-region click is a no-op: don't re-fit / re-fetch / re-render.

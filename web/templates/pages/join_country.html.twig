@@ -111,8 +111,9 @@
         <select id="region" name="region">
           {# A rejected submit re-renders with what they chose, not with the
              query-string default: losing the selection would be a second
-             punishment for one typo. #}
-          {% set picked = sent.region is defined and sent.region is not empty ? sent.region : (wanted ? wanted.id : null) %}
+             punishment for one typo. An area named in the address (the
+             map's "Add Nevada") opens on that area. #}
+          {% set picked = sent.region is defined and sent.region is not empty ? sent.region : (wanted ? wanted.id : area_pick) %}
           <option value=""{{ picked ? '' : ' selected' }}>{{ 'join.scope_whole_country'|trans }}</option>
           {% for r in regions %}<option value="{{ r.id }}"{{ picked == r.id ? ' selected' : '' }}>{{ r.name }}</option>{% endfor %}
           {# Areas the Commons has no region for. Somebody willing to run one

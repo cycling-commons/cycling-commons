@@ -30,14 +30,34 @@ test('a pending state is declared and set true only while the outlines are unres
   assert.match(src, /_covPending\s*=\s*true/, 'the outlines-not-yet-loaded branch marks the decision pending');
 });
 
-test('the pending/fetch branch is entered only at PAN_MIN_ZOOM or above', () => {
-  // Below PAN_MIN_ZOOM the pure module hides regardless of `near`, so that
-  // tick needs no outlines and must not wait on them - a rider zooming out
+test('the pending/fetch branch is entered for a pan only at PAN_MIN_ZOOM or above', () => {
+  // Below PAN_MIN_ZOOM the pure module hides a pan regardless of `near`, so
+  // that tick needs no shapes and must not wait on them - a rider zooming out
   // while the fetch is in flight must not keep the nudge suppressed for it.
+  // A search hit is explicit and may wait at any zoom.
   assert.match(src, /import\s*\{[^}]*\bPAN_MIN_ZOOM\b[^}]*\}\s*from\s*['"]\.\/coverage-notice\.js['"]/,
     'PAN_MIN_ZOOM must be imported from the pure module, not a second magic number');
-  assert.match(src, /if\s*\(\s*!hit\s*&&\s*!cc\s*&&\s*zoom\s*>=\s*PAN_MIN_ZOOM\s*\)\s*\{/,
-    'the outlines/pending branch must be gated on zoom >= PAN_MIN_ZOOM, not entered for every non-onboarded, no-hit tick');
+  assert.match(src, /if\s*\(\s*!covered\s*&&\s*\(\s*hit\s*\|\|\s*zoom\s*>=\s*PAN_MIN_ZOOM\s*\)\s*\)\s*\{/,
+    'the shapes/pending branch must be gated on an explicit hit or zoom >= PAN_MIN_ZOOM');
+});
+
+test('covered means inside a live region outline, never only its bbox', () => {
+  assert.match(src, /function coveredAt\([^)]*\)\s*\{[^}]*liveRegionAt\(/,
+    'coveredAt() must ask the registry for the outline test');
+  assert.doesNotMatch(src.slice(src.indexOf('function evaluateCoverageNotice'), src.indexOf('async function coverageClick')), /countryAt\(/,
+    'the banner decision must not use the bbox-only countryAt()');
+});
+
+test('a search hit in a partly covered country is not covered by its country code alone', () => {
+  assert.match(src, /onboardedAt:\s*hit\s*\?\s*\(\s*covered\s*\|\|\s*\(\s*hitCountryOnboarded\(hit\.countryCode\)\s*&&\s*near\s*\)\s*\)/,
+    'a hit is covered only inside a live region, or near one in its own country');
+});
+
+test('a click outside coverage shows the notice instead of scoping to a region whose bbox holds it', () => {
+  const click = src.slice(src.indexOf("map.on('click', async e=>{"));
+  const cov = click.indexOf('coverageClick(');
+  const scope = click.indexOf('regionOfPointPrecise(');
+  assert.ok(cov >= 0 && scope >= 0 && cov < scope, 'coverageClick() must run, and can return, before the region lookup');
 });
 
 test('the nudge exposes its own evaluate() so the outlines fetch can re-run it on settle', () => {
@@ -57,8 +77,8 @@ test('settling the outlines fetch re-runs the coverage decision AND the nudge, i
 
 test('exactly one fetch call, memoized: the outlines are never retried', () => {
   const fetches = src.match(/\bfetch\(/g) || [];
-  assert.equal(fetches.length, 1, 'one fetch() call site for /regions/outlines.json');
-  assert.match(src, /if\s*\(\s*_outlinesReq\s*\)\s*return\s*_outlinesReq\s*;/,
+  assert.equal(fetches.length, 1, 'one fetch() call site, for both shape files');
+  assert.match(src, /if\s*\(\s*_shapesReq\s*\)\s*return\s*_shapesReq\s*;/,
     'a second call while the first is in flight (or after it settled) must return the same promise, not fetch again');
 });
 

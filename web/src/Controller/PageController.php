@@ -243,6 +243,83 @@ final class PageController extends AbstractController
         return json_encode(['type' => 'FeatureCollection', 'features' => $features], \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES | \JSON_PRESERVE_ZERO_FRACTION);
     }
 
+    /**
+     * The areas the map does not cover yet, inside countries it partly covers,
+     * as GeoJSON: one Feature per area, with its country (`cc`) and its name.
+     * The map's coverage notice (docs/specs/map-and-search.md §4.5b) finds
+     * the area under a click or the map centre in the browser, so it can say
+     * "no data for Utah yet" while no point the rider looks at reaches the
+     * server.
+     *
+     * An area is a held boundary (`world_division`, subtype region) of a
+     * country whose live regions sit below country level, with no live
+     * region of the same ISO code: a pending region's area is listed, as the
+     * map does not show it yet. A country onboarded as one whole region has
+     * nothing uncovered. Shapes are coarse (parts under 0.05 square degrees
+     * dropped unless an area has no larger one, simplified at 0.03°, two
+     * decimals): a name lookup needs no more, and the live regions are tested
+     * first.
+     */
+    #[Route('/regions/uncovered.json', name: 'regions_uncovered', methods: ['GET'])]
+    public function uncoveredAreas(Request $request, Connection $db, CacheInterface $cache): Response
+    {
+        /** @var array{n: int|string, p: int|string, at: string|null, w: int|string} $stamp */
+        $stamp = $db->fetchAssociative(
+            'SELECT COUNT(*) AS n, COUNT(*) FILTER (WHERE pending) AS p, MAX(updated_at)::text AS at,
+                    (SELECT COUNT(*) FROM world_division) AS w
+               FROM region',
+        ) ?: ['n' => 0, 'p' => 0, 'at' => null, 'w' => 0];
+        $key = 'regions-uncovered-v1-'.substr(hash('xxh128', $stamp['n'].'|'.$stamp['p'].'|'.(string) $stamp['at'].'|'.$stamp['w']), 0, 16);
+
+        $json = $cache->get($key, function (ItemInterface $item) use ($db): string {
+            $item->expiresAfter(86400);
+
+            return $this->uncoveredShapes($db);
+        });
+        $response = new JsonResponse($json, Response::HTTP_OK, [], true);
+        $response->setEtag(md5($json));
+        $response->isNotModified($request);
+
+        return $response;
+    }
+
+    private function uncoveredShapes(Connection $db): string
+    {
+        /** @var list<array{cc: string, iso: string, name: string, shape: string}> $rows */
+        $rows = $db->fetchAllAssociative(
+            "WITH partly AS (
+                 SELECT country_code FROM region WHERE NOT pending
+                  GROUP BY country_code HAVING MAX(admin_level) > 2
+             ), areas AS (
+                 SELECT w.id, w.country_code, w.iso_code, w.name, w.geom
+                   FROM world_division w
+                   JOIN partly ON partly.country_code = w.country_code
+                  WHERE w.subtype = 'region' AND w.iso_code IS NOT NULL
+                    AND NOT EXISTS (SELECT 1 FROM region r WHERE r.iso_code = w.iso_code AND NOT r.pending)
+             ), parts AS (
+                 SELECT a.id, (ST_Dump(a.geom)).geom AS g FROM areas a
+             ), ranked AS (
+                 SELECT id, g, ST_Area(g) AS area, ROW_NUMBER() OVER (PARTITION BY id ORDER BY ST_Area(g) DESC) AS n FROM parts
+             )
+             SELECT a.country_code AS cc, a.iso_code AS iso, a.name,
+                    ST_AsGeoJSON(ST_Collect(ST_SimplifyPreserveTopology(ranked.g, 0.03)), 2) AS shape
+               FROM areas a JOIN ranked ON ranked.id = a.id
+              WHERE ranked.area >= 0.05 OR ranked.n = 1
+              GROUP BY a.country_code, a.iso_code, a.name
+              ORDER BY a.country_code, a.iso_code",
+        );
+        $features = [];
+        foreach ($rows as $row) {
+            $features[] = [
+                'type' => 'Feature',
+                'properties' => ['cc' => $row['cc'], 'iso' => $row['iso'], 'name' => $row['name']],
+                'geometry' => json_decode($row['shape'], true, 512, \JSON_THROW_ON_ERROR),
+            ];
+        }
+
+        return json_encode(['type' => 'FeatureCollection', 'features' => $features], \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE);
+    }
+
     #[Route(LocalizedPath::ACCESSIBILITY, name: 'accessibility')]
     public function accessibility(): Response
     {

@@ -196,6 +196,28 @@ final class JoinCountryController extends AbstractController
             }
         }
 
+        // Arriving from the map's "Add Nevada": the area the rider asked for is
+        // also the one they would curate, so the curator picker opens on it
+        // rather than on the whole country. Matched by name, the name the map
+        // and this picker both read from the same held boundaries.
+        $areaPrefill = trim($request->query->getString('area'));
+        $unmapped = $onboarded ? $scopes->forCountry($code) : [];
+        $areaPick = null;
+        if ('' !== $areaPrefill) {
+            $wantedName = mb_strtolower($areaPrefill);
+            foreach ($regions as $r) {
+                if (mb_strtolower((string) $r['name']) === $wantedName) {
+                    $areaPick = $r['id'];
+                    break;
+                }
+            }
+            foreach ($unmapped as $name) {
+                if (null === $areaPick && mb_strtolower($name) === $wantedName) {
+                    $areaPick = 'new:'.$name;
+                }
+            }
+        }
+
         return $this->render('pages/join_country.html.twig', [
             'page_title' => 'meta.join_country_title',
             'page_description' => 'meta.join_country_description',
@@ -213,11 +235,13 @@ final class JoinCountryController extends AbstractController
             // CuratorScopes already leaves out every area onboarded here, by ISO
             // code: the names never agree ("Bavaria" on the map, "Bayern" in
             // the reference data), so no comparison belongs in this controller.
-            'unmapped_areas' => $onboarded ? $scopes->forCountry($code) : [],
+            'unmapped_areas' => $unmapped,
             // Arriving from the typeahead with the area already typed once.
             // A rider who wrote "Ohio" on /regions should not be asked to
             // write it again on the page they were sent to for that reason.
-            'area_prefill' => trim($request->query->getString('area')),
+            'area_prefill' => $areaPrefill,
+            // The curator picker's choice for that same area, or null.
+            'area_pick' => $areaPick,
             'sent' => $request->isMethod('POST') ? [
                 'region' => $request->request->getString('region'),
                 'region_name' => $request->request->getString('region_name'),
