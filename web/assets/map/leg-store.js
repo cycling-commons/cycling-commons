@@ -14,7 +14,7 @@ const STORE = 'legs';
 export const KEEP_LEGS = 500;
 /* What a kept leg holds: the engine's answer and the verdicts of the repeat check and the gravel hints, nothing the
    page adds. */
-const FIELDS = ['key', 'routed', 'line', 'distM', 'heights', 'surfaces', 'streets', 'runs', 'busyRuns', 'recorded', 'quality', 'speeds', 'detailRuns', 'curatedM', 'otherWay', 'repeatChecked', 'gravelChecked', 'viaGravel', 'fromFile', 'matched'];
+const FIELDS = ['key', 'routed', 'line', 'distM', 'heights', 'surfaces', 'streets', 'runs', 'busyRuns', 'recorded', 'quality', 'speeds', 'detailRuns', 'curatedM', 'bridgeRuns', 'tunnelRuns', 'deckAt', 'otherWay', 'repeatChecked', 'gravelChecked', 'viaGravel', 'fromFile', 'matched'];
 
 /** A kept leg as stored: only FIELDS, and `at`, the time it was last part of a ride. */
 export function legRecord(leg, at){
@@ -24,9 +24,11 @@ export function legRecord(leg, at){
   return out;
 }
 /** Whether a kept leg is used as it is: routed, within its seven days, and of the server's current answer, which
-    carries the road detail and where it lies, `detailRuns`, and the metres along our curators' road surfaces,
-    `curatedM` (route-planner.md section 4.4a); an older one is asked of the server again. */
-export const keptLegUsable = (v, now) => !!v && !!v.routed && workFresh(v.at, now) && 'detailRuns' in v && 'curatedM' in v;
+    carries the road detail and where it lies, `detailRuns`, the metres along our curators' road surfaces, `curatedM`
+    (route-planner.md section 4.4a), and its bridges and tunnels, `bridgeRuns` and `tunnelRuns`, where its heights
+    follow the deck, with a high deck's ends and top, `deckAt` (section 4.4); an older one is asked of the server
+    again. */
+export const keptLegUsable = (v, now) => !!v && !!v.routed && workFresh(v.at, now) && 'detailRuns' in v && 'curatedM' in v && 'deckAt' in v;
 /** Whether a kept leg goes, oldest first: past its seven days, or while more than KEEP_LEGS are kept (`over` above 0). */
 export const forgetLeg = (at, over, now) => over > 0 || !workFresh(at, now);
 

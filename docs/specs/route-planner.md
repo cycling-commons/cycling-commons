@@ -647,10 +647,48 @@ takes the map to the stop (owner 2026-10-14); hovering a row rings it.
 - **Climbed and descended** are read from the leg heights with one rule,
   `cleanHeights()` in `plan-model.js`: the samples are smoothed by a
   three-sample moving average; then a height counts only once it is 5 m
-  (`HEIGHT_NOISE_M`) or more from the last height that counted, and the
-  samples between two counted heights lie on the straight line between
-  them. Every rise of the cleaned heights is climbed and every drop is
-  descended. The rule is there because the elevation model is a surface
+  (`HEIGHT_NOISE_M`) or more from the last height that counted. Between two
+  counted heights, the samples stay level up to where the height last stood
+  within 1 m (`CLIMB_START_M`) of the first, lie on the straight line from
+  there to where it first stands within 1 m of the second, and stay level at
+  the second after that; the rest after the last counted height, under 5 m,
+  lies on the straight line to the end. So a climb lies where the road
+  rises: the ramp up to the Houtribdijk on dev, 5 m after 900 m of flat,
+  read as 5 m over 1 km when the line ran from one counted height to the
+  next, and reads as 5 m over 340 m (1.5 %) with it. The metres climbed and
+  descended are the same either way; only where they lie moves. Every rise
+  of the cleaned heights is climbed and every drop is descended.
+- **Bridges and tunnels.** The elevation model has no decks: on a bridge it
+  hits the deck in places and the water or the road below in others, through
+  a tunnel it reads the hill above. On dev the Houtribsluizen's bridge read 0
+  to 1 m on a dike at 6 to 7 m, and the ride "climbed" 6 m back up its far
+  end; the Zuiderzeeweg bridge over the Amsterdam-Rijnkanaal, 1.1 km, read
+  the deck up to 8 m and the water at 0 m. The leg walk (section 4.4a) asks
+  the engine for `edge.bridge` and `edge.tunnel`, and the leg carries
+  `bridgeRuns` and `tunnelRuns`, `[from, to]` metres along it, touching runs
+  merged. Before the leg is sent (`App\Elevation\BridgeHeights`), each span
+  is scaled from the edges' length to the profile's and widened by one
+  sample, 30 m, on both sides, as the two do not line up to the metre. On a
+  bridge the deck runs along the upper hull of the samples from the last one
+  before it to the first after it: a deck never sags under the straight line
+  between two of its points, so the dips are the water and the hits are the
+  deck; a point steeper than 15 % from its neighbours on the hull
+  (`MAX_DECK_GRADE`), a pylon or a mast, is left out. In a tunnel the heights
+  run straight from the sample before it to the sample after; a tunnel at the
+  start or end of the leg takes the height beside it. A bridge there has one
+  end on land: its deck rises along its own points to the highest, a pylon
+  left out, and stays at that height to the leg's end, as the water under the
+  open end is no deck (on dev, a leg from Insulindeweg to a point on the
+  Zuiderzeeweg bridge read the deck flat at 4 m; it now rises to 7 m). A deck whose top
+  stands 5 m (`DECK_COUNT_M`) or more over its lower end is a climb: the leg
+  carries its ends and top as `deckAt`, metres along the profile, and
+  `cleanHeights()` always counts those samples, so the noise rule cannot
+  miss the hump. On dev the Zuiderzeeweg bridge eastbound read flat before
+  and now climbs 4.8 m over 180 m. A small bridge over a ditch never rises
+  5 m, so a flat ride keeps its figures. A leg kept in the browser without
+  `deckAt` is asked of the server again.
+- **The day graphic's gradient parts** read "climbing over 2 %", "on the
+  flat" and "descending over 2 %", so the rider knows where the line lies. The rule is there because the elevation model is a surface
   model in whole metres: trees, roofs and rounding add up over a long ride
   (owner 2026-10-17, "Strava also always has this wrong"). A loop of 53 km
   around Hoorn, between -4 and 6 m, reads 245 m climbed without it and 25 m

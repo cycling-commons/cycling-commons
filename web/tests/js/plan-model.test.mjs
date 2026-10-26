@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const HEIGHTS = JSON.parse(readFileSync(new URL('./fixtures/plan-heights.json', import.meta.url), 'utf8'));
 import {
-  MAX_STOPS, WORK_KEEP_MS, workFresh, rideFromGpx, simplifyTrack, SHAPE_M, thinLine, ALONG_MAX_POINTS, waterGapSpan, bestWaterStop, legGoesRound, whyThisWay, sliceAlong, stopIndexAt, stopRows, stopKey, legKeys, nearLine, insertIndex, figures, cleanHeights, HEIGHT_NOISE_M, profileRuns, pointAt, gpxText, barText, createHistory, tickStepKm, surfaceMix, roadDetail, detailSpans, avgKmh,
+  MAX_STOPS, WORK_KEEP_MS, workFresh, rideFromGpx, simplifyTrack, SHAPE_M, thinLine, ALONG_MAX_POINTS, waterGapSpan, bestWaterStop, legGoesRound, whyThisWay, sliceAlong, stopIndexAt, stopRows, stopKey, legKeys, nearLine, insertIndex, figures, cleanHeights, HEIGHT_NOISE_M, CLIMB_START_M, profileRuns, pointAt, gpxText, barText, createHistory, tickStepKm, surfaceMix, roadDetail, detailSpans, avgKmh,
   PACE, flatSpeed, rideTime, surfaceBars, gradientBars, roundedHm, steepestKm, longestClimb, waterGap, sunTimes, windShares,
   durationText, TOUGHER, tougherLines, forecastPageUrl, FORECAST, forecastPoint, heightTicks,
 } from '../../assets/map/plan-model.js';
@@ -993,6 +993,39 @@ test('with a start time, the daylight line says the rider starts or finishes mor
 });
 
 import { gradientSpans, surfaceSpans } from '../../assets/map/plan-model.js';
+/* A short ramp after a long flat (owner 2026-10-26, the ramp up to the Houtribdijk: "should be climbing"): 900 m at
+   2 m, then 5 m up over 150 m. The rise counts once it is HEIGHT_NOISE_M from the last height that counted, at the
+   top; it starts where the height last stood within CLIMB_START_M of that height, not back at the start of the flat,
+   where 5 m over 1 km read as flat. */
+/* The Zuiderzeeweg bridge on dev (owner 2026-10-26: "I think the part inside the marker is over 2%"): the deck laid
+   from 2.9 m up to 7.7 m, 4.8 m, less than HEIGHT_NOISE_M over the last height that counted. The server says where a
+   deck that rises 5 m or more has its ends and top (`deckAt`); those always count. */
+test('a bridge deck\'s ends and top always count, so its hump is climbed', () => {
+  const hs = [3, 3, 3, 3, 2.7, 3.3, 4, 4.7, 5.3, 6, 6.7, 7.3, 8, 7.9, 7.8, 7.7, 7.6, 7.5, 7.4, 7.3, 7.2, 7.1, 7, 6.9, 6.8, 6.6, 6.4, 6.2, 6, 2, 1, 1, 1];
+  const heights = hs.map((h, i) => [i * 30, h]);
+  const leg = { routed: true, line: [], distM: (hs.length - 1) * 30, heights };
+  assert.equal(gradientSpans([leg], 'climb').length, 0, 'without the deck: under the noise rule');
+  const deck = { ...leg, deckAt: [90, 360, 870] };
+  const climb = gradientSpans([deck], 'climb');
+  assert.equal(climb.length, 1, JSON.stringify(climb));
+  assert.ok(climb[0][0] >= 120 && climb[0][1] <= 360, `up the ramp: ${climb[0]}`);
+  assert.ok(figures([deck]).upM > 4, `climbed ${figures([deck]).upM}`);
+});
+
+test('a climb starts where the road starts to rise, not where the last height that counted was', () => {
+  const heights = [...Array.from({ length: 31 }, (_, i) => [i * 30, 2]), [930, 3], [960, 4], [990, 5], [1020, 6], [1050, 7], [1080, 7], [1110, 7]];
+  const leg = { routed: true, line: [], distM: 1110, heights };
+  const climb = gradientSpans([leg], 'climb');
+  assert.equal(climb.length, 1, `climb ${JSON.stringify(climb)}`);
+  assert.ok(climb[0][0] >= 870 && climb[0][1] <= 1110, `the ramp only: ${climb[0]}`);
+  assert.equal(CLIMB_START_M, 1);
+  // The climbed metres are the same as before: only where they lie moves.
+  assert.ok(Math.abs(figures([leg]).upM - 5) < 0.01, `climbed ${figures([leg]).upM}`);
+  // And a drop the same way: down at its own place.
+  const down = gradientSpans([{ ...leg, heights: heights.map(([d, h]) => [d, 9 - h]) }], 'descend');
+  assert.ok(down.length === 1 && down[0][0] >= 870, `drop ${JSON.stringify(down)}`);
+});
+
 test('the stats light their stretches: a climb in the middle of a flat leg, and the surface runs with the map reading winning', () => {
   // 3 km flat, 1 km at 6 %, 3 km flat, sampled every 30 m.
   const heights = Array.from({ length: 234 }, (_, i) => { const d = i * 30; return [d, d < 3000 ? 10 : d < 4000 ? 10 + (d - 3000) * 0.06 : 70]; });

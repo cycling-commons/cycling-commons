@@ -9,6 +9,7 @@ namespace App\Controller;
 use App\Catalog\BikeType;
 use App\Catalog\RideCheckService;
 use App\Contribution\Gpx\TrackProcessor;
+use App\Elevation\BridgeHeights;
 use App\Elevation\ElevationClient;
 use App\Elevation\GravelHints;
 use App\Elevation\LegSurfaces;
@@ -507,11 +508,29 @@ final class PlanController extends AbstractController
      */
     private static function legJson(array $snapped, ?array $heights, ?array $read): array
     {
+        // Over a bridge and through a tunnel the heights follow the deck: the elevation model has none.
+        $spans = ['bridgeRuns' => [], 'tunnelRuns' => []];
+        foreach (array_keys($spans) as $key) {
+            foreach (\is_array($read[$key] ?? null) ? $read[$key] : [] as $run) {
+                if (\is_array($run) && is_numeric($run[0] ?? null) && is_numeric($run[1] ?? null)) {
+                    $spans[$key][] = [(int) $run[0], (int) $run[1]];
+                }
+            }
+        }
+        $surfaces = \is_array($read['surfaces'] ?? null) ? $read['surfaces'] : [];
+        $legM = 0.0;
+        $deckAt = [];
+        foreach (['paved', 'gravel', 'rough', 'unknown'] as $class) {
+            $legM += is_numeric($surfaces[$class] ?? null) ? (float) $surfaces[$class] : 0.0;
+        }
+
         return [
             'routed' => true,
             'coordinates' => $snapped['coordinates'],
             'distanceM' => $snapped['distanceM'],
-            'heights' => $heights,
+            'heights' => BridgeHeights::level($heights, $spans['bridgeRuns'], $spans['tunnelRuns'], $legM, $deckAt),
+            // Where a high deck has its ends and top, metres along the profile: the figures always count them.
+            'deckAt' => $deckAt,
             'surfaces' => $read['surfaces'] ?? null,
             'streets' => $read['streets'] ?? null,
             'runs' => $read['runs'] ?? null,
@@ -521,6 +540,8 @@ final class PlanController extends AbstractController
             'speeds' => $read['speeds'] ?? null,
             'detailRuns' => $read['detailRuns'] ?? null,
             'curatedM' => $read['curatedM'] ?? 0,
+            'bridgeRuns' => $spans['bridgeRuns'],
+            'tunnelRuns' => $spans['tunnelRuns'],
         ];
     }
 

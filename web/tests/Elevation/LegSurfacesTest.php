@@ -115,7 +115,7 @@ final class LegSurfacesTest extends TestCase
         $read = $client->read([[50.49, 5.86], [50.47, 5.86]]);
         self::assertNotNull($read);
         self::assertSame([[0, 2000], [3200, 3600]], $read['busyRuns']);
-        self::assertSame(['edge.surface', 'edge.length', 'edge.road_class', 'edge.cycle_lane', 'edge.names', 'edge.use', 'edge.traffic_signal', 'node.traffic_signal', 'edge.way_id', 'edge.speed_limit', 'edge.begin_shape_index', 'edge.end_shape_index', 'shape'], $this->lastBody['filters']['attributes']);
+        self::assertSame(['edge.surface', 'edge.length', 'edge.road_class', 'edge.cycle_lane', 'edge.names', 'edge.use', 'edge.traffic_signal', 'node.traffic_signal', 'edge.way_id', 'edge.speed_limit', 'edge.begin_shape_index', 'edge.end_shape_index', 'shape', 'edge.bridge', 'edge.tunnel'], $this->lastBody['filters']['attributes']);
         // The leg's own line, walked edge by edge, under the bicycle costing.
         self::assertSame('edge_walk', $this->lastBody['shape_match']);
         self::assertSame('bicycle', $this->lastBody['costing']);
@@ -359,5 +359,25 @@ final class LegSurfacesTest extends TestCase
         self::assertSame(1112, $read['surfaces']['rough']);
         self::assertSame(1112, $read['surfaces']['sand']);
         self::assertSame(['very_bad' => 1112], $read['quality']['smoothness']);
+    }
+
+    /** Where the leg crosses a bridge or runs through a tunnel, [from, to] metres along it, one touching run merged: BridgeHeights lays the deck there. */
+    public function testItSaysWhereTheLegIsOnABridgeOrInATunnel(): void
+    {
+        $client = $this->client(new MockResponse((string) json_encode(['units' => 'kilometers', 'edges' => [
+            ['surface' => 'paved', 'length' => 0.35],
+            ['surface' => 'paved', 'length' => 0.28, 'bridge' => true],
+            ['surface' => 'paved', 'length' => 0.32],
+            ['surface' => 'paved', 'length' => 0.03, 'bridge' => true],
+            ['surface' => 'paved', 'length' => 0.05, 'bridge' => true],
+            ['surface' => 'paved', 'length' => 0.1],
+            ['surface' => 'paved', 'length' => 0.2, 'tunnel' => true],
+        ]])));
+
+        $read = $client->read([[52.53, 5.42], [52.52, 5.45]]);
+
+        self::assertNotNull($read);
+        self::assertSame([[350, 630], [950, 1030]], $read['bridgeRuns']);
+        self::assertSame([[1130, 1330]], $read['tunnelRuns']);
     }
 }

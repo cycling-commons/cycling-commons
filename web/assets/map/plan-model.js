@@ -116,19 +116,36 @@ export function insertIndex(stops, legs, place){
     9 m (5 m reads 0 to 21 m, 3 m read 3 to 58 m). */
 export const HEIGHT_NOISE_M = 5;
 
+/** A rise or drop starts where the height last stood within this many metres of the height it starts from: the
+    ramp up to the Houtribdijk, 5 m over 150 m after 900 m of flat, read as 5 m over 1 km, flat (owner 2026-10-26). */
+export const CLIMB_START_M = 1;
+
 /** A leg's heights as the figures read them, one rule for every ride (route-planner.md section 4.4): a three-sample
-    moving average, then a height counts only once it is HEIGHT_NOISE_M or more from the last height that counted,
-    and the heights between two that count lie on the straight line from one to the other. One elevation per sample. */
-export function cleanHeights(heights){
+    moving average, then a height counts only once it is HEIGHT_NOISE_M or more from the last height that counted.
+    Between two that count, the height stays level up to where it last stood within CLIMB_START_M of the first, lies
+    on the straight line from there to where it first stands within CLIMB_START_M of the second, and stays level at
+    the second after that; the rest after the last one, under HEIGHT_NOISE_M, lies on the straight line to the end.
+    One elevation per sample. The indices in `keep`, a high bridge deck's ends and top (`deckAt`), always count. */
+export function cleanHeights(heights, keep = new Set()){
   const h = heights.map(x => x[1]);
   const sm = h.map((v, i) => (h[Math.max(0, i - 1)] + v + h[Math.min(h.length - 1, i + 1)]) / 3);
-  const keep = [0];
-  for(let i = 1; i < sm.length; i++){ if(Math.abs(sm[i] - sm[keep[keep.length - 1]]) >= HEIGHT_NOISE_M) keep.push(i); }
-  if(keep[keep.length - 1] !== sm.length - 1) keep.push(sm.length - 1);
+  const counted = [0];
+  for(let i = 1; i < sm.length; i++){ if(keep.has(i) || Math.abs(sm[i] - sm[counted[counted.length - 1]]) >= HEIGHT_NOISE_M) counted.push(i); }
+  if(counted[counted.length - 1] !== sm.length - 1) counted.push(sm.length - 1);
   const out = new Array(sm.length);
-  for(let k = 1; k < keep.length; k++){
-    const a = keep[k - 1], b = keep[k], d0 = heights[a][0], span = heights[b][0] - d0;
-    for(let i = a; i <= b; i++) out[i] = sm[a] + (sm[b] - sm[a]) * (span > 0 ? (heights[i][0] - d0) / span : (i - a) / Math.max(1, b - a));
+  for(let k = 1; k < counted.length; k++){
+    const a = counted[k - 1], b = counted[k], up = sm[b] >= sm[a];
+    // A rise or drop runs from where the height last stood near its foot to where it first stands near its top; the
+    // rest after the last height that counted, under HEIGHT_NOISE_M, stays spread over its stretch.
+    let s = a, e = b;
+    if(Math.abs(sm[b] - sm[a]) >= HEIGHT_NOISE_M || keep.has(a) || keep.has(b)){
+      for(let j = a; j < b; j++) if(up ? sm[j] <= sm[a] + CLIMB_START_M : sm[j] >= sm[a] - CLIMB_START_M) s = j;
+      for(let j = b; j > s; j--) if(up ? sm[j] >= sm[b] - CLIMB_START_M : sm[j] <= sm[b] + CLIMB_START_M) e = j;
+    }
+    const d0 = heights[s][0], span = heights[e][0] - d0;
+    for(let i = a; i <= s; i++) out[i] = sm[a];
+    for(let i = s; i <= e; i++) out[i] = sm[a] + (sm[b] - sm[a]) * (span > 0 ? (heights[i][0] - d0) / span : (i - s) / Math.max(1, e - s));
+    for(let i = e; i <= b; i++) out[i] = sm[b];
   }
   if(sm.length === 1) out[0] = sm[0];
   return out;
@@ -137,14 +154,30 @@ export function cleanHeights(heights){
 /** The cleaned heights of every leg, cleaned over the ride as one line (owner 2026-10-18: cleaned leg by leg, a
     round trip climbed 115 m and descended 123 m, as every leg started its own filter and the joins were never
     counted): one array per leg, aligned to its `heights`, null for a leg without heights, which breaks the line. */
+/** The indices of a leg's height samples at its `deckAt` metres (a high bridge deck's ends and top), shifted by `base`. */
+function deckIndices(leg, base = 0){
+  const out = [];
+  if(!Array.isArray(leg.deckAt) || !Array.isArray(leg.heights)) return out;
+  for(const m of leg.deckAt){
+    let best = -1, bestD = Infinity;
+    leg.heights.forEach(([d], k) => { const g = Math.abs(d - m); if(g < bestD){ bestD = g; best = k; } });
+    if(best >= 0) out.push(base + best);
+  }
+  return out;
+}
 export function cleanRide(legs){
   const out = legs.map(() => null);
   let run = [];
   const flush = () => {
     if(!run.length) return;
-    const all = []; let off = 0;
-    for(const i of run){ const hs = legs[i].heights; for(const [d, h] of hs) all.push([off + d - hs[0][0], h]); off += hs[hs.length - 1][0] - hs[0][0]; }
-    const sm = cleanHeights(all);
+    const all = [], keep = new Set(); let off = 0;
+    for(const i of run){
+      const hs = legs[i].heights;
+      deckIndices(legs[i], all.length).forEach(k => keep.add(k));
+      for(const [d, h] of hs) all.push([off + d - hs[0][0], h]);
+      off += hs[hs.length - 1][0] - hs[0][0];
+    }
+    const sm = cleanHeights(all, keep);
     let k = 0;
     for(const i of run){ const n = legs[i].heights.length; out[i] = sm.slice(k, k + n); k += n; }
     run = [];
@@ -158,8 +191,8 @@ export function cleanRide(legs){
 }
 
 /* Climbed and descended over the cleaned heights: every rise and every drop. */
-function climbOf(heights){
-  const sm = cleanHeights(heights);
+function climbOf(heights, keep){
+  const sm = cleanHeights(heights, keep);
   let up = 0, down = 0;
   for(let i = 1; i < sm.length; i++){ const d = sm[i] - sm[i - 1]; if(d > 0) up += d; else down -= d; }
   return { up, down };
@@ -1086,7 +1119,7 @@ export function whyThisWay(cur, alt){
   if(alt.distM >= cur.distM * 0.97 || cur.distM - alt.distM < 200) return { kind: 'shortest' };
   const surf = l => l.surfaces || {};
   const unpaved = l => (surf(l).gravel || 0) + (surf(l).rough || 0);
-  const up = l => Array.isArray(l.heights) && l.heights.length > 1 ? climbOf(l.heights).up : 0;
+  const up = l => Array.isArray(l.heights) && l.heights.length > 1 ? climbOf(l.heights, new Set(deckIndices(l))).up : 0;
   const base = { curM: cur.distM, altM: alt.distM };
   // A gravel or mountain bike's leg that took a way through gravel (route-planner.md section 4.2b): the gravel is the reason.
   const soughtM = unpaved(cur) - unpaved(alt);

@@ -34,10 +34,10 @@ test('a kept leg from before the road detail is asked again', () => {
   const now = Date.now();
   assert.equal(keptLegUsable({ routed: true, at: now, surfaces: {} }, now), false);
   assert.equal(keptLegUsable({ routed: true, at: now, speeds: { 50: 100 } }, now), false, 'totals without their stretches');
-  assert.equal(keptLegUsable({ routed: true, at: now, speeds: { 50: 100 }, detailRuns: { speeds: [[0, 100, '50']] }, curatedM: 0 }, now), true);
-  assert.equal(keptLegUsable({ routed: true, at: now, speeds: null, detailRuns: null, curatedM: 0 }, now), true);
-  assert.equal(keptLegUsable({ routed: true, at: now - WORK_KEEP_MS - 1, detailRuns: {}, curatedM: 0 }, now), false, 'past its seven days');
-  assert.equal(keptLegUsable({ routed: false, at: now, detailRuns: {}, curatedM: 0 }, now), false);
+  assert.equal(keptLegUsable({ routed: true, at: now, speeds: { 50: 100 }, detailRuns: { speeds: [[0, 100, '50']] }, curatedM: 0, bridgeRuns: [], tunnelRuns: [], deckAt: [] }, now), true);
+  assert.equal(keptLegUsable({ routed: true, at: now, speeds: null, detailRuns: null, curatedM: 0, bridgeRuns: [], tunnelRuns: [], deckAt: [] }, now), true);
+  assert.equal(keptLegUsable({ routed: true, at: now - WORK_KEEP_MS - 1, detailRuns: {}, curatedM: 0, bridgeRuns: [], tunnelRuns: [], deckAt: [] }, now), false, 'past its seven days');
+  assert.equal(keptLegUsable({ routed: false, at: now, detailRuns: {}, curatedM: 0, bridgeRuns: [], tunnelRuns: [], deckAt: [] }, now), false);
   assert.equal(keptLegUsable(null, now), false);
 });
 
@@ -48,4 +48,14 @@ test('a kept leg from before the curated surfaces is asked again', () => {
   assert.equal(keptLegUsable({ routed: true, at: now, detailRuns: { speeds: [] } }, now), false);
   assert.equal(keptLegUsable({ routed: true, at: now, detailRuns: { speeds: [] }, curatedM: 15616, bridgeRuns: [], tunnelRuns: [], deckAt: [] }, now), true);
   assert.equal(legRecord({ key: 'k', routed: true, curatedM: 15616 }, now).curatedM, 15616, 'the store keeps it');
+});
+
+/* A leg kept from before its heights followed the decks of its bridges (owner 2026-10-26: "Climbing is incorrect",
+   the ride "climbed" back up the Houtribsluizen's bridge) has no `deckAt`: it is asked again. */
+test('a kept leg from before the bridge decks is asked again', () => {
+  const now = Date.now();
+  assert.equal(keptLegUsable({ routed: true, at: now, detailRuns: {}, curatedM: 0 }, now), false);
+  assert.equal(keptLegUsable({ routed: true, at: now, detailRuns: {}, curatedM: 0, bridgeRuns: [], tunnelRuns: [] }, now), false);
+  const kept = legRecord({ key: 'k', routed: true, bridgeRuns: [[350, 630]], tunnelRuns: [[900, 1100]], deckAt: [908, 1178, 2137] }, now);
+  assert.deepEqual([kept.bridgeRuns, kept.tunnelRuns, kept.deckAt], [[[350, 630]], [[900, 1100]], [908, 1178, 2137]]);
 });

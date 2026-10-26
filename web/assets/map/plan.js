@@ -65,7 +65,7 @@ async function routeLeg(a, b, bike, shortest){
     const d = await r.json();
     showLegsLeft(d.budget);
     if(!d.routed) return { routed: false };
-    return { routed: true, line: d.coordinates, distM: d.distanceM, heights: d.heights || null, surfaces: d.surfaces || null, streets: d.streets || null, runs: d.runs || null, busyRuns: d.busyRuns || null, recorded: !!d.recorded, quality: d.quality || null, speeds: d.speeds || null, detailRuns: d.detailRuns || null, curatedM: d.curatedM || 0 };
+    return { routed: true, line: d.coordinates, distM: d.distanceM, heights: d.heights || null, surfaces: d.surfaces || null, streets: d.streets || null, runs: d.runs || null, busyRuns: d.busyRuns || null, recorded: !!d.recorded, quality: d.quality || null, speeds: d.speeds || null, detailRuns: d.detailRuns || null, curatedM: d.curatedM || 0, bridgeRuns: d.bridgeRuns || [], tunnelRuns: d.tunnelRuns || [], deckAt: d.deckAt || [] };
   } catch(e){ return { routed: false, down: true }; }
 }
 /* How far the along list looks (route-planner.md section 5): 250 m unless the rider picks more, kept with the draft.
@@ -130,7 +130,7 @@ async function routeGravel(asks, bike){
   } catch(e){ return null; }
 }
 function legFrom(l){
-  return { routed: true, line: l.coordinates, distM: l.distanceM, heights: l.heights || null, surfaces: l.surfaces || null, streets: l.streets || null, runs: l.runs || null, busyRuns: l.busyRuns || null, recorded: !!l.recorded, quality: l.quality || null, speeds: l.speeds || null, detailRuns: l.detailRuns || null, curatedM: l.curatedM || 0, ...(l.fromFile ? { fromFile: true, matched: !!l.matched } : {}) };
+  return { routed: true, line: l.coordinates, distM: l.distanceM, heights: l.heights || null, surfaces: l.surfaces || null, streets: l.streets || null, runs: l.runs || null, busyRuns: l.busyRuns || null, recorded: !!l.recorded, quality: l.quality || null, speeds: l.speeds || null, detailRuns: l.detailRuns || null, curatedM: l.curatedM || 0, bridgeRuns: l.bridgeRuns || [], tunnelRuns: l.tunnelRuns || [], deckAt: l.deckAt || [], ...(l.fromFile ? { fromFile: true, matched: !!l.matched } : {}) };
 }
 /* A ride file's legs on the file's own roads (route-planner.md section 6.1, owner 2026-10-18): its track cut at the
    checkpoints, one piece per leg, matched to the roads in one request. One leg per piece, in order; null when the
@@ -778,7 +778,7 @@ const DASHED = new Set(['unknown']);
 const partFill = cls => DASHED.has(cls) ? 'url(#planPartDash)' : PART_COLOUR[cls];
 const partSwatch = cls => DASHED.has(cls) ? `background:repeating-linear-gradient(90deg,${PART_COLOUR[cls]} 0 3px,transparent 3px 5px)` : `background:${PART_COLOUR[cls]}`;
 const DASH_DEFS = `<defs><pattern id="planPartDash" width="2" height="10" patternUnits="userSpaceOnUse"><rect width="1.2" height="10" fill="${PART_COLOUR.unknown}"/></pattern></defs>`;
-function partLabel(cls){ const d = { paved: P().partPaved || 'on asphalt', gravel: P().partGravel || 'on gravel', rough: P().partRough || 'on rough road', unknown: P().partUnknown || 'surface not recorded', climb: P().partClimb || 'climbing', flat: P().partFlat || 'on the flat', descend: P().partDescend || 'descending' }; return d[cls] || cls; }
+function partLabel(cls){ const d = { paved: P().partPaved || 'on asphalt', gravel: P().partGravel || 'on gravel', rough: P().partRough || 'on rough road', unknown: P().partUnknown || 'surface not recorded', climb: P().partClimb || 'climbing over 2 %', flat: P().partFlat || 'on the flat', descend: P().partDescend || 'descending over 2 %' }; return d[cls] || cls; }
 /* ---------- the stats light up their stretches (route-planner.md section 4.4, owner 2026-10-17) ----------
    Pointing at a figure or a part of the day graphic draws its stretches over the ride: the distance the whole ride,
    climbed and descended their gradient class, a surface its runs. The pale parts of the bars get a deeper tone on the map. */

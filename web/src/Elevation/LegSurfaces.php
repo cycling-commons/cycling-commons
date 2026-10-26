@@ -109,7 +109,7 @@ final class LegSurfaces
      *
      * @param list<array{0: float, 1: float}> $coords [lat, lng] pairs, the routed line
      *
-     * @return array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, sand: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}, curatedM: int}|null
+     * @return array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, sand: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}, curatedM: int, bridgeRuns: list<array{0: int, 1: int}>, tunnelRuns: list<array{0: int, 1: int}>}|null
      */
     public function read(array $coords): ?array
     {
@@ -129,7 +129,7 @@ final class LegSurfaces
      *
      * @param list<array{0: float, 1: float}> $coords [lat, lng] pairs
      *
-     * @return array{distanceM: int, surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, sand: int, signals: int}, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}, curatedM: int}|null
+     * @return array{distanceM: int, surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, sand: int, signals: int}, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}, curatedM: int, bridgeRuns: list<array{0: int, 1: int}>, tunnelRuns: list<array{0: int, 1: int}>}|null
      */
     public function readLine(array $coords): ?array
     {
@@ -139,8 +139,8 @@ final class LegSurfaces
         }
         $out = ['distanceM' => 0, 'surfaces' => ['paved' => 0, 'gravel' => 0, 'rough' => 0, 'unknown' => 0, 'busy' => 0, 'cycle' => 0, 'sand' => 0, 'signals' => 0],
             'runs' => [], 'busyRuns' => [], 'recorded' => false, 'quality' => ['smoothness' => [], 'tracktype' => []], 'speeds' => [],
-            'detailRuns' => ['smoothness' => [], 'tracktype' => [], 'speeds' => []], 'curatedM' => 0];
-        /** @var list<array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, sand: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}, curatedM: int}> $reads */
+            'detailRuns' => ['smoothness' => [], 'tracktype' => [], 'speeds' => []], 'curatedM' => 0, 'bridgeRuns' => [], 'tunnelRuns' => []];
+        /** @var list<array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, sand: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}, curatedM: int, bridgeRuns: list<array{0: int, 1: int}>, tunnelRuns: list<array{0: int, 1: int}>}> $reads */
         foreach ($reads as $read) {
             $off = $out['distanceM'];
             foreach ($read['surfaces'] as $k => $m) {
@@ -180,6 +180,11 @@ final class LegSurfaces
             }
             $out['recorded'] = $out['recorded'] || $read['recorded'];
             $out['curatedM'] += $read['curatedM'];
+            foreach (['bridgeRuns', 'tunnelRuns'] as $key) {
+                foreach ($read[$key] as [$from, $to]) {
+                    $out[$key][] = [$off + $from, $off + $to];
+                }
+            }
             $out['distanceM'] += $read['surfaces']['paved'] + $read['surfaces']['gravel'] + $read['surfaces']['rough'] + $read['surfaces']['unknown'];
         }
         uksort($out['speeds'], static fn (int|string $a, int|string $b): int => ('unset' === $a ? \PHP_INT_MAX : (int) $a) <=> ('unset' === $b ? \PHP_INT_MAX : (int) $b));
@@ -227,7 +232,7 @@ final class LegSurfaces
      * @param list<list<array{0: float, 1: float}>> $lines      [lat, lng] pairs per leg
      * @param string                                $shapeMatch `edge_walk` for the engine's own route, `map_snap` for any other line
      *
-     * @return list<array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, sand: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}, curatedM: int}|null>
+     * @return list<array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, sand: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}, curatedM: int, bridgeRuns: list<array{0: int, 1: int}>, tunnelRuns: list<array{0: int, 1: int}>}|null>
      */
     public function readMany(array $lines, string $shapeMatch = 'edge_walk'): array
     {
@@ -254,7 +259,7 @@ final class LegSurfaces
                     'shape_match' => $shapeMatch,
                     'units' => 'kilometers',
                     // The engine marks a traffic light on the edge that ends at it, now and then on the node itself.
-                    'filters' => ['attributes' => ['edge.surface', 'edge.length', 'edge.road_class', 'edge.cycle_lane', 'edge.names', 'edge.use', 'edge.traffic_signal', 'node.traffic_signal', 'edge.way_id', 'edge.speed_limit', 'edge.begin_shape_index', 'edge.end_shape_index', 'shape'], 'action' => 'include'],
+                    'filters' => ['attributes' => ['edge.surface', 'edge.length', 'edge.road_class', 'edge.cycle_lane', 'edge.names', 'edge.use', 'edge.traffic_signal', 'node.traffic_signal', 'edge.way_id', 'edge.speed_limit', 'edge.begin_shape_index', 'edge.end_shape_index', 'shape', 'edge.bridge', 'edge.tunnel'], 'action' => 'include'],
                 ],
                 'timeout' => 8,
             ]);
@@ -268,7 +273,7 @@ final class LegSurfaces
     /**
      * @param list<array{0: float, 1: float}> $coords
      *
-     * @return array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, sand: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}, curatedM: int}|null
+     * @return array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, sand: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}, curatedM: int, bridgeRuns: list<array{0: int, 1: int}>, tunnelRuns: list<array{0: int, 1: int}>}|null
      */
     private function result(ResponseInterface $res, array $coords): ?array
     {
@@ -315,6 +320,8 @@ final class LegSurfaces
         $runs = [];
         // The busy stretches, [from, to] metres along the leg: what makes it tough lights them up (section 4.4).
         $busyRuns = [];
+        // On a bridge and in a tunnel, [from, to] metres along the leg: BridgeHeights lays the deck there.
+        $structureRuns = ['bridge' => [], 'tunnel' => []];
         $at = 0.0;
         foreach ($edges as $edge) {
             if (!\is_array($edge) || !isset($edge['length']) || !is_numeric($edge['length'])) {
@@ -376,6 +383,17 @@ final class LegSurfaces
                     $busyRuns[] = [(int) round($at), (int) round($at + $length)];
                 }
             }
+            foreach (['bridge', 'tunnel'] as $kind) {
+                if (true !== ($edge[$kind] ?? null)) {
+                    continue;
+                }
+                $last = array_key_last($structureRuns[$kind]);
+                if (null !== $last && $structureRuns[$kind][$last][1] >= (int) round($at)) {
+                    $structureRuns[$kind][$last][1] = (int) round($at + $length);
+                } else {
+                    $structureRuns[$kind][] = [(int) round($at), (int) round($at + $length)];
+                }
+            }
             if (self::CYCLEWAY_USE === $use || self::APART_LANE === $lane) {
                 $metres['cycle'] += $length;
             }
@@ -405,7 +423,9 @@ final class LegSurfaces
             'quality' => ['smoothness' => $round($quality['smoothness']), 'tracktype' => $round($quality['tracktype'])],
             'speeds' => $round($speeds),
             'detailRuns' => $detailRuns,
-            'curatedM' => (int) round($curatedM)];
+            'curatedM' => (int) round($curatedM),
+            'bridgeRuns' => $structureRuns['bridge'],
+            'tunnelRuns' => $structureRuns['tunnel']];
     }
 
     /**
