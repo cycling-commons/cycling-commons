@@ -508,6 +508,42 @@ final class PlanControllerTest extends WebTestCase
         }
     }
 
+    /**
+     * A ride file's leg keeps its surfaces (route-planner.md section 6.1): the file's own line, standing in for a
+     * match that fell short, follows no edges of the engine exactly, and an exact edge walk of it reads nothing. The
+     * read falls back to matching, as for the gravel hints; measured on the dev engine, a 17 km BRouter line near
+     * Leusden read no surfaces before and 2.9 km of gravel after.
+     */
+    public function testAFileLegKeepsItsSurfacesWhenTheMatchFallsShort(): void
+    {
+        $client = static::createClient();
+        $modes = [];
+        $engine = new MockHttpClient(static function (string $method, string $url, array $options) use (&$modes): MockResponse {
+            $body = json_decode((string) ($options['body'] ?? '{}'), true);
+            if (str_ends_with($url, '/trace_attributes')) {
+                $modes[] = $body['shape_match'];
+
+                // As the engine answers a line off its edges: an exact walk finds no route match.
+                return new MockResponse((string) json_encode('walk_or_snap' === $body['shape_match']
+                    ? ['units' => 'kilometers', 'edges' => [['surface' => 'paved_smooth', 'length' => 1.9], ['surface' => 'gravel', 'length' => 0.6]]]
+                    : ['error' => 'edge_walk algorithm failed to find exact route match']));
+            }
+
+            return new MockResponse((string) json_encode(['range_height' => [[0, 300], [30, 305]]]));
+        });
+        static::getContainer()->set(RouteSnapper::class, new RouteSnapper($engine, new NullLogger(), ''));
+        static::getContainer()->set(ElevationClient::class, new ElevationClient($engine, new NullLogger(), 'http://valhalla.test', 'Copernicus DEM GLO-30'));
+        static::getContainer()->set(LegSurfaces::class, new LegSurfaces($engine, new NullLogger(), 'http://valhalla.test'));
+
+        self::post($client, '/map/plan/match', 'plan-leg', ['legs' => [[[5.80, 50.40], [5.81, 50.40], [5.83, 50.41]]], 'bike' => 'Gravel']);
+
+        self::assertResponseIsSuccessful();
+        $leg = self::json($client)['legs'][0];
+        self::assertFalse($leg['matched'], 'no engine to match with: the file\'s own line');
+        self::assertSame(600, $leg['surfaces']['gravel'], 'the file line\'s surfaces are read, not lost');
+        self::assertSame(['walk_or_snap'], $modes);
+    }
+
     public function testAlongRefusesALineTooShortToRide(): void
     {
         $client = static::createClient();

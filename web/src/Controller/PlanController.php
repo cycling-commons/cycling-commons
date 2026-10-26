@@ -397,7 +397,9 @@ final class PlanController extends AbstractController
         }
         $lines = array_map(static fn (array $leg): array => array_map(static fn (array $c): array => [$c[1], $c[0]], $leg['coordinates']), $legs);
         $heights = $elevation->profileMany($lines);
-        $reads = $surfaces->readMany($lines);
+        // A file's own line follows no edges of the engine exactly, and a match can fall a little off them too: an
+        // exact edge walk reads nothing there, so the read falls back to matching.
+        $reads = $surfaces->readMany($lines, 'walk_or_snap');
         $out = [];
         foreach ($legs as $i => $leg) {
             $out[] = [...self::legJson(['coordinates' => $leg['coordinates'], 'distanceM' => $leg['distanceM']], $heights[$i] ?? null, $reads[$i] ?? null), 'fromFile' => true, 'matched' => $leg['matched']];
