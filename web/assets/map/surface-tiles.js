@@ -3,7 +3,7 @@
    their own PMTiles artifact, drawn under curated A items. Off until the rail
    toggle. SURFACE_STYLE is shared with A so a tile line and an A-item of the
    same class look the same. */
-import { map, flyToPin } from './map-init.js';
+import { map, flyToPin, holdLandTone } from './map-init.js';
 import { SURFACE_CLS, surfaceStyle } from './render.js';
 import { D, trVal } from './i18n.js';
 import { layerByKey } from './catalog.js';
@@ -537,6 +537,7 @@ export function setStudyMode(on) {
   const style = map.getStyle();
   if (!style) return study;
   study = !!on;
+  holdLandTone(study);
   if (study && visBefore === null) visBefore = new Map();
   style.layers.forEach(l => {
     if (l.type === 'background') {

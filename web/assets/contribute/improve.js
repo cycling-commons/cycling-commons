@@ -296,7 +296,11 @@
     endDragOffMap(wmap);
     wmap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     wmap.addControl(new maplibregl.AttributionControl({ customAttribution: '© OpenStreetMap contributors · ODbL' }), 'bottom-right');
+    // The main map's greens and land tone (map/basemap-tone.js), again after any style change; a repeat sets nothing.
+    var tone = function () { if (window.CcToneBasemap) window.CcToneBasemap(wmap); };
+    wmap.on('styledata', tone);
     wmap.on('load', function () {
+      tone();
       if (window.Cc && window.Cc.mountEditorBase) {
         window.Cc.mountEditorBase(wmap, { token: window.MAPILLARY_TOKEN, labels: window.CC_BASE_LABELS });
       }

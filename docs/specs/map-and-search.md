@@ -1883,6 +1883,78 @@ get darker and less saturated, hue about 98 to 72-75 (`WARM_GREENS`,
 `hsla(73,38%,52%,0.7)`, park `#ccd6a4`, each with liberty's own opacity. Set after every style change with the small roads
 below, and only where the colour differs.
 
+**The land takes a field's tone.** Liberty's land is a near-white cream,
+`#f8f4f0`, and it paints no farmland; below zoom 12 the tiles leave most
+fields out besides (east of Hoorn, grass and farmland cover 60% of a zoom 12
+tile and 5% of a zoom 11 one). So wherever no green was drawn, the land read
+as white patches between the meadows, the more so zoomed out. The land is
+painted a light, fresh yellow-green, `#E5EBCF` (`LAND_TONE` in
+`basemap-tone.js`), so a field and unmapped country read alike at every
+zoom and a meadow a little greener; a greyer `#E2E3CF` read pale and dead
+beside Komoot's. Towns are a light warm grey, nearly solid and at every zoom
+(`TOWN_TONE`, liberty's `landuse_residential` with its own filter, from 90%
+opacity at zoom 9 to 95% at 16, its zoom range opened past liberty's 12
+with `setLayerZoomRange`): liberty's own fill is see-through (49% at zoom
+12) and stops at 12. The greens, the land and the towns are one palette in
+`map/basemap-tone.js`, for every map that draws liberty: the main map
+(through `warmGreens()` in `map-init.js`) and the contribute wizard's map
+(`toneBasemap()`, loaded by `contribute/improve.html.twig` and applied by
+`improve.js` on load and after every style change). The country globe draws
+its own plain style, land one colour, and needs neither. Road mode keeps its
+own grey background: while it is on, the land tone is held
+(`holdLandTone()`), so a style change does not paint the land back under the
+surfaces.
+
+**A calmer base under the ride.** The strong colours are kept for what a
+rider reads: the ride, the cycle paths, the places, and the roads a bike may
+not take.
+
+- A road a bike may ride (secondary and tertiary, trunk and primary, and
+  their links, on the ground, on bridges and in tunnels) is white with the
+  small roads' grey edge `#bcb7ad` (`ROAD_TONE`, `ROAD_EDGE`), the bigger
+  ones only wider: liberty's yellow on every road made the orange ride line
+  read as one more road. The edge is darker zoomed out (`#8f8a80` at zoom 8,
+  the light grey from 12), or a white road on the light land is lost at
+  zoom 9 to 10.
+- A road for cars only keeps liberty's yellow `#fea` with its orange edge
+  `#e9ac77`: a trunk road, or one that says `bicycle=no` or `use_sidepath`
+  (`CAR_ONLY`, the same test as `NO_BIKE_FADE`). The fade switch in the
+  Layers panel still fades them; motorways keep liberty's own colour, faded.
+- Ditches and small canals (`waterway_other`) are thinner, 0.4 px at zoom 13
+  to 3 px at 20, and faint until zoom 13 (25% at 11, 55% at 13, 90% at 16),
+  in liberty's own blue: east of Hoorn the polder read as a blue grid.
+  Rivers keep liberty's colour; lakes and the sea are a little lighter,
+  `#B0CAFF` against liberty's `rgb(158,189,255)`, still clearly blue
+  rather than Komoot's grey-blue.
+- More village names zoomed out: the tiles carry them (171 villages in a
+  zoom 10 tile round Hoorn), but liberty set them in 10 to 12 px black and a
+  label that would overlap another is dropped, so most never showed. Village
+  names are 8.5 px at zoom 9 to 12 px at 13, dark grey `#333`, with a text
+  padding of 1 (`LABEL_LAYOUT`, `LABEL_PAINT`, set by `setLayoutsOn()`);
+  town names a touch smaller zoomed out (11.5 px at zoom 9), still above
+  the villages.
+
+- Zoomed out the tiles carry no road smaller than a secondary one: tertiary
+  roads arrive at zoom 11, small roads at 12, ditches and streams at 12
+  (measured in Flevoland). So the secondary and tertiary roads are drawn
+  wider there, 0.8 px at zoom 8 and 1.4 px at 10 against liberty's half a
+  pixel, with liberty's own widths close in.
+- Railways show from zoom 8 (`cc-rail`, `addRailOn()`), a thin grey dashed
+  line under liberty's own, which takes over at zoom 14; tunnels are left
+  out. The tiles carry them from zoom 8, liberty drew none below 14.
+
+`calmBasemapOn()` sets the greens, the towns, the roads, the railways, the
+water and the place names; `toneBasemap()` adds the land. Road mode holds only the land,
+and hides the railway with the rest of the basemap. The greens and the land are one palette in
+`map/basemap-tone.js`, for every map that draws liberty: the main map
+(through `warmGreens()` in `map-init.js`) and the contribute wizard's map
+(`toneBasemap()`, loaded by `contribute/improve.html.twig` and applied by
+`improve.js` on load and after every style change). The country globe draws
+its own plain style, land one colour, and needs neither. Road mode keeps its
+own grey background: while it is on, the land tone is held
+(`holdLandTone()`), so a style change does not paint the land back under the
+surfaces.
+
 **Small roads seen from zoom 12** (owner 2026-10-18: "what I like about
 OSM's cycle map is that you can see all roads at lower zoom levels, because
 all roads are white"; tracks and service roads keep liberty's own drawing,

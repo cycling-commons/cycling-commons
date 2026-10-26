@@ -624,6 +624,9 @@
 <script type="module" nonce="{{ csp_nonce() }}">
   import * as maplibregl from "{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.mjs') }}";
   window.maplibregl = maplibregl;
+  {# The main map's moss greens and land tone on this map too (map/basemap-tone.js, map-and-search.md section 4.1). #}
+  import { toneBasemap } from "{{ asset('map/basemap-tone.js') }}";
+  window.CcToneBasemap = toneBasemap;
 </script>
 {# climb-elevation.js + climb-editor.js must load before improve.js (the
    climb edit path calls window.Cc.mountClimbEditor / window.Cc.profileFromRoute).

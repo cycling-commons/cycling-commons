@@ -3,6 +3,7 @@
    right-click coordinates (docs/specs/map-and-search.md §2).
    `map` is adopted from catalog-load.js (built before the catalog fetch). */
 import { pinOffset, locateOffset, locateErrorMessage, offsetAsPadding } from './util.js';
+import { WARM_GREENS, LAND_TONE, TOWN_TONE, ROAD_TONE, WATER_TONE, ROAD_EDGE, setPaintsOn, calmBasemapOn } from './basemap-tone.js';
 import { hopIsNear } from './camera-hop.js';
 import { uDistUnit } from './units.js';
 
@@ -115,7 +116,7 @@ export function addCycleways(){
    service roads stay liberty's, the surfaces show those). The tiles carry the small roads (`minor`) from zoom 12, and
    liberty draws their white only from 13.5: its two layers are set wider from 12. Each property is set only when it
    differs, so a run after a style change sets nothing again. */
-export const SMALL_ROAD_EDGE = '#bcb7ad';
+export const SMALL_ROAD_EDGE = ROAD_EDGE;
 const exp = stops => ['interpolate', ['exponential', 1.2], ['zoom'], ...stops];
 export const SMALL_ROADS = {
   // The edge's opacity a zoom expression, never a plain number: fadeHighways() rewrites a plain number with its own,
@@ -123,28 +124,15 @@ export const SMALL_ROADS = {
   road_minor_casing: { 'line-width': exp([12, 2.4, 13, 3.4, 14, 5, 20, 20]), 'line-color': SMALL_ROAD_EDGE, 'line-opacity': ['interpolate', ['linear'], ['zoom'], 11.5, 0, 12, 1] },
   road_minor: { 'line-width': exp([12, 1.2, 13, 2, 14, 3, 20, 18]) },
 };
-/* The basemap's greens warmer and deeper, a moss green (map-and-search.md section 4.1, owner 2026-10-19: "the green in
-   our map needs to be a bit warmer", then "Green must be deeper a bit more mossy", then "add a bit more warmth to
-   it"). Liberty's grass, wood and park sit near hue 90 to 98; ours near 72 to 75, darker and less saturated, with
-   their own opacity kept. */
-export const WARM_GREENS = {
-  landcover_grass: { 'fill-color': 'rgb(156,174,102)' },
-  landcover_wood: { 'fill-color': 'hsla(73,38%,52%,0.7)' },
-  park: { 'fill-color': '#ccd6a4' },
-};
+/* The greens and the land's own tone: one palette for every map that draws liberty (basemap-tone.js). */
+export { WARM_GREENS, LAND_TONE, TOWN_TONE, ROAD_TONE, WATER_TONE };
 export function showSmallRoads(){ return setPaints(SMALL_ROADS); }
-export function warmGreens(){ return setPaints(WARM_GREENS); }
-function setPaints(table){
-  let n = 0;
-  for(const [id, paint] of Object.entries(table)){
-    if(!map.getLayer(id)) continue;
-    for(const [k, v] of Object.entries(paint)){
-      if(JSON.stringify(map.getPaintProperty(id, k)) === JSON.stringify(v)) continue;
-      map.setPaintProperty(id, k, v); n++;
-    }
-  }
-  return n;
-}
+/* Road mode paints the background its own grey (surface-tiles.js setStudyMode): while it does, the land tone is held,
+   or the next style change would paint the land back under the surfaces. */
+let landHeld = false;
+export function holdLandTone(on){ landHeld = !!on; }
+export function warmGreens(){ return calmBasemapOn(map) + (landHeld ? 0 : setPaints(LAND_TONE)); }
+function setPaints(table){ return setPaintsOn(map, table); }
 /* After a style change, once per frame however many changes come in that frame. */
 let fadeQueued = false;
 export function fadeHighwaysSoon(){
