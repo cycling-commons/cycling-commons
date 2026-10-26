@@ -653,6 +653,15 @@ test('the start search sends Photon a rounded middle of the map, and the scope f
   assert.ok(/regionOfPointPrecise\(r\.lng, r\.lat\)\.then\(reg => \{ if\(reg\) followRideScope\(reg\); \}\)/.test(fn), 'a start picked outside the scope leaves the scope where it was');
 });
 
+test('a coordinate typed as the start is a checkpoint there, and never goes to the place search', () => {
+  const fn = plan.slice(plan.indexOf('async function searchStart'), plan.indexOf('function setBike'));
+  const coord = fn.indexOf('window.Cc.parseLatLng(qy)'), photon = fn.indexOf('photon.komoot.io');
+  assert.ok(coord > 0 && photon > 0 && coord < photon, 'the coordinate is read before any place search');
+  const branch = fn.slice(coord, photon);
+  assert.match(branch, /snapPoint\(pt\.lat, pt\.lng\)\.then\(p => addStop\(/, 'the checkpoint goes on the nearest road, as a map click does');
+  assert.match(branch, /\n    return;\n  \}/, 'the coordinate branch returns before the place search');
+});
+
 test('the scope follows the start as soon as it is on the map, and a stop clicked in the list', () => {
   assert.match(plan, /routeAll\(\); followStopScope\(ride\.stops\[0\]\); saveDraft\(\);/, 'a new start leaves the scope where it was until the legs are routed');
   assert.match(plan, /flyToPin\(\[s\.lng, s\.lat\]\); followStopScope\(s\);/, 'a stop clicked in the list does not take the scope to its region');

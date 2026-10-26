@@ -425,7 +425,12 @@ location"). The first block of the panel (`#planStart`):
    "Click the map where you start." The scope follows the start picked, as for
    any ride (section 5, `followRideScope`): Hoorn picked while the map
    looked near Spa takes the scope to North Holland, and clearing the ride
-   gives the rider's own scope back (owner 2026-10-17).
+   gives the rider's own scope back (owner 2026-10-17). A coordinate typed
+   there (`52.0400, 5.6650`, read by the map search's own parser,
+   `window.Cc.parseLatLng`, `contribute/coords.js`) is no name: one row, "Go
+   to this point", puts the checkpoint there, on the nearest road as a map
+   click does (`snapPoint()`), and the place search is never asked, so the
+   point does not reach Photon.
 3. **The first click** sets the start, as before.
 
 ### 4.2 Legs, the engine, and the bike

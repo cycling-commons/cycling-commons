@@ -298,6 +298,17 @@ async function searchStart(qy){
   const ul = $('planStartResults'); if(!ul) return;
   if(startCtl) startCtl.abort();
   if(qy.length < 3){ ul.innerHTML = ''; return; }
+  // A coordinate (52.0400, 5.6650) is a point, not a name: one row that puts the checkpoint there, on the nearest
+  // road, and no place search, which would learn the point for nothing (the map search's own parser, contribute/coords.js).
+  const pt = window.Cc && window.Cc.parseLatLng ? window.Cc.parseLatLng(qy) : null;
+  if(pt){
+    const five = v => String(Math.round(v * 1e5) / 1e5), at = `${five(pt.lat)}, ${five(pt.lng)}`;
+    ul.innerHTML = `<li><button type="button" class="cc-near" data-start="point"><span class="cc-near-nm">${escPend(D.goToPoint || 'Go to this point')}</span><em>${escPend(at)}</em></button></li>`;
+    ul.onclick = e => { if(!e.target.closest('[data-start]')) return;
+      ul.innerHTML = ''; map.flyTo({ center: [pt.lng, pt.lat], zoom: 15 });
+      snapPoint(pt.lat, pt.lng).then(p => addStop({ lat: p.lat, lng: p.lng, name: P().mapPoint || 'Map point' })); };
+    return;
+  }
   startCtl = new AbortController();
   // Photon ranks towns and streets near the middle of the map first; rounded to 0.1° (about 10 km), all it needs,
   // as the privacy notice says (bs_photon_sees).
