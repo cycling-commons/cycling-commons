@@ -6,7 +6,7 @@ import { map, flyToPin } from './map-init.js';
 import { showTip, hideTip } from './sheet.js';
 import { layerByKey, active, mode, LETTER_KEY, KEY_LETTER } from './catalog.js';
 import { liftScopeForHit } from './scope-ui.js';
-import { mintKindIcons, miniIcon, iconMinZoom, SERVICE_GLYPH, serviceIconId, coverageIconId, kindImageId, covIconSizes, DISC_SIZES, DROP_SIZES, witnessCutoff, KIND_ICONS, PLACE_LETTER, PLACE_KIND_LABELS, kindOfLabel } from './icons.js';
+import { mintKindIcons, miniIcon, iconMinZoom, SERVICE_GLYPH, serviceIconId, coverageIconId, kindImageId, covIconSizes, SIZE_ZOOMS, DISC_SIZES, DROP_SIZES, witnessCutoff, KIND_ICONS, PLACE_LETTER, PLACE_KIND_LABELS, kindOfLabel } from './icons.js';
 import { updateCounts, applyStaysAccessFilter, liftInfoLayersAboveRoutes, bikeFriendlyOn, activeAccess, ALL_ACCESS } from './render.js';
 import { stayCoverageShown } from './filters.js';
 import { openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt, planPlace } from './drawer.js';
@@ -227,10 +227,10 @@ function addCoverageLayers(cc, src){
         // One ramp per shape: the food discs size like every other disc.
         'icon-size': key==='water'
           ? ['interpolate',['linear'],['zoom'],
-              8,['case',isFood,DISC_SIZES[0],DROP_SIZES[0]],
-              13,['case',isFood,DISC_SIZES[1],DROP_SIZES[1]],
-              18,['case',isFood,DISC_SIZES[2],DROP_SIZES[2]]]
-          : ['interpolate',['linear'],['zoom'],8,DISC_SIZES[0],13,DISC_SIZES[1],18,DISC_SIZES[2]],
+              SIZE_ZOOMS[0],['case',isFood,DISC_SIZES[0],DROP_SIZES[0]],
+              SIZE_ZOOMS[1],['case',isFood,DISC_SIZES[1],DROP_SIZES[1]],
+              SIZE_ZOOMS[2],['case',isFood,DISC_SIZES[2],DROP_SIZES[2]]]
+          : ['interpolate',['linear'],['zoom'],SIZE_ZOOMS[0],DISC_SIZES[0],SIZE_ZOOMS[1],DISC_SIZES[1],SIZE_ZOOMS[2],DISC_SIZES[2]],
         // A folded group's size (coverage-provider.md §3 step 5): one pin stands
         // for five or more of a kind close together, and says how many.
         'text-field': ['case', ['has','grp'], ['to-string',['get','grp']], ''],
@@ -252,7 +252,7 @@ export function addCoverage(){
       // One zoom interpolate (MapLibre forbids two); per-feature stops keep water vs rest ramps.
       layout:{'icon-image':['get','_icon'],'icon-allow-overlap':true,
         'icon-size':['interpolate',['linear'],['zoom'],
-          8,['get','_s8'],13,['get','_s13'],18,['get','_s18']]}});
+          SIZE_ZOOMS[0],['get','_s0'],SIZE_ZOOMS[1],['get','_s1'],SIZE_ZOOMS[2],['get','_s2']]}});
   }
   bindCoverageHandlers();
   const mount = () => mountInView(map, 'coverage', 'points', COVERAGE_MIN_ZOOM, (key, src) => {
@@ -553,9 +553,9 @@ function staysShown(){
 
 export function showSelectedCoverageIcon(key, tp, ll){
   const src=map.getSource('cov-sel'); if(!src||!ll) return;
-  const [s8,s13,s18]=covIconSizes(key,tp);
+  const [s0,s1,s2]=covIconSizes(key,tp);
   src.setData({type:'FeatureCollection',features:[{type:'Feature',
     geometry:{type:'Point',coordinates:[ll.lng,ll.lat]},
-    properties:{_icon:coverageIconId(key,tp), _s8:s8, _s13:s13, _s18:s18}}]});
+    properties:{_icon:coverageIconId(key,tp), _s0:s0, _s1:s1, _s2:s2}}]});
 }
 export function clearSelectedCoverageIcon(){ const src=map.getSource('cov-sel'); if(src) src.setData({type:'FeatureCollection',features:[]}); }

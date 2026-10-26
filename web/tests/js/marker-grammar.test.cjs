@@ -82,13 +82,16 @@ test('pinClasses puts the border and the badge on the element, and nothing about
 // `--u`, which discScale() keeps equal to that ramp as the map zooms.
 test('the DOM disc scale follows the tile ramp between and beyond its stops', () => {
   const sizes = JSON.parse((src.match(/export const DISC_SIZES=(\[[^\]]+\])/) || [])[1]);
-  const c = { DISC_SIZES: sizes };
+  const zooms = JSON.parse((src.match(/export const SIZE_ZOOMS=(\[[^\]]+\])/) || [])[1]);
+  assert.deepEqual(zooms, [11, 13, 18], 'the lowest stop where the icons start');
+  const c = { DISC_SIZES: sizes, SIZE_ZOOMS: zooms };
   vm.createContext(c);
   vm.runInContext(lift('discScale'), c);
   assert.equal(c.discScale(13), sizes[1]);
   assert.equal(c.discScale(18), sizes[2]);
   assert.ok(Math.abs(c.discScale(15.5) - (sizes[1] + sizes[2]) / 2) < 1e-9, 'linear between stops, like the tile interpolate');
-  assert.equal(c.discScale(5), sizes[0], 'clamped below z8');
+  assert.equal(c.discScale(11), sizes[0]);
+  assert.equal(c.discScale(5), sizes[0], 'clamped below z11');
   assert.equal(c.discScale(21), sizes[2], 'clamped above z18');
   assert.match(src, /map\.on\('zoom', syncZoomStyles\)/, 'the scale moves with the map');
 });

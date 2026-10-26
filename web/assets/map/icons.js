@@ -307,17 +307,20 @@ export function coverageIconId(key, tp){
 export function serviceIconId(kind, badge){
   return kind && Object.hasOwn(SERVICE_GLYPH, kind) ? miniIcon('services', SERVICE_GLYPH[kind], kind, badge) : miniIcon('services', undefined, undefined, badge);
 }
-/* icon-size stops at z8/z13/z18 for a coverage icon. Every disc (every
-   category, and the food half of letter B) shares one ramp; the drop is
+/* icon-size stops at SIZE_ZOOMS (z11/z13/z18) for a coverage icon. Every disc
+   (every category, and the food half of letter B) shares one ramp; the drop is
    narrower than a disc in the same 24-box, so it rides a slightly larger one
-   to keep the height the drops always had. */
+   to keep the height the drops always had. The lowest stop sits at z11, where
+   the icons start, so zoomed out to a town and its villages they are small
+   (owner 2026-10-26: "make our spots a bit smaller when zoomed out", at z11.4). */
+export const SIZE_ZOOMS=[11,13,18];
 export const DISC_SIZES=[0.6,1.05,1.37];
 export const DROP_SIZES=[0.66,1.15,1.5];
 /* The disc ramp at any zoom, as the tile layer's linear interpolate computes
    it. The DOM disc pin (.cc-pin.disc) is drawn in units of this scale, so one
    OSM point is one size in both renderers at every zoom. */
 export function discScale(zoom){
-  const z=[8,13,18], s=DISC_SIZES;
+  const z=SIZE_ZOOMS, s=DISC_SIZES;
   if(zoom<=z[0]) return s[0];
   if(zoom>=z[2]) return s[2];
   const i=zoom<z[1] ? 0 : 1;
@@ -328,8 +331,8 @@ export function discScale(zoom){
    Water first, at z11 where the tiles hold every point; the rest at z12. */
 export const COV_ICON_MIN_ZOOM={water:11};
 export function iconMinZoom(key){ return COV_ICON_MIN_ZOOM[key] ?? 12; }
-/* Our own teardrops grow with the zoom: 70% at z8 and wider, full at z14. */
-const PIN_SIZES=[[8,0.7],[14,1]];
+/* Our own teardrops grow with the zoom: 62% at z11 and wider, full at z14. */
+const PIN_SIZES=[[11,0.62],[14,1]];
 export function pinScale(zoom){
   const [[z0,s0],[z1,s1]]=PIN_SIZES;
   if(zoom<=z0) return s0;

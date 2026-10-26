@@ -2465,7 +2465,7 @@ The geometry is pure (`web/assets/map/fan-out.js`, tested in
   any corrections overlay.
 - **What changes with the zoom (owner 2026-10-08).** All in `icons.js`, set on
   the map container as the map zooms (`syncZoomStyles()`):
-  - Our own teardrop pins grow from 70% at z8 to full size (30px) at z14
+  - Our own teardrop pins grow from 62% at z11 (and wider) to full size (30px) at z14
     (`pinScale()`, `--pin-s`; the badges grow with them). A page without the
     map draws them full size.
   - A climb's summit icon and gradient chip show from z11 (`SUMMIT_MIN_ZOOM`,
@@ -3186,8 +3186,9 @@ closed) runs it again, so the list comes back without retyping
 castle, not the category's temple front). A coverage hit that is our own item
 (`itemId`, with its region id `rid`) opens that item, loading its region first,
 never an OSM view of it with an extra icon over our pin. The OSM coverage discs
-size by `DISC_SIZES` 0.6 / 1.05 / 1.37 at z8 / z13 / z18, the drops by
-`DROP_SIZES` 0.66 / 1.15 / 1.5. The DOM disc pin (`.cc-pin.disc`) is
+size by `DISC_SIZES` 0.6 / 1.05 / 1.37 at z11 / z13 / z18 (`SIZE_ZOOMS`;
+the lowest stop where the icons start, so they are small zoomed out to a town
+and its villages), the drops by `DROP_SIZES` 0.66 / 1.15 / 1.5. The DOM disc pin (`.cc-pin.disc`) is
 drawn in the tile icon's own 24-box units at the same ramp: `discScale()` sets
 `--disc-s` on the map container as the map zooms, and the disc, its glyph and
 its "?" take the tile's sizes and positions in those units. One OSM point looks

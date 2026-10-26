@@ -59,11 +59,11 @@ test('the summit marker is a drawn flag on a peak, not a word in a pill (owner 2
   assert.match(mapCss, /\.cc-summit\{[^}]*width:\d+px;height:\d+px/, 'the marker is a fixed small icon');
 });
 
-test('our teardrops grow from 70% at z8 to full size at z14', () => {
+test('our teardrops grow from 62% at z11 to full size at z14', () => {
   const at = liftPinScale();
-  assert.equal(at(6), 0.7);
-  assert.equal(at(8), 0.7);
-  assert.ok(Math.abs(at(11) - 0.85) < 1e-9);
+  assert.equal(at(8), 0.62);
+  assert.equal(at(11), 0.62);
+  assert.ok(Math.abs(at(11.4) - 0.6707) < 1e-3, 'smaller zoomed out to a town and its villages (owner 2026-10-26)');
   assert.equal(at(14), 1);
   assert.equal(at(17), 1);
   assert.match(icons, /pin=pinScale\(z\)\.toFixed\(2\)/);
