@@ -1,0 +1,61 @@
+web/tests/js/leg-store.test.mjs
+  s_086f006d5a9290::t_d0477059d0cb63 43-48,50
+  s_086f006d5a9290::t_7399d31e14a9dc 37-40,49
+  s_086f006d5a9290::t_fffd5142bab858 51
+docs/specs/route-planner.md
+  s_086f006d5a9290::t_e2e7a94875470a 1190-1195,1201-1215
+  s_086f006d5a9290::t_b2b3396e7406a8 1196-1200
+  s_086f006d5a9290::t_4dd20f80a6300b 1216-1218
+web/tests/Elevation/LegSurfacesTest.php
+  s_086f006d5a9290::t_8911b63179d8b2 118
+  s_086f006d5a9290::t_987d3bf1813ef1 29-30
+  s_086f006d5a9290::t_9c69ac5dcf3e89 9,32,56-94,315-362
+web/config/services.yaml
+  s_086f006d5a9290::t_50bde3bc1f8e20 186-187
+web/assets/map/route-roads.js
+  s_086f006d5a9290::t_950003328b522f 43
+web/assets/map/leg-store.js
+  s_086f006d5a9290::t_87ee2b3a4e6a21 28
+  s_086f006d5a9290::t_f9d6e348444300 27
+  s_086f006d5a9290::t_7399d31e14a9dc 29
+web/src/Elevation/CuratedSurfaces.php
+  s_086f006d5a9290::t_a8f5248c4dedb2 1-21
+web/assets/map/plan.js
+  s_086f006d5a9290::t_7399d31e14a9dc 68,133
+web/src/Elevation/ItemSurfaces.php
+  s_086f006d5a9290::t_a8f5248c4dedb2 1-60
+web/src/Elevation/LegSurfaces.php
+  s_086f006d5a9290::t_ecc767d82f0a25 112,132,142-143,407
+  s_086f006d5a9290::t_fc53ac154a14c8 96
+  s_086f006d5a9290::t_987d3bf1813ef1 413-414
+  s_086f006d5a9290::t_50bde3bc1f8e20 9,26-28,68-76,88,271,290,309,328,337,339-355,357-358,408-412,415-560
+  s_086f006d5a9290::t_e28f1ce2e31fea 182,338
+  s_086f006d5a9290::t_19573ffae656d9 291-292
+  s_086f006d5a9290::t_54abeede19f645 310
+  s_086f006d5a9290::t_f25caaa7612ddf 327
+  s_086f006d5a9290::t_b24c3077458c8f 356
+  s_086f006d5a9290::t_3383a4337f2ed3 561
+web/tests/Elevation/ItemSurfacesTest.php
+  s_086f006d5a9290::t_d0fd122a8a6a5d 1-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "115d6f301d85a71f54230985dd5a3e7c050d7db6",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_086f006d5a9290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97afd631-7f48-4430-aac8-2c62f5b7a119",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
