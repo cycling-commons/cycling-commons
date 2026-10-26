@@ -743,6 +743,7 @@ final class MapController extends AbstractController
                 'matching' => $t->trans('map.plan_matching'),
                 'openRefused' => ['not_gpx' => $t->trans('map.plan_open_not_gpx'), 'no_stops' => $t->trans('map.plan_open_no_stops'), 'too_many' => $t->trans('map.plan_open_too_many'), 'bad_point' => $t->trans('map.plan_open_not_gpx')],
                 'routing' => $t->trans('map.plan_routing'),
+                'gravel' => $t->trans('map.plan_gravel'),
                 'routed' => $t->trans('map.plan_routed'),
                 'engineDown' => $t->trans('map.plan_engine_down'),
                 'maxStops' => $t->trans('map.plan_max_stops'),
@@ -787,7 +788,7 @@ final class MapController extends AbstractController
                 // What a water stop is, in the legend's words (KindIcons, B): the notice names a place by it.
                 'waterKinds' => ['tap' => $t->trans('legend.kind_b_tap_h'), 'no' => $t->trans('legend.kind_b_no_h'), 'unk' => $t->trans('legend.kind_b_unk_h'), 'food' => $t->trans('legend.kind_b_food_h'), 'food_water' => $t->trans('legend.kind_b_food_water_h')],
                 // Why this way? (route-planner.md section 4.2a).
-                'wayAsk' => $t->trans('map.plan_way_ask'), 'wayAsking' => $t->trans('map.plan_way_asking'), 'wayShortest' => $t->trans('map.plan_way_shortest'), 'waySurface' => $t->trans('map.plan_way_surface'),
+                'wayAsk' => $t->trans('map.plan_way_ask'), 'wayAsking' => $t->trans('map.plan_way_asking'), 'wayShortest' => $t->trans('map.plan_way_shortest'), 'waySurface' => $t->trans('map.plan_way_surface'), 'wayGravel' => $t->trans('map.plan_way_gravel'),
                 'wayRoundOne' => $t->trans('map.plan_way_round_one'), 'wayRoundMany' => $t->trans('map.plan_way_round_many'),
                 'unnamedOn' => $t->trans('map.plan_unnamed_on'),
                 'wayShow' => $t->trans('map.plan_way_show'), 'wayHide' => $t->trans('map.plan_way_hide'), 'wayTake' => $t->trans('map.plan_way_take'), 'wayTaken' => $t->trans('map.plan_way_taken'), 'wayBack' => $t->trans('map.plan_way_back'),

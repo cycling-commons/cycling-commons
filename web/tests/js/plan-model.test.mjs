@@ -689,6 +689,13 @@ test('the answer names gravel or dirt the bike avoids', () => {
   const why = whyThisWay(leg(7560, { paved: 7560 }), leg(4420, { paved: 1340, rough: 2600, gravel: 480 }));
   assert.deepEqual(why, { kind: 'surface', curM: 7560, altM: 4420, unpavedM: 3080 });
 });
+test('a leg that took a way through gravel names the gravel it rides (route-planner.md section 4.2b)', () => {
+  // The owner's leg near Barneveld: 25.2 km with 6.3 km unpaved against the shortest 19.6 km with 3.0 km.
+  const cur = { ...leg(25200, { paved: 18900, gravel: 5000, rough: 1300 }), viaGravel: true };
+  assert.deepEqual(whyThisWay(cur, leg(19600, { paved: 16600, gravel: 3000 })), { kind: 'gravel', curM: 25200, altM: 19600, unpavedM: 3300 });
+  const engines = { ...cur, viaGravel: undefined };
+  assert.notEqual(whyThisWay(engines, leg(19600, { paved: 16600, gravel: 3000 })).kind, 'gravel', 'only a leg that took a way through gravel says so');
+});
 test('or the climbing it saves', () => {
   const flat = Array.from({ length: 21 }, (_, i) => [i * 300, 100]);
   const steep = Array.from({ length: 21 }, (_, i) => [i * 150, 100 + (i <= 10 ? i : 20 - i) * 15]);   // up to 250 m and down

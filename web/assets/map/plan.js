@@ -19,6 +19,7 @@ import { storedLegs, keepLegs } from './leg-store.js';
 import { activePanel } from './shell.js';
 import { isPicking } from './picking.js';
 import { setPlanning, isLineOrArea } from './plan-state.js';
+import { seeksUnpaved, gravelCandidates, surfaceLinesNear, GRAVEL_HINTS } from './plan-gravel.js';
 import { CATALOG } from './catalog.js';
 import { layerGlyph, waterKind } from './icons.js';
 import { scopeKey, planScopeFor } from './ride-scope.js';
@@ -103,6 +104,23 @@ async function routeDetours(asks, bike){
     const r = await fetch(CC_PLAN.detours, { method: 'POST', credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CC-Token': CC_PLAN.legToken || '' },
       body: JSON.stringify({ bike, legs: asks.map(q => ({ a: [q.a.lng, q.a.lat], b: [q.b.lng, q.b.lat], avoid: q.avoid })) }) });
+    if(r.status === 429) return await spent(r);
+    if(!r.ok) return null;
+    const d = await r.json();
+    showLegsLeft(d.budget);
+    if(!Array.isArray(d.legs) || d.legs.length !== asks.length) return null;
+    return d.legs.map(l => l && l.routed ? legFrom(l) : { routed: false });
+  } catch(e){ return null; }
+}
+/* The gravel hints' legs in one request (route-planner.md section 4.2b): each leg with the engine's way and the ways
+   through gravel found near it. One answer per ask, in order: a leg to ride instead, or `routed: false` to keep the
+   engine's; null when the request fails, `{ limited: true }` when the legs are spent. */
+async function routeGravel(asks, bike){
+  if(!CC_PLAN.gravel) return null;
+  try {
+    const r = await fetch(CC_PLAN.gravel, { method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CC-Token': CC_PLAN.legToken || '' },
+      body: JSON.stringify({ bike, legs: asks.map(q => ({ a: [q.a.lng, q.a.lat], b: [q.b.lng, q.b.lat], base: q.base, candidates: q.candidates })) }) });
     if(r.status === 429) return await spent(r);
     if(!r.ok) return null;
     const d = await r.json();
@@ -396,7 +414,7 @@ async function routeAll(){
   });
   const needed = [];
   ride.legs = keys.map((key, i) => { const c = legCache.get(key); if(!c) needed.push([i, key]); return c || null; });
-  if(!needed.length){ drawRide(); renderStops(); if(await avoidRepeats(myGen)) finishRouting(); return; }
+  if(!needed.length){ drawRide(); renderStops(); if(await seekGravel(myGen) && await avoidRepeats(myGen)) finishRouting(); return; }
   routing = true;
   setStatus(tpl(P().routing || 'Routing the legs for a {bike} bike…', { bike: ride.bike }), true);
   // Neighbouring legs in one request each; what is left, or a run the server could not route whole, leg by leg.
@@ -421,7 +439,44 @@ async function routeAll(){
   }
   if(myGen !== gen) return;
   routing = false;
-  if(await avoidRepeats(myGen)) finishRouting();
+  if(await seekGravel(myGen) && await avoidRepeats(myGen)) finishRouting();
+}
+/* ---------- gravel on the way (route-planner.md section 4.2b) ----------
+   The engine rides the fastest way, and asphalt is as fast for every bike, so a gravel or mountain bike rides it
+   wherever it can. Each leg is looked at once per bike: the gravel near its way, from the road-surface tiles, gives
+   up to four ways through gravel, and the server keeps the best fair trade or none. A leg the rider set to the
+   shortest way, or one a ride file gave, keeps its roads. */
+async function seekGravel(myGen){
+  const entries = window.CC_TILES && window.CC_TILES.surface;
+  if(!seeksUnpaved(ride.bike) || !CC_PLAN.gravel || !entries) return true;
+  const asks = [];
+  for(let i = 0; i < ride.legs.length; i++){
+    const leg = ride.legs[i];
+    if(!leg || !leg.routed || leg.fromFile || leg.gravelChecked === GRAVEL_HINTS.version || ride.stops[i + 1].way === 'shortest') continue;
+    leg.gravelChecked = GRAVEL_HINTS.version;
+    if(!asks.length) setStatus(P().gravel || 'Looking for gravel on the way…', true);
+    let lines = [];
+    try { lines = await surfaceLinesNear(leg.line, leg.distM, entries); } catch(e){ lines = []; }
+    if(myGen !== gen) return false;
+    const candidates = gravelCandidates(leg.line, lines, ride.bike);
+    const s = leg.surfaces || {};
+    // Unpaved as the server counts it for this bike: sand is no gain for a gravel bike (GravelHints::unpavedM()).
+    const unpavedM = (s.gravel || 0) + (s.rough || 0) - (ride.bike === 'Gravel' ? (s.sand || 0) : 0);
+    if(candidates.length) asks.push({ i, a: ride.stops[i], b: ride.stops[i + 1], base: { distanceM: leg.distM, unpavedM }, candidates });
+  }
+  if(!asks.length) return true;
+  const alts = await routeGravel(asks, ride.bike);
+  if(myGen !== gen) return false;
+  if(alts && !alts.limited){
+    asks.forEach((q, k) => {
+      const alt = alts[k], leg = ride.legs[q.i];
+      if(!alt || !alt.routed || !leg) return;
+      alt.key = leg.key; alt.gravelChecked = GRAVEL_HINTS.version; alt.viaGravel = true;
+      legCache.set(leg.key, alt); ride.legs[q.i] = alt;
+    });
+  }
+  drawRide(); renderStops();
+  return true;
 }
 /* ---------- never the same road twice (route-planner.md section 4.2, owner 2026-10-18) ----------
    A leg that rides a stretch an earlier leg already rides is asked once more, keeping off that stretch; the other way
@@ -597,6 +652,7 @@ function backToBikeWay(i){
 function wayText(w){
   const d = { cur: fmtKm(w.curM), alt: fmtKm(w.altM) };
   if(w.kind === 'shortest') return P().wayShortest || 'This is about the shortest way your bike may ride here.';
+  if(w.kind === 'gravel') return tpl(P().wayGravel || 'The shortest way is {alt}. Your bike looks for unpaved roads, so this way is {cur}, with {unpaved} more gravel or dirt.', { ...d, unpaved: fmtKm(w.unpavedM) });
   if(w.kind === 'surface') return tpl(P().waySurface || 'The shortest way is {alt}, with {unpaved} of gravel or dirt. Your bike avoids that, so this way is {cur}.', { ...d, unpaved: fmtKm(w.unpavedM) });
   if(w.kind === 'climb') return tpl(P().wayClimb || 'The shortest way is {alt}, but climbs {m} more. This way is {cur}.', { ...d, m: uElev(w.upM) });
   if(w.kind === 'busy') return tpl(P().wayBusy || 'The shortest way is {alt}, with {busy} on main roads without a cycle lane. This way is {cur}.', { ...d, busy: fmtKm(w.busyM) });

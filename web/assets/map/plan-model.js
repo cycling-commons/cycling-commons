@@ -1088,6 +1088,9 @@ export function whyThisWay(cur, alt){
   const unpaved = l => (surf(l).gravel || 0) + (surf(l).rough || 0);
   const up = l => Array.isArray(l.heights) && l.heights.length > 1 ? climbOf(l.heights).up : 0;
   const base = { curM: cur.distM, altM: alt.distM };
+  // A gravel or mountain bike's leg that took a way through gravel (route-planner.md section 4.2b): the gravel is the reason.
+  const soughtM = unpaved(cur) - unpaved(alt);
+  if(cur.viaGravel && soughtM >= 300) return { kind: 'gravel', ...base, unpavedM: Math.round(soughtM) };
   const unpavedM = unpaved(alt) - unpaved(cur);
   if(unpavedM >= 300) return { kind: 'surface', ...base, unpavedM: Math.round(unpavedM) };
   const upM = up(alt) - up(cur);

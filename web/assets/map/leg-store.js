@@ -12,8 +12,9 @@ export const LEG_DB = 'cc-plan';
 const STORE = 'legs';
 /** The most legs kept: about ten rides of fifty legs, some ten megabytes at most. */
 export const KEEP_LEGS = 500;
-/* What a kept leg holds: the engine's answer and the repeat check's verdict, nothing the page adds. */
-const FIELDS = ['key', 'routed', 'line', 'distM', 'heights', 'surfaces', 'streets', 'runs', 'busyRuns', 'recorded', 'quality', 'speeds', 'detailRuns', 'otherWay', 'repeatChecked', 'fromFile', 'matched'];
+/* What a kept leg holds: the engine's answer and the verdicts of the repeat check and the gravel hints, nothing the
+   page adds. */
+const FIELDS = ['key', 'routed', 'line', 'distM', 'heights', 'surfaces', 'streets', 'runs', 'busyRuns', 'recorded', 'quality', 'speeds', 'detailRuns', 'otherWay', 'repeatChecked', 'gravelChecked', 'viaGravel', 'fromFile', 'matched'];
 
 /** A kept leg as stored: only FIELDS, and `at`, the time it was last part of a ride. */
 export function legRecord(leg, at){

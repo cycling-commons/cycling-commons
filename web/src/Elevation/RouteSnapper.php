@@ -73,6 +73,56 @@ final class RouteSnapper
     }
 
     /**
+     * Legs through points on the way, all at once (the gravel hints, route-planner.md section 4.2b): each ask is a
+     * leg from `a` to `b` that passes through `vias` in order. A through point neither starts a new leg nor lets the
+     * engine turn round on it, so each answer is one line from `a` to `b`. One answer per ask, in order, as snap()
+     * answers it; null for an ask the engine cannot route.
+     *
+     * @param list<array{a: array{0: float, 1: float}, b: array{0: float, 1: float}, vias: list<array{0: float, 1: float}>}> $asks [lat, lng] points
+     *
+     * @return list<array{coordinates: list<array{0: float, 1: float}>, distanceM: float}|null>
+     */
+    public function snapThroughMany(array $asks, BikeType $bike): array
+    {
+        $pending = array_map(fn (array $ask): ?ResponseInterface => $this->throughRequest($ask['a'], $ask['vias'], $ask['b'], $bike), $asks);
+
+        return array_map(fn (?ResponseInterface $res): ?array => null === $res ? null : $this->snapResult($res), $pending);
+    }
+
+    /**
+     * @param array{0: float, 1: float}       $a
+     * @param list<array{0: float, 1: float}> $vias
+     * @param array{0: float, 1: float}       $b
+     */
+    private function throughRequest(array $a, array $vias, array $b, BikeType $bike): ?ResponseInterface
+    {
+        if ('' === $this->valhallaUrl) {
+            return null;
+        }
+        $url = $this->endpoints?->forShape([$a, $b]) ?? $this->valhallaUrl;
+        $locations = [['lat' => $a[0], 'lon' => $a[1]]];
+        foreach ($vias as $v) {
+            $locations[] = ['lat' => $v[0], 'lon' => $v[1], 'type' => 'through'];
+        }
+        $locations[] = ['lat' => $b[0], 'lon' => $b[1]];
+        try {
+            return $this->http->request('POST', rtrim($url, '/').'/route', [
+                'json' => [
+                    'locations' => $locations,
+                    'costing' => 'bicycle',
+                    'costing_options' => ['bicycle' => BikeCosting::options($bike)],
+                    'directions_type' => 'none',
+                ],
+                'timeout' => 8,
+            ]);
+        } catch (\Throwable $e) {
+            $this->logger->warning('route snap failed', ['error' => $e->getMessage()]);
+
+            return null;
+        }
+    }
+
+    /**
      * Pieces of a ride file's track onto the roads, each on its own, all at once (route-planner.md section 6.1, owner
      * 2026-10-18: Liège-Bastogne-Liège opened as 50 checkpoints rode round the Stockeu instead of up it). The engine's
      * map matching (`trace_route`, `map_snap`) follows the track's own roads where routing would pick its own. A piece

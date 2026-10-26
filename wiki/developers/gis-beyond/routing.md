@@ -155,9 +155,16 @@ block, which `web/src/Elevation/BikeCosting.php` builds from the rider's bike ty
 rides the engine's road profile, a gravel bike the cyclocross one, a mountain bike the mountain
 one; an e-bike, a handbike and the wide or long bikes tune hills and rough surfaces on top). The
 planner's "Why this way?" asks once more with `shortest` set on that same block: the shortest way
-the same bike may ride, so a rider can compare it with the way the profile picked. That is the
-entire vocabulary of routing this project speaks: two points, a bike and that one switch, no
-avoid-list.
+the same bike may ride, so a rider can compare it with the way the profile picked.
+
+Two more asks build on the same request. Points to keep off (`exclude_locations`) let the planner
+ask a leg again without the road an earlier leg already rides. Points to ride through (`through`
+locations, `RouteSnapper::snapThroughMany()`) are how a gravel or a mountain bike finds gravel:
+the engine's bicycle profiles tolerate rough ground but never prefer it, so the fastest way stays
+on asphalt wherever asphalt is as quick. The planner reads the gravel and dirt roads near a leg
+from the road-surface tiles, asks for the leg through points on the longest stretches, and
+`web/src/Elevation/GravelHints.php` keeps a way only when it rides clearly more unpaved road for
+little more distance.
 
 The reply is a trip whose legs each carry an encoded `shape`, which the class decodes into
 coordinate pairs:

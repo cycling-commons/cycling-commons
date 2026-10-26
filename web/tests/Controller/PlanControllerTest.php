@@ -403,6 +403,78 @@ final class PlanControllerTest extends WebTestCase
     }
 
     /**
+     * The gravel hints (route-planner.md section 4.2b): each way is routed through its points, as through points, and
+     * the best fair trade comes back; a leg with none keeps the engine's way. One leg spent per leg.
+     */
+    public function testGravelKeepsTheBestFairTradeThroughItsPoints(): void
+    {
+        $client = static::createClient();
+        $routes = [];
+        // Two ways for the leg: one via point rides 3.0 km with 1.1 km of gravel, two via points 2.6 km with 1.0 km.
+        $short = self::encode([[50.4925, 5.8633], [50.4830, 5.8700], [50.4745, 5.8627]]);
+        $long = self::encode([[50.4925, 5.8633], [50.4800, 5.8800], [50.4745, 5.8627]]);
+        $engine = new MockHttpClient(static function (string $method, string $url, array $options) use (&$routes, $short, $long): MockResponse {
+            $body = json_decode((string) ($options['body'] ?? '{}'), true);
+            if (str_ends_with($url, '/route')) {
+                $routes[] = $body;
+                $vias = \count($body['locations']) - 2;
+
+                return new MockResponse((string) json_encode(['trip' => ['legs' => [['shape' => 1 === $vias ? $long : $short, 'summary' => ['length' => 1 === $vias ? 3.0 : 2.6]]]]]));
+            }
+            if (str_ends_with($url, '/trace_attributes')) {
+                $viaLong = abs(($body['shape'][1]['lon'] ?? 0) - 5.88) < 1e-6;
+                self::assertSame('walk_or_snap', $body['shape_match'], 'a line through points is no exact edge walk');
+
+                return new MockResponse((string) json_encode(['units' => 'kilometers', 'edges' => [
+                    ['surface' => 'paved_smooth', 'length' => $viaLong ? 1.9 : 1.6],
+                    ['surface' => 'gravel', 'length' => $viaLong ? 1.1 : 1.0],
+                ]]));
+            }
+
+            return new MockResponse((string) json_encode(['range_height' => [[0, 300], [30, 305]]]));
+        });
+        static::getContainer()->set(RouteSnapper::class, new RouteSnapper($engine, new NullLogger(), 'http://valhalla.test'));
+        static::getContainer()->set(ElevationClient::class, new ElevationClient($engine, new NullLogger(), 'http://valhalla.test', 'Copernicus DEM GLO-30'));
+        static::getContainer()->set(LegSurfaces::class, new LegSurfaces($engine, new NullLogger(), 'http://valhalla.test'));
+
+        $leg = ['a' => [5.8633, 50.4925], 'b' => [5.8627, 50.4745], 'base' => ['distanceM' => 2400, 'unpavedM' => 0],
+            'candidates' => [[[5.8800, 50.4800]], [[5.8650, 50.4880], [5.8700, 50.4830]]]];
+        $none = [...$leg, 'base' => ['distanceM' => 2400, 'unpavedM' => 1500]];
+        self::post($client, '/map/plan/gravel', 'plan-leg', ['legs' => [$leg, $none], 'bike' => 'Gravel']);
+
+        self::assertResponseIsSuccessful();
+        $json = self::json($client);
+        self::assertTrue($json['legs'][0]['routed']);
+        self::assertEqualsWithDelta(2600.0, $json['legs'][0]['distanceM'], 1e-6, '0.2 km more for 1.0 km of gravel beats 0.6 km more for 1.1 km');
+        self::assertSame(1000, $json['legs'][0]['surfaces']['gravel']);
+        self::assertSame(['routed' => false], $json['legs'][1], 'no gain over what the engine already rides: its way stays');
+        self::assertSame(98, $json['budget']['left'], 'one leg spent per leg, not per way');
+        self::assertCount(4, $routes, 'two ways for each of the two legs');
+        self::assertSame('through', $routes[0]['locations'][1]['type']);
+        self::assertSame('Cross', $routes[0]['costing_options']['bicycle']['bicycle_type']);
+    }
+
+    public function testGravelRefusesABadAsk(): void
+    {
+        $client = static::createClient();
+        $leg = ['a' => [5.80, 50.40], 'b' => [5.83, 50.40], 'base' => ['distanceM' => 2400, 'unpavedM' => 0], 'candidates' => [[[5.81, 50.41]]]];
+        foreach ([
+            ['legs' => [$leg], 'bike' => 'Road'],
+            ['legs' => [$leg], 'bike' => 'Unicycle'],
+            ['legs' => [], 'bike' => 'Gravel'],
+            ['legs' => array_fill(0, 50, $leg), 'bike' => 'Gravel'],
+            ['legs' => [[...$leg, 'candidates' => []]], 'bike' => 'Gravel'],
+            ['legs' => [[...$leg, 'candidates' => array_fill(0, 7, [[5.81, 50.41]])]], 'bike' => 'Gravel'],
+            ['legs' => [[...$leg, 'candidates' => [array_fill(0, 7, [5.81, 50.41])]]], 'bike' => 'Gravel'],
+            ['legs' => [[...$leg, 'candidates' => [['there']]]], 'bike' => 'Gravel'],
+            ['legs' => [[...$leg, 'base' => ['distanceM' => 'far']]], 'bike' => 'Gravel'],
+        ] as $bad) {
+            self::post($client, '/map/plan/gravel', 'plan-leg', $bad);
+            self::assertResponseStatusCodeSame(400, json_encode($bad, \JSON_THROW_ON_ERROR));
+        }
+    }
+
+    /**
      * A ride file's legs on its own roads (route-planner.md section 6.1): without an engine each piece is its own
      * line, unmatched; a short piece, too many pieces or points, or an unknown bike is refused.
      */

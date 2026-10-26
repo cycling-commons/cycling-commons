@@ -1200,7 +1200,7 @@ window.CC_VENDOR = {{ {
     list: map_presets|default([])
   } : {}))|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT') b-or constant('JSON_UNESCAPED_SLASHES'))|raw }};
   window.CC_PLAN = {{ ({
-    leg: path('map_plan_leg'), legs: path('map_plan_legs'), detours: path('map_plan_detours'), budget: path('map_plan_budget'), match: path('map_plan_match'), legToken: csrf_token('plan-leg'), snap: path('map_plan_snap'),
+    leg: path('map_plan_leg'), legs: path('map_plan_legs'), detours: path('map_plan_detours'), gravel: path('map_plan_gravel'), budget: path('map_plan_budget'), match: path('map_plan_match'), legToken: csrf_token('plan-leg'), snap: path('map_plan_snap'),
     along: path('map_plan_along'), alongToken: csrf_token('plan-along'),
     weather: path('map_plan_weather'), weatherToken: csrf_token('plan-weather'),
     nearby: path('map_coverage_nearby'),

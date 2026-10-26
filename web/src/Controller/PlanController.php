@@ -10,6 +10,7 @@ use App\Catalog\BikeType;
 use App\Catalog\RideCheckService;
 use App\Contribution\Gpx\TrackProcessor;
 use App\Elevation\ElevationClient;
+use App\Elevation\GravelHints;
 use App\Elevation\LegSurfaces;
 use App\Elevation\PointSnapper;
 use App\Elevation\RouteSnapper;
@@ -17,6 +18,7 @@ use App\Entity\User;
 use App\Security\PseudonymousKey;
 use App\Weather\Forecast;
 use App\Weather\ForecastUsage;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -232,6 +234,93 @@ final class PlanController extends AbstractController
         foreach (array_keys($asks) as $i) {
             // No road is an answer that carries no line, as for a single leg.
             $out[] = isset($snapped[$i]) ? self::legJson($snapped[$i], $heights[$i] ?? null, $reads[$i] ?? null) : ['routed' => false];
+        }
+
+        return new JsonResponse(['legs' => $out, 'budget' => $this->budget($budget)]);
+    }
+
+    /**
+     * The gravel hints in one request (route-planner.md section 4.2b): for a gravel or mountain bike, each leg comes
+     * with the engine's own way (its length and unpaved metres) and up to GravelHints::MAX_CANDIDATES ways through
+     * gravel, each a list of points the planner found on gravel near the leg. Every way is routed through its points
+     * and its surfaces are read; GravelHints::choose() keeps the best, or none. One answer per leg, in order: the leg
+     * as /map/plan/leg answers it, or `routed: false` to keep the engine's way. Every leg counts against the same
+     * limiter as a single leg. The points pass through to the engine; nothing of them is kept.
+     */
+    #[Route('/map/plan/gravel', name: 'map_plan_gravel', methods: ['POST'])]
+    public function gravel(
+        Request $request,
+        RouteSnapper $snapper,
+        ElevationClient $elevation,
+        LegSurfaces $surfaces,
+        RateLimiterFactoryInterface $planLegLimiter,
+        RateLimiterFactoryInterface $planLegAnonLimiter,
+        LoggerInterface $logger,
+        #[Autowire('%kernel.secret%')]
+        string $secret,
+    ): JsonResponse {
+        if (!$this->isCsrfTokenValid('plan-leg', (string) $request->headers->get('X-CC-Token'))) {
+            throw new AccessDeniedHttpException('Invalid CSRF token.');
+        }
+        $payload = json_decode($request->getContent(), true);
+        $payload = \is_array($payload) ? $payload : [];
+        $bike = BikeType::tryFrom(\is_string($payload['bike'] ?? null) ? $payload['bike'] : '');
+        if (null === $bike) {
+            return new JsonResponse(['error' => 'unknown_bike'], 400);
+        }
+        if (!GravelHints::seeks($bike)) {
+            return new JsonResponse(['error' => 'bad_request'], 400);
+        }
+        $raw = $payload['legs'] ?? null;
+        if (!\is_array($raw) || [] === $raw || \count($raw) > self::MAX_RIDE_STOPS - 1) {
+            return new JsonResponse(['error' => 'bad_request'], 400);
+        }
+        $legs = [];
+        $asks = [];
+        foreach ($raw as $leg) {
+            $a = \is_array($leg) ? self::point($leg['a'] ?? null) : null;
+            $b = \is_array($leg) ? self::point($leg['b'] ?? null) : null;
+            $base = \is_array($leg) && \is_array($leg['base'] ?? null) ? $leg['base'] : null;
+            $candidates = \is_array($leg) ? ($leg['candidates'] ?? null) : null;
+            if (null === $a || null === $b || null === $base || !\is_array($candidates) || [] === $candidates || \count($candidates) > GravelHints::MAX_CANDIDATES
+                || !is_numeric($base['distanceM'] ?? null) || !is_numeric($base['unpavedM'] ?? null)) {
+                return new JsonResponse(['error' => 'bad_request'], 400);
+            }
+            $ways = [];
+            foreach ($candidates as $vias) {
+                $points = \is_array($vias) && [] !== $vias && \count($vias) <= GravelHints::MAX_VIAS ? self::avoid($vias) : null;
+                if (null === $points || [] === $points) {
+                    return new JsonResponse(['error' => 'bad_request'], 400);
+                }
+                $ways[] = \count($asks);
+                $asks[] = ['a' => $a, 'b' => $b, 'vias' => $points];
+            }
+            $legs[] = ['base' => ['distanceM' => max(0.0, (float) $base['distanceM']), 'unpavedM' => max(0.0, (float) $base['unpavedM'])], 'ways' => $ways];
+        }
+        $budget = $this->limit($request, $planLegLimiter, $planLegAnonLimiter, $secret, \count($legs));
+        if (!$budget->isAccepted()) {
+            return $this->legsSpent($budget);
+        }
+        $snapped = array_filter($snapper->snapThroughMany($asks, $bike));
+        $lines = array_map(static fn (array $s): array => array_map(static fn (array $c): array => [$c[1], $c[0]], $s['coordinates']), $snapped);
+        // A line through points is no exact walk of the engine's edges at a through point: the walk falls back to matching.
+        $reads = array_combine(array_keys($lines), $surfaces->readMany(array_values($lines), 'walk_or_snap'));
+        $chosen = [];
+        foreach ($legs as $l => $leg) {
+            $options = array_map(static fn (int $k): ?array => isset($snapped[$k]) ? ['distanceM' => $snapped[$k]['distanceM'], 'unpavedM' => GravelHints::unpavedM($reads[$k]['surfaces'] ?? null, $bike), 'twiceM' => GravelHints::twiceM($snapped[$k]['coordinates'])] : null, $leg['ways']);
+            $pick = GravelHints::choose($leg['base'], $options);
+            $chosen[$l] = null === $pick ? null : $leg['ways'][$pick];
+            // Lengths and unpaved metres only, never a point: what the choice was made on, to tune the rule by.
+            $logger->debug(sprintf('gravel hints: base %.1f km, %.1f km unpaved; ways %s; kept %s',
+                $leg['base']['distanceM'] / 1000, $leg['base']['unpavedM'] / 1000,
+                implode(', ', array_map(static fn (?array $w): string => null === $w ? 'no route' : sprintf('%.1f km/%.1f km/twice %d m', $w['distanceM'] / 1000, $w['unpavedM'] / 1000, $w['twiceM']), $options)),
+                null === $pick ? 'none' : (string) $pick));
+        }
+        $winners = array_values(array_filter($chosen, static fn (?int $k): bool => null !== $k));
+        $heights = [] === $winners ? [] : array_combine($winners, $elevation->profileMany(array_map(static fn (int $k): array => $lines[$k], $winners)));
+        $out = [];
+        foreach ($chosen as $k) {
+            $out[] = null === $k ? ['routed' => false] : self::legJson($snapped[$k], $heights[$k] ?? null, $reads[$k] ?? null);
         }
 
         return new JsonResponse(['legs' => $out, 'budget' => $this->budget($budget)]);

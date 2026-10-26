@@ -545,6 +545,84 @@ ride file keeps it (`<cc:way>shortest</cc:way>` on that waypoint). The leg
 row then says "shortest way" with **Back to your bike's way**. Both are
 changes to the stops, so undo takes them back.
 
+#### 4.2b Gravel on the way
+
+The engine rides the fastest way, and asphalt is as fast for every bike: its
+bicycle types tolerate rough ground (Cross for a gravel bike, Mountain for a
+mountain bike, `BikeCosting`), none prefers it, and no option makes it. So a
+gravel or a mountain bike rode asphalt wherever asphalt was as quick: measured
+on the dev engine, Zeist to Amersfoort, 15.4 km, rode 0 km unpaved for the
+road, the gravel and the mountain bike alike.
+
+For those two bikes (`GravelHints::seeks()`, `seeksUnpaved()`), each leg the
+engine routed is looked at once more, after the legs are in and before the
+repeat check (section 4.2):
+
+1. **Gravel near the leg.** `plan-gravel.js` reads the road-surface tiles
+   (`CC_TILES.surface`, the classified arm) the leg's way crosses and a
+   corridor to either side, at z11: the tiles keep every road at every zoom
+   (`pipeline/coverage/tiles.py`), so a coarse zoom is enough, and the tiles
+   are read whether or not the surface layer is on (`decodeLines()` in
+   `assets/lib/road-pieces.js`, through the page's pmtiles library). The
+   corridor is 12% of the leg, at least 800 m, at most 3 km (`corridorM()`).
+   A leg under 1 km or over 80 km keeps the engine's way.
+2. **Ways through it.** The lines of the classes the bike seeks (gravel and
+   dirt; sand and rock too for a mountain bike, never sand for a gravel bike:
+   5.1 of the 6 km unpaved BRouter rode across the Ederheide were sand, heavy
+   going on narrow tyres) are joined where their ends meet
+   (within 15 m of any point of another, not only at their ends: a track
+   often ends on the middle of another) into networks. A network counts
+   when it is at least 600 m long, follows the way rather than crossing it
+   (5% of the leg or more), and is not mostly on the way already (within
+   30 m); its points are sampled every 50 m, as a straight track keeps only
+   its two ends at the tiles' zoom. The best three, by length along the way
+   less twice their distance from it, each give three points on the gravel,
+   in the leg's direction, kept 150 m from a dead end (`deadEnds()`: a line
+   end that touches no other road of any class, so a track ending on a paved
+   road is none); the best two together make a further way when one follows
+   the other, and the best two are asked once more with their points spread
+   over the whole stretch: which rides better shows only once routed
+   (`gravelCandidates()`, at most six ways of at most six points).
+3. **The fair trade.** `POST /map/plan/gravel` routes every way through its
+   points as `through` locations (`RouteSnapper::snapThroughMany()`: a
+   through point starts no new leg and allows no turning round), reads their
+   surfaces (`readMany()` with `walk_or_snap`: an exact edge walk fails at a
+   through point), and `GravelHints::choose()` keeps the one with the most
+   unpaved road gained for the length it adds, among those at most 1.25
+   times the engine's length, with at least 500 m (or 5% of the leg) more
+   unpaved road (sand not counted for a gravel bike, `GravelHints::unpavedM()`,
+   `surfaces.sand`), and more unpaved road by at least half the length they add
+   (`EXTRA_SHARE`): a way to gravel mostly needs a paved link to reach it.
+   A way that rides more than 150 m of it twice (`twiceM()`, `MAX_TWICE_M`)
+   is never kept: a point at the end of a dead-end track sent the owner's
+   leg near Barneveld down it and back up the same road.
+   Measured on a ride near Barneveld, the engine's 20.7 km with 2.5 km
+   unpaved gave way to 24.6 km with 5.9 km; with the whole added length
+   asked in gravel, no way passed. None of them, and the leg keeps the
+   engine's way.
+
+A leg the rider set to the shortest way (section 4.2a), or one a ride file
+gave (section 6.1), keeps its roads. A checked leg carries `gravelChecked`, the version of
+the choosing that checked it (`GRAVEL_HINTS.version`: a leg checked by an
+older one is looked at again), and `viaGravel` when it took a way through
+gravel, kept with the leg in
+this browser (section 6.0), so it is not asked again. "Why this way?" (section 4.2a) then
+names the gravel first: "The shortest way is 19.6 km. Your bike looks for
+unpaved roads, so this way is 25.2 km, with 3.3 km more gravel or dirt."
+(`kind: 'gravel'`, `map.plan_way_gravel`), when the leg took a way through
+gravel and rides at least 300 m more unpaved road than the shortest way. The status line says
+"Looking for gravel on the way..." (`map.plan_gravel`) while it is asked.
+Measured on the dev stack, the requests the planner sends:
+
+| Leg | Bike | The engine's way | Through gravel |
+|---|---|---|---|
+| Amersfoort to Barneveld | Gravel | 17.6 km, 0.0 km unpaved | 18.7 km, 2.6 km unpaved |
+| Zeist to Amersfoort | Gravel | 15.4 km, 0.0 km unpaved | 15.8 km, 1.1 km unpaved |
+| Leusden to the Veluwe edge | MTB | 16.7 km, 2.0 km unpaved | 20.7 km, 6.9 km unpaved |
+
+The tiles for a 15 km leg are three, about 1.2 MB decompressed; each is read
+once per page.
+
 ### 4.3 "Add to ride" on the place drawer
 
 Every place drawer (a Commons item, a coverage point, a town card's nearby

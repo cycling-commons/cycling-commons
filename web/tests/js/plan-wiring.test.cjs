@@ -517,7 +517,7 @@ test('the guide opens with the planner, remembers the rider\'s choice, and opens
    routing and left the stops list and the line one step behind (2026-10-15). */
 test('a change whose legs are all known still redraws the line and the stops', () => {
   const all = (plan.match(/async function routeAll\(\)\{([\s\S]*?)\n\}/) || [])[1] || '';
-  assert.match(all, /if\(!needed\.length\)\{ drawRide\(\); renderStops\(\); if\(await avoidRepeats\(myGen\)\) finishRouting\(\); return; \}/);
+  assert.match(all, /if\(!needed\.length\)\{ drawRide\(\); renderStops\(\); if\(await seekGravel\(myGen\) && await avoidRepeats\(myGen\)\) finishRouting\(\); return; \}/);
 });
 
 /* Reaching a water stop off the line can change the route itself, so the dry
@@ -903,7 +903,7 @@ test('a leg never rides an earlier leg\'s road twice where there is another way 
   assert.match(av, /alt\.distM <= leg\.distM \* REPEAT\.maxGrowth/);
   assert.match(av, /if\(repeatedM\(repeatRuns\(trial, q\.i\)\) >= was\) return;/, 'the other way is taken even when it repeats as much');
   assert.match(av, /ride\.stops\[i \+ 1\]\.way === 'shortest'/, 'a leg set to the shortest way is overridden');
-  assert.match(plan, /if\(await avoidRepeats\(myGen\)\) finishRouting\(\);/);
+  assert.match(plan, /if\(await seekGravel\(myGen\) && await avoidRepeats\(myGen\)\) finishRouting\(\);/);
 });
 
 test('the repeat check asks all its legs in one request, at most three rounds (owner 2026-10-18)', () => {
@@ -943,7 +943,7 @@ test('a reopened ride takes its legs from this browser before it asks our server
 test('the legs left to plan show under the status line, always (owner 2026-10-18)', () => {
   assert.match(twig, /<div class="cc-ride-left" id="planLegsLeft" hidden><\/div>/);
   assert.match(twig, /budget: path\('map_plan_budget'\)/);
-  assert.equal((plan.match(/showLegsLeft\(d\.budget\);/g) || []).length, 5, 'a leg answer does not update the legs left');
+  assert.equal((plan.match(/showLegsLeft\(d\.budget\);/g) || []).length, 6, 'a leg answer does not update the legs left');
   assert.match(plan, /until = d\.until \|\| ''; showLegsLeft\(d\.budget\);/, 'a spent budget does not show 0 left');
   assert.match(plan, /everOpened = true; askLegsLeft\(\);/, 'opening the planner does not ask the legs left');
   for (const l of ['en', 'fr', 'nl', 'de', 'es']) for (const k of ['plan_legs_left_day', 'plan_legs_left_window']) assert.match(read(`translations/messages.${l}.yaml`), new RegExp(`^ {2}${k}: ".*\\{n\\}.*\\{max\\}`, 'm'));
@@ -1041,3 +1041,14 @@ test('the headwind shows its arrows at rest at half strength; pointed at, the ar
   const sleep = (plan.match(/function sleepRide\(\)\{([\s\S]*?)\n\}/) || [])[1] || '';
   assert.ok(sleep.includes("'plan-wind-rest'"), 'a sleeping ride keeps its headwind arrows');
 });
+
+test('a gravel or mountain bike looks for gravel on each leg once, before the repeat check (route-planner.md section 4.2b)', () => {
+  assert.match(twig, /gravel: path\('map_plan_gravel'\)/);
+  const seek = (plan.match(/async function seekGravel\(myGen\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.match(seek, /if\(!seeksUnpaved\(ride\.bike\) \|\| !CC_PLAN\.gravel \|\| !entries\) return true;/, 'only for a bike that seeks gravel');
+  assert.match(seek, /leg\.fromFile \|\| leg\.gravelChecked === GRAVEL_HINTS\.version \|\| ride\.stops\[i \+ 1\]\.way === 'shortest'/, 'a file leg, a leg checked by this version and a shortest-way leg keep their roads');
+  assert.match(seek, /alt\.gravelChecked = GRAVEL_HINTS\.version;/);
+  assert.match(read('assets/map/leg-store.js'), /'gravelChecked', 'viaGravel'/, 'a kept leg remembers it was checked');
+  for (const l of ['en', 'fr', 'nl', 'de', 'es']) assert.match(read(`translations/messages.${l}.yaml`), /^ {2}plan_gravel: ".+"/m);
+});
+

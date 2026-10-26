@@ -208,6 +208,43 @@ export function decodePieces(bytes, z, x, y, cc = null) {
   return out;
 }
 
+/**
+ * Every line in one decoded tile whose layer name starts with `layerPrefix`,
+ * with its properties: the same reader, for another line archive (the
+ * road-surface tiles the planner's gravel hints read, route-planner.md
+ * section 4.2b). A clipped way comes back once per part.
+ *
+ * @returns {Array<{props: Object, coords: Array<[number, number]>}>}
+ */
+export function decodeLines(bytes, z, x, y, layerPrefix) {
+  const r = new Reader(bytes);
+  const out = [];
+  const n = 2 ** z;
+  while (r.pos < r.end) {
+    const tag = r.varint();
+    if (Math.floor(tag / 8) !== 3 || (tag & 7) !== 2) { r.skip(tag & 7); continue; }
+    const layer = readLayer(r.bytes());
+    if (!layer.name.startsWith(layerPrefix)) continue;
+    for (const raw of layer.features) {
+      const f = readFeature(raw);
+      if (f.type !== 2) continue;
+      const props = {};
+      for (let t = 0; t + 1 < f.tags.length; t += 2) props[layer.keys[f.tags[t]]] = layer.values[f.tags[t + 1]];
+      for (const part of lineParts(f.geometry)) {
+        out.push({
+          props,
+          coords: part.map(([gx, gy]) => {
+            const lon = (x + gx / layer.extent) / n * 360 - 180;
+            const merc = Math.PI * (1 - 2 * (y + gy / layer.extent) / n);
+            return [lon, Math.atan(Math.sinh(merc)) * 180 / Math.PI];
+          }),
+        });
+      }
+    }
+  }
+  return out;
+}
+
 function tileCentre(z, x, y) {
   const n = 2 ** z;
   const lon = (x + 0.5) / n * 360 - 180;
