@@ -1187,6 +1187,37 @@ onboarded extracts, so about 1.2 GB; Belgium 391,245 ways (29 MB), the
 Netherlands 706,259 (52 MB), Germany 5,200,789 (385 MB). The coverage places
 table is 1.9 GB on the same database.
 
+**The curated road surfaces, from the server.** A road surface our curators
+or riders set (layer A, the served states only: verified and unverified)
+stands for what OpenStreetMap records and for the engine's word, along the
+stretch it covers, in every country. The leg walk also asks the engine for
+its matched line (`shape`) and each edge's `begin_shape_index` and
+`end_shape_index`; `App\Elevation\ItemSurfaces` reads the layer A rows within
+15 m of that line. An edge runs along a row when two of its three sample
+points, at a quarter, half and three quarters of the edge, lie within 8 m of
+the row's line on a stretch that runs with the edge, within 30 degrees
+(`LegSurfaces::ON_CURATED_M`, `PARALLEL_DEG`): a road that crosses the row,
+or one beside it, keeps its own words. A separate cycle path along a curated
+road is a way of its own and needs its own row: its surface can differ from
+the road's. Measured on dev: the cycle path along the curated
+Schellinkhouterdijk road lies 12 to 14 m from it and keeps OpenStreetMap's
+words. Along a row:
+
+| The row holds | The edge reads |
+|---|---|
+| a surface with a map class (`SurfaceVocabulary::tileClassFor()`) | that class, folded as the table's: Asphalt paved, Gravel gravel, Sand rough and counted apart as sand |
+| "Surface unverified", or no surface | its own surface, as above |
+| a smoothness | that smoothness, over the table's (Very bad is `very_bad`) |
+
+The tracktype stays the table's: the road surface form has none. The leg
+carries `curatedM`, the metres along curated rows; a leg kept in the browser
+without it is asked of the server again (`keptLegUsable()` in leg-store.js).
+Measured on dev: the curated Zuiderdijk (15.7 km, Asphalt, Good) read as a
+ride along it gave 14.9 km paved, 0.8 km "surface not recorded" and no
+smoothness from OpenStreetMap alone; with the curated row, 15.7 km paved,
+15.6 km good and 45 m excellent, where it meets the curated
+Schellinkhouterdijk.
+
 **What OpenStreetMap records along the ride** (owner 2026-10-19). Under the
 day's bars, `#planDetail` lists, in distance, each only where something is
 recorded: the **smoothness** in the five words the contribute form offers
@@ -1197,7 +1228,7 @@ grade 1 "solid" to grade 5 "soft", and the **speed limit**, OpenStreetMap's
 max speeds for roads"), in km/h, or in mph rounded to 5 when the rider reads
 miles, slowest first, with "no limit recorded" last; the speed line shows
 only when at least one limit is recorded. A note under them says "From
-OpenStreetMap, where it is recorded". Each line lights its stretches on the
+OpenStreetMap and our curators, where it is recorded". Each line lights its stretches on the
 map when pointed at or focused, as the surface lines do (owner 2026-10-19:
 "But what part of the road is that about? I can't hover it"): the leg also
 carries `detailRuns`, `[from, to, value]` metres along the leg per
@@ -1206,7 +1237,8 @@ smoothness, tracktype and speed limit, a run of one value merged, and
 (`sm:good`, `tt:grade3`, `sp:50`, `sp:unset`). The leg carries `quality:
 {smoothness, tracktype}` and `speeds` in metres (`LegSurfaces::read()`),
 summed over the ride by `roadDetail()`; the speed limits come from the engine
-in every country, the smoothness and tracktype only from the table. Nothing
+in every country, the smoothness and tracktype only from the table and the
+curated rows (above). Nothing
 of it is a rating: the speed limit is also an input to the road safety rating
 (traffic-measurements.md).
 

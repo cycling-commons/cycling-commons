@@ -1433,7 +1433,7 @@ map:
   plan_part_descend: "dalen"
   plan_part_flat: "op vlak terrein"
   plan_part_unknown: "ondergrond niet vastgelegd"
-  plan_detail_h: "Uit OpenStreetMap, waar het is vastgelegd"
+  plan_detail_h: "Uit OpenStreetMap en van onze regiobeheerders, waar het is vastgelegd"
   plan_detail_smooth: "Vlakheid"
   plan_sm_excellent: "uitstekend"
   plan_sm_good: "goed"

@@ -2027,7 +2027,7 @@ map:
   plan_part_descend: "descending"
   plan_part_flat: "on the flat"
   plan_part_unknown: "surface not recorded"
-  plan_detail_h: "From OpenStreetMap, where it is recorded"
+  plan_detail_h: "From OpenStreetMap and our curators, where it is recorded"
   plan_detail_smooth: "Smoothness"
   plan_sm_excellent: "excellent"
   plan_sm_good: "good"

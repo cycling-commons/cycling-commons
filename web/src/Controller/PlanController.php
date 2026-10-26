@@ -520,6 +520,7 @@ final class PlanController extends AbstractController
             'quality' => $read['quality'] ?? null,
             'speeds' => $read['speeds'] ?? null,
             'detailRuns' => $read['detailRuns'] ?? null,
+            'curatedM' => $read['curatedM'] ?? 0,
         ];
     }
 

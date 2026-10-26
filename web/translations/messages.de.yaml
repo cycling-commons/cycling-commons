@@ -1436,7 +1436,7 @@ map:
   plan_part_descend: "bergab"
   plan_part_flat: "in der Ebene"
   plan_part_unknown: "Belag nicht erfasst"
-  plan_detail_h: "Aus OpenStreetMap, wo es erfasst ist"
+  plan_detail_h: "Aus OpenStreetMap und von unseren Kuratoren, wo es erfasst ist"
   plan_detail_smooth: "Ebenheit"
   plan_sm_excellent: "ausgezeichnet"
   plan_sm_good: "gut"

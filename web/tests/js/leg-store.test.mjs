@@ -34,9 +34,18 @@ test('a kept leg from before the road detail is asked again', () => {
   const now = Date.now();
   assert.equal(keptLegUsable({ routed: true, at: now, surfaces: {} }, now), false);
   assert.equal(keptLegUsable({ routed: true, at: now, speeds: { 50: 100 } }, now), false, 'totals without their stretches');
-  assert.equal(keptLegUsable({ routed: true, at: now, speeds: { 50: 100 }, detailRuns: { speeds: [[0, 100, '50']] } }, now), true);
-  assert.equal(keptLegUsable({ routed: true, at: now, speeds: null, detailRuns: null }, now), true);
-  assert.equal(keptLegUsable({ routed: true, at: now - WORK_KEEP_MS - 1, detailRuns: {} }, now), false, 'past its seven days');
-  assert.equal(keptLegUsable({ routed: false, at: now, detailRuns: {} }, now), false);
+  assert.equal(keptLegUsable({ routed: true, at: now, speeds: { 50: 100 }, detailRuns: { speeds: [[0, 100, '50']] }, curatedM: 0 }, now), true);
+  assert.equal(keptLegUsable({ routed: true, at: now, speeds: null, detailRuns: null, curatedM: 0 }, now), true);
+  assert.equal(keptLegUsable({ routed: true, at: now - WORK_KEEP_MS - 1, detailRuns: {}, curatedM: 0 }, now), false, 'past its seven days');
+  assert.equal(keptLegUsable({ routed: false, at: now, detailRuns: {}, curatedM: 0 }, now), false);
   assert.equal(keptLegUsable(null, now), false);
+});
+
+/* A leg kept from before the curated road surfaces were read (owner 2026-10-26: "it does not add our own road surface
+   quality into the mix") has no `curatedM`: it is asked again, or the Zuiderdijk's Good stays out for a week. */
+test('a kept leg from before the curated surfaces is asked again', () => {
+  const now = Date.now();
+  assert.equal(keptLegUsable({ routed: true, at: now, detailRuns: { speeds: [] } }, now), false);
+  assert.equal(keptLegUsable({ routed: true, at: now, detailRuns: { speeds: [] }, curatedM: 15616, bridgeRuns: [], tunnelRuns: [], deckAt: [] }, now), true);
+  assert.equal(legRecord({ key: 'k', routed: true, curatedM: 15616 }, now).curatedM, 15616, 'the store keeps it');
 });

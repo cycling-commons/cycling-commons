@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Elevation;
 
+use App\Elevation\CuratedSurfaces;
 use App\Elevation\LegSurfaces;
 use App\Elevation\RecordedWays;
 use PHPUnit\Framework\TestCase;
@@ -25,9 +26,10 @@ final class LegSurfacesTest extends TestCase
     private array $lastBody = [];
 
     /**
-     * @param array<int, array{surface: string|null, smoothness: string|null, tracktype: string|null}>|null $recorded what the table holds, or null for a leg outside a loaded country
+     * @param array<int, array{surface: string|null, smoothness: string|null, tracktype: string|null}>|null          $recorded what the table holds, or null for a leg outside a loaded country
+     * @param list<array{line: list<array{0: float, 1: float}>, surface: string|null, smoothness: string|null}>|null $curated  the curated road surfaces near the leg, or null for none read
      */
-    private function client(MockResponse $response, string $url = 'http://valhalla.test', ?array $recorded = null, bool $withWays = false): LegSurfaces
+    private function client(MockResponse $response, string $url = 'http://valhalla.test', ?array $recorded = null, bool $withWays = false, ?array $curated = null): LegSurfaces
     {
         $ways = $withWays ? new class($recorded) implements RecordedWays {
             /** @var list<int> */
@@ -51,7 +53,45 @@ final class LegSurfacesTest extends TestCase
             return $response;
         });
 
-        return new LegSurfaces($http, new NullLogger(), $url, null, $ways);
+        $near = null === $curated ? null : new class($curated) implements CuratedSurfaces {
+            /** @param list<array{line: list<array{0: float, 1: float}>, surface: string|null, smoothness: string|null}> $curated */
+            public function __construct(private readonly array $curated)
+            {
+            }
+
+            public function near(array $coords): array
+            {
+                return $this->curated;
+            }
+        };
+
+        return new LegSurfaces($http, new NullLogger(), $url, null, $ways, $near);
+    }
+
+    /**
+     * The engine's line as it answers it, Google's encoded polyline at six decimals.
+     *
+     * @param list<array{0: float, 1: float}> $points [lat, lng] pairs
+     */
+    private static function polyline6(array $points): string
+    {
+        $out = '';
+        $prev = [0, 0];
+        foreach ($points as $p) {
+            foreach ([0, 1] as $k) {
+                $v = (int) round($p[$k] * 1e6);
+                $d = $v - $prev[$k];
+                $prev[$k] = $v;
+                $d = $d < 0 ? ~($d << 1) : $d << 1;
+                while ($d >= 0x20) {
+                    $out .= \chr((0x20 | ($d & 0x1F)) + 63);
+                    $d >>= 5;
+                }
+                $out .= \chr($d + 63);
+            }
+        }
+
+        return $out;
     }
 
     public function testItFoldsTheEnginesSurfacesIntoPavedGravelRoughAndUnknownMetres(): void
@@ -75,7 +115,7 @@ final class LegSurfacesTest extends TestCase
         $read = $client->read([[50.49, 5.86], [50.47, 5.86]]);
         self::assertNotNull($read);
         self::assertSame([[0, 2000], [3200, 3600]], $read['busyRuns']);
-        self::assertSame(['edge.surface', 'edge.length', 'edge.road_class', 'edge.cycle_lane', 'edge.names', 'edge.use', 'edge.traffic_signal', 'node.traffic_signal', 'edge.way_id', 'edge.speed_limit'], $this->lastBody['filters']['attributes']);
+        self::assertSame(['edge.surface', 'edge.length', 'edge.road_class', 'edge.cycle_lane', 'edge.names', 'edge.use', 'edge.traffic_signal', 'node.traffic_signal', 'edge.way_id', 'edge.speed_limit', 'edge.begin_shape_index', 'edge.end_shape_index', 'shape'], $this->lastBody['filters']['attributes']);
         // The leg's own line, walked edge by edge, under the bicycle costing.
         self::assertSame('edge_walk', $this->lastBody['shape_match']);
         self::assertSame('bicycle', $this->lastBody['costing']);
@@ -271,5 +311,53 @@ final class LegSurfacesTest extends TestCase
         $line = array_map(static fn (int $i): array => [50.0 + $i * 0.0081, 5.8], range(0, 77));
 
         self::assertNull((new LegSurfaces(new MockHttpClient($answers), new NullLogger(), 'http://valhalla.test'))->readLine($line));
+    }
+
+    /**
+     * The road surfaces our curators set (layer A) stand for what OpenStreetMap records, on the edges that run along
+     * them (owner 2026-10-26: "it does not add our own road surface quality into the mix. the Zuiderdijk is set to good
+     * quality by me"). The dike runs north along 5.1 E; the leg rides it 1.1 km, then turns east off it: the short edge
+     * across the dike and the road beyond it keep their own words.
+     */
+    public function testACuratedRoadSurfaceStandsForTheRecordedOneAlongIt(): void
+    {
+        $shape = [[52.600, 5.1], [52.605, 5.1], [52.610, 5.1], [52.610, 5.10029], [52.610, 5.11]];
+        $client = $this->client(new MockResponse((string) json_encode(['units' => 'kilometers', 'shape' => self::polyline6($shape), 'edges' => [
+            ['way_id' => 31, 'surface' => 'gravel', 'length' => 0.556, 'use' => 'road', 'road_class' => 'residential', 'begin_shape_index' => 0, 'end_shape_index' => 1],
+            ['way_id' => 32, 'surface' => 'paved', 'length' => 0.556, 'use' => 'road', 'road_class' => 'residential', 'begin_shape_index' => 1, 'end_shape_index' => 2],
+            ['way_id' => 33, 'surface' => 'paved', 'length' => 0.020, 'use' => 'road', 'road_class' => 'residential', 'begin_shape_index' => 2, 'end_shape_index' => 3],
+            ['way_id' => 34, 'surface' => 'paved', 'length' => 0.660, 'use' => 'road', 'road_class' => 'residential', 'begin_shape_index' => 3, 'end_shape_index' => 4],
+        ]])), 'http://valhalla.test', [
+            31 => ['surface' => 'gravel', 'smoothness' => 'bad', 'tracktype' => null],
+            33 => ['surface' => 'paved', 'smoothness' => 'intermediate', 'tracktype' => null],
+        ], true, [
+            ['line' => [[52.600, 5.1], [52.620, 5.1]], 'surface' => 'Asphalt', 'smoothness' => 'Good'],
+        ]);
+
+        $read = $client->read([[52.600, 5.1], [52.610, 5.11]]);
+
+        self::assertNotNull($read);
+        self::assertSame(['paved' => 1792, 'gravel' => 0, 'rough' => 0, 'unknown' => 0, 'busy' => 0, 'cycle' => 0, 'sand' => 0, 'signals' => 0], $read['surfaces'], 'the curated asphalt over the recorded gravel');
+        self::assertSame(['smoothness' => ['good' => 1112, 'intermediate' => 20], 'tracktype' => []], $read['quality'], 'the curated Good over the recorded bad; the edge across the dike keeps its own');
+        self::assertSame([[0, 1112, 'good'], [1112, 1132, 'intermediate']], $read['detailRuns']['smoothness']);
+    }
+
+    /** Outside a loaded country the curated rows speak all the same: their sand is rough and counted apart, their quality read. */
+    public function testOutsideALoadedCountryACuratedRowStillSpeaks(): void
+    {
+        $shape = [[52.600, 5.1], [52.610, 5.1]];
+        $client = $this->client(new MockResponse((string) json_encode(['units' => 'kilometers', 'shape' => self::polyline6($shape), 'edges' => [
+            ['way_id' => 41, 'surface' => 'paved', 'length' => 1.112, 'use' => 'track', 'road_class' => 'service_other', 'begin_shape_index' => 0, 'end_shape_index' => 1],
+        ]])), 'http://valhalla.test', null, true, [
+            ['line' => [[52.600, 5.10005], [52.620, 5.10005]], 'surface' => 'Sand', 'smoothness' => 'Very bad'],
+        ]);
+
+        $read = $client->read($shape);
+
+        self::assertNotNull($read);
+        self::assertFalse($read['recorded'], 'no OpenStreetMap table for this country');
+        self::assertSame(1112, $read['surfaces']['rough']);
+        self::assertSame(1112, $read['surfaces']['sand']);
+        self::assertSame(['very_bad' => 1112], $read['quality']['smoothness']);
     }
 }

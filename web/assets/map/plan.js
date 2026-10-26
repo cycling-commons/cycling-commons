@@ -65,7 +65,7 @@ async function routeLeg(a, b, bike, shortest){
     const d = await r.json();
     showLegsLeft(d.budget);
     if(!d.routed) return { routed: false };
-    return { routed: true, line: d.coordinates, distM: d.distanceM, heights: d.heights || null, surfaces: d.surfaces || null, streets: d.streets || null, runs: d.runs || null, busyRuns: d.busyRuns || null, recorded: !!d.recorded, quality: d.quality || null, speeds: d.speeds || null, detailRuns: d.detailRuns || null };
+    return { routed: true, line: d.coordinates, distM: d.distanceM, heights: d.heights || null, surfaces: d.surfaces || null, streets: d.streets || null, runs: d.runs || null, busyRuns: d.busyRuns || null, recorded: !!d.recorded, quality: d.quality || null, speeds: d.speeds || null, detailRuns: d.detailRuns || null, curatedM: d.curatedM || 0 };
   } catch(e){ return { routed: false, down: true }; }
 }
 /* How far the along list looks (route-planner.md section 5): 250 m unless the rider picks more, kept with the draft.
@@ -130,7 +130,7 @@ async function routeGravel(asks, bike){
   } catch(e){ return null; }
 }
 function legFrom(l){
-  return { routed: true, line: l.coordinates, distM: l.distanceM, heights: l.heights || null, surfaces: l.surfaces || null, streets: l.streets || null, runs: l.runs || null, busyRuns: l.busyRuns || null, recorded: !!l.recorded, quality: l.quality || null, speeds: l.speeds || null, detailRuns: l.detailRuns || null, ...(l.fromFile ? { fromFile: true, matched: !!l.matched } : {}) };
+  return { routed: true, line: l.coordinates, distM: l.distanceM, heights: l.heights || null, surfaces: l.surfaces || null, streets: l.streets || null, runs: l.runs || null, busyRuns: l.busyRuns || null, recorded: !!l.recorded, quality: l.quality || null, speeds: l.speeds || null, detailRuns: l.detailRuns || null, curatedM: l.curatedM || 0, ...(l.fromFile ? { fromFile: true, matched: !!l.matched } : {}) };
 }
 /* A ride file's legs on the file's own roads (route-planner.md section 6.1, owner 2026-10-18): its track cut at the
    checkpoints, one piece per leg, matched to the roads in one request. One leg per piece, in order; null when the
@@ -973,7 +973,7 @@ function renderDetail(){
   const html = row('sm', t.smooth || 'Smoothness', d.smoothness, k => (t.sm || {})[k] || k)
     + row('tt', t.track || 'Tracks', d.tracktype, k => (t.tt || {})[k] || k)
     + row('sp', t.speed || 'Speed limit', speeds, speedText);
-  host.innerHTML = html ? html + `<p class="cc-plan-detailnote">${escPend(t.h || 'From OpenStreetMap, where it is recorded')}</p>` : '';
+  host.innerHTML = html ? html + `<p class="cc-plan-detailnote">${escPend(t.h || 'From OpenStreetMap and our curators, where it is recorded')}</p>` : '';
   host.hidden = !html;
 }
 function renderDayGraphic(day){

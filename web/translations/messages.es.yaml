@@ -2034,7 +2034,7 @@ map:
   plan_part_descend: "bajando"
   plan_part_flat: "en llano"
   plan_part_unknown: "firme sin registrar"
-  plan_detail_h: "De OpenStreetMap, donde está registrado"
+  plan_detail_h: "De OpenStreetMap y de nuestros curadores, donde está registrado"
   plan_detail_smooth: "Regularidad"
   plan_sm_excellent: "excelente"
   plan_sm_good: "buena"

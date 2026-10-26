@@ -1431,7 +1431,7 @@ map:
   plan_part_descend: "en descente"
   plan_part_flat: "sur le plat"
   plan_part_unknown: "revêtement non renseigné"
-  plan_detail_h: "D'après OpenStreetMap, là où c'est renseigné"
+  plan_detail_h: "D'après OpenStreetMap et nos curateurs, là où c'est renseigné"
   plan_detail_smooth: "Régularité"
   plan_sm_excellent: "excellent"
   plan_sm_good: "bon"
