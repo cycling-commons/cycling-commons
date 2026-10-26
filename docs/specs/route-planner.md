@@ -167,9 +167,11 @@ shows, which is the point.
   over any other layer, but stay below spot icons"). It is thin, 1.8 px at zoom 10
   to 3 px at zoom 18 over a faint cream edge, so the surface band under it
   stays readable on both sides (owner 2026-10-15). Chevrons along it, from
-  zoom 11, show which way the ride goes (`plan-arrows`, owner 2026-10-15),
+  zoom 8, show which way the ride goes (`plan-arrows`, owner 2026-10-15),
   21 px drawn (1.5 times the first 14 px, `ARROW_K`, drawn at that size so
-  they stay sharp); the line's eye hides them with it.
+  they stay sharp); the line's eye hides them with it. Zoomed out they are
+  smaller and closer together: 0.55 of full size at zoom 8, 0.75 at 11, full
+  at 16, every 70 px at zoom 8 and every 90 px from zoom 12.
 - **Show or hide the line** (owner 2026-10-15): an eye beside "Your ride"
   in the panel (`#planLineToggle`) hides the ride line and shows it again,
   so the surface under it can be read on its own; the stops, the profile and

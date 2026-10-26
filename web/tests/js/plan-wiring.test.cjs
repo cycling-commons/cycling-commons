@@ -450,7 +450,7 @@ test('with the stops folded, a line says how many legs go round and opens the fi
 });
 
 test('arrows along the ride line show the way it is ridden', () => {
-  assert.match(plan, /map\.addLayer\(\{ id: 'plan-arrows', type: 'symbol', source: 'plan', minzoom: 11,/);
+  assert.match(plan, /map\.addLayer\(\{ id: 'plan-arrows', type: 'symbol', source: 'plan', minzoom: 8,/, 'the direction shows zoomed out too (owner 2026-10-26)');
   assert.match(plan, /'symbol-placement': 'line'/);
   assert.match(plan, /'icon-image': 'plan-arrow'/);
   assert.match(plan, /function addArrowImage\(\)\{/);

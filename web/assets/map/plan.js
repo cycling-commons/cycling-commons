@@ -1644,7 +1644,9 @@ function addLayers(){
   map.addLayer({ id: 'plan-wind-rest', type: 'symbol', source: 'plan-wind-rest', layout: windLayout, paint: { 'icon-opacity': TOUGH_REST } });
   map.addSource('plan-wind', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   map.addLayer({ id: 'plan-wind', type: 'symbol', source: 'plan-wind', layout: { ...windLayout } });
-  map.addLayer({ id: 'plan-arrows', type: 'symbol', source: 'plan', minzoom: 11, layout: { 'symbol-placement': 'line', 'symbol-spacing': 90, 'icon-image': 'plan-arrow', 'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.75, 16, 1], 'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
+  // From zoom 8, smaller and a little closer together zoomed out (owner 2026-10-26: "ride direction arrows are gone
+  // when zoomed out"): a ride across a province is planned at zoom 9 to 10, and its direction is read there too.
+  map.addLayer({ id: 'plan-arrows', type: 'symbol', source: 'plan', minzoom: 8, layout: { 'symbol-placement': 'line', 'symbol-spacing': ['interpolate', ['linear'], ['zoom'], 8, 70, 12, 90], 'icon-image': 'plan-arrow', 'icon-size': ['interpolate', ['linear'], ['zoom'], 8, 0.55, 11, 0.75, 16, 1], 'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
   // Into the one stacking order (map-and-search.md section 4.1): over every other line, under the icons.
   liftInfoLayersAboveRoutes();
   applyLineShown();
