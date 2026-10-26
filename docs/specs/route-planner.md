@@ -1231,8 +1231,8 @@ onboarded extracts, so about 1.2 GB; Belgium 391,245 ways (29 MB), the
 Netherlands 706,259 (52 MB), Germany 5,200,789 (385 MB). The coverage places
 table is 1.9 GB on the same database.
 
-**The curated road surfaces, from the server.** A road surface our curators
-or riders set (layer A, the served states only: verified and unverified)
+**The curated road surfaces, from the server.** A road surface anyone added
+on Cycling Commons (layer A, the served states only: verified and unverified)
 stands for what OpenStreetMap records and for the engine's word, along the
 stretch it covers, in every country. The leg walk also asks the engine for
 its matched line (`shape`) and each edge's `begin_shape_index` and
@@ -1272,7 +1272,7 @@ grade 1 "solid" to grade 5 "soft", and the **speed limit**, OpenStreetMap's
 max speeds for roads"), in km/h, or in mph rounded to 5 when the rider reads
 miles, slowest first, with "no limit recorded" last; the speed line shows
 only when at least one limit is recorded. A note under them says "From
-OpenStreetMap and our curators, where it is recorded". Each line lights its stretches on the
+OpenStreetMap and Cycling Commons, where it is recorded". Each line lights its stretches on the
 map when pointed at or focused, as the surface lines do (owner 2026-10-19:
 "But what part of the road is that about? I can't hover it"): the leg also
 carries `detailRuns`, `[from, to, value]` metres along the leg per

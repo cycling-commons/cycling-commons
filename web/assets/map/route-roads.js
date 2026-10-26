@@ -40,7 +40,7 @@ function cardHtml(d) {
   if (!html) return '';
   // A fold, closed until the rider opens it (owner 2026-10-19), headed as the card's other sections are.
   return `<details class="cc-d-roadsfold"><summary class="cc-near-h">${escPend(D.routeRoadsH || 'Roads on this route')}</summary>`
-    + `<div class="cc-plan-detail">${html}<p class="cc-plan-detailnote">${escPend(t.h || 'From OpenStreetMap and our curators, where it is recorded')}</p></div></details>`;
+    + `<div class="cc-plan-detail">${html}<p class="cc-plan-detailnote">${escPend(t.h || 'From OpenStreetMap and Cycling Commons, where it is recorded')}</p></div></details>`;
 }
 
 function light(routeId, d, part, own) {

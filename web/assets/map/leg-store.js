@@ -24,7 +24,7 @@ export function legRecord(leg, at){
   return out;
 }
 /** Whether a kept leg is used as it is: routed, within its seven days, and of the server's current answer, which
-    carries the road detail and where it lies, `detailRuns`, the metres along our curators' road surfaces, `curatedM`
+    carries the road detail and where it lies, `detailRuns`, the metres along road surfaces added on Cycling Commons, `curatedM`
     (route-planner.md section 4.4a), and its bridges and tunnels, `bridgeRuns` and `tunnelRuns`, where its heights
     follow the deck, with a high deck's ends and top, `deckAt` (section 4.4); an older one is asked of the server
     again. */

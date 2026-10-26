@@ -973,7 +973,7 @@ function renderDetail(){
   const html = row('sm', t.smooth || 'Smoothness', d.smoothness, k => (t.sm || {})[k] || k)
     + row('tt', t.track || 'Tracks', d.tracktype, k => (t.tt || {})[k] || k)
     + row('sp', t.speed || 'Speed limit', speeds, speedText);
-  host.innerHTML = html ? html + `<p class="cc-plan-detailnote">${escPend(t.h || 'From OpenStreetMap and our curators, where it is recorded')}</p>` : '';
+  host.innerHTML = html ? html + `<p class="cc-plan-detailnote">${escPend(t.h || 'From OpenStreetMap and Cycling Commons, where it is recorded')}</p>` : '';
   host.hidden = !html;
 }
 function renderDayGraphic(day){
