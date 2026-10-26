@@ -1,0 +1,67 @@
+web/assets/map/basemap-tone.js
+  s_086f006d5a9290::t_8a7eb922e8b83f 28-29,31,124-131
+  s_086f006d5a9290::t_338a9026ddffa2 74-75,77,84-112,137-138
+  s_086f006d5a9290::t_086b2bcd438de8 19-21,24-27,30,33-41,43-45,48-50
+  s_086f006d5a9290::t_27eee1cd330c64 22
+  s_086f006d5a9290::t_7b37a2bbe42a61 32,42,46-47,51,76,78-83,132-136,141,143
+  s_086f006d5a9290::t_c94993605746e8 70
+  s_086f006d5a9290::t_6c088ef6d94fc7 1-15,23,113-123,139-140,142,144
+  s_086f006d5a9290::t_6db2b84d45c862 52-69,71-73
+  s_086f006d5a9290::t_8d8890e29c37ca 16-18
+web/assets/map/map-init.js
+  s_086f006d5a9290::t_5dff88a1a49a3c 130-133
+  s_086f006d5a9290::t_8d8890e29c37ca 127
+  s_086f006d5a9290::t_9a0fab38f4fcb0 135
+  s_086f006d5a9290::t_7b37a2bbe42a61 6,119,128,134
+web/assets/contribute/improve.js
+  s_086f006d5a9290::t_8d8890e29c37ca 299
+  s_086f006d5a9290::t_9a0fab38f4fcb0 300-301,303
+docs/specs/map-and-search.md
+  s_086f006d5a9290::t_0a8e2932ae8a5c 1907,1911,1936
+  s_086f006d5a9290::t_da5eb5e8b23a67 1886-1890,1949-1956
+  s_086f006d5a9290::t_b67bd53552993d 1892-1906,1908-1910,1912-1925
+  s_086f006d5a9290::t_27eee1cd330c64 1891
+  s_086f006d5a9290::t_aca01daed982c4 1926-1935,1946-1947
+  s_086f006d5a9290::t_f65888ba6603e7 1937-1945,1948
+  s_086f006d5a9290::t_82d23c05181604 1957
+web/assets/map/surface-tiles.js
+  s_086f006d5a9290::t_5dff88a1a49a3c 6,540
+web/assets/map/map.js
+  s_086f006d5a9290::t_8d8890e29c37ca 8,54
+web/tests/js/fade-highways.test.mjs
+  s_086f006d5a9290::t_8d8890e29c37ca 66-69,71-77,79
+  s_086f006d5a9290::t_c94993605746e8 82
+  s_086f006d5a9290::t_086b2bcd438de8 70,99-101,104-108,111,115
+  s_086f006d5a9290::t_5dff88a1a49a3c 35,145-153,155-156
+  s_086f006d5a9290::t_338a9026ddffa2 36,113-114,132-135,137-138,140-144
+  s_086f006d5a9290::t_6db2b84d45c862 118-131
+  s_086f006d5a9290::t_7b37a2bbe42a61 97-98,102-103,109-110,112,116-117
+  s_086f006d5a9290::t_7911ed1452b837 136,139
+  s_086f006d5a9290::t_8a7eb922e8b83f 80-81,83-96
+  s_086f006d5a9290::t_27eee1cd330c64 78,154
+  s_086f006d5a9290::t_8f11eac41ab441 157
+web/templates/contribute/improve.html.twig
+  s_086f006d5a9290::t_8d8890e29c37ca 627
+  s_086f006d5a9290::t_9a0fab38f4fcb0 628-629
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ceb0cf062330d59b9680a5d130a3d73f4082e4ae",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_086f006d5a9290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97afd631-7f48-4430-aac8-2c62f5b7a119",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
