@@ -168,7 +168,11 @@ best-of results, the site's GPX) behind the public contract.
 CORS `Access-Control-Allow-Origin: *` with `GET` only
 (`PublicApiCorsSubscriber`), per-IP `public_api_read` limiter (120/min, own
 pool), ETag + `public` caching with the explicit `^/v1/` PUBLIC_ACCESS entry
-in security.yaml. The conventions every endpoint shares (limiter, JSON
+in security.yaml. Responses are gzip-compressed when the request carries
+`Accept-Encoding: gzip` (nginx, `gzip_types` includes `application/json` and
+`application/geo+json`, `Vary: Accept-Encoding`): `/v1/regions` goes from
+122 KB to 38 KB, a Benelux `/v1/search` from 31 KB to 2 KB. The OpenAPI
+description says so, with `--compressed` for curl. The conventions every endpoint shares (limiter, JSON
 errors, cache headers, bbox, limit, cursor) live in one class,
 `App\Api\V1\ApiResponder`. Controllers: `PublicApiController` (map-config,
 catalog, search, items, counts), `RegionApiController`, `RouteApiController`

@@ -27,6 +27,11 @@ info:
     and monthly quotas for reads are planned, not built: nothing here asks
     for one yet.
 
+    Responses are gzip-compressed when the request carries
+    `Accept-Encoding: gzip`. Browsers and most HTTP libraries send it on
+    their own; with curl, add `--compressed`. GeoJSON shrinks to a third of
+    its size or less.
+
     Writes are for **registered partner apps** only: `POST
     /v1/contributions` and the two calls beside it need a partner key in
     `Authorization: Bearer <key>`. A partner key belongs on a server, never
@@ -117,6 +122,11 @@ paths:
         Cacheable for an hour; the tile URLs change when a new build is
         published, which is why consumers read them here instead of
         hardcoding them.
+      x-codeSamples:
+        - lang: Shell
+          label: curl
+          source: |-
+            curl --compressed "https://api.cyclingcommons.org/v1/map-config"
       responses:
         '200':
           description: The bootstrap payload.
@@ -139,6 +149,11 @@ paths:
         `/v1/contributions` takes it (`accepted`). The same form the site's
         own wizard renders, so a partner app offers its users the same
         choices a rider gets. English labels. Cacheable for an hour.
+      x-codeSamples:
+        - lang: Shell
+          label: curl
+          source: |-
+            curl --compressed "https://api.cyclingcommons.org/v1/catalog"
       responses:
         '200':
           description: The catalogue.
@@ -192,6 +207,11 @@ paths:
         - $ref: '#/components/parameters/hydrate'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/cursor'
+      x-codeSamples:
+        - lang: Shell
+          label: curl
+          source: |-
+            curl --compressed "https://api.cyclingcommons.org/v1/search?letter=B&bbox=5.0,51.8,5.3,52.1"
       responses:
         '200':
           description: Matching features. Cacheable for five minutes.
@@ -222,6 +242,11 @@ paths:
           description: Commons item id (the `id` property of a search feature).
           schema: { type: integer, minimum: 1 }
         - $ref: '#/components/parameters/hydrate'
+      x-codeSamples:
+        - lang: Shell
+          label: curl
+          source: |-
+            curl --compressed "https://api.cyclingcommons.org/v1/items/23865"
       responses:
         '200':
           description: The item. Cacheable for five minutes.
@@ -247,6 +272,11 @@ paths:
         because the coverage count reads every point in it.
       parameters:
         - $ref: '#/components/parameters/bboxRequired'
+      x-codeSamples:
+        - lang: Shell
+          label: curl
+          source: |-
+            curl --compressed "https://api.cyclingcommons.org/v1/coverage/counts?bbox=5.0,51.8,5.3,52.1"
       responses:
         '200':
           description: Counts keyed by catalogue letter. Cacheable for five minutes.
@@ -274,6 +304,11 @@ paths:
           example: BE
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/cursor'
+      x-codeSamples:
+        - lang: Shell
+          label: curl
+          source: |-
+            curl --compressed "https://api.cyclingcommons.org/v1/regions?country=NL"
       responses:
         '200':
           description: Region features. Cacheable for an hour.
@@ -294,6 +329,11 @@ paths:
         shape the map draws), with its counts per letter.
       parameters:
         - $ref: '#/components/parameters/regionId'
+      x-codeSamples:
+        - lang: Shell
+          label: curl
+          source: |-
+            curl --compressed "https://api.cyclingcommons.org/v1/regions/gelderland"
       responses:
         '200':
           description: The region. Cacheable for an hour.
@@ -322,6 +362,11 @@ paths:
         R and an item (`/v1/items/{id}`) for every other letter.
       parameters:
         - $ref: '#/components/parameters/regionId'
+      x-codeSamples:
+        - lang: Shell
+          label: curl
+          source: |-
+            curl --compressed "https://api.cyclingcommons.org/v1/regions/gelderland/best"
       responses:
         '200':
           description: The lists. Cacheable for an hour.
@@ -348,6 +393,11 @@ paths:
           description: Page size; a whole line weighs more than a point, so the cap is lower than search's.
           schema: { type: integer, minimum: 1, maximum: 100, default: 100 }
         - $ref: '#/components/parameters/cursor'
+      x-codeSamples:
+        - lang: Shell
+          label: curl
+          source: |-
+            curl --compressed "https://api.cyclingcommons.org/v1/routes?bbox=5.0,51.8,5.3,52.1"
       responses:
         '200':
           description: Route features (LineString geometry). Cacheable for five minutes.
@@ -369,6 +419,11 @@ paths:
         GPX link.
       parameters:
         - $ref: '#/components/parameters/routeId'
+      x-codeSamples:
+        - lang: Shell
+          label: curl
+          source: |-
+            curl --compressed "https://api.cyclingcommons.org/v1/routes/1"
       responses:
         '200':
           description: The route. Cacheable for five minutes.
@@ -387,6 +442,11 @@ paths:
       description: The route's track as a GPX 1.1 file to download, the same file the site offers.
       parameters:
         - $ref: '#/components/parameters/routeId'
+      x-codeSamples:
+        - lang: Shell
+          label: curl
+          source: |-
+            curl --compressed -o route.gpx "https://api.cyclingcommons.org/v1/routes/1.gpx"
       responses:
         '200':
           description: The route as a GPX 1.1 document. Cacheable for an hour.

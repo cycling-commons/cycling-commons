@@ -33,7 +33,9 @@
 <div id="redoc"></div>
 <script src="{{ asset('lib/redoc-standalone-2.5.3.js') }}"></script>
 <script nonce="{{ csp_nonce() }}">
-Redoc.init('/api/openapi.yaml', {
+{# The release's commit (or its number) in the address: a browser that kept the file loads
+   the new one after a release instead of showing an old reference. #}
+Redoc.init('/api/openapi.yaml?v={{ (cc_build().commit ?: cc_build().number)|url_encode }}', {
   hideDownloadButton: false,
   expandResponses: '200',
   theme: {
