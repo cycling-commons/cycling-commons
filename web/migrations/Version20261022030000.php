@@ -28,7 +28,8 @@ final class Version20261022030000 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $this->addSql("COMMENT ON COLUMN region.silhouette IS 'Rings drawn on region pages (RegionSilhouette): simplified at a tenth of a drawing unit of the country frame, parts from 1.5 units across.'");
-        $this->addSql(RegionDerivations::silhouetteSql());
+        // Whole shapes: region_land() comes with Version20261025010000, which draws again with the lakes left out.
+        $this->addSql(RegionDerivations::silhouetteSql(cutLakes: false));
     }
 
     #[\Override]

@@ -29,7 +29,8 @@ final class Version20261020030000 extends AbstractMigration
     {
         $this->addSql('ALTER TABLE region ADD silhouette JSONB DEFAULT NULL');
         $this->addSql("COMMENT ON COLUMN region.silhouette IS 'Rings drawn on region pages (RegionSilhouette): like outline, simplified at 0.008 degrees instead of 0.05.'");
-        $this->addSql(RegionDerivations::silhouetteSql());
+        // Whole shapes: region_land() comes with Version20261025010000, which draws again with the lakes left out.
+        $this->addSql(RegionDerivations::silhouetteSql(cutLakes: false));
     }
 
     #[\Override]

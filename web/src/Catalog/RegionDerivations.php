@@ -52,10 +52,15 @@ final class RegionDerivations
      * `region_silhouettes_refresh()` after a harvest: a change here ships a
      * migration that defines that function again
      * (RegionSilhouettesFunctionTest holds the two together).
+     *
+     * `$cutLakes` false draws the shape whole, without `region_land()`: the migrations from before that function
+     * existed draw as they did then, so a fresh database migrates in order (Version20261025010000 creates it and
+     * draws again with the lakes).
      */
-    public static function silhouetteSql(): string
+    public static function silhouetteSql(bool $cutLakes = true): string
     {
         return strtr(self::SILHOUETTE_SQL, [
+            '{land}' => $cutLakes ? 'region_land(r.geom)' : 'r.geom',
             '{step}' => (string) (10 ** -RegionSilhouette::DECIMALS),
             '{min_part}' => '1.5',
             '{box_w}' => (string) (RegionSilhouette::W - 2 * RegionSilhouette::PAD),
@@ -203,7 +208,7 @@ final class RegionDerivations
                 FROM (
                     SELECT ST_SimplifyPreserveTopology(d.geom, f.unit * {step}) AS g,
                            GREATEST((ST_XMax(d.geom) - ST_XMin(d.geom)) * f.k, ST_YMax(d.geom) - ST_YMin(d.geom)) / f.unit AS drawn
-                    FROM ST_Dump(region_land(r.geom)) d
+                    FROM ST_Dump({land}) d
                 ) z
                 CROSS JOIN LATERAL ST_DumpRings(z.g) rg
                 WHERE z.g IS NOT NULL

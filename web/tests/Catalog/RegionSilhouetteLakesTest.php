@@ -51,6 +51,20 @@ final class RegionSilhouetteLakesTest extends KernelTestCase
             'RegionDerivations::silhouetteSql() changed: ship a migration that runs Version20261025010000::refreshFunction() again');
     }
 
+    /**
+     * A fresh database migrates in order (owner 2026-10-26: CI on main failed, "function region_land(geometry) does
+     * not exist"): the migrations from before Version20261025010000 draw whole shapes, without region_land().
+     */
+    public function testTheMigrationsBeforeRegionLandDrawWithoutIt(): void
+    {
+        self::assertStringNotContainsString('region_land', RegionDerivations::silhouetteSql(cutLakes: false));
+        self::assertStringContainsString('ST_Dump(r.geom)', RegionDerivations::silhouetteSql(cutLakes: false));
+        foreach (['Version20261020030000', 'Version20261022030000'] as $version) {
+            $source = (string) file_get_contents(\dirname(__DIR__, 2).'/migrations/'.$version.'.php');
+            self::assertStringContainsString('RegionDerivations::silhouetteSql(cutLakes: false)', $source, $version);
+        }
+    }
+
     /** @param list<array{0: float, 1: float}> $ring */
     private function region(string $cc, int $level, array $ring): int
     {
