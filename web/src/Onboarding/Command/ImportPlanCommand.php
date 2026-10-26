@@ -20,6 +20,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Reads a bundle from app:country:export into a plan, so apply, repair, check and live run on staging's exact rows.
  *
+ * For a country already live here, the bundle's regions this side lacks are planned as added regions.
+ *
  * @api
  */
 #[AsCommand(name: 'app:country:import-plan', description: 'Read a country bundle (stdin or --file) into country + country_plan_region as a plan')]
@@ -63,7 +65,19 @@ final class ImportPlanCommand extends Command
         }
         $cc = $bundle['country']['code'];
         $status = $this->countries->status($cc);
-        if (\in_array($status, [CountryStatus::Seeded, CountryStatus::Live], true)) {
+        if (CountryStatus::Live === $status) {
+            try {
+                $added = $this->bundle->importAdded($bundle);
+            } catch (DBALException|\InvalidArgumentException $e) {
+                $io->error(sprintf('Nothing written: %s', $e->getMessage()));
+
+                return Command::FAILURE;
+            }
+            $io->success(sprintf('%s is live here; planned the regions it lacks: %s. Next: app:country:apply %s', $cc, implode(', ', $added), $cc));
+
+            return Command::SUCCESS;
+        }
+        if (CountryStatus::Seeded === $status) {
             $io->error(sprintf('%s is %s here; its slugs are frozen identity. Nothing written.', $cc, $status->value));
 
             return Command::FAILURE;

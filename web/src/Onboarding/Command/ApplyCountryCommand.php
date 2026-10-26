@@ -25,6 +25,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Turns a confirmed plan into region rows, derivations and re-stamped rider data, in one transaction.
  *
+ * A live country with plan rows gets regions added (`python -m onboarding.plan US --add US-AZ`):
+ * they are written pending, its planned extracts join country_extract, and the country stays live.
+ *
  * @api
  */
 #[AsCommand(name: 'app:country:apply', description: 'Turn a planned country into region rows, derivations and re-stamped rider data')]
@@ -59,19 +62,26 @@ final class ApplyCountryCommand extends Command
             return Command::INVALID;
         }
         $status = $this->countries->status($cc);
-        if (!\in_array($status, [CountryStatus::Planned, CountryStatus::Seeded], true)) {
-            $io->error(sprintf('%s is %s; apply needs a planned country (or seeded, for a rerun).', $cc, null === $status ? 'not planned' : $status->value));
+        $plan = $this->countries->planRegions($cc);
+        $adding = CountryStatus::Live === $status && [] !== $plan;
+        if (!$adding && !\in_array($status, [CountryStatus::Planned, CountryStatus::Seeded], true)) {
+            $io->error(sprintf('%s is %s; apply needs a planned country (or seeded, for a rerun), or a live one with regions planned by --add.', $cc, null === $status ? 'not planned' : $status->value));
 
             return Command::FAILURE;
         }
-        $plan = $this->countries->planRegions($cc);
         if ([] === $plan) {
             $io->error(sprintf('%s has no plan rows; run python -m onboarding.plan %s first.', $cc, $cc));
 
             return Command::FAILURE;
         }
-        if ([] === $this->countries->extracts($cc)) {
+        if ([] === $this->countries->extracts($cc) && [] === $this->countries->planExtracts($cc)) {
             $io->error(sprintf('%s has no country_extract row; the plan is incomplete.', $cc));
+
+            return Command::FAILURE;
+        }
+        $onMap = $adding ? $this->countries->shownSlugs($cc, array_column($plan, 'slug')) : [];
+        if ([] !== $onMap) {
+            $io->error(sprintf('%s already shows %s; adding regions never rewrites a region on the map. Nothing was written.', $cc, implode(', ', $onMap)));
 
             return Command::FAILURE;
         }
@@ -93,13 +103,19 @@ final class ApplyCountryCommand extends Command
                     'source' => 'overture',
                 ], $row['geojson'], sprintf('plan %s/%s', $cc, $row['slug']), $row['labels']);
             }
+            if ($adding) {
+                // Pending first: the steps below read only the added regions, never the whole country.
+                $this->countries->markAdded($cc, array_column($plan, 'slug'));
+            }
             $this->regions->assertTessellates();
             $this->derivations->shapes();
-            $neighbours = $this->countries->neighbours($cc);
-            $derived = $this->derivations->dependentsNear([$cc, ...$neighbours], Countries::NEIGHBOUR_DEG);
-            $stamped = $this->restamper->restamp([$cc, ...$neighbours], false);
-            $this->countries->markSeeded($cc);
-            $this->countries->fillTimezones($cc);
+            $neighbours = $this->countries->neighbours($cc, $adding);
+            $derived = $this->derivations->dependentsNear([$cc, ...$neighbours], Countries::NEIGHBOUR_DEG, $adding);
+            $stamped = $this->restamper->restamp([$cc, ...$neighbours], false, $adding);
+            if (!$adding) {
+                $this->countries->markSeeded($cc);
+                $this->countries->fillTimezones($cc);
+            }
             $this->db->commit();
         } catch (\InvalidArgumentException|\JsonException|DBALException $e) {
             if ($this->db->isTransactionActive()) {
@@ -117,7 +133,9 @@ final class ApplyCountryCommand extends Command
         $io->text(sprintf('%s: %d region row(s); neighbours: %s', $cc, \count($plan), [] === $neighbours ? 'none' : implode(',', $neighbours)));
         $io->text(sprintf('rows re-derived near %s: membership %d, rider bases %d, route surfaces %d', implode(',', [$cc, ...$neighbours]), $derived['assigned'], $derived['rederived'], $derived['surfaced']));
         $io->table(['table', 'country', 'rows'], RestampRegionsCommand::rows($stamped));
-        $io->success(sprintf('%s is seeded. Next: python -m onboarding.repair %s', $cc, $cc));
+        $io->success($adding
+            ? sprintf('%s: %s added, not on the map yet. Next: python -m onboarding.repair %s', $cc, implode(', ', array_column($plan, 'slug')), $cc)
+            : sprintf('%s is seeded. Next: python -m onboarding.repair %s', $cc, $cc));
 
         return Command::SUCCESS;
     }

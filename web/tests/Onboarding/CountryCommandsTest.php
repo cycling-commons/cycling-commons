@@ -403,4 +403,74 @@ final class CountryCommandsTest extends KernelTestCase
         self::assertContains('xa-east', $slugs());
         self::assertSame('XA', $timezones->map()['Etc/GMT-3'] ?? null);
     }
+
+    /** Live XB gains xb-south below xb-north: pending until mark-live, its extract onboarded only by apply. */
+    /** @return array{0: int, 1: int} a submission outside xb-south, and one inside it */
+    private function planAddedXbSouth(): array
+    {
+        $outside = $this->seed();
+        $this->plan('XB', 'xb-south', 'POLYGON((51 50.2,52 50.2,52 51,51 51,51 50.2))', 4, 'XB-S');
+        $this->db()->executeStatement("INSERT INTO country_extract (slug, country_code) VALUES ('test/xbland', 'XB')");
+        $this->db()->executeStatement("INSERT INTO country_plan_extract (slug, country_code) VALUES ('test/xbland-south', 'XB')");
+        $inside = (int) $this->db()->fetchOne(
+            "INSERT INTO submission (type, letter, user_id, status, title, geom, country_code, changes, payload, created_at)
+             SELECT type, letter, user_id, status, 'Bench', ST_SetSRID(ST_MakePoint(51.5, 50.5), 4326), '', '{}', '{}', NOW()
+               FROM submission WHERE id = :id RETURNING id",
+            ['id' => $outside],
+        );
+
+        return [$outside, $inside];
+    }
+
+    public function testRegionsAddedToALiveCountryShowOnlyOnceMarkedLive(): void
+    {
+        self::bootKernel();
+        [$outside, $inside] = $this->planAddedXbSouth();
+        $db = $this->db();
+        $registry = static::getContainer()->get(RegionRegistryProvider::class);
+        $slugs = static fn (): array => array_column($registry->all(), 'slug');
+        $liveAt = $db->fetchOne("SELECT live_at FROM country WHERE code = 'XB'");
+
+        $apply = $this->command('app:country:apply', ['country' => 'XB']);
+
+        $apply->assertCommandIsSuccessful();
+        self::assertStringContainsString('xb-south added, not on the map yet', $apply->getDisplay());
+        self::assertTrue((bool) $db->fetchOne("SELECT pending FROM region WHERE slug = 'xb-south'"));
+        self::assertFalse((bool) $db->fetchOne("SELECT pending FROM region WHERE slug = 'xb-north'"));
+        self::assertSame(['test/xbland', 'test/xbland-south'], $db->fetchFirstColumn("SELECT slug FROM country_extract WHERE country_code = 'XB' ORDER BY slug"));
+        self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM country_plan_extract WHERE country_code = 'XB'"));
+        self::assertSame(['status' => 'live', 'live_at' => $liveAt], $db->fetchAssociative("SELECT status, live_at FROM country WHERE code = 'XB'"));
+        self::assertSame(['xb-south', 'XB'], array_values((array) $db->fetchAssociative('SELECT r.slug, s.country_code FROM submission s JOIN region r ON r.id = s.region_id WHERE s.id = ?', [$inside])));
+        self::assertSame('', $db->fetchOne('SELECT country_code FROM submission WHERE id = ?', [$outside]), 'a row outside the added region is not read');
+        self::assertNotContains('xb-south', $slugs(), 'an added region waits for the rest of its onboarding');
+        self::assertContains('xb-north', $slugs(), 'the regions already live stay on the map');
+
+        $this->command('app:country:apply', ['country' => 'XB'])->assertCommandIsSuccessful();
+        self::assertTrue((bool) $db->fetchOne("SELECT pending FROM region WHERE slug = 'xb-south'"), 'a rerun keeps it pending');
+
+        $live = $this->command('app:country:mark-live', ['country' => 'XB']);
+
+        $live->assertCommandIsSuccessful();
+        self::assertStringContainsString('XB: xb-south live', $live->getDisplay());
+        self::assertContains('xb-south', $slugs());
+        self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM country_plan_region WHERE country_code = 'XB'"));
+        self::assertSame($liveAt, $db->fetchOne("SELECT live_at FROM country WHERE code = 'XB'"), 'the country keeps the day it went live');
+        self::assertSame(1, $this->command('app:country:mark-live', ['country' => 'XB'])->getStatusCode(), 'nothing left to mark');
+    }
+
+    public function testAddingRegionsNeverRewritesARegionOnTheMap(): void
+    {
+        self::bootKernel();
+        $this->seed();
+        $this->plan('XB', 'xb-north', 'POLYGON((51 51,53 51,53 53,51 53,51 51))', 4, 'XB-N');
+        $this->db()->executeStatement("INSERT INTO country_extract (slug, country_code) VALUES ('test/xbland', 'XB')");
+        $geom = $this->db()->fetchOne("SELECT ST_AsText(geom) FROM region WHERE slug = 'xb-north'");
+
+        $tester = $this->command('app:country:apply', ['country' => 'XB']);
+
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertStringContainsString('XB already shows xb-north', $tester->getDisplay());
+        self::assertSame($geom, $this->db()->fetchOne("SELECT ST_AsText(geom) FROM region WHERE slug = 'xb-north'"));
+        self::assertFalse((bool) $this->db()->fetchOne("SELECT pending FROM region WHERE slug = 'xb-north'"));
+    }
 }

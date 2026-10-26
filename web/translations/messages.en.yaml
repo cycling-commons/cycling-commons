@@ -5485,6 +5485,7 @@ changelog:
   v098_region_story: "<b>The history, nature and culture of a region.</b> A region page now has a second text under its geography: what the region is about in its history, its nature and its culture, with its sources linked in the text. Anyone signed in can write, edit or translate it, and the form checks every link while you type it. A curator of the region approves it before it shows. The first ones are in the Netherlands."
   v098_translations: "<b>A translation says what it translates.</b> On the form for a town or region text, say which language you translated it from. Under a region text, the page then says it is a translation, and also when the original has changed since."
   v098_region_page: "<b>A clearer region page.</b> On a wide screen, the texts are on the left and what riders find there is on the right. The country's name opens its other regions."
+  v0912_us_states: "<b>Arizona and Oregon.</b> Two more states of the United States join the map within a day of this release, next to California and Colorado."
   v0912_uncovered: "<b>Where the map has no data yet.</b> Click a state the map does not cover yet, such as Nevada, and it says so, with a link to ask for it."
   v0912_region_map: "<b>Find your way between regions.</b> Point at a region on the country map of a region page to see its name, and click it to go there. Big lakes show as water."
   v0912_region_page: "<b>Region pages on a phone and a tablet.</b> The figures take less room, and a long text folds after three lines with \"Read more\"."

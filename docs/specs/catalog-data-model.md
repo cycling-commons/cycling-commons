@@ -169,7 +169,12 @@ voting/rankings, and the per-region route cap all anchor to `region.id`
 (`python -m onboarding.plan <CC>`, then `app:country:apply <CC>`;
 `wiki/developers/data-ops/onboarding-a-country.md`): one operating level per
 country, chosen by the planner's fixed rules from Overture's divisions
-(data-source-register.md, Region boundaries). `app:catalog:import` still
+(data-source-register.md, Region boundaries). A live country gains regions
+at its own level with `python -m onboarding.plan <CC> --add <ISO 3166-2>`:
+the new rows carry `region.pending` from `app:country:apply` until
+`app:country:mark-live`, and the region registry leaves a pending row out,
+so they reach the map only once their harvest and elevation check passed.
+Their extracts wait in `country_plan_extract` until apply. `app:catalog:import` still
 upserts any `region-*.geojson` artifact in its export dir the same way. A
 jurisdiction is a **set of region rows** on `moderator_area`, never a drawn
 polygon.

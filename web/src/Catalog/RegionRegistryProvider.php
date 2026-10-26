@@ -49,7 +49,9 @@ final class RegionRegistryProvider
              FROM region
              WHERE geom IS NOT NULL AND country_code <> \'\'
                AND '.OperationalRegions::predicate('region').'
-               /* A country shows once it is live; regions with no country row predate the table. */
+               /* A country shows once it is live, and a region added to a live country once
+                  its own onboarding passed; regions with no country row predate the table. */
+               AND NOT region.pending
                AND NOT EXISTS (SELECT 1 FROM country c WHERE c.code = region.country_code AND c.status <> \'live\')
              ORDER BY area_km2 DESC, slug',
         );

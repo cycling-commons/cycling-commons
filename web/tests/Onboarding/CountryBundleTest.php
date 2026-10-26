@@ -102,7 +102,7 @@ final class CountryBundleTest extends KernelTestCase
         self::assertSame(1, $this->command('app:country:import-plan', ['--file' => $this->tempFile('')])->getStatusCode());
     }
 
-    public function testImportPlanRefusesACountryAlreadyLiveHere(): void
+    public function testImportPlanFindsNothingToAddToACountryLiveHereWithTheSameRegions(): void
     {
         self::bootKernel();
         $this->seedLiveXa();
@@ -111,7 +111,62 @@ final class CountryBundleTest extends KernelTestCase
         $tester = $this->command('app:country:import-plan', ['--file' => $this->tempFile($json)]);
 
         self::assertSame(1, $tester->getStatusCode());
-        self::assertStringContainsString('XA is live', $tester->getDisplay());
+        self::assertStringContainsString('XA already holds every region in the bundle', $tester->getDisplay());
+        self::assertSame(0, (int) $this->db()->fetchOne("SELECT COUNT(*) FROM country_plan_region WHERE country_code = 'XA'"));
+    }
+
+    /** Staging added xa-east to live XA; production, live with xa-west only, plans just that region and its extract. */
+    public function testImportPlanPlansTheRegionsALiveCountryLacksHere(): void
+    {
+        self::bootKernel();
+        $this->seedLiveXa();
+        $db = $this->db();
+        $db->executeStatement(
+            "INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, labels, created_at, updated_at)
+             VALUES ('xa-east', 'East', ST_Multi(ST_GeomFromText('POLYGON((51.4 50,52 50,52 51,51.4 51,51.4 50))', 4326)), 5000, 'XA', 'XA-E', 4, 'overture', '{\"en\":\"East\"}', NOW(), NOW())",
+        );
+        $db->executeStatement("INSERT INTO country_extract (slug, country_code) VALUES ('test/xaland-east', 'XA')");
+        $json = $this->command('app:country:export', ['country' => 'XA'])->getDisplay();
+        $db->executeStatement("DELETE FROM region WHERE slug = 'xa-east'");
+        $db->executeStatement("DELETE FROM country_extract WHERE slug = 'test/xaland-east'");
+        $liveAt = $db->fetchOne("SELECT live_at FROM country WHERE code = 'XA'");
+
+        $tester = $this->command('app:country:import-plan', ['--file' => $this->tempFile($json)]);
+
+        $tester->assertCommandIsSuccessful();
+        self::assertStringContainsString('planned the regions it lacks: xa-east', $tester->getDisplay());
+        self::assertSame(['xa-east'], $db->fetchFirstColumn("SELECT slug FROM country_plan_region WHERE country_code = 'XA'"));
+        self::assertSame(['test/xaland-east'], $db->fetchFirstColumn("SELECT slug FROM country_plan_extract WHERE country_code = 'XA'"));
+        self::assertSame(['test/xaland'], $db->fetchFirstColumn("SELECT slug FROM country_extract WHERE country_code = 'XA'"));
+        self::assertSame(['status' => 'live', 'live_at' => $liveAt], $db->fetchAssociative("SELECT status, live_at FROM country WHERE code = 'XA'"));
+    }
+
+    public function testImportPlanRefusesABundleThatLacksARegionALiveCountryHoldsHere(): void
+    {
+        self::bootKernel();
+        $this->seedLiveXa();
+        $json = $this->command('app:country:export', ['country' => 'XA'])->getDisplay();
+        $this->db()->executeStatement(
+            "INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
+             VALUES ('xa-north', 'North', ST_Multi(ST_GeomFromText('POLYGON((50 51,51 51,51 52,50 52,50 51))', 4326)), 5000, 'XA', 'XA-N', 4, 'overture', NOW(), NOW())",
+        );
+
+        $tester = $this->command('app:country:import-plan', ['--file' => $this->tempFile($json)]);
+
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertStringContainsString('the bundle lacks xa-north', $tester->getDisplay());
+    }
+
+    public function testExportWaitsUntilAddedRegionsAreLive(): void
+    {
+        self::bootKernel();
+        $this->seedLiveXa();
+        $this->db()->executeStatement("UPDATE region SET pending = true WHERE slug = 'xa-west'");
+
+        $export = $this->command('app:country:export', ['country' => 'XA']);
+
+        self::assertSame(1, $export->getStatusCode());
+        self::assertStringContainsString('added regions that are not live yet (xa-west)', $export->getDisplay());
     }
 
     public function testNonObjectLabelsAreReadAsEmptyAndWrittenAsAnObject(): void

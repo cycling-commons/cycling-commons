@@ -11,7 +11,8 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 
 /**
- * A grid of points inside a country's operational regions, for the elevation check.
+ * A grid of points inside a country's operational regions, for the elevation check; only its pending
+ * regions when $pendingOnly, for regions added to a live country.
  *
  * @api
  */
@@ -24,11 +25,11 @@ final class ElevationSample
     }
 
     /** @return list<array{lat: float, lon: float}> */
-    public function points(string $cc): array
+    public function points(string $cc, bool $pendingOnly = false): array
     {
         $rows = [];
         for ($n = 5; $n <= 40; $n += 5) {
-            $rows = $this->grid($cc, $n);
+            $rows = $this->grid($cc, $n, $pendingOnly);
             if (\count($rows) >= self::POINTS) {
                 break;
             }
@@ -44,12 +45,12 @@ final class ElevationSample
     }
 
     /** @return list<array<string, mixed>> */
-    private function grid(string $cc, int $n): array
+    private function grid(string $cc, int $n, bool $pendingOnly): array
     {
         return $this->db->fetchAllAssociative(
             'WITH c AS (
                  SELECT ST_Union(r.geom) AS g FROM region r
-                  WHERE r.country_code = :cc AND r.geom IS NOT NULL AND '.OperationalRegions::predicate('r').'
+                  WHERE r.country_code = :cc AND r.geom IS NOT NULL AND '.OperationalRegions::predicate('r').($pendingOnly ? ' AND r.pending' : '').'
              ), b AS (
                  SELECT g, ST_XMin(g) AS x0, ST_YMin(g) AS y0, ST_XMax(g) AS x1, ST_YMax(g) AS y1 FROM c WHERE g IS NOT NULL
              )

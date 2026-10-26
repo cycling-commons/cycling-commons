@@ -82,11 +82,11 @@ def db():
 
 @pytest.fixture()
 def catalog(db):
-    """The onboarding tables (web/migrations/Version20261005120000.php) in the test schema."""
+    """The onboarding tables (web/migrations/Version20261005120000.php, Version20261025020000.php) in the test schema."""
     db.execute(
         "ALTER TABLE region ADD COLUMN slug varchar(80), ADD COLUMN name varchar(160), "
         "ADD COLUMN iso_code varchar(10), ADD COLUMN source varchar(32), "
-        "ADD COLUMN labels jsonb NOT NULL DEFAULT '{}'"
+        "ADD COLUMN labels jsonb NOT NULL DEFAULT '{}', ADD COLUMN pending boolean NOT NULL DEFAULT false"
     )
     db.execute(
         "CREATE TABLE country (code char(2) PRIMARY KEY, name varchar(100) NOT NULL, "
@@ -106,6 +106,11 @@ def catalog(db):
         "labels jsonb NOT NULL DEFAULT '{}', fallback_locales text[] NOT NULL DEFAULT '{}', "
         "admin_level smallint NOT NULL, area_km2 double precision NOT NULL, "
         "geom geometry(Geometry, 4326) NOT NULL, PRIMARY KEY (country_code, slug))"
+    )
+    db.execute(
+        "CREATE TABLE country_plan_extract (slug varchar(100) NOT NULL, "
+        "country_code char(2) NOT NULL REFERENCES country (code) ON DELETE CASCADE, "
+        "PRIMARY KEY (slug, country_code))"
     )
     db.commit()
     return db

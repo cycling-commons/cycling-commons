@@ -36,12 +36,15 @@ case "${1:-}" in
   EUROPE)  BBOX="35,-11,72,32" ;;
   # The 2026-08-06 rollout's continents. Each is the onboarded ground, not the
   # continent: AUSTRALIA stops at 44S (Tasmania) and leaves out Macquarie
-  # Island, and USWEST is California + Colorado only, because a degree cell
+  # Island, and USWEST is California only (USROCKY, USARIZONA and USOREGON
+  # cover the other onboarded states), because a degree cell
   # costs ~25 MB of .hgt whether or not a climb is in it.
   AUSTRALIA) BBOX="-44,112,-9,154" ;;
   JAPAN)     BBOX="24,122,46,146" ;;
   USWEST)    BBOX="32,-125,43,-113" ;;   # California
   USROCKY)   BBOX="36,-110,42,-101" ;;   # Colorado
+  USARIZONA) BBOX="31,-115,37,-109" ;;   # Arizona
+  USOREGON)  BBOX="41,-125,47,-116" ;;   # Oregon; its southern strip overlaps USWEST
   # The 2026-08-14 rollout. Same rule as above — the onboarded ground, not the
   # continent — and the same reason: ~25 MB of .hgt per degree cell whether or
   # not a climb is in it. NOTE which Valhalla instance each feeds
@@ -71,7 +74,7 @@ case "${1:-}" in
   NEWZEALAND) BBOX="-48,166,-34,179" ;;
   CANADAWEST) BBOX="48,-140,61,-113" ;;  # British Columbia
   CANADAEAST) BBOX="44,-80,63,-56" ;;    # Québec
-  "")      echo "usage: $0 <BE|NL|LU|BENELUX|EUROPE|AUSTRALIA|JAPAN|USWEST|USROCKY|SLOVENIA|RWANDA|SOUTHAFRICA|COLOMBIA|CHILE|NEWZEALAND|CANADAWEST|CANADAEAST|min_lat,min_lon,max_lat,max_lon> [out_dir]" >&2; exit 2 ;;
+  "")      echo "usage: $0 <BE|NL|LU|BENELUX|EUROPE|AUSTRALIA|JAPAN|USWEST|USROCKY|USARIZONA|USOREGON|SLOVENIA|RWANDA|SOUTHAFRICA|COLOMBIA|CHILE|NEWZEALAND|CANADAWEST|CANADAEAST|min_lat,min_lon,max_lat,max_lon> [out_dir]" >&2; exit 2 ;;
   *)       BBOX="$1" ;;
 esac
 

@@ -159,14 +159,14 @@ final class SurfaceProfiler
      *
      * @param list<string> $countries ISO 3166-1 alpha-2, upper case
      */
-    public function recomputeNear(array $countries, float $bandDeg): int
+    public function recomputeNear(array $countries, float $bandDeg, bool $pendingOnly = false): int
     {
         /** @var list<array{id: int|string, geom: string, attributes: string}> $rows */
         $rows = $this->db->fetchAllAssociative(
             'SELECT rr.id, ST_AsGeoJSON(rr.geom) AS geom, rr.attributes::text AS attributes
                FROM recommended_route rr
               WHERE EXISTS (SELECT 1 FROM region r
-                             WHERE r.country_code IN (:ccs) AND r.geom IS NOT NULL AND ST_DWithin(r.geom, rr.geom, :deg))
+                             WHERE r.country_code IN (:ccs) AND r.geom IS NOT NULL'.($pendingOnly ? ' AND r.pending' : '').' AND ST_DWithin(r.geom, rr.geom, :deg))
               ORDER BY rr.id',
             ['ccs' => $countries, 'deg' => $bandDeg],
             ['ccs' => ArrayParameterType::STRING],

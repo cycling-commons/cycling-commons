@@ -141,6 +141,40 @@ sequence then runs there, so production gets staging's exact slugs, labels and b
 names the other countries that share each extract; the import shares an extract with exactly those
 and refuses one that another country holds there.
 
+## Adding regions to a live country
+
+The United States and Canada are onboarded in part: a few states and provinces, plus the country
+outline. More regions join a live country through the same five steps, with `--add` on the planner:
+
+<!-- CODE-ILLUSTRATIVE plan Arizona and Oregon for the live United States, then the usual steps -->
+```bash
+python -m onboarding.plan US --add US-AZ --add US-OR
+php bin/console app:country:apply US
+python -m onboarding.repair US
+php bin/console app:country:check-elevation US
+php bin/console app:country:mark-live US
+```
+
+- **Plan.** Each `--add` names one ISO 3166-2 code. The new regions take the country's own level,
+  and the extract whose Geofabrik `iso3166-2` is exactly that code (`north-america/us/arizona` for
+  `US-AZ`); `--extract US-AZ=<slug>` overrides one. A code the country already has stops the plan.
+  The plan writes `country_plan_region` and `country_plan_extract` only: the country stays live and
+  its extracts stay as they were, so a nightly harvest never reads the new extract before its
+  regions exist.
+- **Apply** writes the new rows with `region.pending` set, moves the planned extracts to
+  `country_extract`, and re-derives and re-stamps only around the new regions. It refuses a plan row
+  whose slug is a region already on the map.
+- **Repair** re-harvests every extract of the country with full membership, not just the new ones:
+  the rows California's extract holds along the Arizona border belong to Arizona now.
+- **Check elevation** samples the pending regions only. The DEM presets `USARIZONA` and `USOREGON`
+  in `tools/elevation/fetch-glo30.sh` cover the two states.
+- **Mark live** clears `pending` and the plan rows. The country keeps its `live_at`.
+
+Until mark-live the region registry leaves a pending region out, as it leaves out a country that
+is not live. `app:country:export` refuses a country with pending regions; once they are live, the
+bundle carries them, and `app:country:import-plan` on a database where the country is already live
+plans exactly the regions it lacks there, with their new extracts.
+
 ## Telling the riders who asked
 
 Once the country is live on production, its block on `/admin/country-requests` shows a button that
@@ -214,9 +248,8 @@ planner and the coverage commands read the tables the migrations create.
   *The regions' Wikipedia text and population* above.
 - **A new UI language.** Onboarding Denmark does not add Danish.
 - **Official data providers.** Separate, per-licence work.
-- **Part of a country.** The planner plans a whole country at one level. The two US states and two
-  Canadian provinces were seeded by hand before the planner existed; adding a third state is not
-  something the planner does.
+- **Telling riders about added regions.** The button on `/admin/country-requests` answers requests
+  made before the country went live; a request for Arizona inside the live United States is not told.
 
 ## Try it
 

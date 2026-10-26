@@ -69,6 +69,11 @@
   "qid": "Q2109",
   "year": 2024
  },
+ "arizona": {
+  "population": 7151502,
+  "qid": "Q816",
+  "year": 2020
+ },
  "asturias": {
   "population": 1008028,
   "qid": "Q3934",
@@ -1008,6 +1013,11 @@
   "population": 1460652,
   "qid": "Q766445",
   "year": 2021
+ },
+ "oregon": {
+  "population": 4237256,
+  "qid": "Q824",
+  "year": 2020
  },
  "osaka": {
   "population": 8826684,

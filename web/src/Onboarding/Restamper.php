@@ -15,7 +15,8 @@ use Doctrine\DBAL\Connection;
  * Submissions keep the region and country SpatialResolver stamped when they
  * were made, and an item keeps its country, so a newly seeded country leaves
  * rider data region-less or under the wrong country. Smallest containing
- * region wins, no snap: SpatialResolver's rule, set-based.
+ * region wins, no snap: SpatialResolver's rule, set-based. For regions added
+ * to a live country, only the rows inside them are read.
  *
  * @api
  */
@@ -26,8 +27,7 @@ final class Restamper
             SELECT DISTINCT ON (s.id) s.id, r.id AS region_id, r.country_code
             FROM submission s
             JOIN region r ON ST_Contains(r.geom, ST_PointOnSurface(s.geom))
-            WHERE s.region_id IS NULL
-               OR s.region_id IN (SELECT id FROM region WHERE country_code IN (:ccs))
+            WHERE %s
             ORDER BY s.id, r.area_km2 ASC NULLS LAST, r.id ASC
         )
         UPDATE submission s SET region_id = m.region_id, country_code = m.country_code
@@ -44,11 +44,7 @@ final class Restamper
             FROM item i
             JOIN region r ON ST_Contains(r.geom, ST_PointOnSurface(i.geom))
             WHERE r.country_code <> ''
-              AND (i.country_code IN (:ccs)
-                   OR i.geom && (SELECT ST_SetSRID(ST_Extent(geom)::geometry, 4326) FROM region WHERE country_code IN (:ccs))
-                      AND EXISTS (SELECT 1 FROM region rl
-                               WHERE rl.country_code IN (:ccs)
-                                 AND ST_Contains(rl.geom, ST_PointOnSurface(i.geom))))
+              AND %s
             ORDER BY i.id, r.area_km2 ASC NULLS LAST, r.id ASC
         )
         UPDATE item i SET country_code = m.country_code
@@ -57,6 +53,23 @@ final class Restamper
           AND i.country_code IS DISTINCT FROM m.country_code
           AND (m.country_code IN (:ccs) OR i.country_code IN (:ccs))
         RETURNING m.country_code
+        SQL;
+
+    private const string SUBMISSION_ROWS = 's.region_id IS NULL OR s.region_id IN (SELECT id FROM region WHERE country_code IN (:ccs))';
+
+    private const string ITEM_ROWS = <<<'SQL'
+        (i.country_code IN (:ccs)
+         OR i.geom && (SELECT ST_SetSRID(ST_Extent(geom)::geometry, 4326) FROM region WHERE country_code IN (:ccs))
+            AND EXISTS (SELECT 1 FROM region rl
+                     WHERE rl.country_code IN (:ccs)
+                       AND ST_Contains(rl.geom, ST_PointOnSurface(i.geom))))
+        SQL;
+
+    /** Inside a region added to a live country: nothing outside one changes region or country. */
+    private const string PENDING_ROWS = <<<'SQL'
+        EXISTS (SELECT 1 FROM region rl
+                 WHERE rl.country_code IN (:ccs) AND rl.pending
+                   AND ST_Contains(rl.geom, ST_PointOnSurface(%s.geom)))
         SQL;
 
     public function __construct(private readonly Connection $db)
@@ -68,17 +81,17 @@ final class Restamper
      *
      * @return array{submission: array<string, int>, item: array<string, int>} rows changed, per new country
      */
-    public function restamp(array $countries, bool $dryRun): array
+    public function restamp(array $countries, bool $dryRun, bool $pendingOnly = false): array
     {
         if ([] === $countries) {
             return ['submission' => [], 'item' => []];
         }
         if (!$dryRun) {
-            return $this->run($countries);
+            return $this->run($countries, $pendingOnly);
         }
         $this->db->beginTransaction();
         try {
-            return $this->run($countries);
+            return $this->run($countries, $pendingOnly);
         } finally {
             $this->db->rollBack();
         }
@@ -89,14 +102,16 @@ final class Restamper
      *
      * @return array{submission: array<string, int>, item: array<string, int>}
      */
-    private function run(array $countries): array
+    private function run(array $countries, bool $pendingOnly): array
     {
         $params = ['ccs' => $countries];
         $types = ['ccs' => ArrayParameterType::STRING];
+        $submissions = sprintf(self::SUBMISSION_SQL, $pendingOnly ? sprintf(self::PENDING_ROWS, 's') : self::SUBMISSION_ROWS);
+        $items = sprintf(self::ITEM_SQL, $pendingOnly ? sprintf(self::PENDING_ROWS, 'i') : self::ITEM_ROWS);
 
         return [
-            'submission' => self::tally($this->db->fetchFirstColumn(self::SUBMISSION_SQL, $params, $types)),
-            'item' => self::tally($this->db->fetchFirstColumn(self::ITEM_SQL, $params, $types)),
+            'submission' => self::tally($this->db->fetchFirstColumn($submissions, $params, $types)),
+            'item' => self::tally($this->db->fetchFirstColumn($items, $params, $types)),
         ];
     }
 

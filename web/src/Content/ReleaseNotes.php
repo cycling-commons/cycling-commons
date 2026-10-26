@@ -65,6 +65,7 @@ final class ReleaseNotes
             'date' => '2026-10-25',
             'sections' => [
                 'public' => [
+                    'changelog.v0912_us_states',
                     'changelog.v0912_uncovered',
                     'changelog.v0912_region_map',
                     'changelog.v0912_region_page',
@@ -73,6 +74,7 @@ final class ReleaseNotes
                 ],
             ],
             'kinds' => [
+                'changelog.v0912_us_states' => 'new',
                 'changelog.v0912_uncovered' => 'new',
                 'changelog.v0912_region_map' => 'new',
                 'changelog.v0912_region_page' => 'improved',

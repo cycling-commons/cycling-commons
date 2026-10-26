@@ -102,6 +102,8 @@ cannot tell you anything new about the dataset itself.
 | `AUSTRALIA` | 44–9 S, 112–154 E | **890** (measured) | **22 GB** |
 | `JAPAN` | 24–46 N, 122–146 E | **239** (measured) | **5.9 GB** |
 | `USWEST` + `USROCKY` | California + Colorado | **165** (measured) | **4.1 GB** |
+| `USARIZONA` | Arizona | 36 cells in the bbox (not yet measured) | ~0.9 GB at ~25 MB a cell |
+| `USOREGON` | Oregon | 54 cells in the bbox, 8 of them already in `USWEST` (not yet measured) | ~1.2 GB for the 46 new cells |
 
 Sea-only cells do not exist in the bucket and are skipped, so the land count is
 below the bbox cell count — 1137 of 1591 for Europe. The intermediate GeoTIFFs

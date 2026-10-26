@@ -15,11 +15,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * The last onboarding step: a seeded country goes live.
+ * The last onboarding step: a seeded country goes live, or the regions added to a live country do.
  *
  * @api
  */
-#[AsCommand(name: 'app:country:mark-live', description: 'Mark a seeded country live')]
+#[AsCommand(name: 'app:country:mark-live', description: 'Mark a seeded country live, or the regions added to a live one')]
 final class MarkLiveCommand extends Command
 {
     public function __construct(private readonly Countries $countries)
@@ -44,9 +44,15 @@ final class MarkLiveCommand extends Command
 
             return Command::INVALID;
         }
+        $added = $this->countries->markAddedLive($cc);
+        if ([] !== $added) {
+            $io->success(sprintf('%s: %s live.', $cc, implode(', ', $added)));
+
+            return Command::SUCCESS;
+        }
         if (!$this->countries->markLive($cc)) {
             $status = $this->countries->status($cc);
-            $io->error(sprintf('%s is %s; mark-live needs a seeded country.', $cc, null === $status ? 'not planned' : $status->value));
+            $io->error(sprintf('%s is %s; mark-live needs a seeded country, or a live one with added regions.', $cc, null === $status ? 'not planned' : $status->value));
 
             return Command::FAILURE;
         }

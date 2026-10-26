@@ -81,21 +81,22 @@ final class RegionDerivations
 
     /**
      * dependents() for rows within $bandDeg of the listed countries' regions; writes only rows whose value changes.
+     * With $pendingOnly, of their pending regions only: the regions added to a live country.
      *
      * @param list<string> $countries ISO 3166-1 alpha-2, upper case
      *
      * @return array{assigned: int, rederived: int, surfaced: int} rows written
      */
-    public function dependentsNear(array $countries, float $bandDeg): array
+    public function dependentsNear(array $countries, float $bandDeg, bool $pendingOnly = false): array
     {
         if ([] === $countries) {
             return ['assigned' => 0, 'rederived' => 0, 'surfaced' => 0];
         }
-        $assigned = $this->membershipNear('item', 'ST_PointOnSurface(m.geom)', $countries, $bandDeg)
-            + $this->membershipNear('recommended_route', 'ST_PointOnSurface(m.geom)', $countries, $bandDeg)
-            + $this->membershipNear('heat_point', 'm.geom', $countries, $bandDeg);
-        $rederived = $this->baseLocations->rederiveNear($countries, $bandDeg);
-        $surfaced = $this->surfaces->recomputeNear($countries, $bandDeg);
+        $assigned = $this->membershipNear('item', 'ST_PointOnSurface(m.geom)', $countries, $bandDeg, $pendingOnly)
+            + $this->membershipNear('recommended_route', 'ST_PointOnSurface(m.geom)', $countries, $bandDeg, $pendingOnly)
+            + $this->membershipNear('heat_point', 'm.geom', $countries, $bandDeg, $pendingOnly);
+        $rederived = $this->baseLocations->rederiveNear($countries, $bandDeg, $pendingOnly);
+        $surfaced = $this->surfaces->recomputeNear($countries, $bandDeg, $pendingOnly);
 
         return ['assigned' => $assigned, 'rederived' => $rederived, 'surfaced' => $surfaced];
     }
@@ -257,14 +258,16 @@ final class RegionDerivations
      *
      * @param list<string> $countries
      */
-    private function membershipNear(string $table, string $point, array $countries, float $bandDeg): int
+    private function membershipNear(string $table, string $point, array $countries, float $bandDeg, bool $pendingOnly): int
     {
+        $pending = $pendingOnly ? ' AND pending' : '';
+
         return (int) $this->db->executeStatement(
-            "WITH scope AS (SELECT id, geom FROM region WHERE country_code IN (:ccs) AND geom IS NOT NULL),
+            "WITH scope AS (SELECT id, geom FROM region WHERE country_code IN (:ccs) AND geom IS NOT NULL{$pending}),
                   cand AS (
                     SELECT t.id FROM {$table} t JOIN scope s ON ST_DWithin(s.geom, t.geom, :deg)
                     UNION
-                    SELECT t.id FROM {$table} t WHERE t.region_id IN (SELECT id FROM region WHERE country_code IN (:ccs))
+                    SELECT t.id FROM {$table} t WHERE t.region_id IN (SELECT id FROM region WHERE country_code IN (:ccs){$pending})
                   ),
                   m AS (
                     SELECT m.id, (SELECT r.id FROM region r WHERE ST_Contains(r.geom, {$point})

@@ -206,17 +206,81 @@ final class CountryBundle
                 $db->executeStatement('INSERT INTO country_extract (slug, country_code) VALUES (:slug, :cc)', ['slug' => $slug, 'cc' => $c['code']]);
             }
             foreach ($bundle['regions'] as $r) {
-                $db->executeStatement(
-                    'INSERT INTO country_plan_region (country_code, slug, iso_code, name, labels, admin_level, area_km2, geom)
-                     VALUES (:cc, :slug, :iso, :name, CAST(:labels AS jsonb), :admin, :area, ST_Multi(ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326)))',
-                    ['cc' => $c['code'], 'slug' => $r['slug'], 'iso' => $r['iso_code'], 'name' => $r['name'],
-                        'labels' => $json((object) $r['labels']), 'admin' => $r['admin_level'], 'area' => $r['area_km2'],
-                        'geom' => $json($r['geometry'])],
-                );
+                self::insertPlanRegion($db, $c['code'], $r);
             }
 
             return \count($bundle['regions']);
         });
+    }
+
+    /**
+     * Plans the bundle's regions a country live here lacks, as regions added to it: rows in
+     * country_plan_region and its new extracts in country_plan_extract; the country row stays.
+     *
+     * @param array{country: array{code: string, name: string, subtype: string, bbox: list<float>|null, labels: array<string, string>, timezones: list<string>, overture_release: string|null}, extracts: list<string>, shared: array<string, list<string>>, regions: list<array{slug: string, iso_code: string|null, name: string, labels: array<string, string>, admin_level: int, area_km2: float, geometry: array<string, mixed>}>} $bundle
+     *
+     * @return list<string> the planned slugs
+     *
+     * @throws \InvalidArgumentException when the bundle lacks a region this side holds, holds nothing new, or reuses another country's slug or extract
+     */
+    public function importAdded(array $bundle): array
+    {
+        $cc = $bundle['country']['code'];
+
+        return $this->db->transactional(function (Connection $db) use ($bundle, $cc): array {
+            /** @var list<string> $here */
+            $here = $db->fetchFirstColumn('SELECT slug FROM region WHERE country_code = :cc ORDER BY slug', ['cc' => $cc]);
+            $carried = array_column($bundle['regions'], 'slug');
+            if ([] !== ($missing = array_values(array_diff($here, $carried)))) {
+                throw new \InvalidArgumentException(\sprintf('the bundle lacks %s, which %s holds here; export it from the same database the country went live on.', implode(', ', $missing), $cc));
+            }
+            $new = array_values(array_filter($bundle['regions'], static fn (array $r): bool => !\in_array($r['slug'], $here, true)));
+            if ([] === $new) {
+                throw new \InvalidArgumentException(\sprintf('%s already holds every region in the bundle.', $cc));
+            }
+            $taken = (new Countries($db))->foreignSlugs($cc, array_column($new, 'slug'));
+            if ([] !== $taken) {
+                throw new \InvalidArgumentException(\sprintf('slug(s) %s already belong to another country here.', implode(', ', $taken)));
+            }
+            $extracts = array_values(array_diff($bundle['extracts'], (new Countries($db))->extracts($cc)));
+            if ([] !== $extracts) {
+                /** @var list<array{slug: string, country_code: string}> $held */
+                $held = $db->fetchAllAssociative(
+                    'SELECT slug, country_code FROM country_extract WHERE slug IN (:slugs) AND country_code <> :cc',
+                    ['slugs' => $extracts, 'cc' => $cc],
+                    ['slugs' => ArrayParameterType::STRING],
+                );
+                $held = array_values(array_filter($held, static fn (array $t): bool => !\in_array(trim($t['country_code']), $bundle['shared'][$t['slug']] ?? [], true)));
+                if ([] !== $held) {
+                    throw new \InvalidArgumentException(\sprintf('extract %s already belongs to %s here.', $held[0]['slug'], trim($held[0]['country_code'])));
+                }
+            }
+            $db->executeStatement('DELETE FROM country_plan_region WHERE country_code = :cc', ['cc' => $cc]);
+            $db->executeStatement('DELETE FROM country_plan_extract WHERE country_code = :cc', ['cc' => $cc]);
+            foreach ($extracts as $slug) {
+                $db->executeStatement('INSERT INTO country_plan_extract (slug, country_code) VALUES (:slug, :cc)', ['slug' => $slug, 'cc' => $cc]);
+            }
+            foreach ($new as $r) {
+                self::insertPlanRegion($db, $cc, $r);
+            }
+            $slugs = array_column($new, 'slug');
+            sort($slugs);
+
+            return $slugs;
+        });
+    }
+
+    /** @param array{slug: string, iso_code: string|null, name: string, labels: array<string, string>, admin_level: int, area_km2: float, geometry: array<string, mixed>} $r */
+    private static function insertPlanRegion(Connection $db, string $cc, array $r): void
+    {
+        $json = static fn (mixed $v): string => json_encode($v, \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_UNICODE);
+        $db->executeStatement(
+            'INSERT INTO country_plan_region (country_code, slug, iso_code, name, labels, admin_level, area_km2, geom)
+             VALUES (:cc, :slug, :iso, :name, CAST(:labels AS jsonb), :admin, :area, ST_Multi(ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326)))',
+            ['cc' => $cc, 'slug' => $r['slug'], 'iso' => $r['iso_code'], 'name' => $r['name'],
+                'labels' => $json((object) $r['labels']), 'admin' => $r['admin_level'], 'area' => $r['area_km2'],
+                'geom' => $json($r['geometry'])],
+        );
     }
 
     /** An empty array or a string-keyed map of strings; a JSON list or nested value is not a label object. */

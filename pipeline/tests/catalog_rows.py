@@ -12,10 +12,10 @@ def add_country(conn, code, status, extracts=(), name=None):
     conn.commit()
 
 
-def add_region(conn, rid, cc, admin_level, wkt, slug=None, area=1000.0):
+def add_region(conn, rid, cc, admin_level, wkt, slug=None, area=1000.0, iso=None, pending=False):
     conn.execute(
-        "INSERT INTO region (id, area_km2, country_code, admin_level, slug, name, geom) "
-        "VALUES (%s, %s, %s, %s, %s, %s, ST_Multi(ST_GeomFromText(%s, 4326)))",
-        (rid, area, cc, admin_level, slug or f"r{rid}", slug or f"r{rid}", wkt),
+        "INSERT INTO region (id, area_km2, country_code, admin_level, slug, name, geom, iso_code, pending) "
+        "VALUES (%s, %s, %s, %s, %s, %s, ST_Multi(ST_GeomFromText(%s, 4326)), %s, %s)",
+        (rid, area, cc, admin_level, slug or f"r{rid}", slug or f"r{rid}", wkt, iso, pending),
     )
     conn.commit()

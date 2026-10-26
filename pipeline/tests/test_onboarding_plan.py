@@ -278,3 +278,84 @@ def test_live_denmark_plan_without_writing():
                               load_index("https://download.geofabrik.de/index-v1-nogeom.json"))
     assert plan.subtype == "region" and plan.extract == "europe/denmark"
     assert len([r for r in plan.regions if r.admin_level == 4]) == 5
+
+
+US_STATES = [
+    division("US-CA", "California", {"en": "California", "de": "Kalifornien"}, (-124.0, 33.0, -114.0, 42.0), 409_440.0),
+    division("US-AZ", "Arizona", {"en": "Arizona"}, (-114.0, 31.0, -109.0, 37.0), 295_234.0),
+]
+
+
+def _live_us(conn):
+    add_country(conn, "US", "live", ["north-america/us/california"])
+    add_region(conn, 1, "US", 4, "POLYGON((-124 33,-114 33,-114 42,-124 42,-124 33))", slug="california", iso="US-CA")
+    add_region(conn, 2, "US", 2, "POLYGON((-125 30,-100 30,-100 49,-125 49,-125 30))", slug="united-states", iso="US")
+
+
+def _main_added(conn, argv, source=None):
+    return planner.main(argv, source=source or FakeOverture(rows={"region": US_STATES}),
+                        connect=lambda dsn: contextlib.nullcontext(conn), index_loader=lambda src: INDEX)
+
+
+def test_add_plans_a_region_and_its_extract_for_a_live_country(catalog, capsys):
+    _live_us(catalog)
+    assert _main_added(catalog, ["US", "--add", "us-az"]) == 0
+    out = capsys.readouterr().out
+    assert "arizona  US-AZ" in out and "north-america/us/arizona" in out
+    assert "Next: app:country:apply US" in out
+    assert catalog.execute("SELECT slug, iso_code, admin_level FROM country_plan_region").fetchall() == [
+        ("arizona", "US-AZ", 4)]
+    assert catalog.execute("SELECT slug, country_code FROM country_plan_extract").fetchall() == [
+        ("north-america/us/arizona", "US")]
+    assert catalog.execute("SELECT status FROM country WHERE code = 'US'").fetchone() == ("live",)
+    assert catalog.execute("SELECT slug FROM country_extract WHERE country_code = 'US'").fetchall() == [
+        ("north-america/us/california",)], "the harvest reads the new extract only after apply"
+
+
+def test_add_refuses_a_region_the_country_already_has(catalog, capsys):
+    _live_us(catalog)
+    assert _main_added(catalog, ["US", "--add", "US-CA"], source=FakeOverture(refuse=True)) == 1
+    assert "US already has US-CA" in capsys.readouterr().err
+    assert catalog.execute("SELECT count(*) FROM country_plan_region").fetchone()[0] == 0
+
+
+def test_add_needs_a_live_country(catalog, capsys):
+    add_country(catalog, "US", "seeded", ["north-america/us/california"])
+    assert _main_added(catalog, ["US", "--add", "US-AZ"], source=FakeOverture(refuse=True)) == 1
+    assert "--add plans regions for a live country only" in capsys.readouterr().err
+
+
+def test_add_refuses_a_region_of_another_country_and_one_overture_lacks(catalog, capsys):
+    _live_us(catalog)
+    assert _main_added(catalog, ["US", "--add", "CA-BC"]) == 1
+    assert "CA-BC: not a region of US" in capsys.readouterr().err
+    assert _main_added(catalog, ["US", "--add", "US-OR"]) == 1
+    assert "Overture has no region land row for US-OR" in capsys.readouterr().err
+
+
+def test_add_without_a_matching_extract_names_the_override(catalog, capsys):
+    _live_us(catalog)
+    oregon = division("US-OR", "Oregon", {"en": "Oregon"}, (-124.5, 42.0, -116.5, 46.3), 254_806.0)
+    assert _main_added(catalog, ["US", "--add", "US-OR"], source=FakeOverture(rows={"region": [oregon]})) == 1
+    assert "rerun with --extract US-OR=<slug>" in capsys.readouterr().err
+    assert _main_added(catalog, ["US", "--add", "US-OR", "--extract", "US-OR=north-america/us/arizona"],
+                       source=FakeOverture(rows={"region": [oregon]})) == 0
+    assert catalog.execute("SELECT slug FROM country_plan_extract").fetchall() == [("north-america/us/arizona",)]
+
+
+def test_add_never_takes_an_extract_another_country_holds(catalog, capsys):
+    _live_us(catalog)
+    add_country(catalog, "MX", "live", ["north-america/us/arizona"])
+    assert _main_added(catalog, ["US", "--add", "US-AZ"]) == 1
+    assert "north-america/us/arizona already belongs to MX" in capsys.readouterr().err
+    assert catalog.execute("SELECT count(*) FROM country_plan_region").fetchone()[0] == 0
+
+
+def test_add_planned_again_replaces_the_earlier_added_plan(catalog, capsys):
+    _live_us(catalog)
+    assert _main_added(catalog, ["US", "--add", "US-AZ", "--json"]) == 0
+    doc = json.loads(capsys.readouterr().out)
+    assert doc["added"] is True and doc["extracts"] == {"US-AZ": "north-america/us/arizona"}
+    assert _main_added(catalog, ["US", "--add", "US-AZ"]) == 0
+    assert catalog.execute("SELECT count(*) FROM country_plan_region").fetchone()[0] == 1
+    assert catalog.execute("SELECT count(*) FROM country_plan_extract").fetchone()[0] == 1

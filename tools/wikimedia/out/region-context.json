@@ -431,6 +431,33 @@
    "url": "https://nl.wikipedia.org/wiki/Arica_y_Parinacota"
   }
  },
+ "arizona": {
+  "de": {
+   "extract": "Arizona ist ein Bundesstaat, der im Südwesten der Vereinigten Staaten liegt. Seine Hauptstadt ist Phoenix, eine der größten Städte in den Vereinigten Staaten. In Arizona liegt auch der Grand-Canyon-Nationalpark.",
+   "title": "Arizona",
+   "url": "https://de.wikipedia.org/wiki/Arizona"
+  },
+  "en": {
+   "extract": "Arizona is a landlocked state in the Southwestern United States, sharing the Four Corners region with Colorado, New Mexico, and Utah. It also borders Nevada to the northwest and California to the west, and shares an international border with the Mexican states of Sonora and Baja California to the south and southwest. Its capital and largest city is Phoenix, which is the most populous state capital and fifth-most populous city in the United States. Arizona is divided into 15 counties.",
+   "title": "Arizona",
+   "url": "https://en.wikipedia.org/wiki/Arizona"
+  },
+  "es": {
+   "extract": "Arizona es uno de los cincuenta estados que, junto con el Distrito de Columbia, integran los Estados Unidos. Su capital y ciudad más poblada es Phoenix.",
+   "title": "Arizona",
+   "url": "https://es.wikipedia.org/wiki/Arizona"
+  },
+  "fr": {
+   "extract": "L'Arizona est un État de l'Ouest des États-Unis.",
+   "title": "Arizona",
+   "url": "https://fr.wikipedia.org/wiki/Arizona"
+  },
+  "nl": {
+   "extract": "Arizona is een van de vijftig staten van de Verenigde Staten. Het ligt aan de Mexicaanse grens en telde 7.151.502 inwoners in 2020. De standaardafkorting voor de Grand Canyon State of Copper State (Koperstaat), zoals de bijnamen luiden, is AZ. De hoofdstad en grootste stad is Phoenix.",
+   "title": "Arizona (staat)",
+   "url": "https://nl.wikipedia.org/wiki/Arizona_(staat)"
+  }
+ },
  "asturias": {
   "de": {
    "extract": "Asturien ist eine autonome Gemeinschaft im Nordwesten Spaniens. Das Territorium der autonomen Gemeinschaft ist identisch mit dem der Provinz Asturien. Die Hauptstadt ist Oviedo mit 223.968 Einwohnern.",
@@ -4974,6 +5001,33 @@
    "extract": "De prefectuur Okinawa  is Japans zuidelijkste prefectuur. Het bestaat uit enkele honderden eilanden die zich over een afstand van 1200 kilometer uitstrekken tussen Kyushu en Taiwan. Okinawa heeft een oppervlakte van 2275,71 km² en had op 1 maart 2008 een bevolking van ongeveer 1.376.105 inwoners. De hoofdstad Naha, bevindt zich op het zuidelijke deel van, het grootste en dichtstbevolkte eiland van de prefectuur, Okinawa.",
    "title": "Okinawa (prefectuur)",
    "url": "https://nl.wikipedia.org/wiki/Okinawa_(prefectuur)"
+  }
+ },
+ "oregon": {
+  "de": {
+   "extract": "Oregon ist ein Bundesstaat der Vereinigten Staaten von Amerika. Er liegt im Nordwesten der Vereinigten Staaten in der Region Pazifischer Nordwesten und wurde im Jahr 1859 als 33. Bundesstaat aufgenommen.",
+   "title": "Oregon",
+   "url": "https://de.wikipedia.org/wiki/Oregon"
+  },
+  "en": {
+   "extract": "Oregon is a state in the Pacific Northwest region of the United States. It is a part of the Western United States, with the Columbia River delineating much of Oregon's northern boundary with Washington, while the Snake River delineates much of its eastern boundary with Idaho. The 42° north parallel delineates the southern boundary with California and Nevada. The western boundary is formed by the Pacific Ocean.",
+   "title": "Oregon",
+   "url": "https://en.wikipedia.org/wiki/Oregon"
+  },
+  "es": {
+   "extract": "Oregón es uno de los cincuenta estados que, junto con Washington D. C., forman los Estados Unidos de América. Su capital es Salem y su ciudad más poblada es Portland. Se ubica en la región Oeste del país, división Pacífico y limita al norte con el estado de Washington, al este con Idaho —gran parte de esta frontera la forma el río Snake—, al sureste con Nevada, al sur y suroeste con California y al oeste con el océano Pacífico. Con 254 805 km² es el noveno estado más extenso, por detrás de Alaska, Texas, California, Montana, Nuevo México, Arizona, Nevada y Colorado. Fue admitido en la Unión el 14 de febrero de 1859, como el estado número 33.",
+   "title": "Oregón",
+   "url": "https://es.wikipedia.org/wiki/Oreg%C3%B3n"
+  },
+  "fr": {
+   "extract": "L'Oregon est un État du Nord-Ouest des États-Unis, situé sur la côte Pacifique entre les États de Washington au nord, de Californie au sud, du Nevada au sud-est, et de l'Idaho à l'est. Ses frontières au nord et à l'est suivent pour l'essentiel les cours du fleuve Columbia et de la rivière Snake. Le territoire est intégralement traversé par la chaîne des Cascades qui forme une importante barrière climatique : l'ouest de l'État, de climat océanique, est recouvert par la forêt tempérée humide tandis que sa partie est, semi-aride, est occupée par le Haut désert de l'Oregon. Le parc national de Crater Lake se trouve dans le sud de l'État. La réserve indienne de Warm Springs s'étend sur 2 640,2 km2 dans le nord de l'État, sur le versant Est de la chaîne des Cascades.",
+   "title": "Oregon",
+   "url": "https://fr.wikipedia.org/wiki/Oregon"
+  },
+  "nl": {
+   "extract": "Oregon is een van de staten van de Verenigde Staten gelegen in het Pacifische Noordwesten van het land. De standaardafkorting voor de Beaver State, zoals de bijnaam luidt, is OR. De hoofdstad is Salem.",
+   "title": "Oregon",
+   "url": "https://nl.wikipedia.org/wiki/Oregon"
   }
  },
  "osaka": {

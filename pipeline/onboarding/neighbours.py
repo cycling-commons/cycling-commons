@@ -9,6 +9,9 @@ NEIGHBOUR_DEG = 0.11
 _SOURCES = {
     "plan": "SELECT ST_Union(geom) FROM country_plan_region WHERE country_code = %(cc)s",
     "region": "SELECT ST_Union(geom) FROM region WHERE country_code = %(cc)s AND geom IS NOT NULL",
+    # Regions added to a live country: its whole outline (the United States
+    # reaches across the antimeridian) is no border of theirs.
+    "pending": "SELECT ST_Union(geom) FROM region WHERE country_code = %(cc)s AND geom IS NOT NULL AND pending",
 }
 
 _NEIGHBOURS_SQL = """
@@ -30,7 +33,8 @@ def country_status(conn, cc: str) -> str | None:
 
 def neighbours(conn, cc: str, source: str = "region") -> list[str]:
     """Seeded or live countries whose operational regions lie within NEIGHBOUR_DEG
-    of `cc`'s plan rows (source="plan") or region rows (source="region")."""
+    of `cc`'s plan rows (source="plan"), region rows (source="region") or pending
+    region rows (source="pending")."""
     sql = _NEIGHBOURS_SQL.format(outline=_SOURCES[source])
     return [code.strip() for (code,) in conn.execute(sql, {"cc": cc, "deg": NEIGHBOUR_DEG})]
 

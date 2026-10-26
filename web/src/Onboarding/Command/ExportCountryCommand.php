@@ -53,6 +53,12 @@ final class ExportCountryCommand extends Command
 
             return Command::FAILURE;
         }
+        $pending = $this->countries->pendingRegions($cc);
+        if ([] !== $pending) {
+            $err->writeln(sprintf('%s has added regions that are not live yet (%s); finish their onboarding first.', $cc, implode(', ', $pending)));
+
+            return Command::FAILURE;
+        }
         $output->write(json_encode($this->bundle->export($cc), \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_UNICODE | \JSON_UNESCAPED_SLASHES), false, OutputInterface::OUTPUT_RAW);
 
         return Command::SUCCESS;

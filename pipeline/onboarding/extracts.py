@@ -66,3 +66,22 @@ def choose_extract(index: dict, cc: str, override: str | None = None) -> str:
     if len(shallowest) > 1:
         raise ExtractUndecided(f"several extracts at the same depth: {', '.join(shallowest)}; rerun with --extract <slug>")
     return shallowest[0]
+
+
+def region_extract(index: dict, iso: str, override: str | None = None) -> str:
+    """The extract whose iso3166-2 is exactly [iso], for a region added to a live
+    country (north-america/us/arizona for US-AZ), shallowest first."""
+    if override:
+        if override not in extract_slugs(index):
+            raise ExtractUndecided(f"--extract {iso}={override}: not an extract in Geofabrik's index")
+        return override
+    found = sorted((s for f in index.get("features", [])
+                    if (p := f.get("properties", {})).get("iso3166-2") == [iso] and (s := _slug(p))),
+                   key=lambda s: (s.count("/"), s))
+    if not found:
+        raise ExtractUndecided(f"no Geofabrik extract carries iso3166-2 = [{iso}]; rerun with --extract {iso}=<slug>")
+    shallowest = [s for s in found if s.count("/") == found[0].count("/")]
+    if len(shallowest) > 1:
+        raise ExtractUndecided(f"several extracts at the same depth for {iso}: {', '.join(shallowest)}; "
+                               f"rerun with --extract {iso}=<slug>")
+    return shallowest[0]

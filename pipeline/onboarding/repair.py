@@ -1,6 +1,10 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 """python -m onboarding.repair <CC>: harvest a seeded country and repair its neighbours' border data.
 
+For a live country with added regions (region.pending), every extract of the
+country is re-harvested with full membership: the rows its older regions own
+along the new borders must be re-owned too.
+
 Each step is a subprocess of the existing coverage.run CLI, so behaviour stays
 the documented one. Neighbours are recomputed here from region rows, not taken
 from the plan. Every step is idempotent: a rerun after a failure is safe."""
@@ -30,10 +34,14 @@ class Step:
     env: dict[str, str] = field(default_factory=dict)
 
 
-def plan_steps(own: list[str], neighbour_extracts: list[str]) -> list[Step]:
+def plan_steps(own: list[str], neighbour_extracts: list[str], adding: bool = False) -> list[Step]:
     # An extract the new country shares with a neighbour (Ireland's is also
     # Great Britain's) is harvested once, in the neighbours' step: it holds
     # the neighbour's border rows too, so it needs the full membership pass.
+    # Regions added to a live country border its own older regions, so then
+    # every extract of the country goes through that pass as well.
+    if adding:
+        neighbour_extracts = list(dict.fromkeys(own + neighbour_extracts))
     only_own = [e for e in own if e not in neighbour_extracts]
     steps = []
     if only_own:
@@ -69,19 +77,23 @@ def main(argv=None, *, connect=psycopg.connect, runner=run_step, clock=time.mono
     dsn = os.environ.get("DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons")
     with connect(dsn) as conn:
         status = country_status(conn, cc)
-        if status != "seeded":
-            print(f"{cc} is {status or 'not planned'}; repair needs a seeded country (app:country:apply {cc} first).",
-                  file=sys.stderr)
+        added = [slug for (slug,) in conn.execute(
+            "SELECT slug FROM region WHERE country_code = %s AND pending ORDER BY slug", (cc,))]
+        adding = status == "live" and bool(added)
+        if status != "seeded" and not adding:
+            print(f"{cc} is {status or 'not planned'}; repair needs a seeded country (app:country:apply {cc} first), "
+                  f"or a live one with added regions.", file=sys.stderr)
             return 1
-        nbs = neighbours(conn, cc, source="region")
+        nbs = neighbours(conn, cc, source="pending" if adding else "region")
         own = extracts_of(conn, [cc])
         nb_extracts = extracts_of(conn, nbs)
     if not own:
         print(f"{cc} has no country_extract row; nothing to harvest.", file=sys.stderr)
         return 1
 
-    print(f"[repair] {cc}: extracts {','.join(own)}; neighbours {','.join(nbs) or 'none'}")
-    for step in plan_steps(own, nb_extracts):
+    print(f"[repair] {cc}: extracts {','.join(own)}; neighbours {','.join(nbs) or 'none'}"
+          + (f"; adding {','.join(added)}" if adding else ""))
+    for step in plan_steps(own, nb_extracts, adding):
         print(f"[repair] {step.name}: starting")
         started = clock()
         rc = runner(step)

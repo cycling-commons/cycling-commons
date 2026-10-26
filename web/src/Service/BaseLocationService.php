@@ -93,7 +93,7 @@ final class BaseLocationService
      *
      * @return int users updated
      */
-    public function rederiveNear(array $countries, float $bandDeg): int
+    public function rederiveNear(array $countries, float $bandDeg, bool $pendingOnly = false): int
     {
         /** @var list<array{id: int|string, base_lng: float|string, base_lat: float|string, base_radius_km: int|string, ids: string, ccs: string}> $rows */
         $rows = $this->db->fetchAllAssociative(
@@ -102,7 +102,7 @@ final class BaseLocationService
                FROM users u
               WHERE u.base_point IS NOT NULL
                 AND EXISTS (SELECT 1 FROM region r
-                             WHERE r.country_code IN (:ccs) AND r.geom IS NOT NULL
+                             WHERE r.country_code IN (:ccs) AND r.geom IS NOT NULL'.($pendingOnly ? ' AND r.pending' : '').'
                                AND (ST_DWithin(r.geom, u.base_point, :deg)
                                     OR ST_DWithin(r.geom::geography, u.base_point::geography, u.base_radius_km * 1000.0)))
               ORDER BY u.id ASC',

@@ -73,7 +73,9 @@ final class CheckElevationCommand extends Command
 
             return Command::FAILURE;
         }
-        $points = $this->sample->points($cc);
+        // A live country with added regions checks only those: the rest already passed.
+        $pending = $this->countries->pendingRegions($cc);
+        $points = $this->sample->points($cc, [] !== $pending);
         if ([] === $points) {
             $io->error(sprintf('%s has no region geometry to sample.', $cc));
 

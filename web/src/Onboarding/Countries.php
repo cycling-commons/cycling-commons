@@ -75,8 +75,13 @@ final class Countries
         return $out;
     }
 
-    /** @return list<string> seeded or live countries whose operational regions lie within NEIGHBOUR_DEG of $cc's regions */
-    public function neighbours(string $cc): array
+    /**
+     * @param bool $pendingOnly measure from the regions added to $cc only: a live country's whole outline
+     *                          (the United States reaches across the antimeridian) is no border of theirs
+     *
+     * @return list<string> seeded or live countries whose operational regions lie within NEIGHBOUR_DEG of $cc's regions
+     */
+    public function neighbours(string $cc, bool $pendingOnly = false): array
     {
         /** @var list<string> $codes */
         $codes = $this->db->fetchFirstColumn(
@@ -84,7 +89,7 @@ final class Countries
                JOIN country c ON c.code = r.country_code AND c.status IN ('seeded', 'live')
               WHERE r.country_code <> :cc AND r.geom IS NOT NULL
                 AND ".OperationalRegions::predicate('r').'
-                AND ST_DWithin(r.geom, (SELECT ST_Union(geom) FROM region WHERE country_code = :cc AND geom IS NOT NULL), :deg)
+                AND ST_DWithin(r.geom, (SELECT ST_Union(geom) FROM region WHERE country_code = :cc AND geom IS NOT NULL'.($pendingOnly ? ' AND pending' : '').'), :deg)
               ORDER BY 1',
             ['cc' => $cc, 'deg' => self::NEIGHBOUR_DEG],
         );
@@ -107,6 +112,82 @@ final class Countries
         );
 
         return $taken;
+    }
+
+    /** @return list<string> extracts planned for regions added to a live country, not yet in country_extract */
+    public function planExtracts(string $cc): array
+    {
+        /** @var list<string> $slugs */
+        $slugs = $this->db->fetchFirstColumn('SELECT slug FROM country_plan_extract WHERE country_code = :cc ORDER BY slug', ['cc' => $cc]);
+
+        return $slugs;
+    }
+
+    /** @return list<string> slugs of the regions added to $cc whose onboarding has not finished */
+    public function pendingRegions(string $cc): array
+    {
+        /** @var list<string> $slugs */
+        $slugs = $this->db->fetchFirstColumn('SELECT slug FROM region WHERE country_code = :cc AND pending ORDER BY slug', ['cc' => $cc]);
+
+        return $slugs;
+    }
+
+    /**
+     * A live country's added regions: flags the planned regions pending and moves the planned extracts to country_extract.
+     *
+     * @param list<string> $slugs
+     */
+    public function markAdded(string $cc, array $slugs): void
+    {
+        $this->db->executeStatement(
+            'UPDATE region SET pending = true WHERE country_code = :cc AND slug IN (:slugs) AND NOT pending',
+            ['cc' => $cc, 'slugs' => $slugs],
+            ['slugs' => ArrayParameterType::STRING],
+        );
+        $this->db->executeStatement(
+            'INSERT INTO country_extract (slug, country_code)
+             SELECT slug, country_code FROM country_plan_extract WHERE country_code = :cc
+             ON CONFLICT DO NOTHING',
+            ['cc' => $cc],
+        );
+        $this->db->executeStatement('DELETE FROM country_plan_extract WHERE country_code = :cc', ['cc' => $cc]);
+    }
+
+    /** @return list<string> the added regions of a live country that went live now, with their plan rows removed */
+    public function markAddedLive(string $cc): array
+    {
+        return $this->db->transactional(function (Connection $db) use ($cc): array {
+            /** @var list<string> $slugs */
+            $slugs = $db->fetchFirstColumn(
+                "UPDATE region SET pending = false WHERE country_code = :cc AND pending
+                    AND EXISTS (SELECT 1 FROM country WHERE code = :cc AND status = 'live')
+                 RETURNING slug",
+                ['cc' => $cc],
+            );
+            if ([] !== $slugs) {
+                $db->executeStatement('DELETE FROM country_plan_region WHERE country_code = :cc', ['cc' => $cc]);
+            }
+            sort($slugs);
+
+            return $slugs;
+        });
+    }
+
+    /**
+     * @param list<string> $slugs
+     *
+     * @return list<string> those slugs already held by a region of $cc that is not pending
+     */
+    public function shownSlugs(string $cc, array $slugs): array
+    {
+        /** @var list<string> $shown */
+        $shown = $this->db->fetchFirstColumn(
+            'SELECT slug FROM region WHERE slug IN (:slugs) AND country_code = :cc AND NOT pending ORDER BY slug',
+            ['slugs' => $slugs, 'cc' => $cc],
+            ['slugs' => ArrayParameterType::STRING],
+        );
+
+        return $shown;
     }
 
     public function regionCount(string $cc): int

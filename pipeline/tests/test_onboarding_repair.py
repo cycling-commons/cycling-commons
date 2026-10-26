@@ -109,3 +109,35 @@ def test_a_shared_extract_is_harvested_once_with_full_membership(catalog):
         (("--routes", "--regions", f"{shared},europe/great-britain"), {"COVERAGE_FORCE_EXTRACT": "1"}),
         (("--surface", "--regions", f"{shared},europe/great-britain"), {"COVERAGE_FORCE_EXTRACT": "1"}),
     ]
+
+
+def test_regions_added_to_a_live_country_re_harvest_all_its_extracts_with_full_membership(catalog, capsys):
+    """Arizona's border rows sit in California's extract too, owned by the outline until now."""
+    add_country(catalog, "US", "live", ["north-america/us/arizona", "north-america/us/california"])
+    add_region(catalog, 1, "US", 4, "POLYGON((-124 33,-114 33,-114 42,-124 42,-124 33))", slug="california")
+    add_region(catalog, 2, "US", 4, "POLYGON((-114 31,-109 31,-109 37,-114 37,-114 31))", slug="arizona", pending=True)
+    # Canada touches California's corner of the outline here, never Arizona: not a neighbour of what is added.
+    add_country(catalog, "CA", "live", ["north-america/canada/british-columbia"])
+    add_region(catalog, 3, "CA", 4, "POLYGON((-124 42.05,-120 42.05,-120 45,-124 45,-124 42.05))", slug="british-columbia")
+    ran = []
+    rc = repair.main(["US"], connect=lambda dsn: contextlib.nullcontext(catalog),
+                     runner=lambda step: ran.append(step) or 0, clock=lambda: 0.0)
+    assert rc == 0
+    both = "north-america/us/arizona,north-america/us/california"
+    assert [(s.argv[3:], s.env) for s in ran] == [
+        (("--load-only", "--regions", both), {"COVERAGE_FULL_MEMBERSHIP": "1"}),
+        (("--tiles-only",), {}),
+        (("--routes", "--regions", both), {"COVERAGE_FORCE_EXTRACT": "1"}),
+        (("--surface", "--regions", both), {"COVERAGE_FORCE_EXTRACT": "1"}),
+    ]
+    out = capsys.readouterr().out
+    assert "adding arizona" in out and "neighbours none" in out
+
+
+def test_a_live_country_without_added_regions_is_refused(catalog, capsys):
+    add_country(catalog, "US", "live", ["north-america/us/california"])
+    add_region(catalog, 1, "US", 4, "POLYGON((-124 33,-114 33,-114 42,-124 42,-124 33))", slug="california")
+    rc = repair.main(["US"], connect=lambda dsn: contextlib.nullcontext(catalog), runner=lambda step: 0,
+                     clock=lambda: 0.0)
+    assert rc == 1
+    assert "or a live one with added regions" in capsys.readouterr().err
