@@ -34,7 +34,7 @@ test('a line click stands aside only while planning', () => {
 
 test('every line and area click handler asks the planner first, and the planner skips only points', () => {
   const guarded = {
-    'assets/map/routes-tiles.js': 2, 'assets/map/surface-tiles.js': 3, 'assets/map/render.js': 2,
+    'assets/map/routes-tiles.js': 2, 'assets/map/surface-tiles.js': 3, 'assets/map/render.js': 3,
     'assets/map/traffic-layer.js': 1, 'assets/map/mapillary.js': 1,
   };
   for (const [file, n] of Object.entries(guarded)) {

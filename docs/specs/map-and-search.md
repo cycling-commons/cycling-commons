@@ -2156,7 +2156,13 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   patterns stay in step) — an excellent-green tick on the paved slate is
   invisible without it. The tile skin's ticks carry the same casing
   (`surfq-case-<cc>`, under the `surfq-` prefix so applyClassVisibility
-  toggles and re-filters it with the ticks).
+  toggles and re-filters it with the ticks). A curated stretch with its quality recorded
+  keeps its class line and its dots but not the wide cream casing
+  (`surface-case` filtered to stretches without `sm`), so no cream band runs
+  between the dots, and the dots answer a click and a hover as the line
+  under them does. The curated dots show from zoom 9, where the curated lines start,
+  2.6 px wide at zoom 9 to 5.5 px at 16 with their casing in step; the tile
+  skin's ticks stay from zoom 13.
 - **Class lines are SOLID; the dash channel belongs to quality**
   (owner 2026-08-14): once ticks stitched over the lines, gravel's own ochre
   dashes and an amber quality tick were two dash patterns fighting on one

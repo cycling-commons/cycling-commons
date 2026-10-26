@@ -316,7 +316,12 @@ export function renderSurfaceLayer(layer, visible){
   const data={type:'FeatureCollection',features:feats};
   if(map.getSource('surface-src')){ map.getSource('surface-src').setData(data); return feats.length; }
   map.addSource('surface-src',{type:'geojson',data});
+  /* A stretch with its quality recorded keeps its class line and its dots, but not the wide cream casing (owner
+     2026-10-26: "we do not need the yellow line between the dots, just the dots", and the class colour of the
+     Zuiderdijk must stay); a stretch without one keeps its casing as well. */
+  const NO_SM=['!',['has','sm']];
   map.addLayer({id:'surface-case',type:'line',source:'surface-src',
+    filter:NO_SM,
     layout:{'line-cap':'round','line-join':'round'},
     paint:{'line-color':'#FBF4E4','line-width':8,'line-opacity':.9}});
   const w=['interpolate',['linear'],['zoom'],9,3,13,5,16,8];
@@ -333,25 +338,34 @@ export function renderSurfaceLayer(layer, visible){
     map.on('mousemove',id,e=>{ const f=featAt(e); if(f) showTip(f.headline||featureSummary(f,D)||f.name, e.lngLat); });   
     map.on('mouseleave',id,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
   });
-  // Quality ticks over our lines: same stitch as the OSM skin, from z13.
+  // Quality dots: the same stitch as the OSM skin, from the zoom our lines start (owner 2026-10-26: zoomed out "we
+  // lose the dots"), smaller when zoomed out. The cream under each dot keeps amber readable on any ground; a dash is
+  // measured in line widths, so the pattern keeps its rhythm as the width changes.
+  const dotW=['interpolate',['linear'],['zoom'],9,2.6,13,4.5,16,5.5];
+  const caseW=['interpolate',['linear'],['zoom'],9,4,13,7,16,8.5];
   map.addLayer({id:'surface-q-case',type:'line',source:'surface-src',
-    minzoom:13,
+    minzoom:9,
     filter:['has','sm'],
     layout:{'line-cap':'butt'},
     paint:{
       'line-color':'#FBF4E4',
-      'line-width':7,
+      'line-width':caseW,
       'line-dasharray':[0.6*4.5/7, 2.8*4.5/7],
       'line-opacity':0.9}});
   map.addLayer({id:'surface-q',type:'line',source:'surface-src',
-    minzoom:13,
+    minzoom:9,
     filter:['has','sm'],
     layout:{'line-cap':'butt'},
     paint:{
       'line-color':['match',['get','sm'],...Object.entries(CURATED_SM_TONE).flat(),'rgba(0,0,0,0)'],
-      'line-width':4.5,
+      'line-width':dotW,
       'line-dasharray':[0.6,2.8],
       'line-opacity':0.95}});
+  // The dots answer a click and a hover as the line under them does.
+  map.on('click','surface-q',e=>{ if(plannerTakesLineClick(e)) return; const f=featAt(e); if(f) openDrawer(layer,f); });
+  map.on('mouseenter','surface-q',()=>map.getCanvas().style.cursor='pointer');
+  map.on('mousemove','surface-q',e=>{ const f=featAt(e); if(f) showTip(f.headline||featureSummary(f,D)||f.name, e.lngLat); });
+  map.on('mouseleave','surface-q',()=>{ map.getCanvas().style.cursor=''; hideTip(); });
   return feats.length;
 }
 /* chipSet null = no filter, not empty selection (empty would hide everything). */
