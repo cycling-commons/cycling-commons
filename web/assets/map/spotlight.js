@@ -58,7 +58,10 @@ export function setSpotlight(slug){
 export const MASK_COLOUR = '#2A2614';
 export const MASK_OPACITY = 0.15;
 export const ADJ_MASK_OPACITY = 0.08;
-// Dim outside `g` + dashed outline. adjFeatures + fullUnion = three-tier neighbour band.
+/* The scope's border: a solid line in the shade's own dark tone. Never dashed and never a road colour, because on
+   this map a dash says how good a surface is (or that nobody recorded it) and ochre is gravel. */
+export const BORDER_COLOUR = MASK_COLOUR;
+// Dim outside `g` + a solid outline. adjFeatures + fullUnion = three-tier neighbour band.
 function drawSpotlightMask(g, adjFeatures, fullUnion){
   const outerRings = geo => (geo.type==='MultiPolygon' ? geo.coordinates : [geo.coordinates]).map(p=>p[0]);
   // Shoelace; >0 is CCW. World ring is CCW, so holes MUST be CW — MapLibre
@@ -76,9 +79,9 @@ function drawSpotlightMask(g, adjFeatures, fullUnion){
   if(adjFeatures && adjFeatures.length && fullUnion){
     map.addSource('region-adj-mask',{type:'geojson',data:{type:'FeatureCollection',features:adjFeatures}});
     map.addLayer({id:'region-adj-mask',type:'fill',source:'region-adj-mask',paint:{'fill-color':MASK_COLOUR,'fill-opacity':ADJ_MASK_OPACITY}});
-    map.addLayer({id:'region-adj-line',type:'line',source:'region-adj-mask',paint:{'line-color':'#C8923A','line-width':1.5,'line-dasharray':[2,1.5],'line-opacity':0.7}});
+    map.addLayer({id:'region-adj-line',type:'line',source:'region-adj-mask',paint:{'line-color':BORDER_COLOUR,'line-width':1,'line-opacity':0.3}});
   }
-  map.addLayer({id:'region-line',type:'line',source:'region',paint:{'line-color':'#C8923A','line-width':2.5,'line-dasharray':[2,1.4],'line-opacity':0.95}});
+  map.addLayer({id:'region-line',type:'line',source:'region',paint:{'line-color':BORDER_COLOUR,'line-width':2,'line-opacity':0.55}});
 }
 // Country spotlight (docs/specs/map-and-search.md §4.5): whole-country outline via ST_Union.
 export function setCountrySpotlight(cc){
@@ -110,5 +113,5 @@ export function setCircleSpotlight(center, rkm){
   map.addSource('region-mask',{type:'geojson',data:mask});
   map.addSource('region',{type:'geojson',data:{type:'Feature',geometry:{type:'Polygon',coordinates:[ring]}}});
   map.addLayer({id:'region-mask',type:'fill',source:'region-mask',paint:{'fill-color':MASK_COLOUR,'fill-opacity':MASK_OPACITY}});
-  map.addLayer({id:'region-line',type:'line',source:'region',paint:{'line-color':'#C8923A','line-width':2.5,'line-blur':3,'line-opacity':0.95}});
+  map.addLayer({id:'region-line',type:'line',source:'region',paint:{'line-color':BORDER_COLOUR,'line-width':2,'line-blur':3,'line-opacity':0.55}});
 }

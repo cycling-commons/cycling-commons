@@ -74,7 +74,7 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
   Map/Satellite toggle, shown only when a key is configured; the key and its
   terms are recorded in [data-source-register.md](data-source-register.md)).
   The region boundary renders as a
-  spotlight mask + dashed outline; it is decorative — failure only logs. It
+  spotlight mask + solid outline; it is decorative — failure only logs. It
   comes from **our own** `/map/region/{slug}/boundary`
   (`RegionBoundaryProvider`, simplified and cacheable), not from Nominatim:
   that fetch was both an external dependency and a usage-policy problem at
@@ -1435,7 +1435,7 @@ This section owns region scoping: the Search & region panel's Region group
   `ST_Union` of the matching `region.geom` rows (ETag + `max-age=3600`; 204
   when the scope resolves to no regions). For a **country** scope, `applyScope`
   fetches this union and draws the existing world-minus-shape dark mask +
-  dashed outline (the same `region-mask`/`region-line` layers a single-region
+  solid outline (the same `region-mask`/`region-line` layers a single-region
   spotlight already builds). A **single named region** keeps drawing its own
   boundary (`GET /map/region/{slug}/boundary`, unchanged). **My-area** keeps
   its own soft ~64-vertex circle (`line-blur`) rather than switching to the
@@ -1472,8 +1472,11 @@ This section owns region scoping: the Search & region panel's Region group
 - **Three-tier region spotlight.** For a single named-region scope,
   the active region's border-neighbours (`region.adj`) render at a **middle** dim
   tone — lighter than the fully-outside world (`0.08` vs `0.15`, a warm dark `#2A2614`; owner 2026-10-19: "Make these areas a bit less gray", `MASK_COLOUR` in `spotlight.js`), darker than the
-  clear active region — each **individually** outlined with a fainter dashed line
-  than the active region's. Dark-mask holes come from the dissolved
+  clear active region — each **individually** outlined with a fainter line
+  than the active region's. The outline is solid, in the shade's own tone
+  (`BORDER_COLOUR`, 2 px at 0.55 for the active region, 1 px at 0.3 for a
+  neighbour): never dashed, because a dash on this map says how good a
+  surface is or that nobody recorded it, and never ochre, the gravel colour. Dark-mask holes come from the dissolved
   `ST_Union(active + adj)` (`/map/scope/boundary?rids=<active,adj>`, one clean
   blob so no two holes touch); the middle-tone fill + per-neighbour borders come
   from each neighbour's own `/map/region/{slug}/boundary`. Mask hole rings are
