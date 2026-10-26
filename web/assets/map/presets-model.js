@@ -13,7 +13,7 @@ export const OVERLAYS = ['surface', 'routes'];
 export const SEASONS = ['spring', 'summer', 'autumn', 'winter'];
 export const FACET_GROUPS = ['sqf', 'trf', 'effortf', 'accessf'];
 /* The key's switches (owner 2026-10-15); a preset without them leaves the key as it is. */
-export const SURFACES = ['paved', 'gravel', 'pave', 'dirt', 'rock', 'unverified'];
+export const SURFACES = ['paved', 'gravel', 'pave', 'dirt', 'sand', 'rock', 'unverified'];
 export const ROUTE_TYPES = ['national', 'regional', 'mtb', 'knoop'];
 
 const sortedUnique = (list, allowed) => {

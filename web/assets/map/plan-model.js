@@ -1192,7 +1192,7 @@ export function windShares(legs, windFromDeg){
 /* ---------- the map's surface lines (route-planner.md section 4.4a) ---------- */
 /** A class of the map's surface tiles as the planner's surface; null for a recorded value the planner has no class for. */
 export function tileSurfaceClass(cls){
-  return ({ paved: 'paved', gravel: 'gravel', pave: 'rough', dirt: 'rough', rock: 'rough', unverified: 'unknown' })[cls] || null;
+  return ({ paved: 'paved', gravel: 'gravel', pave: 'rough', dirt: 'rough', sand: 'rough', rock: 'rough', unverified: 'unknown' })[cls] || null;
 }
 /**
  * A leg's surfaces with the map's own lines where they were read: the tiles'

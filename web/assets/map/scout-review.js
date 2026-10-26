@@ -23,7 +23,7 @@ const RIDE_SRC = 'cc-scout-ride';
 const RIDE_LINE = 'cc-scout-ride-line';
 const SEG_SRC = 'cc-scout-seg';
 const SEG_CASE = 'cc-scout-seg-case';
-const SEG_CLS = ['paved', 'pave', 'gravel', 'dirt', 'rock'];
+const SEG_CLS = ['paved', 'pave', 'gravel', 'dirt', 'sand', 'rock'];
 const RED = '#D92D20';
 let passMarkers = [];
 /* The step on screen: 1 the tags, 2 the traffic (setStep()). */

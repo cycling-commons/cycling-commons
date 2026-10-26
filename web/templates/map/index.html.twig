@@ -714,8 +714,8 @@
       <div class="grp">
         <h3>{{ 'item_type.road-surface.label'|trans }}</h3>
         {% set ksc = cc_surface_colours() %}
-        {% for cls, lbl in {'paved': 'map.legend_paved', 'pave': 'map.legend_cobbles', 'gravel': 'map.legend_gravel', 'dirt': 'map.legend_dirt', 'rock': 'map.legend_rock', 'unverified': 'map.legend_unverified'} %}
-        <div class="mkp-row mk-surface" data-surf="{{ cls }}"><span class="mkp-sw"><span class="mkp-line{{ cls == 'unverified' ? ' dash' : '' }}" style="--sc:{{ ksc[cls] }}" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ lbl|trans }}</b></div></div>
+        {% for cls, lbl in {'paved': 'map.legend_paved', 'pave': 'map.legend_cobbles', 'gravel': 'map.legend_gravel', 'dirt': 'map.legend_dirt', 'sand': 'map.legend_sand', 'rock': 'map.legend_rock', 'unverified': 'map.legend_unverified'} %}
+        <div class="mkp-row mk-surface" data-surf="{{ cls }}"><span class="mkp-sw"><span class="mkp-line{{ cls == 'unverified' ? ' dash' : '' }}{{ cls == 'sand' ? ' rim' : '' }}" style="--sc:{{ ksc[cls] }}{{ cls == 'sand' ? ';--se:' ~ constant('App\\Catalog\\SurfaceVocabulary::SAND_EDGE') : '' }}" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ lbl|trans }}</b></div></div>
         {% endfor %}
       </div>
       {# Climb and route lines, as the /map-key page shows them (the shared
@@ -942,6 +942,7 @@
         <button type="button" class="skey-row" data-surf-cls="gravel" aria-pressed="true"><span class="skey-ln" style="--sc:{{ sc.gravel }}"></span>{{ 'map.legend_gravel'|trans }}</button>
         <button type="button" class="skey-row" data-surf-cls="pave" aria-pressed="true"><span class="skey-ln" style="--sc:{{ sc.pave }}"></span>{{ 'map.legend_cobbles'|trans }}</button>
         <button type="button" class="skey-row" data-surf-cls="dirt" aria-pressed="true"><span class="skey-ln" style="--sc:{{ sc.dirt }}"></span>{{ 'map.legend_dirt'|trans }}</button>
+        <button type="button" class="skey-row" data-surf-cls="sand" aria-pressed="true"><span class="skey-ln rim" style="--sc:{{ sc.sand }};--se:{{ constant('App\\Catalog\\SurfaceVocabulary::SAND_EDGE') }}"></span>{{ 'map.legend_sand'|trans }}</button>
         <button type="button" class="skey-row" data-surf-cls="rock" aria-pressed="true"><span class="skey-ln" style="--sc:{{ sc.rock }}"></span>{{ 'map.legend_rock'|trans }}</button>
         <button type="button" class="skey-row" data-surf-cls="unverified" aria-pressed="true"><span class="skey-ln dash" style="--sc:{{ sc.unverified }}"></span>{{ 'map.legend_unverified'|trans }}</button>
       </div>
@@ -1296,6 +1297,7 @@ window.CC_VENDOR = {{ {
   window.CC_BASEMAP_ICONS = {{ basemap_icons|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# Surface line colours, class → hex: SurfaceVocabulary::LINE_COLOUR, the only palette. #}
   window.CC_SURFACE_COLOURS = {{ cc_surface_colours()|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  window.CC_SURFACE_SAND_EDGE = {{ constant('App\\Catalog\\SurfaceVocabulary::SAND_EDGE')|json_encode|raw }};
   {# Locale bundle for the strings map.js renders itself (layer list, subtitle,
      drawer, toasts) — built by MapController::mapI18n, one source of truth. #}
   window.CC_I18N = {{ map_i18n|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};

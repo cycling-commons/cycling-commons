@@ -1081,7 +1081,7 @@ the country). Then, per edge:
 
 | The table holds the way | The engine says the road is | The edge reads |
 |---|---|---|
-| with a surface class | anything | that class: paved, gravel, or rough for pave, dirt and rock |
+| with a surface class | anything | that class: paved, gravel, or rough for pave, dirt, sand and rock; sand is counted apart as well (`surfaces.sand`, inside `rough`) |
 | without a surface class, or not at all | a track or an unclassified road: the roads whose surface nobody can guess, the map's "surface not recorded" lines (contract `surface.todo.highways`) | "surface not recorded" |
 | without a surface class, or not at all | anything else: a main road, a street, a cycleway, a path, a service road | the engine's own word, as before |
 

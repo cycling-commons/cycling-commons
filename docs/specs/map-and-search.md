@@ -1998,7 +1998,10 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   gravel under `smoothness=intermediate`). The palette is ONE table,
   `SurfaceVocabulary::LINE_COLOUR` (owner 2026-09-18): paved slate green `#577A71`,
   gravel ochre `#C8923A`, pavé light purple `#B89AD9`, dirt brown `#6E5849`,
-  rock light grey `#98A1AB`, and red `#D92D20` dashes for `unverified` (no
+  sand pale yellow `#E0C15A` over a thin dark edge `#8A6F22`
+  (`SurfaceVocabulary::SAND_EDGE`, a `surfedge-` layer under the class: pale
+  yellow alone is lost on the light map), rock light grey `#98A1AB`, and red
+  `#D92D20` dashes for `unverified` (no
   surface tag, "needs a tag"; red means nothing else). The map lines read it
   through `CC_SURFACE_COLOURS` into `render.js` `SURFACE_STYLE`; the legend box,
   the Key panel's Road surface group and the `/map-key` page read it through
@@ -2087,7 +2090,7 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   dashes and an amber quality tick were two dash patterns fighting on one
   line — and "smooth gravel vs rough gravel" is exactly what the ticks
   exist to say. `SURFACE_STYLE` carries colour only for
-  paved/gravel/pave/dirt/rock (curated layer, tile skin and the legend
+  paved/gravel/pave/dirt/sand/rock (curated layer, tile skin and the legend
   swatches all read it); `unverified` keeps its red dash, because that dash
   IS its meaning and it never draws ticks.
 - **The tile lines dedupe against curated refs**, the same rule as the

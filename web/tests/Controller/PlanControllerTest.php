@@ -143,7 +143,7 @@ final class PlanControllerTest extends WebTestCase
         // JSON carries a whole number without its fraction; the values are what count.
         self::assertEqualsWithDelta(2400.0, $json['distanceM'], 1e-6);
         self::assertEquals([[0, 300], [30, 305], [60, 311]], $json['heights']);
-        self::assertSame(['paved' => 2000, 'gravel' => 400, 'rough' => 0, 'unknown' => 0, 'busy' => 0, 'cycle' => 0, 'signals' => 0], $json['surfaces']);
+        self::assertSame(['paved' => 2000, 'gravel' => 400, 'rough' => 0, 'unknown' => 0, 'busy' => 0, 'cycle' => 0, 'sand' => 0, 'signals' => 0], $json['surfaces']);
         self::assertSame([[0, 'Avenue Reine Astrid', 'road'], [2000, 'Chemin du Thier', 'road']], $json['streets'], 'the leg carries its street names, from our own engine');
     }
 

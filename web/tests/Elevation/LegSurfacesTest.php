@@ -70,7 +70,7 @@ final class LegSurfacesTest extends TestCase
 
         $mix = $client->along([[50.49, 5.86], [50.47, 5.86]]);
 
-        self::assertSame(['paved' => 2500, 'gravel' => 500, 'rough' => 200, 'unknown' => 400, 'busy' => 2400, 'cycle' => 500, 'signals' => 0], $mix);
+        self::assertSame(['paved' => 2500, 'gravel' => 500, 'rough' => 200, 'unknown' => 400, 'busy' => 2400, 'cycle' => 500, 'sand' => 0, 'signals' => 0], $mix);
         // The busy stretches: the primary road from 0 to 2000 m, the trunk road at the end, 3200 to 3600 m.
         $read = $client->read([[50.49, 5.86], [50.47, 5.86]]);
         self::assertNotNull($read);
@@ -146,6 +146,26 @@ final class LegSurfacesTest extends TestCase
      * smoothness and the tracktype come with it, in metres (owner 2026-10-19: "why more detailed surfaces in
      * bikerouter?").
      */
+    /** Sand is rough ground, and counted apart: a gravel bike seeks rough ground, never sand (route-planner.md 4.2b). */
+    public function testARecordedSandWayIsRoughAndCountedAsSand(): void
+    {
+        $client = $this->client(new MockResponse((string) json_encode(['units' => 'kilometers', 'edges' => [
+            ['way_id' => 21, 'surface' => 'paved', 'length' => 1.0, 'use' => 'road', 'road_class' => 'tertiary'],
+            ['way_id' => 22, 'surface' => 'dirt', 'length' => 0.8, 'use' => 'track', 'road_class' => 'service_other'],
+            ['way_id' => 23, 'surface' => 'dirt', 'length' => 0.3, 'use' => 'track', 'road_class' => 'service_other'],
+        ]])), 'http://valhalla.test', [
+            21 => ['surface' => 'paved', 'smoothness' => null, 'tracktype' => null],
+            22 => ['surface' => 'sand', 'smoothness' => null, 'tracktype' => 'grade5'],
+            23 => ['surface' => 'dirt', 'smoothness' => null, 'tracktype' => null],
+        ], true);
+
+        $read = $client->read([[52.04, 5.66], [52.10, 5.77]]);
+
+        self::assertNotNull($read);
+        self::assertSame(1100, $read['surfaces']['rough'], 'sand and earth are both rough');
+        self::assertSame(800, $read['surfaces']['sand'], 'and the sand is counted apart');
+    }
+
     public function testInALoadedCountryTheRecordedSurfacesStandForTheEnginesGuess(): void
     {
         $client = $this->client(new MockResponse((string) json_encode(['units' => 'kilometers', 'edges' => [
@@ -167,7 +187,7 @@ final class LegSurfacesTest extends TestCase
         self::assertTrue($read['recorded']);
         // 11 paved; 12 the table's cobbles, rough; 13 not recorded; 16 the engine's paved; 14 the engine's dirt, rough;
         // 15 a track with no surface tag, not recorded.
-        self::assertSame(['paved' => 1250, 'gravel' => 0, 'rough' => 700, 'unknown' => 700, 'busy' => 250, 'cycle' => 0, 'signals' => 0], $read['surfaces']);
+        self::assertSame(['paved' => 1250, 'gravel' => 0, 'rough' => 700, 'unknown' => 700, 'busy' => 250, 'cycle' => 0, 'sand' => 0, 'signals' => 0], $read['surfaces']);
         self::assertSame([[0, 'paved'], [1000, 'rough'], [1500, 'unknown'], [1800, 'paved'], [2050, 'rough'], [2250, 'unknown']], $read['runs']);
         self::assertSame(['smoothness' => ['good' => 1000, 'bad' => 500], 'tracktype' => ['grade3' => 400]], $read['quality']);
         // Where each one lies, so the panel lights it on the map (owner 2026-10-19: "what part of the road is that about?").
@@ -237,7 +257,7 @@ final class LegSurfacesTest extends TestCase
         self::assertSame('map_snap', $bodies[0]['shape_match']);
         self::assertSame(end($bodies[0]['shape']), $bodies[1]['shape'][0], 'the pieces share their joining point');
         self::assertNotNull($read);
-        self::assertSame(['paved' => 55000, 'gravel' => 15000, 'rough' => 0, 'unknown' => 0, 'busy' => 15000, 'cycle' => 0, 'signals' => 0], $read['surfaces']);
+        self::assertSame(['paved' => 55000, 'gravel' => 15000, 'rough' => 0, 'unknown' => 0, 'busy' => 15000, 'cycle' => 0, 'sand' => 0, 'signals' => 0], $read['surfaces']);
         self::assertSame(70000, $read['distanceM']);
         self::assertSame([[0, 'paved'], [40000, 'gravel'], [55000, 'paved']], $read['runs'], 'one gravel run across the join');
         self::assertSame([[40000, 55000]], $read['busyRuns']);

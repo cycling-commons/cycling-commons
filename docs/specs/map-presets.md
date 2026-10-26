@@ -49,7 +49,7 @@ The settings, as stored and as sent (`MapPreset::settings`, JSON):
   chip values that are on; a group that is absent is left as it is, every
   chip on. `bikeFriendly` is the stays Bike-friendly chip (`#labelf`), `true`
   when on; absent reads as off, and the server refuses a value that is not a
-  boolean (`PresetInput::settings()`). `surfaces` (`paved`, `gravel`, `pave`, `dirt`, `rock`,
+  boolean (`PresetInput::settings()`). `surfaces` (`paved`, `gravel`, `pave`, `dirt`, `sand`, `rock`,
   `unverified`) and `routes` (`national`, `regional`, `mtb`, `knoop`) list
   the key's rows that are on; absent, the key is left as it is, so an older
   preset changes nothing there. A name is 1 to 40 characters.

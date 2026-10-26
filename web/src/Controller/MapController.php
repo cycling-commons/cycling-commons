@@ -469,7 +469,7 @@ final class MapController extends AbstractController
             'historyAuto' => 'd_history_auto', 'riderRemoved' => 'd_rider_removed',
             'surfCycleway' => 'legend_cycleway', 'surfPaved' => 'legend_paved',
             'surfGravel' => 'legend_gravel', 'surfCobbles' => 'legend_cobbles',
-            'surfDirt' => 'legend_dirt', 'surfRock' => 'legend_rock',
+            'surfDirt' => 'legend_dirt', 'surfSand' => 'legend_sand', 'surfRock' => 'legend_rock',
             'surfUnverified' => 'legend_unverified',
             'gapsTitle' => 'd_gaps_title', 'gapsUnrecorded' => 'd_gaps_unrecorded',
             'gapsShare' => 'd_gaps_share', 'gapsRoads' => 'd_gaps_roads',

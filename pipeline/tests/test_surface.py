@@ -36,7 +36,9 @@ def test_road_type_is_not_a_surface_class(contract):
     ("asphalt", "paved"), ("concrete", "paved"), ("paving_stones", "paved"),
     ("gravel", "gravel"), ("fine_gravel", "gravel"), ("compacted", "gravel"),
     ("sett", "pave"), ("cobblestone", "pave"),
-    ("ground", "dirt"), ("sand", "dirt"), ("grass", "dirt"),
+    ("ground", "dirt"), ("grass", "dirt"),
+    # Sand is its own class: heavy going on a gravel bike, where earth is not.
+    ("sand", "sand"),
     ("rock", "rock"),
 ])
 def test_surface_values_map_to_their_class(surface, expected, contract):

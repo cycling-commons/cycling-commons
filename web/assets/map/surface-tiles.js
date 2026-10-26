@@ -65,6 +65,8 @@ const QUALITY_PREFIX = 'surfq-';
 
 let added = false;
 let visible = false;
+/* The dark edge layers under a pale class, `surfedge-<cls>[-<cc>]`: shown and filtered with their class. */
+const EDGE_PREFIX = 'surfedge-';
 
 /* Pipeline emits surface_<cc> per country; plain `surface` is the pre-split fallback. */
 function sourceLayers() {
@@ -86,6 +88,23 @@ function addClassifiedLayers(srcLayer, src, under) {
     const st = surfaceStyle(cls);
     const id = 'surftile-' + cls + (srcLayer === 'surface' ? '' : '-' + srcLayer.slice(8));
     if (map.getLayer(id)) return;
+    // A pale class draws a thin dark edge under itself (sand), so it reads on the light map.
+    if (st.edge) {
+      map.addLayer({
+        id: EDGE_PREFIX + id.slice('surftile-'.length),
+        type: 'line',
+        source: src,
+        'source-layer': srcLayer,
+        minzoom: CLASSIFIED_MIN_ZOOM,
+        filter: ['==', ['get', 'cls'], cls],
+        layout: { 'line-cap': 'round', 'line-join': 'round', visibility: 'none' },
+        paint: {
+          'line-color': st.edge,
+          'line-width': ['interpolate', ['linear'], ['zoom'], 8, 1.2, 11, 2.4, 14, 4.4, 16, 7.6, 18, 13.6],
+          'line-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.4, 12, 0.7],
+        },
+      }, under);
+    }
     const paint = {
       'line-color': st.color,
       // Thinner than curated A at country zoom, where full weight is a smear;
@@ -329,13 +348,13 @@ export function setSurfaceTiles(on) {
 
 export function classLabel(cls) {
   const k = { cycleway: 'surfCycleway', paved: 'surfPaved', gravel: 'surfGravel',
-              pave: 'surfCobbles', dirt: 'surfDirt', rock: 'surfRock',
+              pave: 'surfCobbles', dirt: 'surfDirt', sand: 'surfSand', rock: 'surfRock',
               unverified: 'surfUnverified' }[cls];
   return (k && D[k]) || cls;
 }
 
 /* Mirrors SurfaceVocabulary::TILE_CLASS; SurfaceConfirmClassContractTest pins them. */
-export const CONFIRMABLE_CLASSES = ['paved', 'gravel', 'pave', 'dirt', 'rock'];
+export const CONFIRMABLE_CLASSES = ['paved', 'gravel', 'pave', 'dirt', 'sand', 'rock'];
 const CONFIRMABLE = new Set(CONFIRMABLE_CLASSES);
 
 /* Highway → assumed traffic. Never stored, never prefilled into the form. */
@@ -468,8 +487,8 @@ function applyClassVisibility() {
   const style = map.getStyle();
   if (!style) return;
   style.layers.forEach(l => {
-    if (l.id.startsWith('surftile-')) {
-      const cls = l.id.slice('surftile-'.length).replace(/-[a-z]{2}$/, '');
+    if (l.id.startsWith('surftile-') || l.id.startsWith(EDGE_PREFIX)) {
+      const cls = l.id.slice((l.id.startsWith(EDGE_PREFIX) ? EDGE_PREFIX : 'surftile-').length).replace(/-[a-z]{2}$/, '');
       map.setLayoutProperty(l.id, 'visibility',
         visible && surfaceClassEnabled(cls) ? 'visible' : 'none');
       // Class filter + curated dedupe, refreshed together (see surfDedupeFilter).

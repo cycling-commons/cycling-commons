@@ -52,8 +52,8 @@ test('late-mounted surface skin layers go under our first overlay layer', () => 
   const layers = body(surface, 'function addClassifiedLayers(srcLayer, src, under) {');
   const adds = layers.match(/map\.addLayer\(/g) || [];
   const under = layers.match(/\},\s*under\);/g) || [];
-  assert.equal(adds.length, 3);
-  assert.equal(under.length, adds.length, 'every class, casing and tick layer takes the beforeId');
+  assert.equal(adds.length, 4, 'a class line, the dark edge under a pale class, the tick casing and the ticks');
+  assert.equal(under.length, adds.length, 'every class, edge, casing and tick layer takes the beforeId');
   const add = body(surface, 'export function addSurfaceTiles() {');
   assert.match(add, /const under = belowOurLayers\(\{ skin: true \}\);/);
 });

@@ -421,11 +421,14 @@ page, so the control disables with the layer and switches off with it.
 
 **Not every class can be confirmed.** `cycleway` says what a way *is*, not what
 it is made of, and `unverified` is the absence of a claim; neither offers the
-confirm action. The other five map to a declarable label in
+confirm action. The other six map to a declarable label in
 `SurfaceVocabulary::TILE_CLASS` (`paved`→Asphalt, `gravel`→Gravel,
-`pave`→Sett — pavé, `dirt`→Dirt, `rock`→Rock — coarser than the dropdown by
-design, since one colour stands for a family of OSM values). The map states the
-same five in `CONFIRMABLE_CLASSES`; `SurfaceConfirmClassContractTest` fails if
+`pave`→Sett — pavé, `dirt`→Dirt, `sand`→Sand, `rock`→Rock — coarser than the
+dropdown by design, since one colour stands for a family of OSM values). Sand
+is its own class, not dirt: OSM `surface=sand` is heavy going on a gravel bike
+where earth is not, and the planner's gravel hints keep a gravel bike off it
+(route-planner.md section 4.2b). The map states the
+same six in `CONFIRMABLE_CLASSES`; `SurfaceConfirmClassContractTest` fails if
 the two lists ever drift.
 
 Segment-located types never resolve through `coverage_poi` — it is the point
@@ -521,7 +524,7 @@ under the smoothness value. Verified in the harvest classifier
 (`tools/wallonia/route_surfaces.py`, `_cls()`: "the actual `surface=` tag wins")
 and the map styles (`SURFACE_STYLE` in `web/assets/map/render.js`, shared with the
 tile layer in `web/assets/map/surface-tiles.js`, keyed by surface class: cycleway teal · paved slate · gravel ochre · pavé slate-grey · dirt brown ·
-rock grey · unverified red dashes — "unverified" = OSM has no `surface=` tag,
+sand pale yellow with a dark edge · rock grey · unverified red dashes — "unverified" = OSM has no `surface=` tag,
 an invitation to tag it).
 
 Rendering is **one line layer per surface class** (over a single consolidated

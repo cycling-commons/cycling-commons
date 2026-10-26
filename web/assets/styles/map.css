@@ -398,6 +398,8 @@
   .rkey-row[hidden]{display:none}
   .rkey .scout-pass{flex:none;width:34px;justify-content:center;padding:.1rem 0}
   .skey-ln.dash{background:repeating-linear-gradient(90deg,var(--sc) 0 8px,transparent 8px 13px)}
+  /* A pale class keeps its thin dark edge in the key, as on the map (sand, SurfaceVocabulary::SAND_EDGE). */
+  .skey-ln.rim{box-shadow:0 0 0 1px var(--se)}
   .skey-ln.dot{background:repeating-linear-gradient(90deg,var(--sc) 0 3px,transparent 3px 7px)}
   .search{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgb(var(--chrome-fg) / .3);color:var(--chrome-fg-solid);font-family:var(--sans);font-size:.95rem;padding:.5rem 0;outline:none}
   .search::placeholder{color:rgb(var(--chrome-fg) / .65)}
@@ -469,6 +471,7 @@
   /* A surface line as the map draws it: colour on a cream casing. */
   .mkp-line{width:34px;height:6px;border-radius:3px;background:var(--sc);box-shadow:0 0 0 2px #FBF4E4}
   .mkp-line.dash{background:repeating-linear-gradient(90deg,var(--sc) 0 5px,#FBF4E4 5px 10px);border-radius:0}
+  .mkp-line.rim{box-shadow:0 0 0 1px var(--se),0 0 0 3px #FBF4E4}
   .mk-surface{padding:.3rem 0}
   .mk-surface .mkp-sw{min-height:30px}
   .mkp-row.mkp-pair .mkp-sw{gap:.55rem}

@@ -281,6 +281,7 @@ export const SURFACE_STYLE={
   gravel:{color:SURF_COL.gravel},                    // gravel/compacted
   pave:{color:SURF_COL.pave},                        // sett/cobbles (pavé)
   dirt:{color:SURF_COL.dirt},                        // dirt
+  sand:{color:SURF_COL.sand,edge:window.CC_SURFACE_SAND_EDGE||'#8A6F22'}, // sand: pale, so a thin dark edge
   rock:{color:SURF_COL.rock},                        // rock
   unverified:{color:SURF_COL.unverified,dash:[2.5,2.5],cap:'butt'} // OSM has no surface tag: red dashes over the white casing ("needs a tag")
 };

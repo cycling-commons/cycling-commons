@@ -29,7 +29,7 @@ final readonly class PresetInput
     private const string SURFACE_LAYER = 'surface';
     public const array SEASONS = ['spring', 'summer', 'autumn', 'winter'];
     /** The key's surface classes and route types (owner 2026-10-15: "add surface and routes to the presets"); absent means every one on. */
-    public const array SURFACES = ['paved', 'gravel', 'pave', 'dirt', 'rock', 'unverified'];
+    public const array SURFACES = ['paved', 'gravel', 'pave', 'dirt', 'sand', 'rock', 'unverified'];
     public const array ROUTES = ['national', 'regional', 'mtb', 'knoop'];
     /** The facet chip groups of the Layers panel and their values, as the template's data-v (map-and-search.md section 4.3). */
     public const array FACETS = [

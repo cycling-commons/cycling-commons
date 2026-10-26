@@ -17,7 +17,7 @@ final class SurfaceVocabulary
 {
     /** @var list<string> Form/route vocabulary. Harvested A-layer rows also store harvester-only labels; Mixed is a bucket output, never stored. */
     public const array DECLARABLE = [
-        'Asphalt', 'Concrete', 'Paving stones', 'Sett — pavé', 'Compacted', 'Fine gravel', 'Gravel', 'Dirt', 'Rock',
+        'Asphalt', 'Concrete', 'Paving stones', 'Sett — pavé', 'Compacted', 'Fine gravel', 'Gravel', 'Dirt', 'Sand', 'Rock',
     ];
 
     /** @var array<string, string> A-layer / harvester labels → coarse Asphalt/Mixed/Gravel. Both spellings of sett are kept. */
@@ -25,14 +25,15 @@ final class SurfaceVocabulary
         'Asphalt' => 'Asphalt', 'Concrete' => 'Asphalt', 'Cycleway · RAVeL' => 'Asphalt',
         'Paving stones' => 'Mixed', 'Sett — pavé' => 'Mixed', 'Sett (pavé)' => 'Mixed', 'Compacted' => 'Mixed',
         'Unhewn cobblestone' => 'Mixed', 'Cobblestone' => 'Mixed',
-        'Fine gravel' => 'Gravel', 'Gravel' => 'Gravel', 'Dirt' => 'Gravel', 'Rock' => 'Gravel',
+        'Fine gravel' => 'Gravel', 'Gravel' => 'Gravel', 'Dirt' => 'Gravel', 'Sand' => 'Gravel', 'Rock' => 'Gravel',
     ];
 
     /**
      * Tile class → line colour. The only palette: the map lines (render.js
      * SURFACE_STYLE via CC_SURFACE_COLOURS), the legend box, the Key panel and
      * the /map-key page all read it. Red is reserved for `unverified` (drawn
-     * dashed).
+     * dashed). Sand is a pale yellow, lighter than gravel's ochre, drawn with a
+     * thin dark edge (SAND_EDGE) so it reads on the light map.
      *
      * @var array<string, string>
      */
@@ -41,9 +42,13 @@ final class SurfaceVocabulary
         'gravel' => '#C8923A',
         'pave' => '#B89AD9',
         'dirt' => '#6E5849',
+        'sand' => '#E0C15A',
         'rock' => '#98A1AB',
         'unverified' => '#D92D20',
     ];
+
+    /** The thin dark edge under a sand line: pale yellow alone is lost on the light map. */
+    public const string SAND_EDGE = '#8A6F22';
 
     /** @var array<string, string> Tile class → declarable label. `cycleway` and `unverified` are absent: they confirm nothing. */
     public const array TILE_CLASS = [
@@ -51,6 +56,7 @@ final class SurfaceVocabulary
         'gravel' => 'Gravel',
         'pave' => 'Sett — pavé',
         'dirt' => 'Dirt',
+        'sand' => 'Sand',
         'rock' => 'Rock',
     ];
 
@@ -67,7 +73,7 @@ final class SurfaceVocabulary
         'ground' => 'Dirt',
         'dirt' => 'Dirt',
         'earth' => 'Dirt',
-        'sand' => 'Dirt',
+        'sand' => 'Sand',
         'rock' => 'Rock',
     ];
 
@@ -91,6 +97,7 @@ final class SurfaceVocabulary
         'Cobblestone' => 'pave', 'Unhewn cobblestone' => 'pave',
         'Compacted' => 'gravel', 'Fine gravel' => 'gravel', 'Gravel' => 'gravel',
         'Dirt' => 'dirt',
+        'Sand' => 'sand',
         'Rock' => 'rock',
         'Surface unverified' => 'unverified',
     ];

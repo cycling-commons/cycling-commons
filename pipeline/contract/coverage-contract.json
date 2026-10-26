@@ -424,9 +424,11 @@
         "earth",
         "ground",
         "mud",
-        "sand",
         "grass",
         "woodchips"
+      ],
+      "sand": [
+        "sand"
       ],
       "rock": [
         "rock",

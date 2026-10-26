@@ -31,7 +31,7 @@ final class PresetCatalog
     ];
     private const array SURFACE_LABELS = [
         'paved' => 'map.legend_paved', 'gravel' => 'map.legend_gravel', 'pave' => 'map.legend_cobbles',
-        'dirt' => 'map.legend_dirt', 'rock' => 'map.legend_rock', 'unverified' => 'map.legend_unverified',
+        'dirt' => 'map.legend_dirt', 'sand' => 'map.legend_sand', 'rock' => 'map.legend_rock', 'unverified' => 'map.legend_unverified',
     ];
     private const array ROUTE_LABELS = [
         'national' => 'map.legend_route_national', 'regional' => 'map.legend_route_regional',

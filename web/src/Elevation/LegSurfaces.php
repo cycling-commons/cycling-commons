@@ -52,7 +52,7 @@ final class LegSurfaces
     private const string APART_LANE = 'separated';
     /** The engine's edge use as the kind a rider reads on an unnamed road (owner 2026-10-15). */
     /** The pipeline's surface classes, folded the same way (coverage-contract.json, surface.classes). */
-    private const array RECORDED_CLASS = ['paved' => 'paved', 'gravel' => 'gravel', 'pave' => 'rough', 'dirt' => 'rough', 'rock' => 'rough'];
+    private const array RECORDED_CLASS = ['paved' => 'paved', 'gravel' => 'gravel', 'pave' => 'rough', 'dirt' => 'rough', 'sand' => 'rough', 'rock' => 'rough'];
     /**
      * The roads whose surface nobody can guess (coverage-contract.json, surface.todo.highways: the map's "surface not
      * recorded" lines), as the engine names them: a track, or an unclassified road. One of these the table does not
@@ -79,7 +79,7 @@ final class LegSurfaces
     /**
      * @param list<array{0: float, 1: float}> $coords [lat, lng] pairs, the routed line
      *
-     * @return array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, signals: int}|null metres per class, on busy
+     * @return array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, sand: int, signals: int}|null metres per class, on busy
      *                                                                                                            roads and on cycle paths, and the traffic lights passed
      */
     public function along(array $coords): ?array
@@ -96,7 +96,7 @@ final class LegSurfaces
      *
      * @param list<array{0: float, 1: float}> $coords [lat, lng] pairs, the routed line
      *
-     * @return array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}}|null
+     * @return array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, sand: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}}|null
      */
     public function read(array $coords): ?array
     {
@@ -116,7 +116,7 @@ final class LegSurfaces
      *
      * @param list<array{0: float, 1: float}> $coords [lat, lng] pairs
      *
-     * @return array{distanceM: int, surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, signals: int}, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}}|null
+     * @return array{distanceM: int, surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, sand: int, signals: int}, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}}|null
      */
     public function readLine(array $coords): ?array
     {
@@ -124,10 +124,10 @@ final class LegSurfaces
         if ([] === $reads || \in_array(null, $reads, true)) {
             return null;
         }
-        $out = ['distanceM' => 0, 'surfaces' => ['paved' => 0, 'gravel' => 0, 'rough' => 0, 'unknown' => 0, 'busy' => 0, 'cycle' => 0, 'signals' => 0],
+        $out = ['distanceM' => 0, 'surfaces' => ['paved' => 0, 'gravel' => 0, 'rough' => 0, 'unknown' => 0, 'busy' => 0, 'cycle' => 0, 'sand' => 0, 'signals' => 0],
             'runs' => [], 'busyRuns' => [], 'recorded' => false, 'quality' => ['smoothness' => [], 'tracktype' => []], 'speeds' => [],
             'detailRuns' => ['smoothness' => [], 'tracktype' => [], 'speeds' => []]];
-        /** @var list<array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}}> $reads */
+        /** @var list<array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, sand: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}}> $reads */
         foreach ($reads as $read) {
             $off = $out['distanceM'];
             foreach ($read['surfaces'] as $k => $m) {
@@ -213,7 +213,7 @@ final class LegSurfaces
      * @param list<list<array{0: float, 1: float}>> $lines      [lat, lng] pairs per leg
      * @param string                                $shapeMatch `edge_walk` for the engine's own route, `map_snap` for any other line
      *
-     * @return list<array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}}|null>
+     * @return list<array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, sand: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}}|null>
      */
     public function readMany(array $lines, string $shapeMatch = 'edge_walk'): array
     {
@@ -254,7 +254,7 @@ final class LegSurfaces
     /**
      * @param list<array{0: float, 1: float}> $coords
      *
-     * @return array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}}|null
+     * @return array{surfaces: array{paved: int, gravel: int, rough: int, unknown: int, busy: int, cycle: int, sand: int, signals: int}, streets: list<array{0: int, 1: string|null, 2: string}>, runs: list<array{0: int, 1: string}>, busyRuns: list<array{0: int, 1: int}>, recorded: bool, quality: array{smoothness: array<string, int>, tracktype: array<string, int>}, speeds: array<string, int>, detailRuns: array{smoothness: list<array{0: int, 1: int, 2: string}>, tracktype: list<array{0: int, 1: int, 2: string}>, speeds: list<array{0: int, 1: int, 2: string}>}}|null
      */
     private function result(ResponseInterface $res, array $coords): ?array
     {
@@ -287,7 +287,8 @@ final class LegSurfaces
             }
             $list[] = [(int) round($from), (int) round($to), $value];
         };
-        $metres = ['paved' => 0.0, 'gravel' => 0.0, 'rough' => 0.0, 'unknown' => 0.0, 'busy' => 0.0, 'cycle' => 0.0];
+        // `sand` is part of `rough`, counted apart as well: a gravel bike seeks rough ground, never sand (route-planner.md 4.2b).
+        $metres = ['paved' => 0.0, 'gravel' => 0.0, 'rough' => 0.0, 'unknown' => 0.0, 'busy' => 0.0, 'cycle' => 0.0, 'sand' => 0.0];
         $signals = 0;
         $streets = [];
         // Where each surface class starts along the leg, one run per class change (route-planner.md section 4.4a): the
@@ -308,6 +309,9 @@ final class LegSurfaces
                 $way = $recorded[is_numeric($edge['way_id'] ?? null) ? (int) $edge['way_id'] : 0] ?? null;
                 if (null !== $way && null !== $way['surface']) {
                     $class = self::RECORDED_CLASS[$way['surface']] ?? 'unknown';
+                    if ('sand' === $way['surface']) {
+                        $metres['sand'] += $length;
+                    }
                 } elseif (\in_array($use, self::UNGUESSED_USES, true) || ('road' === $use && \in_array($road, self::UNGUESSED_ROADS, true))) {
                     $class = 'unknown';
                 }

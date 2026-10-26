@@ -258,7 +258,7 @@ repeated below.
 
 ## A. Map & surface, per road or stretch
 - **Form:**
-  - *surface* (asphalt · concrete · paving stones · sett / pavé · compacted · fine gravel · gravel · dirt · rock)
+  - *surface* (asphalt · concrete · paving stones · sett / pavé · compacted · fine gravel · gravel · dirt · sand · rock)
   - *road type* (main road · local road · residential street · farm or forest track · path or trail · cycleway)
   - *smoothness* (excellent → very bad)
   - *traffic* (quiet · moderate · busy · car-free), one answer per edit

@@ -48,7 +48,7 @@ final class RouteRoadsEndpointTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         $body = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
-        self::assertSame(['paved' => 1500, 'gravel' => 600, 'rough' => 0, 'unknown' => 0, 'busy' => 1500, 'cycle' => 0, 'signals' => 0], $body['surfaces']);
+        self::assertSame(['paved' => 1500, 'gravel' => 600, 'rough' => 0, 'unknown' => 0, 'busy' => 1500, 'cycle' => 0, 'sand' => 0, 'signals' => 0], $body['surfaces']);
         self::assertSame(2100, $body['distanceM']);
         self::assertSame(['70' => 1500, 'unset' => 600], $body['speeds']);
         self::assertSame([[0, 1500, '70'], [1500, 2100, 'unset']], $body['detailRuns']['speeds']);
