@@ -1,0 +1,80 @@
+web/tests/Elevation/LegSurfacesTest.php
+  s_086f006d5a9290::t_c5f2514a45104d 364,380-381
+  s_086f006d5a9290::t_8911b63179d8b2 363,365-379
+  s_086f006d5a9290::t_fa7539e8630bd4 382
+web/translations/messages.nl.yaml
+  s_086f006d5a9290::t_72f30f52d284c2 1432-1433
+web/translations/messages.fr.yaml
+  s_086f006d5a9290::t_72f30f52d284c2 1430-1431
+web/assets/map/plan.js
+  s_086f006d5a9290::t_72f30f52d284c2 781
+docs/specs/route-planner.md
+  s_086f006d5a9290::t_72f30f52d284c2 662-666,668-676,683-691
+  s_086f006d5a9290::t_0b1e7dc8b4ab6a 677-682
+  s_086f006d5a9290::t_7ee1ad910d6821 650-661,667
+web/translations/messages.de.yaml
+  s_086f006d5a9290::t_72f30f52d284c2 1435-1436
+web/src/Elevation/LegSurfaces.php
+  s_086f006d5a9290::t_ecc767d82f0a25 112,183-186,235,276,323-324,386-392,394-395
+  s_086f006d5a9290::t_5b51a610eaa86f 187,262,393,396
+web/src/Elevation/BridgeHeights.php
+  s_086f006d5a9290::t_f6b0f6d10d26c0 102-105,128-130,156-183,186-196,199-201
+  s_086f006d5a9290::t_9bfac47fabc595 22-25,42-44,50,56,58,142-144,146-147
+  s_086f006d5a9290::t_ecc767d82f0a25 11-14,16-21,35-40,47-48,59,61-62,65,69,71-75,77,79-81,83,96-101,106-107,110,112-120,122-123,125-127,131-132,134,136,138-140,148-155,197,204-251
+  s_086f006d5a9290::t_540ad1f531a976 67-68,109,111,124,137,141,145,203
+  s_086f006d5a9290::t_fea4bc2b24d198 184-185
+  s_086f006d5a9290::t_9d9591a03e2985 52-53,63-64,66,76,78,82,84,108
+  s_086f006d5a9290::t_bae05ba6dea28a 1-10,15,26-34,41,45-46,49,51,54-55,57,60,70,85-95,121,133,135,198,202,252-253
+web/tests/Elevation/BridgeHeightsTest.php
+  s_086f006d5a9290::t_cc53153f14f776 118-126,128-131,133-138
+  s_086f006d5a9290::t_c5f2514a45104d 27,29,47,60,72,81-93,96-97,101-116
+  s_086f006d5a9290::t_bae05ba6dea28a 53-56,59,63-67
+  s_086f006d5a9290::t_55cb62ae0c1aa1 32-33,36,94-95,98-100
+  s_086f006d5a9290::t_f6b0f6d10d26c0 127,132
+  s_086f006d5a9290::t_8911b63179d8b2 1-26,28,30-31,34-35,37-46,48-52,57-58,61-62,68-71,73-80,117,139
+web/assets/map/leg-store.js
+  s_086f006d5a9290::t_7399d31e14a9dc 30-31
+  s_086f006d5a9290::t_4716618fb0e655 27-29
+web/translations/messages.en.yaml
+  s_086f006d5a9290::t_72f30f52d284c2 2026-2027
+web/src/Controller/PlanController.php
+  s_086f006d5a9290::t_ecc767d82f0a25 511-517,543-544
+  s_086f006d5a9290::t_9bfac47fabc595 522,531-533
+  s_086f006d5a9290::t_fef3f0d4c6d07e 12,518-521,523-526
+web/tests/js/leg-store.test.mjs
+  s_086f006d5a9290::t_f9d6e348444300 52,56-57
+  s_086f006d5a9290::t_7399d31e14a9dc 54,58-60
+  s_086f006d5a9290::t_87ee2b3a4e6a21 53,55
+  s_086f006d5a9290::t_f05aa0b515d972 61
+web/translations/messages.es.yaml
+  s_086f006d5a9290::t_72f30f52d284c2 2033-2034
+web/tests/js/plan-model.test.mjs
+  s_086f006d5a9290::t_55cb62ae0c1aa1 1000-1014
+  s_086f006d5a9290::t_f9d6e348444300 11,996-999,1015-1028
+web/assets/map/plan-model.js
+  s_086f006d5a9290::t_7399d31e14a9dc 157-167,173-180,194-195,1122
+  s_086f006d5a9290::t_9bfac47fabc595 128-129,132-134,136-137,141
+  s_086f006d5a9290::t_f9d6e348444300 119-122,124,146
+  s_086f006d5a9290::t_3962c4f1ea6976 125-127,138-140,142-145,147-148
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1959b3593b47f969c8455c783d5f8f592b4df443",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_086f006d5a9290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97afd631-7f48-4430-aac8-2c62f5b7a119",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
