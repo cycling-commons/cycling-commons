@@ -1,0 +1,39 @@
+web/assets/map/ride-scope.js
+  s_086f006d5a9290::t_ad2291e32ffc0f 43-45
+  s_086f006d5a9290::t_e4cf348e58d1ac 73-74
+  s_086f006d5a9290::t_a27bf491349a02 31-35,37-41,46-72,75-82
+web/tests/js/plan-wiring.test.cjs
+  s_086f006d5a9290::t_e4cf348e58d1ac 607-611,614-615,667-670
+  s_086f006d5a9290::t_b9184e73b5032a 671
+docs/specs/route-planner.md
+  s_086f006d5a9290::t_3c0773cbde1cca 1283-1292
+  s_086f006d5a9290::t_a1392e1663db42 1293-1295
+  s_086f006d5a9290::t_f89318c506c537 1296-1300
+web/tests/js/ride-scope.test.mjs
+  s_086f006d5a9290::t_e4cf348e58d1ac 10,64-68,70-89
+  s_086f006d5a9290::t_1865487e78e804 69
+web/assets/map/plan.js
+  s_086f006d5a9290::t_a27bf491349a02 25,350-353,355,357,359,369-372
+  s_086f006d5a9290::t_64dc326b1f9ea2 374-375,407,527,1901
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1045e32a57aac4736f0668ad1cac5dc01aa3fc25",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_086f006d5a9290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97afd631-7f48-4430-aac8-2c62f5b7a119",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
