@@ -8,6 +8,10 @@ namespace App\Tests\Onboarding;
 
 use App\Catalog\CountryTimezones;
 use App\Catalog\RegionRegistryProvider;
+use App\Coverage\CoverageManifest;
+use App\Coverage\RoadPiecesManifest;
+use App\Coverage\RoutesManifest;
+use App\Coverage\SurfaceManifest;
 use App\Entity\User;
 use App\Onboarding\Countries;
 use Doctrine\DBAL\Connection;
@@ -154,6 +158,30 @@ final class CountryCommandsTest extends KernelTestCase
 
         self::assertSame('live', $this->db()->fetchOne("SELECT status FROM country WHERE code = 'XA'"));
         self::assertNotNull($this->db()->fetchOne("SELECT live_at FROM country WHERE code = 'XA'"));
+    }
+
+    public function testMarkLiveForgetsTheCachedTileManifests(): void
+    {
+        self::bootKernel();
+        $this->seed();
+        $this->command('app:country:apply', ['country' => 'XA'])->assertCommandIsSuccessful();
+        $cache = static::getContainer()->get('cache.app');
+        $keys = [];
+        foreach ([CoverageManifest::class, SurfaceManifest::class, RoutesManifest::class, RoadPiecesManifest::class] as $class) {
+            $key = (string) (new \ReflectionMethod($class, 'cacheKey'))->invoke(static::getContainer()->get($class));
+            $cache->get($key, static fn (): array => ['stale' => true]);
+            $keys[] = $key;
+        }
+
+        self::assertSame(1, $this->command('app:country:mark-live', ['country' => 'XB'])->getStatusCode(), 'XB has nothing to mark live');
+        foreach ($keys as $key) {
+            self::assertTrue($cache->getItem($key)->isHit(), 'a refused mark-live keeps '.$key);
+        }
+
+        $this->command('app:country:mark-live', ['country' => 'XA'])->assertCommandIsSuccessful();
+        foreach ($keys as $key) {
+            self::assertFalse($cache->getItem($key)->isHit(), $key.' must be re-read after go-live');
+        }
     }
 
     public function testStatusPrintsOneLinePerCountry(): void

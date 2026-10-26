@@ -98,6 +98,26 @@ abstract class BucketManifest
         }
     }
 
+    /**
+     * Drop the cached manifest so the next page view reads the bucket again.
+     * For a step that changes what the map must show before the TTL runs out
+     * (onboarding's mark-live). False when the cache could not answer.
+     */
+    final public function forget(): bool
+    {
+        $this->discardPending();
+        try {
+            return $this->cache->delete($this->cacheKey());
+        } catch (\Throwable $e) {
+            $this->logger->warning($this->cacheUnavailableMessage(), [
+                'manifest_url' => $this->manifestUrl,
+                'exception' => $e,
+            ]);
+
+            return false;
+        }
+    }
+
     /** Whether this manifest still has to be read, or a pin/flag makes it moot. */
     abstract protected function needsManifest(): bool;
 
