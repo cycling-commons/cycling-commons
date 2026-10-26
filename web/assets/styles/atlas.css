@@ -177,6 +177,11 @@ h2.disp{font-family:var(--serif);font-weight:500;font-size:clamp(1.8rem,3.4vw,2.
 /* inline text links (in prose) — visible by default */
 .lead a,.tldr a,.note a,.disc a,p a{color:var(--clay);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px;font-weight:500}
 .lead a:hover,.tldr a:hover,.note a:hover,.disc a:hover,p a:hover{color:var(--trail)}
+/* On a dark hero the clay of a text link is too dark to read: the link takes
+   the hero's own light text and keeps the trail underline. Plain text links
+   only; a button in a hero has a class and keeps its own colours. */
+:is(.lhero,.rhero,.chero,.ahero,.dhero,.phero,.shero,.uhero) :is(p,.lead) a:not([class]){color:var(--paper);text-decoration-color:var(--trail)}
+:is(.lhero,.rhero,.chero,.ahero,.dhero,.phero,.shero,.uhero) :is(p,.lead) a:not([class]):hover{color:var(--trail)}
 
 /* buttons + chips */
 /* Checkboxes and radios, site-wide. System blue appears nowhere else here.
