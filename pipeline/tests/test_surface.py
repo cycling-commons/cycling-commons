@@ -433,6 +433,18 @@ _GATE_OSM = """<?xml version="1.0" encoding="UTF-8"?>
     <nd ref="1"/><nd ref="2"/>
     <tag k="highway" v="motorway"/><tag k="tracktype" v="grade1"/>
   </way>
+  <way id="14" version="1">
+    <nd ref="1"/><nd ref="2"/>
+    <tag k="highway" v="cycleway"/><tag k="surface" v="asphalt"/><tag k="bridge" v="viaduct"/>
+  </way>
+  <way id="15" version="1">
+    <nd ref="1"/><nd ref="2"/>
+    <tag k="highway" v="cycleway"/><tag k="tunnel" v="building_passage"/>
+  </way>
+  <way id="16" version="1">
+    <nd ref="1"/><nd ref="2"/>
+    <tag k="highway" v="cycleway"/><tag k="bridge" v="no"/><tag k="tunnel" v="no"/>
+  </way>
 </osm>
 """
 
@@ -447,9 +459,24 @@ def test_the_collector_keeps_only_contract_tracktype_and_smoothness_values(tmp_p
     ways = []
     stream_surface_ways(osm, contract, ways.append)
     by_ref = {w.ref: w for w in ways}
-    assert set(by_ref) == {"way/11", "way/12"}
+    assert set(by_ref) == {"way/11", "way/12", "way/14", "way/15", "way/16"}
     assert (by_ref["way/11"].sm, by_ref["way/11"].tt) == ("bad", "grade2")
     assert (by_ref["way/12"].sm, by_ref["way/12"].tt) == ("", "")
+
+
+def test_the_collector_reads_any_bridge_or_tunnel_tag_but_no(tmp_path, contract):
+    # The Merwedebrug's cycle path is bridge=viaduct, which the routing engine
+    # does not call a bridge (owner 2026-10-26): the planner's heights dipped to
+    # the river and "climbed" its far end. Any value but `no` is a structure.
+    from coverage.surface import stream_surface_ways
+
+    osm = tmp_path / "gate.osm"
+    osm.write_text(_GATE_OSM)
+    ways = []
+    stream_surface_ways(osm, contract, ways.append)
+    st = {w.ref: w.st for w in ways}
+    assert (st["way/14"], st["way/15"], st["way/16"], st["way/11"]) == ("bridge", "tunnel", "", "")
+    assert contract.surface["structures"]["tags"] == ["bridge", "tunnel"]
 
 
 def test_tracktype_values_are_the_five_osm_grades(contract):
@@ -478,6 +505,7 @@ def test_the_ways_file_lists_each_way_with_a_recorded_answer(tmp_path, contract,
         SurfaceWay("way/4", "unverified", "residential", "", [(4.1, 50.7), (4.11, 50.7)], sm="good"),
         SurfaceWay("way/5", "unverified", "track", "", [(4.1, 50.7), (4.11, 50.7)]),
         SurfaceWay("way/6", "paved", "primary", "", [(9.1, 45.7), (9.11, 45.7)], sm="excellent"),
+        SurfaceWay("way/7", "unverified", "cycleway", "", [(4.1, 50.7), (4.11, 50.7)], st="bridge"),
     ]
     monkeypatch.setattr(mod, "stream_surface_ways", lambda pbf, contract, emit: [emit(w) for w in ways])
     ways_out = tmp_path / "w.tsv"
@@ -488,14 +516,16 @@ def test_the_ways_file_lists_each_way_with_a_recorded_answer(tmp_path, contract,
         keep=lambda coords: coords[0][0] < 9.0)
     # COPY text format: tab-separated, \N for NULL. A way with nothing
     # recorded (way/5) has no row, and a way the owner rule gives to another
-    # country (way/6) has none either.
+    # country (way/6) has none either. A bridge with nothing else recorded
+    # (way/7) has one: the planner lays its deck.
     assert ways_out.read_text().splitlines() == [
-        "1\tgravel\tbad\tgrade2",
-        "2\tpaved\t\\N\t\\N",
-        "3\t\\N\t\\N\tgrade4",
-        "4\t\\N\tgood\t\\N",
+        "1\tgravel\tbad\tgrade2\t\\N",
+        "2\tpaved\t\\N\t\\N\t\\N",
+        "3\t\\N\t\\N\tgrade4\t\\N",
+        "4\t\\N\tgood\t\\N\t\\N",
+        "7\t\\N\t\\N\t\\N\tbridge",
     ]
-    assert counts.ways == 4
+    assert counts.ways == 5
 
 
 def test_no_ways_file_is_written_unless_asked(tmp_path, contract, monkeypatch):

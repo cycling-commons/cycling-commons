@@ -25,7 +25,7 @@ Three artifacts, from ONE pass over the PBF (2026-08-12):
   planning scale, for ~1% of the bytes.
 
 The same pass also writes the **way table file**: each way's recorded surface
-class, smoothness and tracktype by OSM way id, which the runner loads into
+class, smoothness, tracktype and structure (bridge or tunnel) by OSM way id, which the runner loads into
 `coverage_way_surface` (coverage.way_surface) for the route planner to look up
 the ways Valhalla routes over. It is the one table this pass feeds, keyed by
 way id with no geometry; the tiles read nothing from it.
@@ -91,6 +91,9 @@ class SurfaceWay:
     # OSM tracktype when it is one the contract names (surface.tracktype), else
     # ''. Read by the way table only: no tile carries it.
     tt: str = ""
+    # 'bridge' or 'tunnel' when the way carries that tag with any value but the
+    # contract's `none` (surface.structures), else ''. Way table only.
+    st: str = ""
 
 
 def canonical_class(surface: str | None, highway: str, contract: Contract) -> str | None:
@@ -154,6 +157,8 @@ class _Collector(osmium.SimpleHandler):
         # the client to invent a colour for (contract surface.quality).
         self._smoothness = frozenset(contract.surface["quality"]["values"])
         self._tracktype = frozenset(contract.surface["tracktype"]["values"])
+        self._structures = tuple(contract.surface["structures"]["tags"])
+        self._not_structure = frozenset(contract.surface["structures"]["none"])
 
     def way(self, w) -> None:
         tags = {t.k: t.v for t in w.tags}
@@ -178,6 +183,9 @@ class _Collector(osmium.SimpleHandler):
         tt = tags.get("tracktype", "")
         if tt not in self._tracktype:
             tt = ""
+        # The engine calls only bridge=yes a bridge; bridge=viaduct carries the
+        # Merwedebrug's cycle path (owner 2026-10-26).
+        st = next((k for k in self._structures if tags.get(k) and tags[k] not in self._not_structure), "")
         # 'way/<id>', NOT 'w<id>'. This ref is what the
         # drawer hands to /improve, and materialize-on-edit then creates an A
         # item carrying it as source_ref — which every other path in the
@@ -194,7 +202,7 @@ class _Collector(osmium.SimpleHandler):
         # rendered from a localised dictionary at draw time, so gluing the two
         # here would freeze one English word into a name field for good.
         self._emit(SurfaceWay(f"way/{w.id}", cls, highway, tags.get("name", ""), coords,
-                              sm=sm, mtb=mtb, tt=tt))
+                              sm=sm, mtb=mtb, tt=tt, st=st))
 
 
 def stream_surface_ways(pbf_path: Path, contract: Contract,
@@ -404,7 +412,7 @@ def extract_region(pbf_path: Path, contract: Contract, *,
 
     `ways_out` is the way table's file (coverage.way_surface): one line per kept
     way with at least one recorded answer, as PostgreSQL COPY text,
-    `<way id>\\t<surface class>\\t<smoothness>\\t<tracktype>`, with `\\N` for an
+    `<way id>\\t<surface class>\\t<smoothness>\\t<tracktype>\\t<structure>`, with `\\N` for an
     answer nobody has recorded. A surface class is NULL for `unverified`. Every
     value comes from a contract list, so none needs COPY escaping.
     """
@@ -424,9 +432,9 @@ def extract_region(pbf_path: Path, contract: Contract, *,
                 counts["foreign"] += 1
                 return
             unrecorded = way.cls == untagged_class
-            if wf is not None and (not unrecorded or way.sm or way.tt):
+            if wf is not None and (not unrecorded or way.sm or way.tt or way.st):
                 wf.write(f"{way.ref.rsplit('/', 1)[1]}\t{_NULL if unrecorded else way.cls}"
-                         f"\t{way.sm or _NULL}\t{way.tt or _NULL}\n")
+                         f"\t{way.sm or _NULL}\t{way.tt or _NULL}\t{way.st or _NULL}\n")
                 counts["ways"] += 1
             if not unrecorded:
                 cf.write(feature_json(way, ridtok=ridtok, cctok=cctok) + "\n")

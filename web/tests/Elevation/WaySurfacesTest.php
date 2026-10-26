@@ -26,24 +26,25 @@ final class WaySurfacesTest extends KernelTestCase
         $db = self::getContainer()->get('doctrine.dbal.default_connection');
         $this->db = $db;
         // The pipeline's own DDL (pipeline/coverage/way_surface.py); the test transaction takes it away again.
-        $db->executeStatement('CREATE TABLE IF NOT EXISTS coverage_way_surface (way_id bigint PRIMARY KEY, country_code text NOT NULL, surface text, smoothness text, tracktype text)');
+        $db->executeStatement('CREATE TABLE IF NOT EXISTS coverage_way_surface (way_id bigint PRIMARY KEY, country_code text NOT NULL, surface text, smoothness text, tracktype text, structure text)');
         $db->executeStatement('CREATE TABLE IF NOT EXISTS coverage_way_surface_country (country_code text PRIMARY KEY, inputs text NOT NULL, ways integer NOT NULL, loaded_at timestamptz NOT NULL DEFAULT now())');
         $db->executeStatement("INSERT INTO region (slug, name, geom, area_km2, country_code, admin_level, created_at, updated_at)
              VALUES ('way-surfaces-be', 'Way surfaces BE', ST_SetSRID(ST_MakeEnvelope(5.0, 50.0, 6.0, 51.0), 4326), 100, 'BE', 4, NOW(), NOW()),
                     ('way-surfaces-nl', 'Way surfaces NL', ST_SetSRID(ST_MakeEnvelope(4.5, 52.0, 5.5, 53.0), 4326), 100, 'NL', 4, NOW(), NOW())");
-        $db->executeStatement("INSERT INTO coverage_way_surface (way_id, country_code, surface, smoothness, tracktype) VALUES
-             (107819295, 'BE', 'paved', 'good', NULL), (15, 'BE', NULL, NULL, 'grade3')");
+        $db->executeStatement("INSERT INTO coverage_way_surface (way_id, country_code, surface, smoothness, tracktype, structure) VALUES
+             (107819295, 'BE', 'paved', 'good', NULL, NULL), (15, 'BE', NULL, NULL, 'grade3', NULL), (16, 'BE', 'paved', NULL, NULL, 'bridge')");
     }
 
     public function testALoadedCountryAnswersWhatIsRecordedAndLeavesTheRestOut(): void
     {
         $this->db->executeStatement("INSERT INTO coverage_way_surface_country (country_code, inputs, ways) VALUES ('BE', 'x', 2)");
 
-        $got = (new WaySurfaces($this->db))->forLeg(50.49, 5.86, [107819295, 15, 99]);
+        $got = (new WaySurfaces($this->db))->forLeg(50.49, 5.86, [107819295, 15, 16, 99]);
 
         self::assertSame([
-            107819295 => ['surface' => 'paved', 'smoothness' => 'good', 'tracktype' => null],
-            15 => ['surface' => null, 'smoothness' => null, 'tracktype' => 'grade3'],
+            107819295 => ['surface' => 'paved', 'smoothness' => 'good', 'tracktype' => null, 'structure' => null],
+            15 => ['surface' => null, 'smoothness' => null, 'tracktype' => 'grade3', 'structure' => null],
+            16 => ['surface' => 'paved', 'smoothness' => null, 'tracktype' => null, 'structure' => 'bridge'],
         ], $got);
     }
 
@@ -58,5 +59,16 @@ final class WaySurfacesTest extends KernelTestCase
     public function testNoCountryLoadedYetAsksNothing(): void
     {
         self::assertNull((new WaySurfaces($this->db))->forLeg(50.49, 5.86, [107819295]));
+    }
+
+    /** A table the pipeline filled before it recorded structures has no such column: its ways read as none. */
+    public function testATableFromBeforeStructuresReadsNone(): void
+    {
+        $this->db->executeStatement('ALTER TABLE coverage_way_surface DROP COLUMN structure');
+        $this->db->executeStatement("INSERT INTO coverage_way_surface_country (country_code, inputs, ways) VALUES ('BE', 'x', 2)");
+
+        $got = (new WaySurfaces($this->db))->forLeg(50.49, 5.86, [107819295]);
+
+        self::assertSame([107819295 => ['surface' => 'paved', 'smoothness' => 'good', 'tracktype' => null, 'structure' => null]], $got);
     }
 }

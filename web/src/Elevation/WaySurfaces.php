@@ -33,8 +33,8 @@ final class WaySurfaces implements RecordedWays
     /**
      * @param list<int> $wayIds the leg's ways, from the engine's `edge.way_id`
      *
-     * @return array<int, array{surface: string|null, smoothness: string|null, tracktype: string|null}>|null by way id; a
-     *                                                                                                       way with nothing recorded is absent
+     * @return array<int, array{surface: string|null, smoothness: string|null, tracktype: string|null, structure: string|null}>|null by way
+     *                                                                                                                               way id; a way with nothing recorded is absent
      */
     #[\Override]
     public function forLeg(float $lat, float $lng, array $wayIds): ?array
@@ -54,8 +54,10 @@ final class WaySurfaces implements RecordedWays
         if ([] === $ids) {
             return [];
         }
+        // The structure through the row's JSON: a table the pipeline filled before it recorded structures has no such
+        // column, and reads as none until its next load adds it.
         $rows = $this->db->fetchAllAssociative(
-            'SELECT way_id, surface, smoothness, tracktype FROM coverage_way_surface WHERE way_id IN (:ids)',
+            "SELECT way_id, surface, smoothness, tracktype, to_jsonb(s)->>'structure' AS structure FROM coverage_way_surface s WHERE way_id IN (:ids)",
             ['ids' => $ids],
             ['ids' => ArrayParameterType::INTEGER],
         );
@@ -65,6 +67,7 @@ final class WaySurfaces implements RecordedWays
                 'surface' => \is_string($row['surface']) ? $row['surface'] : null,
                 'smoothness' => \is_string($row['smoothness']) ? $row['smoothness'] : null,
                 'tracktype' => \is_string($row['tracktype']) ? $row['tracktype'] : null,
+                'structure' => \is_string($row['structure']) ? $row['structure'] : null,
             ];
         }
 

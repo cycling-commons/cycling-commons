@@ -278,6 +278,13 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
             raise ValueError(f"contract surface.tracktype section missing {required!r}")
     if not surface["tracktype"]["values"]:
         raise ValueError("contract surface.tracktype.values must name at least one value")
+    # The structures the way table records: a deck where the engine sees none.
+    for required in ("tags", "none"):
+        if required not in surface.get("structures", {}):
+            raise ValueError(f"contract surface.structures section missing {required!r}")
+    if surface["structures"]["tags"] != ["bridge", "tunnel"]:
+        raise ValueError("contract surface.structures.tags must be [\"bridge\", \"tunnel\"]: the way table "
+                         "records the tag's own name, and the planner reads exactly those two")
 
     for required in ("cellZoom", "minZoom", "maxZoom", "tileProps"):
         if required not in surface.get("gaps", {}):

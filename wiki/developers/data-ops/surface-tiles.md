@@ -217,12 +217,15 @@ The route planner says what a ride's roads are made of from what
 OpenStreetMap records, not from what the routing engine guesses where a road
 has no `surface` tag. The same streaming pass writes a fourth file per country,
 `surface_<slug>_ways.tsv`: one line per way it keeps that has a surface class,
-a smoothness or a tracktype recorded.
+a smoothness, a tracktype or a structure recorded. The structure is `bridge` or
+`tunnel`, from any value of that tag but `no`: the routing engine sees only
+`bridge=yes`, and the planner lays a bridge deck where this says bridge.
 
-<!-- CODE-ILLUSTRATIVE two lines of a way file: way id, surface class, smoothness, tracktype, \N for none -->
+<!-- CODE-ILLUSTRATIVE three lines of a way file: way id, surface class, smoothness, tracktype, structure, \N for none -->
 ```text
-107819295	paved	good	\N
-3	\N	\N	grade4
+107819295	paved	good	\N	\N
+3	\N	\N	grade4	\N
+716714250	paved	\N	\N	bridge
 ```
 
 `pipeline/coverage/way_surface.py` loads each country into

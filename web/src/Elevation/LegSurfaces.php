@@ -333,6 +333,8 @@ final class LegSurfaces
             $class = self::CLASS_OF[\is_string($edge['surface'] ?? null) ? $edge['surface'] : ''] ?? 'unknown';
             $sand = false;
             $detail = ['smoothness' => null, 'tracktype' => null];
+            // A bridge or a tunnel the engine does not see (bridge=viaduct, the Merwedebrug), as OpenStreetMap records it.
+            $structure = null;
             if (null !== $recorded) {
                 $way = $recorded[is_numeric($edge['way_id'] ?? null) ? (int) $edge['way_id'] : 0] ?? null;
                 if (null !== $way && null !== $way['surface']) {
@@ -342,6 +344,7 @@ final class LegSurfaces
                     $class = 'unknown';
                 }
                 $detail = ['smoothness' => $way['smoothness'] ?? null, 'tracktype' => $way['tracktype'] ?? null];
+                $structure = $way['structure'] ?? null;
             }
             $own = [] === $curated ? null : self::curatedOn($edge, $shape, $curated);
             if (null !== $own) {
@@ -384,7 +387,7 @@ final class LegSurfaces
                 }
             }
             foreach (['bridge', 'tunnel'] as $kind) {
-                if (true !== ($edge[$kind] ?? null)) {
+                if (true !== ($edge[$kind] ?? null) && $kind !== $structure) {
                     continue;
                 }
                 $last = array_key_last($structureRuns[$kind]);

@@ -490,6 +490,11 @@
         "grade5"
       ]
     },
+    "structures": {
+      "_comment": "A bridge or a tunnel, from any value of these OSM tags but the ones in `none` (bridge=viaduct, movable, aqueduct; tunnel=building_passage, culvert). Read by the surface pass for the way table only (coverage_way_surface.structure): the routing engine calls only bridge=yes a bridge, so the planner lays a deck where this says bridge too (route-planner.md section 4.4). The first tag that matches wins.",
+      "tags": ["bridge", "tunnel"],
+      "none": ["no"]
+    },
     "_roadTypeChannel": "Road type is NOT a colour in this scale (owner 2026-08-12). `highway=cycleway` used to override the surface class, which answered two questions with one key. The raw highway value rides every feature as `hw` (tileProps) and the client draws a cycleway as a pale core inside whatever surface colour it has."
   },
   "routes": {

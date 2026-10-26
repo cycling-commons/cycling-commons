@@ -3,9 +3,10 @@
 
 The route planner (POST /map/plan/leg) asks Valhalla which ways a leg rides
 and looks each `edge.way_id` up here. The rows are what the surface pass
-already reads: the contract class of the `surface` tag, the smoothness and the
-tracktype, each NULL when OSM records none (or a value the contract does not
-name). A way with none of the three has no row.
+already reads: the contract class of the `surface` tag, the smoothness, the
+tracktype and the structure (`bridge` or `tunnel`, contract surface.structures),
+each NULL when OSM records none (or a value the contract does not name). A way
+with none of the four has no row.
 
 One row in coverage_way_surface_country per loaded country says its ways are
 in: a way missing from a loaded country is a way nobody has recorded, and a
@@ -30,9 +31,13 @@ CREATE TABLE IF NOT EXISTS coverage_way_surface (
   country_code text   NOT NULL,
   surface      text   NULL,
   smoothness   text   NULL,
-  tracktype    text   NULL
+  tracktype    text   NULL,
+  structure    text   NULL
 )
 """
+
+# A table from before structures gains the column.
+_STRUCTURE_DDL = "ALTER TABLE coverage_way_surface ADD COLUMN IF NOT EXISTS structure text NULL"
 
 # A country reload deletes by country; without this it would scan the table.
 _INDEX_DDL = """
@@ -54,7 +59,8 @@ CREATE TEMP TABLE way_surface_stage (
   way_id     bigint NOT NULL,
   surface    text,
   smoothness text,
-  tracktype  text
+  tracktype  text,
+  structure  text
 ) ON COMMIT DROP
 """
 
@@ -62,15 +68,16 @@ CREATE TEMP TABLE way_surface_stage (
 # california + colorado). ON CONFLICT: a way another country held until the
 # owner rule moved it changes country here, before that country's own reload.
 _SWAP_INSERT = """
-INSERT INTO coverage_way_surface (way_id, country_code, surface, smoothness, tracktype)
-SELECT DISTINCT ON (way_id) way_id, %s::text, surface, smoothness, tracktype
+INSERT INTO coverage_way_surface (way_id, country_code, surface, smoothness, tracktype, structure)
+SELECT DISTINCT ON (way_id) way_id, %s::text, surface, smoothness, tracktype, structure
   FROM way_surface_stage
- ORDER BY way_id, surface, smoothness, tracktype
+ ORDER BY way_id, surface, smoothness, tracktype, structure
 ON CONFLICT (way_id) DO UPDATE
    SET country_code = EXCLUDED.country_code,
        surface      = EXCLUDED.surface,
        smoothness   = EXCLUDED.smoothness,
-       tracktype    = EXCLUDED.tracktype
+       tracktype    = EXCLUDED.tracktype,
+       structure    = EXCLUDED.structure
 """
 
 _MARKER_UPSERT = """
@@ -82,8 +89,9 @@ ON CONFLICT (country_code) DO UPDATE
 
 
 def ensure_schema(conn: psycopg.Connection) -> None:
-    """Create both tables and the country index when absent."""
+    """Create both tables and the country index when absent, and the structure column."""
     conn.execute(_TABLE_DDL)
+    conn.execute(_STRUCTURE_DDL)
     conn.execute(_INDEX_DDL)
     conn.execute(_MARKER_DDL)
 
@@ -108,7 +116,7 @@ def load_country(conn: psycopg.Connection, country_code: str, files: Iterable[Pa
     with conn.transaction():
         conn.execute(_STAGE_DDL)
         with conn.cursor() as cur:
-            with cur.copy("COPY way_surface_stage (way_id, surface, smoothness, tracktype) "
+            with cur.copy("COPY way_surface_stage (way_id, surface, smoothness, tracktype, structure) "
                           "FROM STDIN") as copy:
                 for path in files:
                     with path.open("rb") as fh:

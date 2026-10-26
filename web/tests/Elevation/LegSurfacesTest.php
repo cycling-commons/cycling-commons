@@ -380,4 +380,28 @@ final class LegSurfacesTest extends TestCase
         self::assertSame([[350, 630], [950, 1030]], $read['bridgeRuns']);
         self::assertSame([[1130, 1330]], $read['tunnelRuns']);
     }
+
+    /**
+     * The Merwedebrug's cycle path is bridge=viaduct in OpenStreetMap, which the engine does not call a bridge (owner
+     * 2026-10-26: the heights dipped to the river and "climbed" the far end): where the recorded way says a bridge or a
+     * tunnel, the leg says so too.
+     */
+    public function testARecordedViaductIsABridgeTheEngineDoesNotSee(): void
+    {
+        $client = $this->client(new MockResponse((string) json_encode(['units' => 'kilometers', 'edges' => [
+            ['way_id' => 46987329, 'surface' => 'paved_smooth', 'length' => 0.2, 'use' => 'cycleway', 'bridge' => false],
+            ['way_id' => 716714250, 'surface' => 'paved_smooth', 'length' => 0.5, 'use' => 'cycleway', 'bridge' => false],
+            ['way_id' => 7110341, 'surface' => 'paved_smooth', 'length' => 0.1, 'use' => 'cycleway', 'bridge' => false],
+            ['way_id' => 8, 'surface' => 'paved', 'length' => 0.1, 'use' => 'road', 'tunnel' => false],
+        ]])), 'http://valhalla.test', [
+            716714250 => ['surface' => 'paved', 'smoothness' => null, 'tracktype' => null, 'structure' => 'bridge'],
+            8 => ['surface' => 'paved', 'smoothness' => null, 'tracktype' => null, 'structure' => 'tunnel'],
+        ], true);
+
+        $read = $client->read([[51.8292, 4.9578], [51.8140, 4.9508]]);
+
+        self::assertNotNull($read);
+        self::assertSame([[200, 700]], $read['bridgeRuns']);
+        self::assertSame([[800, 900]], $read['tunnelRuns']);
+    }
 }

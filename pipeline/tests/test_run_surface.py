@@ -1030,9 +1030,9 @@ def _share(workdir, slug, ways):
 def test_the_way_table_load_end_to_end(db, tmp_path, capsys):
     db.commit()
     db.autocommit = True
-    _share(tmp_path, "north-america-us-california", ["7\tpaved\t\\N\t\\N", "8\tdirt\tbad\tgrade3"])
-    _share(tmp_path, "north-america-us-colorado", ["7\tpaved\t\\N\t\\N", "9\t\\N\t\\N\tgrade5"])
-    _share(tmp_path, "europe-netherlands", ["5\tgravel\t\\N\t\\N"])
+    _share(tmp_path, "north-america-us-california", ["7\tpaved\t\\N\t\\N\t\\N", "8\tdirt\tbad\tgrade3\t\\N"])
+    _share(tmp_path, "north-america-us-colorado", ["7\tpaved\t\\N\t\\N\t\\N", "9\t\\N\t\\N\tgrade5\tbridge"])
+    _share(tmp_path, "europe-netherlands", ["5\tgravel\t\\N\t\\N\t\\N"])
     (tmp_path / "surface_europe-netherlands_ways.tsv").unlink()
     complete = {"NL": ["europe/netherlands"],
                 "US": ["north-america/us/california", "north-america/us/colorado"]}
@@ -1042,9 +1042,10 @@ def test_the_way_table_load_end_to_end(db, tmp_path, capsys):
     assert failed == ["NL ways"]
     assert "[surface] NL: way table load FAILED" in out.err
     assert "[surface] US: 3 ways in the table" in out.out
-    assert db.execute("SELECT way_id, country_code, surface, smoothness, tracktype "
+    assert db.execute("SELECT way_id, country_code, surface, smoothness, tracktype, structure "
                       "FROM coverage_way_surface ORDER BY way_id").fetchall() == [
-        (7, "US", "paved", None, None), (8, "US", "dirt", "bad", "grade3"), (9, "US", None, None, "grade5")]
+        (7, "US", "paved", None, None, None), (8, "US", "dirt", "bad", "grade3", None),
+        (9, "US", None, None, "grade5", "bridge")]
     inputs = run._surface_inputs(tmp_path, ["north-america-us-california", "north-america-us-colorado"])
     assert db.execute("SELECT inputs, ways FROM coverage_way_surface_country "
                       "WHERE country_code = 'US'").fetchone() == (inputs, 3)

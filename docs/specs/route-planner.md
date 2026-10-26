@@ -666,7 +666,13 @@ takes the map to the stop (owner 2026-10-14); hovering a row rings it.
   the deck up to 8 m and the water at 0 m. The leg walk (section 4.4a) asks
   the engine for `edge.bridge` and `edge.tunnel`, and the leg carries
   `bridgeRuns` and `tunnelRuns`, `[from, to]` metres along it, touching runs
-  merged. Before the leg is sent (`App\Elevation\BridgeHeights`), each span
+  merged. The engine calls only `bridge=yes` a bridge; where the recorded way
+  (section 4.4a, `coverage_way_surface.structure`) says `bridge` or `tunnel`,
+  from any value of that tag but `no`, the edge counts as one too: the
+  Merwedebrug's cycle path is `bridge=viaduct`, and its heights dipped to the
+  river and "climbed" 9 m up the far end. A table loaded before the pipeline
+  recorded structures reads as none (`WaySurfaces` reads the column through
+  the row's JSON) until its next load. Before the leg is sent (`App\Elevation\BridgeHeights`), each span
   is scaled from the edges' length to the profile's and widened by one
   sample, 30 m, on both sides, as the two do not line up to the metre. On a
   bridge the deck runs along the upper hull of the samples from the last one
@@ -1194,9 +1200,9 @@ the unnamed road, because the village part of the line has many vertices).
 to the todo"; built 2026-10-19 with smoothness and tracktype, owner: "Why
 more detailed surfaces in bikerouter?", "Yes add them to the spec and build
 it"). The weekly surface pipeline writes, per onboarded country, every way it
-reads that has a surface class, a smoothness or a tracktype recorded to
-`coverage_way_surface` (way id, country, surface class, smoothness,
-tracktype), and marks the country loaded in `coverage_way_surface_country`
+reads that has a surface class, a smoothness, a tracktype or a structure
+recorded to `coverage_way_surface` (way id, country, surface class,
+smoothness, tracktype, structure: `bridge` or `tunnel`), and marks the country loaded in `coverage_way_surface_country`
 (coverage-provider.md section 4). The leg walk asks the engine for
 `edge.way_id` too, and `App\Elevation\WaySurfaces` looks the leg's ways up
 when the leg starts in a loaded country (the region the start lies in names

@@ -867,16 +867,22 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   extract output per share, `surface_<slug>_ways.tsv` (`<slug>` as
   `_line_key`, so a shared region gets `_ie` / `_gb`), one line per way the
   pass selects, the owner rule keeps, and that has a surface class, a
-  smoothness or a tracktype recorded: `<way_id>\t<surface class or \N>\t<smoothness
-  or \N>\t<tracktype or \N>` (PostgreSQL COPY text). `tracktype` comes from
+  smoothness, a tracktype or a structure recorded: `<way_id>\t<surface class or \N>\t<smoothness
+  or \N>\t<tracktype or \N>\t<structure or \N>` (PostgreSQL COPY text). `tracktype` comes from
   the contract's `surface.tracktype` (`grade1` to `grade5`, an unlisted value
-  dropped); it feeds the table only, the tiles do not carry it. The file is
+  dropped); it feeds the table only, the tiles do not carry it. The
+  structure is `bridge` or `tunnel`, from any value of that OSM tag but the
+  contract's `surface.structures.none` (`no`): the routing engine calls only
+  `bridge=yes` a bridge, and the Merwedebrug's cycle path is
+  `bridge=viaduct`, so the planner reads the structure to lay a deck where
+  the engine sees none (route-planner.md section 4.4). The table only, too. The file is
   under the same stamp and currentness rule as the other three, and
   `_surface_inputs` hashes it, so an edit that changes only a smoothness
   reloads the table. `_surface_pass` loads every complete country
   (`pipeline/coverage/way_surface.py`) into `coverage_way_surface` (`way_id`
-  PK, `country_code`, `surface`, `smoothness`, `tracktype`; an index on
-  `country_code` for the per-country reload) and marks it in
+  PK, `country_code`, `surface`, `smoothness`, `tracktype`, `structure`; an
+  index on `country_code` for the per-country reload; `ensure_schema` adds
+  `structure` to a table from before it) and marks it in
   `coverage_way_surface_country` (`country_code` PK, `inputs`, `ways`,
   `loaded_at`): one transaction per country (COPY into a temporary stage,
   delete the country's rows, insert one row per way, a way in two regions of
