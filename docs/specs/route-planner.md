@@ -241,7 +241,9 @@ step lays an orange glowing frame over what it speaks of, above the veil
 and time, the place search, the bike, the map, each checkpoint, and for the
 places step a ring round every pin of ours in view (`spotPoints()`, at most 60,
 one per pin, none under the guide). The frames lie over the veil and under the
-guide, which stays the top layer. The place search is the
+guide, which stays the top layer. On a phone (820 px and narrower) the left
+drawer lies over the map (z-index 1400), so the veil, the frames and the guide
+go over it (1440, 1445, 1450) and stay under the bottom sheet (1550). The place search is the
 panel's third card, after the name and the day (`#planSearchGrp`, owner
 2026-10-18), shown once the ride has a name; once the ride has checkpoints
 it reads "Go to a place" (`map.plan_goto_h`): it moves the map and no longer

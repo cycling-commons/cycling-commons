@@ -494,6 +494,9 @@ test('the guide opens with the planner, remembers the rider\'s choice, and opens
   const mapWrap = twig.slice(twig.indexOf('<main class="map-wrap">'));
   assert.ok(mapWrap.includes('id="planGuide"'), 'the guide is not on the map, in its middle (owner 2026-10-15)');
   assert.match(read('assets/styles/map.css'), /\.cc-plan-guide\{position:absolute;left:50%;top:50%;transform:translate\(-50%,-50%\)/);
+  // On a phone the left drawer (1400) lies over the map; the guide went behind it (owner 2026-10-26).
+  assert.match(read('assets/styles/map.css'), /@media\(max-width:820px\)\{ \.cc-plan-veil\{z-index:1440\} \.cc-guide-glow\{z-index:1445\} \.cc-plan-guide\{z-index:1450\} \}/);
+  assert.match(read('assets/styles/map.css'), /\.dwr\{position:absolute;left:48px;top:0;bottom:0;z-index:1400;/, 'the drawer the guide must go over');
   assert.match(twig, /<button type="button" class="dl-all cc-head-plan" id="planGuideOpen">\{\{ 'map\.plan_guide_open'\|trans \}\}<\/button>/);
   const head = twig.slice(twig.indexOf('<div class="dwr-head">'), twig.indexOf('id="dwr-x"'));
   assert.ok(head.includes('id="planGuideOpen"'), 'How it works is not in the title row (owner 2026-10-17)');

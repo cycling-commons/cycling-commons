@@ -2404,5 +2404,8 @@
   /* Over the ride line a click inserts a checkpoint: the insert cursor beats any layer's hover pointer. */
   .cc-insert .maplibregl-canvas{cursor:copy!important}
   .cc-guide-glow.spot{border-radius:50%}
+  /* On a phone the left drawer (.dwr, 1400) lies over the map: the guide, its frames and its veil go over it, under
+     the bottom sheet (1550). */
+  @media(max-width:820px){ .cc-plan-veil{z-index:1440} .cc-guide-glow{z-index:1445} .cc-plan-guide{z-index:1450} }
 /* The language a pending contribution is written in, after its badge (moderation-and-contribution.md §3.1d). */
 .cc-mod-lang{display:inline-block;margin-left:.5rem;padding:0 .35rem;border:1px solid currentColor;border-radius:3px;opacity:.8}
