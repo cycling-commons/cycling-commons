@@ -7,7 +7,7 @@
 // along rather than one winning and the rest of the ride going unscoped.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { rideScopeFor, scopeKey, planScopeFor } from '../../assets/map/ride-scope.js';
+import { rideScopeFor, scopeKey, planScopeFor, rideRegions } from '../../assets/map/ride-scope.js';
 
 const VAUCLUSE = { id: 11, slug: 'vaucluse', countryCode: 'FR' };
 const DROME = { id: 12, slug: 'drome', countryCode: 'FR' };
@@ -60,4 +60,30 @@ test('the planner scope moves nothing when it is the start region already, or th
   assert.equal(planScopeFor({ kind: 'region', regionIds: [LIEGE.id], countryCode: null }, LIEGE), null);
   assert.equal(planScopeFor({ kind: 'myArea', regionIds: [LIEGE.id], countryCode: null }, null), null);
   assert.equal(planScopeFor({ kind: 'myArea', regionIds: [LIEGE.id], countryCode: null }, {}), null);
+});
+
+/* Owner 2026-10-26: a checkpoint outside the start's region left that region's places unloaded. */
+test('the planner\'s scope is every region of the ride, the start\'s first, and nothing new when it already is', () => {
+  assert.deepEqual(planScopeFor({ kind: 'region', regionIds: [LIEGE.id], countryCode: null }, [LIEGE, VAUCLUSE, LIEGE]),
+    { kind: 'region', regionIds: [LIEGE.id, VAUCLUSE.id], countryCode: null }, 'a region twice counts once, two countries name none');
+  assert.equal(planScopeFor({ kind: 'region', regionIds: [VAUCLUSE.id, DROME.id], countryCode: 'FR' }, [DROME, VAUCLUSE]), null, 'the same set in another order is no change');
+  assert.equal(planScopeFor(null, []), null);
+});
+
+test('a ride\'s regions are its checkpoints\' and those its legs cross, read along the legs', () => {
+  // Three regions side by side along a parallel: west of 5.0 E, 5.0 to 5.1, east of 5.1.
+  const W = { id: 1, countryCode: 'NL' }, M = { id: 2, countryCode: 'NL' }, E = { id: 3, countryCode: 'NL' };
+  const S = {
+    liveRegionAt: lng => (lng < 5.0 ? W : lng < 5.1 ? M : E),
+    regionOfPoint: () => null,
+  };
+  const stops = [{ lng: 4.95, lat: 52 }, { lng: 5.15, lat: 52 }];
+  // Before routing only the checkpoints count: M lies between them, crossed by no checkpoint.
+  assert.deepEqual(rideRegions(stops, [], S).map(x => x.id), [1, 3]);
+  // Once routed, the leg across M adds it, in ride order.
+  const leg = { routed: true, line: [[4.95, 52], [5.15, 52]] };
+  assert.deepEqual(rideRegions(stops, [leg], S).map(x => x.id), [1, 2, 3]);
+  // A checkpoint just outside every outline falls back to the bounding box.
+  const S2 = { liveRegionAt: () => null, regionOfPoint: () => W };
+  assert.deepEqual(rideRegions([{ lng: 4.9, lat: 52 }], [], S2).map(x => x.id), [1]);
 });

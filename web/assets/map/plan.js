@@ -22,7 +22,7 @@ import { setPlanning, isLineOrArea } from './plan-state.js';
 import { seeksUnpaved, gravelCandidates, surfaceLinesNear, GRAVEL_HINTS } from './plan-gravel.js';
 import { CATALOG } from './catalog.js';
 import { layerGlyph, waterKind } from './icons.js';
-import { scopeKey, planScopeFor } from './ride-scope.js';
+import { scopeKey, planScopeFor, rideRegions } from './ride-scope.js';
 import { keepCameraForNextScope } from './scope-ui.js';
 import { MAX_STOPS, ALONG_MAX_POINTS, thinLine, CORRIDOR_M, workFresh, rideFromGpx, waterGapSpan, bestWaterStop, stopRows, legGoesRound, whyThisWay, sliceAlong, stopIndexAt, legKeys, stopKey, insertIndex, REPEAT, repeatRuns, repeatedM, avoidPoints, figures, profileRuns, pointAt, gpxText, barText, createHistory, coverPadding, tickStepKm, gradientSpans, surfaceSpans, rideTime, surfaceBars, gradientBars, durationText, tougherLines, rideFeel, rideHours, defaultStartMin, forecastPageUrl, forecastPoint, heightTicks, tileSurfaceClass, mergeSurfaces, roadDetail, detailSpans, avgKmh, streetAt, stopStreet, roadAt, steepestKm, longestClimb, waterGap, sunTimes, windShares, windSpans, hourSpan } from './plan-model.js';
 
@@ -347,16 +347,16 @@ function clearRide(){
   afterChange();
   restoreRideScope();
 }
-/* While a ride is planned the map's scope is the region of its start (route-planner.md section 5, owner 2026-10-19:
-   "just load the region our ride is in (startpoint of the ride if it spans multiple). Do not show the lighter
-   circle"), whatever the rider's own scope was. Never stored as the rider's own scope; the chip says it comes from
-   the ride. */
+/* While a ride is planned the map's scope is every region it passes through, its start's first (route-planner.md
+   section 5; owner 2026-10-26: a checkpoint clicked outside the start's region left that region's places unloaded),
+   whatever the rider's own scope was. Never stored as the rider's own scope; the chip says it comes from the ride.
+   `regions` is one region or a list in ride order. */
 let scopeBefore = null, scopeSet = null;
-function followRideScope(region){
+function followRideScope(regions){
   const S = window.CCScope;
-  if(!S || !region) return;
+  if(!S || !regions) return;
   const cur = S.get();
-  const next = planScopeFor(cur, region); if(!next) return;
+  const next = planScopeFor(cur, regions); if(!next) return;
   if(scopeBefore == null) scopeBefore = cur;
   // The ride's own framing stays the last word; the scope change would otherwise move the camera.
   keepCameraForNextScope();
@@ -366,14 +366,13 @@ function followRideScope(region){
   const line = document.getElementById('regionLine');
   if(line) line.textContent = line.textContent + ' · ' + (I18N.rcScopeFromRide || 'from your ride');
 }
-/* The scope follows the start as soon as it is on the map (owner 2026-10-17: a map point clicked near Hoorn left
-   the scope near Spa), before any leg is routed; a stop clicked in the Checkpoints list takes it to that stop's
-   region. A stop outside every region asks nothing. */
-function followStopScope(stop){
+/* The scope follows the ride as soon as a checkpoint is on the map (owner 2026-10-17: a map point clicked near Hoorn
+   left the scope near Spa), and again once the legs are routed, when the regions they cross between checkpoints are
+   known. A ride outside every region asks nothing. */
+function followRide(){
   const S = window.CCScope;
-  if(!S || !S.regionOfPointPrecise || !stop) return;
-  const myGen = gen;
-  S.regionOfPointPrecise(stop.lng, stop.lat).then(r => { if(myGen === gen && r) followRideScope(r); }).catch(() => {});
+  if(!S || !S.liveRegionAt || !ride.stops.length) return;
+  followRideScope(rideRegions(ride.stops, ride.legs, S));
 }
 /* The rider's own scope back when the ride is cleared, unless they picked another since. */
 function restoreRideScope(){
@@ -405,7 +404,7 @@ function applyStep(st){
 /* Ctrl+Z, or the command key with Z on a Mac: the ride before the last change. */
 function undo(){ const prev = history.undo(step(true)); if(prev) applyStep(prev); }
 function redo(){ const next = history.redo(step(true)); if(next) applyStep(next); }
-function afterChange(){ pendingFill = null; if(altPinned && !legKeys(ride.stops, ride.bike).includes(altPinned)){ altPinned = null; paintAlt(null); } alongRows = null; syncStart(); renderStops(); drawRide(); routeAll(); followStopScope(ride.stops[0]); saveDraft(); syncPlanning(); paintDrawerButtons(); }
+function afterChange(){ pendingFill = null; if(altPinned && !legKeys(ride.stops, ride.bike).includes(altPinned)){ altPinned = null; paintAlt(null); } alongRows = null; syncStart(); renderStops(); drawRide(); routeAll(); followRide(); saveDraft(); syncPlanning(); paintDrawerButtons(); }
 
 async function routeAll(){
   const myGen = ++gen;
@@ -525,6 +524,7 @@ async function avoidRepeats(myGen){
   return true;
 }
 function finishRouting(){
+  followRide();
   const legs = ride.legs.filter(Boolean);
   const spentLeg = legs.find(l => l.limited);
   if(spentLeg) setStatus(spentLeg.tomorrow ? (P().rateLimitedDay || 'This connection has planned many legs today. Try again tomorrow, or sign in to plan more.') : (P().rateLimited || 'Too many legs in a short time. Wait a few minutes, then try again.'));
@@ -1898,7 +1898,7 @@ export function initPlan(){
     if(e.target.closest('[data-up]')) moveStop(i, -1);
     else if(e.target.closest('[data-down]')) moveStop(i, 1);
     else if(e.target.closest('[data-rm]')) removeStop(i);
-    else if(e.target.closest('[data-fly]')){ const s = ride.stops[i]; flyToPin([s.lng, s.lat]); followStopScope(s); }
+    else if(e.target.closest('[data-fly]')){ const s = ride.stops[i]; flyToPin([s.lng, s.lat]); }
   });
   $('planStops').addEventListener('mouseover', e => { const li = e.target.closest('.cc-plan-stop'); if(!li) return; const s = ride.stops[Number(li.dataset.i)]; if(s) highlightAt([s.lat, s.lng], [0, 0], null); });
   $('planStops').addEventListener('mouseleave', clearHighlight);

@@ -1280,22 +1280,24 @@ unnamed places in one list tell apart; where the street has no name, the
 group alone (owner 2026-10-17). The same title goes into the ride when the
 place is added as a checkpoint.
 
-**While a ride is planned, the map's scope is its start's region** (owner
-2026-10-19: "when opening the route planner it still keeps my default
-openings screen with the circle. It should not do that. just load the region
-our ride is in (startpoint of the ride if it spans multiple). Do not show the
-lighter circle"). Whatever the rider's own scope is, a My area circle, a
-country, Everywhere or another region, the planner sets the scope to the one
-region the start lies in (`planScopeFor()` in `ride-scope.js`), never stored
-as the rider's own, the camera kept on the ride, and the scope chip says
-"from your ride", as the ride check does. A ride over several regions shows
-its start's region only; the along list still reads the whole corridor from
-the server. A start in no onboarded region leaves the scope alone. The start
-moves the scope as soon as it is on the map, before any leg is routed
-(`followStopScope()`): a map point clicked near Hoorn while the scope looked
-near Spa takes it to North Holland. A stop clicked in the Checkpoints list
-takes the scope to that stop's region; the next change to the ride takes it
-back to the start's. The along answer never moves the scope: the list is
+**While a ride is planned, the map's scope is every region it passes
+through**, the start's first. Whatever the rider's own scope is, a My area
+circle, a country, Everywhere or another region, the planner sets the scope
+to the regions of the ride (`planScopeFor()`, `rideRegions()` in
+`ride-scope.js`), never stored as the rider's own, the camera kept on the
+ride, and the scope chip says "from your ride", as the ride check does; a
+ride over three regions reads "North Holland +2". The regions are those of
+every checkpoint, and those the routed legs cross between checkpoints, read
+every kilometre along them with the region's own outline
+(`CCScope.liveRegionAt()`), so a leg along a border never adds the
+neighbour its bounding box reaches into; a checkpoint just outside a
+simplified outline falls back to the bounding box. The scope follows as
+soon as a checkpoint is on the map (`followRide()`), and again once the
+legs are routed (`finishRouting()`): a checkpoint clicked in Utrecht while
+the start lies in North Holland loads Utrecht's places too. A ride in no
+onboarded region leaves the scope alone, and the same regions in another
+order are no change. A stop clicked in the Checkpoints list only takes the
+map to it. The along answer never moves the scope: the list is
 asked again after every pan, and a town picked in North Holland while a ride
 in Wallonia was planned had its scope put back on Wallonia by the next
 refresh (owner 2026-10-18). Clearing the ride gives the rider's scope back,

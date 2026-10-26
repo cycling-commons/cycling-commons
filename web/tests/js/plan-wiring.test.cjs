@@ -604,14 +604,15 @@ test('the way text names what was measured, and the plain answer claims nothing'
   assert.doesNotMatch(read('translations/messages.en.yaml'), /suit your bike less/);
 });
 
-/* While a ride is planned the scope is its start's region, and the map goes to the ride (owner 2026-10-16: a GPX of
-   North Holland opened in Wallonia neither panned nor showed places; owner 2026-10-19: the circle near Spa stayed). */
-test('a planned ride takes the scope to its start region for as long as it is planned, and the map goes to a file at once', () => {
-  assert.match(plan, /import \{ scopeKey, planScopeFor \} from '\.\/ride-scope\.js';/);
+/* While a ride is planned the scope is every region it passes through, and the map goes to the ride (owner
+   2026-10-16: a GPX of North Holland opened in Wallonia neither panned nor showed places; owner 2026-10-19: the circle
+   near Spa stayed; owner 2026-10-26: a checkpoint outside the start's region left its places unloaded). */
+test('a planned ride takes the scope to its regions for as long as it is planned, and the map goes to a file at once', () => {
+  assert.match(plan, /import \{ scopeKey, planScopeFor, rideRegions \} from '\.\/ride-scope\.js';/);
   const along = (plan.match(/async function renderAlong\(\)\{([\s\S]*?)\n\}/) || [])[1] || '';
   assert.doesNotMatch(along, /followRideScope\(/, 'the regions the line crosses widen the scope again');
-  const follow = (plan.match(/function followRideScope\(region\)\{([\s\S]*?)\n\}/) || [])[1] || '';
-  assert.match(follow, /const next = planScopeFor\(cur, region\); if\(!next\) return;/);
+  const follow = (plan.match(/function followRideScope\(regions\)\{([\s\S]*?)\n\}/) || [])[1] || '';
+  assert.match(follow, /const next = planScopeFor\(cur, regions\); if\(!next\) return;/);
   assert.match(follow, /keepCameraForNextScope\(\);/, 'the scope change keeps the camera on the ride');
   assert.match(follow, /S\.set\(next, \{ persist: false \}\);/, 'never stored as the rider\'s own scope');
   const clear = (plan.match(/function clearRide\(\)\{([\s\S]*?)\n\}/) || [])[1] || '';
@@ -663,10 +664,11 @@ test('a coordinate typed as the start is a checkpoint there, and never goes to t
 });
 
 test('the scope follows the start as soon as it is on the map, and a stop clicked in the list', () => {
-  assert.match(plan, /routeAll\(\); followStopScope\(ride\.stops\[0\]\); saveDraft\(\);/, 'a new start leaves the scope where it was until the legs are routed');
-  assert.match(plan, /flyToPin\(\[s\.lng, s\.lat\]\); followStopScope\(s\);/, 'a stop clicked in the list does not take the scope to its region');
-  const fn = plan.slice(plan.indexOf('function followStopScope'), plan.indexOf('function restoreRideScope'));
-  assert.ok(fn.includes('followRideScope(r)'), 'the start does not use the ride\'s own scope rule');
+  assert.match(plan, /routeAll\(\); followRide\(\); saveDraft\(\);/, 'a new checkpoint leaves the scope where it was until the legs are routed');
+  assert.match(plan, /function finishRouting\(\)\{\n  followRide\(\);/, 'the regions the legs cross between checkpoints are never added');
+  assert.match(plan, /flyToPin\(\[s\.lng, s\.lat\]\); \}/, 'a stop clicked in the list narrows the ride\'s scope to one region');
+  const fn = plan.slice(plan.indexOf('function followRide()'), plan.indexOf('function restoreRideScope'));
+  assert.ok(fn.includes('followRideScope(rideRegions(ride.stops, ride.legs, S))'), 'the scope does not take every region of the ride');
 });
 
 test('another rail panel, or the drawer closing, takes the guide away without changing its tick', () => {

@@ -28,14 +28,56 @@ export function rideScopeFor(regions){
 }
 
 /**
- * The planner's scope: the region of the ride's start, whatever the rider's scope was (route-planner.md section 5,
- * owner 2026-10-19: "just load the region our ride is in (startpoint of the ride if it spans multiple). Do not show
- * the lighter circle"). A My area circle, a country or Everywhere gives way to it, and a ride over several regions
- * shows its start's. Null when the scope is that region already, or the start lies in no region.
+ * The planner's scope: every region the ride passes through, the start's first, whatever the rider's scope was
+ * (route-planner.md section 5; owner 2026-10-26: a checkpoint clicked outside the start's region left its places
+ * unloaded, so the scope covers the whole ride, no longer only its start). A My area circle, a country or Everywhere
+ * gives way to it. `regions` is one region or a list, in ride order; a region twice counts once. Null when the scope
+ * is that set already, or the ride lies in no region.
  */
-export function planScopeFor(scope, start){
-  const next = rideScopeFor([start]);
+export function planScopeFor(scope, regions){
+  const seen = new Set();
+  const list = (Array.isArray(regions) ? regions : [regions])
+    .filter(x => x && x.id != null && !seen.has(x.id) && seen.add(x.id));
+  const next = rideScopeFor(list);
   if(!next) return null;
-  const ids = scope && scope.kind === 'region' ? scope.regionIds || [] : [];
-  return ids.length === 1 && ids[0] === next.regionIds[0] ? null : next;
+  // The same regions, in any order, are no change: the country code a scope carries says nothing more.
+  const ids = s => (s.regionIds || []).slice().sort((x, y) => x - y).join('.');
+  return scope && scope.kind === 'region' && ids(scope) === ids(next) ? null : next;
+}
+
+/**
+ * The regions a ride passes through, in ride order, each once: the region of every checkpoint, and every region its
+ * routed legs cross, read every `stepM` metres along them. `S` is the scope registry (CCScope): `liveRegionAt` is
+ * the region whose own outline holds a point, so a leg near a border never adds the neighbour its bounding box
+ * reaches into; a checkpoint just outside a simplified outline falls back to `regionOfPoint`.
+ */
+export function rideRegions(stops, legs, S, stepM = 1000){
+  const out = [];
+  const add = reg => { if(reg && reg.id != null && !out.some(x => x.id === reg.id)) out.push(reg); };
+  (stops || []).forEach((s, i) => {
+    if(!s) return;
+    add(S.liveRegionAt(s.lng, s.lat) || S.regionOfPoint(s.lng, s.lat));
+    const leg = legs && legs[i];
+    if(leg && leg.routed && Array.isArray(leg.line)) for(const p of everyMetres(leg.line, stepM)) add(S.liveRegionAt(p[0], p[1]));
+  });
+  return out;
+}
+
+/* Points every `stepM` metres along a [lng, lat] line, its first point included. */
+function everyMetres(line, stepM){
+  const out = line.length ? [line[0]] : [];
+  let left = stepM;
+  for(let i = 1; i < line.length; i++){
+    const a = line[i - 1], b = line[i];
+    const kx = 111320 * Math.cos(a[1] * Math.PI / 180);
+    const len = Math.hypot((b[0] - a[0]) * kx, (b[1] - a[1]) * 111320);
+    let at = 0;
+    while(len - at >= left){
+      at += left; left = stepM;
+      const f = at / len;
+      out.push([a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]);
+    }
+    left -= len - at;
+  }
+  return out;
 }
