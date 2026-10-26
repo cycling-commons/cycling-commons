@@ -3693,6 +3693,15 @@ requirement).
   map never pays for it. Dock slides up immediately with a loading state; ⤢ toggles
   fullscreen; ✕ closes and removes the marker. The dock owns the bottom edge on
   mobile (hides the filters peek).
+- **The last click wins:** the dock remembers the image asked for last
+  (`mlyWanted`). Its spinner stays up until that image is on screen: the
+  viewer's `image` event for any other image changes nothing. A later click
+  moves the open viewer (`moveTo`, after `viewer.resize()`, as the dock may
+  have been closed in between); a move the viewer drops, while it is still
+  busy with its first image or for any other reason, opens a fresh viewer on
+  the image asked for, unless a newer click took over. Closing the dock
+  forgets the image and stops a sequence that is playing (the sequence
+  component's `stop()`), so it never plays on behind the map.
 - **Resizable dock:** top-edge grip (`#mlyGrip`, `role="separator"`), pointer
   drag + ↑/↓ keys (24 px steps) when focused, double-click resets to the CSS
   default; height clamped **[160 px, 85 vh]**, persisted per browser in

@@ -10,6 +10,10 @@ const MAPILLARY_TOKEN = window.MAPILLARY_TOKEN || 'MLY|PASTE_TOKEN_HERE';
 export const MLY_ENABLED = /^MLY\|/.test(MAPILLARY_TOKEN) && !/PASTE_TOKEN_HERE/.test(MAPILLARY_TOKEN);
 const MLY_GREEN = '#05CB63';
 let mlyOn=false, mlyMarker=null, mlyViewer=null, mlyLoading=null;
+/* The image the rider asked for last: the dock shows it or keeps its spinner, never an earlier one (owner
+   2026-10-26: "When I click on a new Mapillary icon it does not load the new location but keeps showing an old
+   one"). */
+let mlyWanted=null;
 
 // coverage line source/layer — Mapillary sequence vector tiles, hidden until toggled on
 export function addMapillary(){
@@ -105,27 +109,42 @@ function loadMapillaryJs(){
   return mlyLoading;
 }
 
+/* A new viewer on the image: the one before it, if any, goes. */
+function mountViewer(imageId){
+  if(mlyViewer){ try{ mlyViewer.remove(); }catch(_){} }
+  mlyViewer=new mapillary.Viewer({accessToken:MAPILLARY_TOKEN,container:'mlyView',imageId});
+  mlyViewer.on('image',ev=>{
+    // Only the image asked for last ends the wait: a viewer still busy with an earlier one says nothing.
+    if(!ev.image || String(ev.image.id)!==mlyWanted) return;
+    document.getElementById('mlyDock').classList.remove('loading');   // photo rendered → hide the spinner
+    const ll=ev.image.lngLat; if(!ll) return;
+    if(!mlyMarker){
+      const el=document.createElement('div'); el.className='cc-pin cur cam';
+      el.style.setProperty('--c',MLY_GREEN); el.innerHTML='<span>📷</span>';
+      mlyMarker=new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([ll.lng,ll.lat]).addTo(map);
+    } else mlyMarker.setLngLat([ll.lng,ll.lat]);
+  });
+}
+
 // open (or move to) an image id in the bottom dock; drops a "you are here" marker
 export async function openMapillaryImage(imageId){
-  const dock=document.getElementById('mlyDock');
-  dock.classList.add('open'); dock.setAttribute('aria-hidden','false');
-  { const ap=document.querySelector('.app'); if(ap) ap.classList.add('dock-open'); }
+  imageId=String(imageId);
+  mlyWanted=imageId;
+  openMapillaryDock();   // the spinner until this image is on screen
   try{ await loadMapillaryJs(); }
   catch(_){ mlyClose(); mlyPopup(map.getCenter(),'Viewer failed to load.'); return; }
-  if(!mlyViewer){
-    mlyViewer=new mapillary.Viewer({accessToken:MAPILLARY_TOKEN,container:'mlyView',imageId});
-    mlyViewer.on('image',ev=>{
-      document.getElementById('mlyDock').classList.remove('loading');   // photo rendered → hide the spinner
-      const ll=ev.image&&ev.image.lngLat; if(!ll) return;
-      if(!mlyMarker){
-        const el=document.createElement('div'); el.className='cc-pin cur cam';
-        el.style.setProperty('--c',MLY_GREEN); el.innerHTML='<span>📷</span>';
-        mlyMarker=new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([ll.lng,ll.lat]).addTo(map);
-      } else mlyMarker.setLngLat([ll.lng,ll.lat]);
-    });
-  } else { mlyViewer.moveTo(imageId).catch(()=>{}); }
+  if(imageId!==mlyWanted) return;   // another click came while the viewer loaded
+  if(!mlyViewer){ mountViewer(imageId); return; }
+  // The dock was closed and is open again: the viewer measures its canvas anew.
+  try{ mlyViewer.resize(); }catch(_){}
+  // A move the viewer drops, while it is still busy with its first image or for any other reason, is never left
+  // standing: unless a newer click took over, a fresh viewer opens on the image asked for.
+  mlyViewer.moveTo(imageId).catch(()=>{ if(imageId===mlyWanted) mountViewer(imageId); });
 }
 export function mlyClose(){
+  mlyWanted=null;
+  // A sequence playing stops with the dock (owner 2026-10-26: it played on in the background).
+  if(mlyViewer){ try{ mlyViewer.getComponent('sequence').stop(); }catch(_){} }
   const dock=document.getElementById('mlyDock');
   dock.classList.remove('open','full','loading'); dock.setAttribute('aria-hidden','true');
   document.querySelector('.app').classList.remove('dock-open');   // restore the filters peek
