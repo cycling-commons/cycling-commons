@@ -1,0 +1,31 @@
+web/tests/Onboarding/CountryCommandsTest.php
+  s_0987e451f37ba2::t_ba799d8afb1e75 11-14
+  s_0987e451f37ba2::t_fa62ec42991c32 163-186
+web/src/Coverage/BucketManifest.php
+  s_0987e451f37ba2::t_ef4ec24585a46f 101-120
+web/tests/Coverage/BucketManifestForgetTest.php
+  s_0987e451f37ba2::t_97f01e58db8a9d 1-76
+web/src/Onboarding/Command/MarkLiveCommand.php
+  s_0987e451f37ba2::t_2c42367b7ae903 9-13,24-25,32-38,61,72,77-88
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ae9ea3114b8e25c6155063c7ccf9931e69137d5d",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_0987e451f37ba2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "25edb378-d314-4f9a-b8dd-86064ad1572d",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
