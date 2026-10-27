@@ -1,0 +1,61 @@
+docs/specs/edit-items/A-road-surface.md
+  s_086f006d5a9290::t_6175973f46642c 59-65
+  s_086f006d5a9290::t_438e229cd99e91 41-58,66
+  s_086f006d5a9290::t_cdaac58065028d 67-68
+web/src/Contribution/DrawnRoadLinker.php
+  s_086f006d5a9290::t_3f1fe18ad87f10 1-92
+web/config/services.yaml
+  s_086f006d5a9290::t_2ae1f4ba093bf1 167-172,293-294
+  s_086f006d5a9290::t_78e29c9d9ec63c 295
+web/src/Contribution/CatalogContributionService.php
+  s_086f006d5a9290::t_2ae1f4ba093bf1 229-230,232,280,586-587,589,619-621,737-739,742
+  s_086f006d5a9290::t_f59dea7fc800c8 732-736
+  s_086f006d5a9290::t_3f1fe18ad87f10 71,231,588,740-741
+  s_086f006d5a9290::t_4a10007962a991 743-744
+web/tests/Contribution/CuratorWizardCopyTest.php
+  s_086f006d5a9290::t_462157d08f0418 110,114,116-124,126,128,135-136
+  s_086f006d5a9290::t_6175973f46642c 111-113,115,125,127,129-134
+web/src/Controller/ContributeController.php
+  s_086f006d5a9290::t_6175973f46642c 606
+  s_086f006d5a9290::t_c254e9cfe2ef66 603-605
+web/src/Contribution/ValhallaRoadWayLocator.php
+  s_086f006d5a9290::t_2ae1f4ba093bf1 1-71
+web/src/Moderation/ModerationService.php
+  s_086f006d5a9290::t_99fa177ab6305d 22
+  s_086f006d5a9290::t_3f1fe18ad87f10 72-73
+  s_086f006d5a9290::t_48a66f2b84fff2 129-138
+  s_086f006d5a9290::t_54234b365d618c 139-140
+web/src/Contribution/RoadWayLocator.php
+  s_086f006d5a9290::t_2ae1f4ba093bf1 1-22
+web/tests/Contribution/ValhallaRoadWayLocatorTest.php
+  s_086f006d5a9290::t_9034054dfbcf00 1-57
+web/tests/Contribution/CatalogContributionServiceTest.php
+  s_086f006d5a9290::t_9f2ef7b056feec 1009-1010,1014-1024,1026-1037,1039-1055,1057-1070,1072-1086,1116-1119,1121-1131,1133
+  s_086f006d5a9290::t_084a06ae9ba3cf 1087-1113
+  s_086f006d5a9290::t_438e229cd99e91 20
+  s_086f006d5a9290::t_a33f533c113718 1114-1115
+  s_086f006d5a9290::t_92ccc5daf38ab3 1004-1008,1011-1013,1025,1038,1056,1071,1120
+  s_086f006d5a9290::t_99fa177ab6305d 24
+  s_086f006d5a9290::t_517232f8b3ca2e 1132
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e49d3fd75fdf7edde5fbdc92f3ee46b72bc99b42",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_086f006d5a9290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97afd631-7f48-4430-aac8-2c62f5b7a119",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
