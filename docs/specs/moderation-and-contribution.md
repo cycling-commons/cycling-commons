@@ -1313,7 +1313,8 @@ mountain profile (`PlaceText::ICONS`).
 
 - **Storage.** `region.facts` (JSONB, migration `Version20261023010000`),
   one entry per figure set: `area {value, submissionId, at}` in whole km²,
-  `population {value, year, submissionId, at}`, `ride {value, ...}` with
+  `population {value, year, source?, submissionId, at}` (`source` an https
+  link the person named, at most 500 characters), `ride {value, ...}` with
   value `flat`, `hilly` or `mountainous` (`App\Catalog\RegionFacts`). No
   user id is stored: the submission names its writer. `region.area_km2`
   stays the area measured from the boundary, because lookups pick the
@@ -1361,7 +1362,11 @@ mountain profile (`PlaceText::ICONS`).
   to `region_edit`.
 - **The figures step.** "Area in km²" (with the measured area beside the
   field, "Measured from the region's boundary: 2,680 km²."), "Population" and
-  "Counted in" side by side, and "Ride character" as three radios. Each
+  "Counted in" side by side, "Source of the population (https link)" under
+  them (`facts[source]`, at most 22 rem wide; it starts from the source a
+  person's count names, empty under a fetched one, whose Wikidata item is
+  named beside the fields), and "Ride character" as three radios. A new
+  source on the same count is a change too; an emptied one changes nothing. Each
   field starts from the figure as it stands. A field left as it is, or
   emptied, changes nothing: a figure is changed, never removed, and an area
   equal to the measured one changes nothing while none is stated. Numbers
@@ -1389,11 +1394,15 @@ mountain profile (`PlaceText::ICONS`).
 - **Checks** (`PlaceTextProposals::factChanges()`, before anything is
   filed): an area from 1 to 20,000,000 (`facts_area`), a population from 0
   to 2,000,000,000 (`facts_population`) given with a year from 1900 to the
-  current year (`facts_year`), never one without the other (`facts_pair`),
+  current year (`facts_year`), never one without the other (`facts_pair`,
+  a source alone too), a source only as an https link (`facts_source`,
+  `RegionFacts::isSource()`),
   and one of the three ride characters (`facts_ride`), each
   `place_text.error.*`, 422, the figures kept as written.
 - **Its own proposal.** `payload = {target: facts, ref: <region id>, slug,
-  lang, facts: {area?, population?: {value, year}, ride?}, details: {note}}`;
+  lang, facts: {area?, population?: {value, year, source?}, ride?}, details: {note}}`;
+  the curator's change list shows a population's source after the count
+  ("5,957,493 (2024) · https://..."), so it can be opened before approving;
   `lang` is the editor's language, the one the note is written in. `changes`
   holds one pair per figure under `fact:area`, `fact:population`,
   `fact:ride`, which the desk shows as "Area 2,633 km²", "Population

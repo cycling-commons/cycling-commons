@@ -122,6 +122,12 @@
               <p class="chint pt-fact-src">{{ 'region_edit.population_source'|trans }} <a href="https://www.wikidata.org/wiki/{{ facts.populationQid }}" target="_blank" rel="noopener noreferrer">Wikidata {{ facts.populationQid }}</a></p>
             {% endif %}
           </div>
+          {# Where a person's count comes from: an https link, approved with the figure (§3.1g). #}
+          <div class="cfield pt-fact pt-fact-source">
+            <label for="pt-fact-source">{{ 'place_text.facts_source'|trans }}</label>
+            <input type="url" id="pt-fact-source" name="facts[source]" inputmode="url" autocomplete="off" maxlength="500" placeholder="https://"
+                   value="{{ fin.source ?? facts.populationSource }}">
+          </div>
           {% set ride = fin.ride ?? facts.ride %}
           <fieldset class="pt-fact-ride">
             <legend>{{ 'place_text.facts_ride'|trans }}</legend>

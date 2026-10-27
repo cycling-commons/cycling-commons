@@ -2789,6 +2789,7 @@ place_text:
   facts_area_measured: "Gemessen an der Grenze der Region: %km2% km²."
   facts_population: "Einwohner"
   facts_year: "Gezählt im Jahr"
+  facts_source: "Quelle der Einwohnerzahl (https-Link)"
   facts_ride: "Gelände"
   fact_label_area: "Fläche"
   fact_label_population: "Einwohner"
@@ -2830,6 +2831,7 @@ place_text:
     facts_population: "Geben Sie die Einwohnerzahl als ganze Zahl an."
     facts_year: "Geben Sie das Jahr der Zählung an, von %min% bis %max%."
     facts_pair: "Geben Sie die Einwohnerzahl zusammen mit dem Jahr der Zählung an."
+    facts_source: "Gib die Quelle der Einwohnerzahl als https-Link an oder lass das Feld leer."
     facts_ride: "Wählen Sie flach, hügelig oder bergig."
     http_link: "Verlinken Sie nur https-Adressen. Ändern Sie diese: %urls%."
 

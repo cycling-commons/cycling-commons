@@ -107,12 +107,17 @@ final readonly class SubmissionChangeSummary
         return false === $at ? \count(RegionFacts::FIELDS) : (int) $at;
     }
 
-    /** One figure's value as the region page shows it: "2,680 km²", "494,000 (2024)", "Hilly". Null for none. */
+    /**
+     * One figure's value as the region page shows it: "2,680 km²", "494,000 (2024)", "Hilly"; a person's
+     * population with its source after it, so the curator can open it. Null for none.
+     */
     private function factValue(string $fact, mixed $value): ?string
     {
         return match (true) {
             RegionFacts::AREA === $fact && \is_int($value) => number_format($value, 0, '.', ',').' km²',
-            RegionFacts::POPULATION === $fact && \is_array($value) && \is_int($value['value'] ?? null) => number_format($value['value'], 0, '.', ',').(\is_int($value['year'] ?? null) ? ' ('.$value['year'].')' : ''),
+            RegionFacts::POPULATION === $fact && \is_array($value) && \is_int($value['value'] ?? null) => number_format($value['value'], 0, '.', ',')
+                .(\is_int($value['year'] ?? null) ? ' ('.$value['year'].')' : '')
+                .(RegionFacts::isSource($value['source'] ?? null) ? ' · '.$value['source'] : ''),
             RegionFacts::RIDE === $fact && \is_string($value) && \in_array($value, RegionFacts::RIDES, true) => $this->translator->trans('region.ride_'.$value),
             default => null,
         };

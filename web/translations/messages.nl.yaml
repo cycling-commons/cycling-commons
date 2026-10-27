@@ -2788,6 +2788,7 @@ place_text:
   facts_area_measured: "Gemeten aan de grens van de regio: %km2% km²."
   facts_population: "Inwoners"
   facts_year: "Geteld in"
+  facts_source: "Bron van het inwonertal (https-link)"
   facts_ride: "Terrein"
   fact_label_area: "Oppervlakte"
   fact_label_population: "Inwoners"
@@ -2829,6 +2830,7 @@ place_text:
     facts_population: "Geef het aantal inwoners als een heel getal."
     facts_year: "Geef het jaar waarin de inwoners zijn geteld, van %min% tot %max%."
     facts_pair: "Geef het aantal inwoners samen met het jaar waarin ze zijn geteld."
+    facts_source: "Geef de bron van het inwonertal als https-link, of laat het veld leeg."
     facts_ride: "Kies vlak, heuvelachtig of bergachtig."
     http_link: "Link alleen https-adressen. Pas deze aan: %urls%."
 

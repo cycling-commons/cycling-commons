@@ -149,6 +149,7 @@
 .pt-fact-row .chint{margin:0}
 .pt-lang-field[hidden]{display:none}
 .pt-fact-year input[type="text"]{max-width:7rem}
+.pt-fact-source input[type="url"]{max-width:22rem}
 .pt-fact-pair{display:flex;flex-wrap:wrap;align-items:flex-end;gap:0 1.2rem}
 /* The count's source, level with the fields it is about. */
 .reppage .pt-fact-src{margin:0 0 1.45rem}

@@ -2810,6 +2810,7 @@ place_text:
   facts_area_measured: "Medida según el límite de la región: %km2% km²."
   facts_population: "Población"
   facts_year: "Contada en"
+  facts_source: "Fuente de la población (enlace https)"
   facts_ride: "Relieve"
   fact_label_area: "Superficie"
   fact_label_population: "Población"
@@ -2851,6 +2852,7 @@ place_text:
     facts_population: "Indica la población como un número entero."
     facts_year: "Indica el año en que se contó la población, de %min% a %max%."
     facts_pair: "Indica la población junto con el año en que se contó."
+    facts_source: "Indica la fuente de la población con un enlace https, o deja el campo vacío."
     facts_ride: "Elige llano, ondulado o montañoso."
     http_link: "Enlaza solo direcciones https. Cambia estas: %urls%."
 

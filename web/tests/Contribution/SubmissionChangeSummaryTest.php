@@ -36,6 +36,19 @@ final class SubmissionChangeSummaryTest extends TestCase
         return $sub;
     }
 
+    /** A curator sees where a person's count comes from before approving it (§3.1g). */
+    public function testAPopulationShowsItsYearAndItsSource(): void
+    {
+        $sub = $this->submission('', ['fact:population' => [
+            'was' => ['value' => 491792, 'year' => 2017],
+            'now' => ['value' => 5957493, 'year' => 2024, 'source' => 'https://census.test/oregon'],
+        ]]);
+        $rows = $this->summary()->rows($sub);
+
+        self::assertSame('491,792 (2017)', $rows[0]['was']);
+        self::assertSame('5,957,493 (2024) · https://census.test/oregon', $rows[0]['now']);
+    }
+
     public function testATownOrRegionTextIsNamedWithItsLanguage(): void
     {
         $sub = $this->submission('', ['text:nl' => ['was' => 'Oud.', 'now' => 'Nieuw.']]);

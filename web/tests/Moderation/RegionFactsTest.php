@@ -159,13 +159,13 @@ final class RegionFactsTest extends WebTestCase
         // The drawer approves it as sent: no form, no Wikipedia question.
         $this->moderation()->decide((int) $sub->getId(), 'approve', $curatorA, null);
         $now = RegionFacts::current($this->stored($a));
-        self::assertSame(['area' => 2633, 'population' => 494000, 'year' => 2024, 'ride' => 'flat', 'populationQid' => null], $now);
+        self::assertSame(['area' => 2633, 'population' => 494000, 'year' => 2024, 'ride' => 'flat', 'populationQid' => null, 'populationSource' => null], $now);
         self::assertSame($sub->getId(), $this->stored($a)['area']['submissionId']);
         self::assertArrayNotHasKey('_credit', $this->fresh($sub)->getPayload(), 'no credit to decide');
 
         // A revoke puts back what stood: nothing.
         static::getContainer()->get(ApprovalRevoker::class)->revoke((int) $sub->getId(), $this->reload($curatorA), 'Wrong province.');
-        self::assertSame(['area' => null, 'population' => null, 'year' => null, 'ride' => null, 'populationQid' => null], RegionFacts::current($this->stored($a)));
+        self::assertSame(['area' => null, 'population' => null, 'year' => null, 'ride' => null, 'populationQid' => null, 'populationSource' => null], RegionFacts::current($this->stored($a)));
     }
 
     public function testAFetchedPopulationShowsUntilAPersonSetsOne(): void
@@ -207,6 +207,40 @@ final class RegionFactsTest extends WebTestCase
         self::assertSame('Population (2017)', $crawler->filter('.rhero .rstats .s-land span')->eq(1)->text());
     }
 
+    /**
+     * A person's population names its own source, an https link (owner 2026-10-26: "i want to change the population
+     * number to another source but i can't change the source"): it travels with the figure through the curator's
+     * approval, and the form shows it again. The source alone, on the same count, is a change too.
+     */
+    public function testAPersonsPopulationCarriesItsSource(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        [$a] = $this->twoRegions();
+        $rider = $this->user('pfacts-rider6@example.com', []);
+        $curator = $this->user('pfacts-cur-a6@example.com', ['ROLE_CURATOR'], $a);
+        /** @var Connection $db */
+        $db = static::getContainer()->get(Connection::class);
+        $db->executeStatement('UPDATE region SET facts_harvest = :h WHERE id = :id', ['h' => '{"population": {"value": 491792, "year": 2017, "qid": "Q772"}}', 'id' => $a->getId()]);
+
+        $region = $this->region('pfacts-a');
+        $changes = $this->proposals()->factChanges($region, ['population' => '5,957,493', 'year' => '2024', 'source' => ' https://census.test/oregon ']);
+        self::assertSame(['population' => ['was' => ['value' => 491792, 'year' => 2017], 'now' => ['value' => 5957493, 'year' => 2024, 'source' => 'https://census.test/oregon']]], $changes);
+        $sub = $this->proposals()->proposeFacts($rider, $region, 'en', $changes, '')['submission'];
+        $this->moderation()->decide((int) $sub->getId(), 'approve', $curator, null);
+        self::assertSame('https://census.test/oregon', RegionFacts::current($this->stored($a))['populationSource']);
+
+        $client->loginUser($rider);
+        $crawler = $client->request('GET', '/regions/pfacts-a/edit');
+        self::assertSame('https://census.test/oregon', $crawler->filter('#pt-fact-source')->attr('value'));
+        self::assertCount(0, $crawler->filter('.pt-fact-src'), 'no Wikidata line under a person\'s count');
+
+        // The same count with another source changes the source; with the same source it changes nothing.
+        $region = $this->region('pfacts-a');
+        self::assertSame([], $this->proposals()->factChanges($region, ['population' => '5957493', 'year' => '2024', 'source' => 'https://census.test/oregon']));
+        self::assertSame(['value' => 5957493, 'year' => 2024, 'source' => 'https://stats.test/or'], $this->proposals()->factChanges($region, ['population' => '5957493', 'year' => '2024', 'source' => 'https://stats.test/or'])['population']['now']);
+    }
+
     public function testARevokeIsRefusedOnceAFigureWasSetSince(): void
     {
         static::createClient();
@@ -244,6 +278,9 @@ final class RegionFactsTest extends WebTestCase
             [['population' => 'many', 'year' => '2024'], 'place_text.error.facts_population'],
             [['population' => '494000', 'year' => '1850'], 'place_text.error.facts_year'],
             [['ride' => 'steep'], 'place_text.error.facts_ride'],
+            [['population' => '494000', 'year' => '2024', 'source' => 'http://census.test/'], 'place_text.error.facts_source'],
+            [['population' => '494000', 'year' => '2024', 'source' => 'the census office'], 'place_text.error.facts_source'],
+            [['source' => 'https://census.test/'], 'place_text.error.facts_pair'],
         ] as [$raw, $error]) {
             try {
                 $p->factChanges($region, $raw);

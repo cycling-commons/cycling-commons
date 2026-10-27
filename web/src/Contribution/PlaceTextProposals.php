@@ -454,7 +454,7 @@ final readonly class PlaceTextProposals
      *
      * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
      *
-     * @return array{area: ?int, population: ?int, year: ?int, ride: ?string, populationQid: ?string, measuredKm2: ?int}
+     * @return array{area: ?int, population: ?int, year: ?int, ride: ?string, populationQid: ?string, populationSource: ?string, measuredKm2: ?int}
      */
     public function currentFacts(array $region): array
     {
@@ -466,10 +466,11 @@ final readonly class PlaceTextProposals
      * pair per figure that differs from what stands. A field left as it is,
      * or emptied, changes nothing: a figure is changed, never removed. An
      * area equal to the measured one changes nothing while none is stated.
-     * The population comes with the year it was counted.
+     * The population comes with the year it was counted, and may name its
+     * source, an https link; a new source on the same count is a change.
      *
      * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>, story: ?array<string, mixed>, facts: ?array<string, mixed>, harvest: ?array<string, mixed>, areaKm2: ?float} $region
-     * @param array<array-key, mixed>                                                                                                                                                                                                                   $raw    the form's `facts[area]`, `facts[population]`, `facts[year]` and `facts[ride]`
+     * @param array<array-key, mixed>                                                                                                                                                                                                                   $raw    the form's `facts[area]`, `facts[population]`, `facts[year]`, `facts[source]` and `facts[ride]`
      *
      * @return array<string, array{was: mixed, now: mixed}> by figure, in RegionFacts::FIELDS order
      *
@@ -488,12 +489,17 @@ final readonly class PlaceTextProposals
         $population = self::wholeNumber($raw['population'] ?? null, 0, RegionFacts::POPULATION_MAX, 'place_text.error.facts_population');
         $thisYear = (int) $this->clock->now()->format('Y');
         $year = self::wholeNumber($raw['year'] ?? null, RegionFacts::YEAR_MIN, $thisYear, 'place_text.error.facts_year', ['%min%' => (string) RegionFacts::YEAR_MIN, '%max%' => (string) $thisYear]);
-        if (null !== $population || null !== $year) {
+        $source = $raw['source'] ?? null;
+        $source = \is_string($source) && '' !== trim($source) ? trim($source) : null;
+        if (null !== $source && !RegionFacts::isSource($source)) {
+            throw new PlaceTextRefused('place_text.error.facts_source');
+        }
+        if (null !== $population || null !== $year || null !== $source) {
             if (null === $population || null === $year) {
                 throw new PlaceTextRefused('place_text.error.facts_pair');
             }
-            if ($population !== $current['population'] || $year !== $current['year']) {
-                $changes[RegionFacts::POPULATION] = ['was' => RegionFacts::valueOf($current, RegionFacts::POPULATION), 'now' => ['value' => $population, 'year' => $year]];
+            if ($population !== $current['population'] || $year !== $current['year'] || (null !== $source && $source !== $current['populationSource'])) {
+                $changes[RegionFacts::POPULATION] = ['was' => RegionFacts::valueOf($current, RegionFacts::POPULATION), 'now' => ['value' => $population, 'year' => $year] + (null !== $source ? ['source' => $source] : [])];
             }
         }
 

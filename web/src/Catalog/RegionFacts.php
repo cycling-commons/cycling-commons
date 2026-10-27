@@ -14,7 +14,7 @@ namespace App\Catalog;
  *
  * `region.facts` (JSONB) holds one entry per figure that was set:
  * `{"area": {"value": 2680, "submissionId": 12, "at": "..."},
- *   "population": {"value": 494000, "year": 2024, ...},
+ *   "population": {"value": 494000, "year": 2024, "source": "https://...", ...},
  *   "ride": {"value": "flat", ...}}`. `submissionId` is the approved
  * proposal that set it, so a revoke puts back only what is still its own.
  *
@@ -49,6 +49,16 @@ final class RegionFacts
     /** The oldest count a page may show. */
     public const int YEAR_MIN = 1900;
 
+    /** The longest source link a population may name. */
+    public const int SOURCE_MAX = 500;
+
+    /** Whether a value is a population's source: an https link, no longer than SOURCE_MAX. */
+    public static function isSource(mixed $value): bool
+    {
+        return \is_string($value) && \strlen($value) <= self::SOURCE_MAX
+            && false !== filter_var($value, \FILTER_VALIDATE_URL) && 'https' === strtolower((string) parse_url($value, \PHP_URL_SCHEME));
+    }
+
     /**
      * What the top of the region page shows: the stated area, else the
      * measured one; the population and its year, a person's else the
@@ -74,12 +84,13 @@ final class RegionFacts
     /**
      * Each figure as it stands, null where none is set: a person's, else the
      * fetched one. `populationQid` names the Wikidata item when the
-     * population shown is the fetched one. A malformed entry reads as none.
+     * population shown is the fetched one, `populationSource` the https link a
+     * person's count names. A malformed entry reads as none.
      *
      * @param array<string, mixed>|null $stored  decoded `region.facts`
      * @param array<string, mixed>|null $harvest decoded `region.facts_harvest`
      *
-     * @return array{area: ?int, population: ?int, year: ?int, ride: ?string, populationQid: ?string}
+     * @return array{area: ?int, population: ?int, year: ?int, ride: ?string, populationQid: ?string, populationSource: ?string}
      */
     public static function current(?array $stored, ?array $harvest = null): array
     {
@@ -89,6 +100,7 @@ final class RegionFacts
         $fetched = null === $count ? self::count(self::entry($harvest, self::POPULATION)) : null;
         $count ??= $fetched;
         $qid = $fetched['qid'] ?? null;
+        $source = null === $fetched ? ($count['source'] ?? null) : null;
 
         return [
             'area' => \is_int($area) && $area > 0 ? $area : null,
@@ -96,6 +108,7 @@ final class RegionFacts
             'year' => null !== $count ? $count['year'] : null,
             'ride' => \is_string($ride) && \in_array($ride, self::RIDES, true) ? $ride : null,
             'populationQid' => \is_string($qid) && 1 === preg_match('~^Q\d{1,12}$~', $qid) ? $qid : null,
+            'populationSource' => self::isSource($source) ? $source : null,
         ];
     }
 
@@ -128,7 +141,7 @@ final class RegionFacts
     /**
      * `$stored` with one figure set by an approved proposal, the others
      * untouched. `$value` is the area or the ride character, or for the
-     * population `{value, year}`.
+     * population `{value, year}` and its `source` when it names one.
      *
      * @param array<string, mixed>|null $stored
      *
@@ -138,7 +151,7 @@ final class RegionFacts
     {
         $stored ??= [];
         $entry = self::POPULATION === $field && \is_array($value)
-            ? ['value' => $value['value'] ?? null, 'year' => $value['year'] ?? null]
+            ? ['value' => $value['value'] ?? null, 'year' => $value['year'] ?? null] + (self::isSource($value['source'] ?? null) ? ['source' => $value['source']] : [])
             : ['value' => $value];
         $stored[$field] = $entry + ['submissionId' => $submissionId, 'at' => $at->format(\DateTimeInterface::ATOM)];
 
@@ -147,7 +160,8 @@ final class RegionFacts
 
     /**
      * Whether a proposal's value for a figure may be stored: an area in
-     * range, a population in range with a year from YEAR_MIN, one of RIDES.
+     * range, a population in range with a year from YEAR_MIN and, when it
+     * names one, an https source, one of RIDES.
      */
     public static function isValid(string $field, mixed $value): bool
     {
@@ -155,7 +169,8 @@ final class RegionFacts
             self::AREA => \is_int($value) && $value >= 1 && $value <= self::AREA_MAX,
             self::POPULATION => \is_array($value)
                 && \is_int($value['value'] ?? null) && $value['value'] >= 0 && $value['value'] <= self::POPULATION_MAX
-                && \is_int($value['year'] ?? null) && $value['year'] >= self::YEAR_MIN,
+                && \is_int($value['year'] ?? null) && $value['year'] >= self::YEAR_MIN
+                && (!\array_key_exists('source', $value) || self::isSource($value['source'])),
             self::RIDE => \is_string($value) && \in_array($value, self::RIDES, true),
             default => false,
         };
@@ -163,16 +178,18 @@ final class RegionFacts
 
     /**
      * A figure's value as a proposal's `changes` carries it: the area and
-     * the ride character as they are, the population as `{value, year}`.
-     * Null when none is set.
+     * the ride character as they are, the population as `{value, year}`, with
+     * its `source` when a person's count names one. Null when none is set.
      *
-     * @param array{area: ?int, population: ?int, year: ?int, ride: ?string, populationQid: ?string} $current
+     * @param array{area: ?int, population: ?int, year: ?int, ride: ?string, populationQid: ?string, populationSource?: ?string} $current
      */
     public static function valueOf(array $current, string $field): mixed
     {
         return match ($field) {
             self::AREA => $current['area'],
-            self::POPULATION => null !== $current['population'] ? ['value' => $current['population'], 'year' => $current['year']] : null,
+            self::POPULATION => null !== $current['population']
+                ? ['value' => $current['population'], 'year' => $current['year']] + (null !== ($current['populationSource'] ?? null) ? ['source' => $current['populationSource']] : [])
+                : null,
             self::RIDE => $current['ride'],
             default => null,
         };

@@ -2803,6 +2803,7 @@ place_text:
   facts_area_measured: "Measured from the region's boundary: %km2% km²."
   facts_population: "Population"
   facts_year: "Counted in"
+  facts_source: "Source of the population (https link)"
   facts_ride: "Ride character"
   fact_label_area: "Area"
   fact_label_population: "Population"
@@ -2844,6 +2845,7 @@ place_text:
     facts_population: "Give the population as a whole number."
     facts_year: "Give the year the population was counted, from %min% to %max%."
     facts_pair: "Give the population together with the year it was counted."
+    facts_source: "Give the source of the population as an https link, or leave it empty."
     facts_ride: "Pick flat, hilly or mountainous."
     http_link: "Link only https addresses. Change these: %urls%."
 

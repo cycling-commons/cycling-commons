@@ -2784,6 +2784,7 @@ place_text:
   facts_area_measured: "Mesurée d’après la limite de la région : %km2% km²."
   facts_population: "Population"
   facts_year: "Recensée en"
+  facts_source: "Source de la population (lien https)"
   facts_ride: "Relief"
   fact_label_area: "Superficie"
   fact_label_population: "Population"
@@ -2825,6 +2826,7 @@ place_text:
     facts_population: "Indiquez la population en nombre entier."
     facts_year: "Indiquez l’année du recensement, de %min% à %max%."
     facts_pair: "Indiquez la population avec l’année où elle a été recensée."
+    facts_source: "Indiquez la source de la population par un lien https, ou laissez le champ vide."
     facts_ride: "Choisissez plat, vallonné ou montagneux."
     http_link: "Ne liez que des adresses https. Modifiez celles-ci : %urls%."
 
