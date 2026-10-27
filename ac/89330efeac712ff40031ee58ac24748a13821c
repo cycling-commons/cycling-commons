@@ -1,0 +1,80 @@
+web/src/Contribution/DrawnRoadLinker.php
+  s_086f006d5a9290::t_2e2cf4970e3708 55-58
+web/src/Controller/ModerateController.php
+  s_086f006d5a9290::t_09b08946ac129f 369-370,372-373,387
+web/translations/messages.es.yaml
+  s_086f006d5a9290::t_b3acfbf94439ff 5544
+  s_086f006d5a9290::t_29601e15f8949d 3096-3097
+web/src/Community/ItemConfirmationService.php
+  s_086f006d5a9290::t_f7009da972dace 185-202
+  s_086f006d5a9290::t_5c2d15dec3e4f2 184
+web/translations/messages.nl.yaml
+  s_086f006d5a9290::t_b3acfbf94439ff 5516
+  s_086f006d5a9290::t_29601e15f8949d 3074-3075
+web/assets/map/osm-question.js
+  s_086f006d5a9290::t_6deac3c032169c 62-69
+web/translations/messages.en.yaml
+  s_086f006d5a9290::t_b3acfbf94439ff 5534
+  s_086f006d5a9290::t_29601e15f8949d 3089-3090
+web/tests/Contribution/CatalogContributionServiceTest.php
+  s_086f006d5a9290::t_b375395ab5a563 25-26,28,1124-1175,1177-1179,1200-1227
+  s_086f006d5a9290::t_76ce727a14dffb 1076-1079,1093,1176,1180-1199
+  s_086f006d5a9290::t_b376b6e64529a0 1228
+web/templates/moderate/_queue_item.html.twig
+  s_086f006d5a9290::t_6deac3c032169c 156-163
+web/src/Moderation/SameStretchRoad.php
+  s_086f006d5a9290::t_56fa0ea544f82b 1-134
+web/src/Controller/MapController.php
+  s_086f006d5a9290::t_6deac3c032169c 956-958
+web/translations/messages.fr.yaml
+  s_086f006d5a9290::t_b3acfbf94439ff 5512
+  s_086f006d5a9290::t_29601e15f8949d 3070-3071
+web/translations/messages.de.yaml
+  s_086f006d5a9290::t_b3acfbf94439ff 5517
+  s_086f006d5a9290::t_29601e15f8949d 3075-3076
+web/src/Moderation/ModerationService.php
+  s_086f006d5a9290::t_09b08946ac129f 460-461,463-470,474-478
+  s_086f006d5a9290::t_4ec950bb9d4331 462,471-473
+  s_086f006d5a9290::t_bb9f56bb2ab74f 74-75,164-165,170,187-189,479-516
+  s_086f006d5a9290::t_5339ac941a1f8d 517
+docs/specs/catalog-data-model.md
+  s_086f006d5a9290::t_4c0fd561ff0dd0 441-445
+web/assets/map/drawer.js
+  s_086f006d5a9290::t_6deac3c032169c 26,729
+web/tests/js/replaces-box.test.mjs
+  s_086f006d5a9290::t_49c011b26e6406 3-4,7,34-48
+web/src/Moderation/SubmissionQueue.php
+  s_086f006d5a9290::t_cb3531720aad07 1190
+  s_086f006d5a9290::t_413071ff485894 55,59,239,585,603,637-641,662-664,673-675,677-683,691,693,695-697,712-739,1185-1189,1191-1214
+  s_086f006d5a9290::t_5e8f391b8f0729 11,642-643
+  s_086f006d5a9290::t_73e4ecc407f764 1215-1216
+docs/specs/moderation-and-contribution.md
+  s_086f006d5a9290::t_4c0fd561ff0dd0 2228-2232
+  s_086f006d5a9290::t_453aa7d0903067 2126
+  s_086f006d5a9290::t_68fc6a44a58303 2125
+  s_086f006d5a9290::t_ce7eec7a0657f8 615-618
+docs/specs/edit-items/A-road-surface.md
+  s_086f006d5a9290::t_4c0fd561ff0dd0 61-64,109-143
+  s_086f006d5a9290::t_4c1e932db4a0d1 144
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ac89330efeac712ff40031ee58ac24748a13821c",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_086f006d5a9290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97afd631-7f48-4430-aac8-2c62f5b7a119",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
