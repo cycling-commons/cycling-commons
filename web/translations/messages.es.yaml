@@ -3078,7 +3078,8 @@ moderate:
     answered_none: 'Registrado: este lugar no tiene equivalente en OSM.'
   replaces:
     heading: 'Aprobar sustituye estos lugares'
-    osm_takes: 'pasa a ser este lugar'
+    osm_heading: 'Aprobar completa esta entrada de OpenStreetMap'
+    osm_takes: 'sigue siendo la referencia OSM'
   empty:
     heading: 'Cola vacía'
     body: 'No queda nada por revisar. Bien.'

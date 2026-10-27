@@ -427,10 +427,16 @@ or a ticked OSM point no served row holds, so the raw pin does not come back.
 row, credited to the submitter. The curator sees the list before deciding, on
 the queue card and in the drawer ("Approving replaces these places"), in a
 box in the trail colour, computed by the same rule (`ReplacedPlaces::preview`).
-Its last line names the OSM point the new place holds once approved, whose
-free pin goes ("OpenStreetMap · node/… · becomes this place",
-`ReplacedPlaces::takesOsm`): its own point, else a ticked point nobody holds,
-else the point of the first row it retires. A rejection retires nothing.
+Each row names the place, whose it is (its data provider's name, else
+"Cycling Commons", also when its line came from OSM: every row here is a place
+on our map), the distance and its id.
+The place adds to its OSM object and keeps it as `osm_ref`, so a value can go
+back to OpenStreetMap on the right object; the card names its own object in the
+OSM chip only. When the place takes over another OSM point (a ticked point
+nobody holds, else the point of the first row it retires,
+`ReplacedPlaces::takesOsm`), a second box names it ("Approving adds to this
+OpenStreetMap entry", "OpenStreetMap · node/… · stays the OSM reference"),
+because that point's free pin leaves our map. A rejection retires nothing.
 
 **While the new place waits.** The rider's own new place, still
 `submitted`, opens in the wizard with the same list and the same known-places

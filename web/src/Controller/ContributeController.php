@@ -303,13 +303,16 @@ final class ContributeController extends AbstractController
         if (null !== $poi && null !== PlaceKind::label($type->letter(), (string) ($poi['kind'] ?? ''))) {
             $current['type'] = (string) $poi['kind'];
         }
-        $prechosen = SurfaceVocabulary::fromTileClass((string) $request->query->get('surface', ''));
-        if (null !== $prechosen) {
-            foreach ($this->registry->for($type)->all() as $field) {
-                if ('surface' === $field->name && \in_array($prechosen, $field->choices, true)) {
-                    $current['surface'] = $prechosen;
-                    break;
-                }
+        /* The form opens on what the map showed: the surface the rider picked and the road type OSM gives the way.
+           A road type left as OSM has it is then no change on the curator's card. */
+        $prechosen = array_filter([
+            'surface' => SurfaceVocabulary::fromTileClass((string) $request->query->get('surface', '')),
+            'roadType' => RoadType::fromHighway((string) $request->query->get('osm_highway', '')),
+        ], static fn (?string $v): bool => null !== $v);
+        foreach ($this->registry->for($type)->all() as $field) {
+            $value = $prechosen[$field->name] ?? null;
+            if (null !== $value && \in_array($value, $field->choices, true)) {
+                $current[$field->name] = $value;
             }
         }
 

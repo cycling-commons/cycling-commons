@@ -89,6 +89,11 @@ final readonly class SubmissionChangeSummary
                 'was' => null === $was || '' === $was ? null : ChangeValue::format((string) $field, $was),
                 'now' => ChangeValue::format((string) $field, $now),
             ];
+            // A value as it was is no change: a new place taken from OpenStreetMap repeats the road type OSM gave it
+            // (owner 2026-10-26: "Road type: Local road -> Local road").
+            if (null !== $row['was'] && $row['was'] === $row['now']) {
+                continue;
+            }
             if (null !== $row['was'] && self::isProse($row['was']) && self::isProse($row['now'])) {
                 $row['diff'] = TranslationDiff::around(TranslationDiff::words($row['was'], $row['now']));
             }

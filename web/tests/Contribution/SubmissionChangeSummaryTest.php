@@ -49,6 +49,19 @@ final class SubmissionChangeSummaryTest extends TestCase
         self::assertSame('5,957,493 (2024) · https://census.test/oregon', $rows[0]['now']);
     }
 
+    /** A value as OpenStreetMap had it is no change, so the card leaves it out (owner 2026-10-26). */
+    public function testAValueAsItWasIsNoRow(): void
+    {
+        $sub = $this->submission('A', [
+            'roadType' => ['was' => 'Local road', 'now' => 'Local road'],
+            'surface' => ['was' => null, 'now' => 'Asphalt'],
+        ]);
+        $rows = $this->summary()->rows($sub);
+
+        self::assertCount(1, $rows);
+        self::assertSame('Asphalt', $rows[0]['now']);
+    }
+
     public function testATownOrRegionTextIsNamedWithItsLanguage(): void
     {
         $sub = $this->submission('', ['text:nl' => ['was' => 'Oud.', 'now' => 'Nieuw.']]);

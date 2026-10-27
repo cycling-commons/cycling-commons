@@ -715,8 +715,9 @@ final class SubmissionQueue
     }
 
     /**
-     * The OpenStreetMap point this new place holds once approved, as
-     * ReplacedPlaces will hand it over.
+     * The OpenStreetMap point this new place takes over once approved, as
+     * ReplacedPlaces will hand it over. Null for the place's own answered
+     * `osm_ref`: the card's OSM chip names that one already.
      *
      * @param array<string, mixed> $r
      */
@@ -725,10 +726,14 @@ final class SubmissionQueue
         if (SubmissionType::NewItem->value !== (string) $r['type'] || null === $r['item_id']) {
             return null;
         }
+        $own = null !== ($r['osm_ref'] ?? null) ? (string) $r['osm_ref'] : null;
+        if (null !== $own && null !== ($r['osm_checked_at'] ?? null)) {
+            return null;
+        }
 
         return $this->replacedPlaces->takesOsm(
             (int) $r['item_id'],
-            null !== ($r['osm_ref'] ?? null) ? (string) $r['osm_ref'] : null,
+            $own,
             ReplacedPlaces::ticks(null !== ($r['replaces'] ?? null) ? json_decode((string) $r['replaces'], true) : null),
         );
     }

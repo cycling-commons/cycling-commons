@@ -244,6 +244,20 @@ final class MaterializeFlowTest extends WebTestCase
         self::assertSame('Gravel', $crawler->filter('select[name="improve[details][surface]"] option[selected]')->attr('value'));
     }
 
+    public function testASurfaceLineOpensTheWizardOnTheRoadTypeOsmGivesIt(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'roadtype');
+
+        $crawler = $client->request('GET', '/improve?ref=way/778899&type=road-surface&lat=50.49&lng=6.04&osm_highway=unclassified');
+        self::assertResponseIsSuccessful();
+        self::assertSame('Local road', $crawler->filter('select[name="improve[details][roadType]"] option[selected]')->attr('value'));
+
+        // A highway value we have no road type for leaves the choice to the rider.
+        $crawler = $client->request('GET', '/improve?ref=way/778899&type=road-surface&lat=50.49&lng=6.04&osm_highway=motorway');
+        self::assertCount(0, $crawler->filter('select[name="improve[details][roadType]"] option[selected]'));
+    }
+
     public function testAClassThatConfirmsNothingLeavesTheSurfaceUnchosen(): void
     {
         $client = static::createClient();

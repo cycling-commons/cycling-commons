@@ -941,6 +941,7 @@ final class MapController extends AbstractController
                 'replacesHead' => $t->trans('moderate.replaces.heading'),
                 'replacesOurs' => $t->trans('improve.similar.from_ours'),
                 'replacesOsm' => $t->trans('moderate.replaces.osm_takes'),
+                'replacesOsmHead' => $t->trans('moderate.replaces.osm_heading'),
                 'replacesMetres' => $t->trans('improve.similar.metres', ['%m%' => '%m%']),
                 'osmUnanswered' => $t->trans('moderate.error.osm_unanswered'),
                 // A town or region text is approved on its own form, where the

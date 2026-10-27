@@ -411,6 +411,12 @@ confident wrong answers. The drawer shows both — `Residential street ·
 living_street` — because a rider following the link back to OSM needs OSM's own
 word.
 
+The form opens on the road type OSM gives the way (`osm_highway` on the
+drawer's edit link, mapped by `RoadType::fromHighway`); a `highway` value with
+no road type leaves the choice empty. A road type the rider leaves as OSM has
+it is no change, and the curator's card shows no row for it
+(`SubmissionChangeSummary` drops every row whose value is as it was).
+
 ### Assumptions are shown, marked, and never stored
 
 A `traffic` value written from a constant keyed on surface class would be worse

@@ -91,4 +91,48 @@ final class NewItemShowsItsValuesTest extends WebTestCase
         self::assertSame('Asphalt', $bySurface[0]['now']);
         self::assertNull($bySurface[0]['was'], 'a new item proposes from nothing');
     }
+
+    /** A road on its own OSM way adds to that way: the card's OSM chip names it, and no box says it is replaced. */
+    public function testANewPlaceOnItsOwnOsmWayGetsTheChipAndNoBox(): void
+    {
+        self::bootKernel();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $queue = static::getContainer()->get(SubmissionQueue::class);
+
+        $rider = (new User())->setEmail('newitem-ownway@test.test');
+        $rider->setPassword('x');
+        $em->persist($rider);
+
+        $item = (new Item())->setLetter('A')->setName('Zuiderdijk')
+            ->setGeom('{"type":"LineString","coordinates":[[5.1076,52.6637],[5.1201,52.6503]]}')
+            ->setCountryCode('NL')
+            ->setState(ItemState::Submitted)->setSource(ItemSource::Osm)->setSourceRef('way/999043')
+            ->answerOsm('way/999043')
+            ->setAttributes(['surface' => 'Asphalt']);
+        $em->persist($item);
+        $em->flush();
+
+        $sub = (new Submission())
+            ->setType(SubmissionType::NewItem)->setLetter('A')->setUserId((int) $rider->getId())
+            ->setItemId((int) $item->getId())
+            ->setTitle('Zuiderdijk')
+            ->setGeom('{"type":"Point","coordinates":[5.1076,52.6637]}')
+            ->setCountryCode('NL')
+            ->setChanges(['surface' => ['was' => null, 'now' => 'Asphalt']])
+            ->setPayload([]);
+        $em->persist($sub);
+        $em->flush();
+
+        $card = null;
+        foreach ($queue->pendingForMap(ModerationScope::global()) as $row) {
+            if ((int) $row['id'] === (int) $sub->getId()) {
+                $card = $row;
+                break;
+            }
+        }
+        self::assertNotNull($card, 'the submission must reach the desk');
+        self::assertSame(['state' => 'linked', 'ref' => 'way/999043', 'candidates' => []], $card['osm'], 'the chip');
+        self::assertNull($card['replacesOsm'], 'its own way is no box');
+        self::assertSame([], $card['replaces']);
+    }
 }

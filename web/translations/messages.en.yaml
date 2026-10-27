@@ -3071,7 +3071,8 @@ moderate:
     answered_none: 'Recorded: this place has no OSM counterpart.'
   replaces:
     heading: 'Approving replaces these places'
-    osm_takes: 'becomes this place'
+    osm_heading: 'Approving adds to this OpenStreetMap entry'
+    osm_takes: 'stays the OSM reference'
   empty:
     heading: 'Queue clear'
     body: 'Nothing left to review. Nice.'

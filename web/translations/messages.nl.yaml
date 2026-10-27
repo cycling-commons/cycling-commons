@@ -3056,7 +3056,8 @@ moderate:
     answered_none: 'Vastgelegd: deze plek heeft geen OSM-tegenhanger.'
   replaces:
     heading: 'Goedkeuren vervangt deze plekken'
-    osm_takes: 'wordt deze plek'
+    osm_heading: 'Goedkeuren vult dit OpenStreetMap-object aan'
+    osm_takes: 'blijft de OSM-verwijzing'
   empty:
     heading: 'Wachtrij leeg'
     body: 'Niets meer te beoordelen. Goed gedaan.'

@@ -3057,7 +3057,8 @@ moderate:
     answered_none: 'Festgehalten: dieser Ort hat kein OSM-Gegenstück.'
   replaces:
     heading: 'Die Freigabe ersetzt diese Orte'
-    osm_takes: 'wird dieser Ort'
+    osm_heading: 'Die Freigabe ergänzt diesen OpenStreetMap-Eintrag'
+    osm_takes: 'bleibt der OSM-Verweis'
   empty:
     heading: 'Warteschlange leer'
     body: 'Nichts mehr zu prüfen. Super.'
