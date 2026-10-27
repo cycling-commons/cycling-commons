@@ -767,6 +767,11 @@
   .maplibregl-popup-anchor-bottom .maplibregl-popup-tip{border-top-color:var(--chrome-bg)}
   .maplibregl-popup-anchor-left .maplibregl-popup-tip{border-right-color:var(--chrome-bg)}
   .maplibregl-popup-anchor-right .maplibregl-popup-tip{border-left-color:var(--chrome-bg)}
+  /* Right-click "Add here": the place types, two columns, plain links. */
+  .pop .pop-add{margin-top:.5rem;max-width:20rem}
+  .pop .pop-add ul{list-style:none;margin:.25rem 0 0;padding:0;columns:2;column-gap:1rem}
+  .pop .pop-add li{break-inside:avoid;padding:.12rem 0}
+  .pop .pop-add a{font-size:.85rem;color:inherit;text-decoration:underline;text-underline-offset:2px}
   .pop .pop-co{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;color:var(--chrome-head);text-transform:uppercase}
   .pop h4{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin:.2rem 0 .5rem}
   .pop .pop-tags{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.6rem}

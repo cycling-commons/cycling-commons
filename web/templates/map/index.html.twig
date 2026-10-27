@@ -1236,6 +1236,15 @@ window.CC_VENDOR = {{ {
 
 {% if is_granted('ROLE_USER') %}
 <script nonce="{{ csp_nonce() }}">
+  {# Right-click "Add here" (map-and-search.md, "Add here from the map"): each place type's add form, opened at the
+     spot. The order of the Contribute page. #}
+  {% set add_types = [] %}
+  {% for t in ['road-surface', 'water-food', 'public-toilets', 'bike-services', 'hazards', 'getting-there', 'shelter', 'climbs', 'where-to-sleep', 'scenic-views', 'history-culture'] %}
+    {% set add_types = add_types|merge([{type: t, label: ('item_type.' ~ t ~ '.label')|trans}]) %}
+  {% endfor %}
+  window.CC_ADD_HERE = {{ {head: 'map.add_here'|trans, href: path('improve'), types: add_types}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT') b-or constant('JSON_UNESCAPED_SLASHES'))|raw }};
+</script>
+<script nonce="{{ csp_nonce() }}">
   {# Ride-check (map-and-search.md §9): endpoint + stateless CSRF token for the
      logged-in GPX upload. Riders-only block — anonymous visitors get no control. #}
 

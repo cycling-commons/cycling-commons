@@ -91,5 +91,19 @@ final class MapToolsLockedTest extends WebTestCase
         self::assertSame(1, $crawler->filter('#rcFile')->count());
         self::assertSame(1, $crawler->filter('#addClimbHere')->count());
         self::assertSame(0, $crawler->filter('#p-tools .cc-locked')->count());
+        // The right-click "Add here" list: every place type, in the page's language.
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('window.CC_ADD_HERE = {"head":"Add here","href":"/improve"', $html);
+        self::assertStringContainsString('{"type":"road-surface","label":"Road surface"}', $html);
+        self::assertStringContainsString('{"type":"history-culture","label":"History \u0026 culture"}', $html);
+    }
+
+    /** A visitor gets no "Add here" list on a right-click: the forms need an account. */
+    public function testLoggedOutGetsNoAddHereList(): void
+    {
+        $client = $this->client();
+        $client->request('GET', '/map');
+
+        self::assertStringNotContainsString('CC_ADD_HERE', (string) $client->getResponse()->getContent());
     }
 }

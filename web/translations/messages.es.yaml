@@ -1799,6 +1799,7 @@ map:
   scope_miss_go: 'Mostrar {area}'
   add_climb_heading: 'Añadir un puerto'
   add_climb_here: 'Añadir un puerto aquí'
+  add_here: 'Añadir aquí'
   add_climb_note: '¿Conoces una subida que falta? Márcala desde el pie hasta la cima.'
   zoom_for_coverage: 'Acerca el zoom para ver las capas de cobertura completa'
   pending_follows_areas: 'Los pines pendientes de revisión ignoran el filtro de región: siguen las zonas que moderas.'
@@ -5537,6 +5538,7 @@ changelog:
   v0913_road_safety: "<b>La seguridad vial en el mapa.</b> Si una carretera te da un carril bici separado, una franja ciclista o la calzada compartida con los coches tiene ahora su propio interruptor entre las capas del mapa, con leyenda, y se ve desde el zoom 12."
   v0913_roads: "<b>Un solo aspecto para cada carretera.</b> Los firmes añadidos en Cycling Commons se ven igual que los de OpenStreetMap."
   v0913_road_editor: "<b>Añadir un firme.</b> La línea entre tus dos toques sigue la carretera que tocaste, también donde las bicis no pueden circular. El formulario nombra las carreteras de OpenStreetMap bajo la línea y rellena el nombre y el tipo de la carretera."
+  v0913_add_here: "<b>Añadir desde el mapa.</b> Haz clic derecho en el mapa para añadir allí un firme, un punto de agua o cualquier otro lugar."
   v0913_population: "<b>De dónde viene una población.</b> La población de una región puede llevar un enlace a su fuente."
   v0913_fixes: "<b>Entre las correcciones menores:</b> en un teléfono, la guía del planificador ya no se esconde detrás del cajón izquierdo."
   v0913_curator_review: "<b>Corregir antes de aprobar.</b> Puedes corregir o confirmar el nuevo lugar de un ciclista antes de aprobarlo, y tu confirmación cuenta cuando lo haces."

@@ -1195,6 +1195,7 @@ map:
   scope_miss_go: '{area} anzeigen'
   add_climb_heading: 'Anstieg hinzufügen'
   add_climb_here: 'Hier einen Anstieg hinzufügen'
+  add_here: 'Hier hinzufügen'
   add_climb_note: 'Du kennst einen Anstieg, der fehlt? Zeichne ihn vom Fuß bis zum Gipfel.'
   zoom_for_coverage: 'Zoome hinein, um die Ebenen mit vollständiger Abdeckung zu sehen'
   pending_follows_areas: 'Pins, die auf Prüfung warten, ignorieren den Regionsfilter: sie folgen den Gebieten, die du moderierst.'
@@ -5510,6 +5511,7 @@ changelog:
   v0913_road_safety: "<b>Verkehrssicherheit auf der Karte.</b> Ob eine Straße dir einen eigenen Radweg, einen Radfahrstreifen oder die Fahrbahn mit den Autos bietet, hat jetzt einen eigenen Schalter bei den Kartenebenen, mit Legende, und ist ab Zoom 12 zu sehen."
   v0913_roads: "<b>Ein Aussehen für jede Straße.</b> Beläge, die auf Cycling Commons hinzugefügt wurden, sehen aus wie die von OpenStreetMap."
   v0913_road_editor: "<b>Einen Belag hinzufügen.</b> Die Linie zwischen deinen zwei Tipps folgt der Straße, die du angetippt hast, auch wo Fahrräder nicht fahren dürfen. Das Formular nennt die OpenStreetMap-Straßen unter der Linie und füllt Name und Art der Straße aus."
+  v0913_add_here: "<b>Von der Karte aus hinzufügen.</b> Klicke mit der rechten Maustaste auf die Karte, um dort einen Straßenbelag, eine Wasserstelle oder einen anderen Ort hinzuzufügen."
   v0913_population: "<b>Woher eine Einwohnerzahl kommt.</b> Die Einwohnerzahl einer Region kann einen Link zu ihrer Quelle tragen."
   v0913_fixes: "<b>Unter den kleineren Korrekturen:</b> Auf einem Telefon versteckt sich die Anleitung des Planers nicht mehr hinter der linken Schublade."
   v0913_curator_review: "<b>Korrigieren vor dem Freigeben.</b> Du kannst den neuen Ort eines Fahrers korrigieren oder bestätigen, bevor du ihn freigibst, und deine Bestätigung zählt, sobald du das tust."

@@ -3287,6 +3287,19 @@ Right-click on the map copies the spot as `52.367612, 5.239157`
 the two halves of one gesture meet: copy a point, paste it anywhere, get back
 to it.
 
+**Add here from the map.** For a signed-in rider the same popup lists every
+place type under "Add here", in the Contribute page's order: road surface,
+water and food, public toilets, bike services, hazards, getting there,
+shelter, climbs, where to sleep, scenic views, history and culture. Each is a
+plain link to that type's add form at the spot:
+`/improve?type=road-surface&mode=add&lat=52.656464&lng=5.142613&z=15`. A
+point type opens with its pin there, ready to drag; a road surface or a climb
+opens with the map there, to tap. The zoom is the map's, and at least 14, so a
+road can be tapped at once. The list comes with the page (`window.CC_ADD_HERE`,
+the types' own labels, `addHereHtml()` in `assets/map/add-here.js`); a visitor
+gets none, as the forms need an account. A right-click a place or a ride took
+first shows no popup.
+
 - **One parser, no second copy.** `web/assets/contribute/coords.js` registers
   `window.Cc.parseLatLng` / `formatLatLng`; the map page loads that same
   classic script (as it already does `contribute/media-upload.js`) and

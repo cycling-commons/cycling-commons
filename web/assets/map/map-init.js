@@ -6,6 +6,7 @@ import { pinOffset, locateOffset, locateErrorMessage, offsetAsPadding } from './
 import { WARM_GREENS, LAND_TONE, TOWN_TONE, ROAD_TONE, WATER_TONE, ROAD_EDGE, setPaintsOn, calmBasemapOn } from './basemap-tone.js';
 import { hopIsNear } from './camera-hop.js';
 import { uDistUnit } from './units.js';
+import { addHereHtml } from './add-here.js';
 
 export const map = (function(){
   if(window.__ccMapInstance) return window.__ccMapInstance;
@@ -310,7 +311,7 @@ let _styleReady=false;
 export const styleReady = () => _styleReady;
 export function markStyleReady(){ _styleReady=true; }
 
-/** Right-click → show + copy coordinates. */
+/** Right-click → show + copy coordinates, and the "Add here" list. */
 export function initCoordPopup(){
   let _coordPopup=null;
   map.on('contextmenu', e=>{
@@ -320,8 +321,9 @@ export function initCoordPopup(){
   });
   function showCoords(e){
     const c = `${e.lngLat.lat.toFixed(6)}, ${e.lngLat.lng.toFixed(6)}`;
-    if(!_coordPopup) _coordPopup=new maplibregl.Popup({closeButton:true,className:'pop'});
-    const label=ok=>_coordPopup.setHTML(`<div class="pop"><div class="pop-co">Coordinates${ok?' · copied':' — select to copy'}</div>${c}</div>`);
+    if(!_coordPopup) _coordPopup=new maplibregl.Popup({closeButton:true,className:'pop',maxWidth:'22rem'});
+    const add=addHereHtml(window.CC_ADD_HERE, e.lngLat.lat, e.lngLat.lng, map.getZoom());
+    const label=ok=>_coordPopup.setHTML(`<div class="pop"><div class="pop-co">Coordinates${ok?' · copied':' · select to copy'}</div>${c}${add}</div>`);
     label(false); _coordPopup.setLngLat(e.lngLat).addTo(map);
     if(navigator.clipboard) navigator.clipboard.writeText(c).then(()=>label(true)).catch(()=>{});
   }
