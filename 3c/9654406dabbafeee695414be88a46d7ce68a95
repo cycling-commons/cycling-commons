@@ -1,0 +1,46 @@
+web/assets/map/mapillary.js
+  s_086f006d5a9290::t_9eb855e3b8c4cd 5,36-37
+web/tests/js/click-to-scope-layers.test.cjs
+  s_086f006d5a9290::t_b52f407164737d 1-38
+  s_086f006d5a9290::t_ab509957085f7d 39-45
+web/assets/map/routes-tiles.js
+  s_086f006d5a9290::t_9eb855e3b8c4cd 6,94,117,158
+web/assets/map/render.js
+  s_086f006d5a9290::t_7163110387527f 4,72,100
+  s_086f006d5a9290::t_9eb855e3b8c4cd 90,346,372
+docs/specs/map-and-search.md
+  s_086f006d5a9290::t_c4e6f1df8ae6e2 1472-1474
+  s_086f006d5a9290::t_00378b9df08d84 1481-1482
+  s_086f006d5a9290::t_325529fc8d93b8 1475-1480
+web/assets/map/traffic-layer.js
+  s_086f006d5a9290::t_9eb855e3b8c4cd 9,63
+web/assets/map/scope-ui.js
+  s_086f006d5a9290::t_26f558ccdfb9e6 639-641
+  s_086f006d5a9290::t_79cf76572e42aa 6,13,618-620,622
+web/assets/map/map-init.js
+  s_086f006d5a9290::t_7163110387527f 24-27
+  s_086f006d5a9290::t_7467b0e027274b 16-23,28
+web/assets/map/surface-tiles.js
+  s_086f006d5a9290::t_9eb855e3b8c4cd 6,128,255,306
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3c9654406dabbafeee695414be88a46d7ce68a95",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_086f006d5a9290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97afd631-7f48-4430-aac8-2c62f5b7a119",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
