@@ -2212,6 +2212,11 @@ that keeps the reviewed road apart from the roads around it. A climb keeps its
 gradient colours (§5.2b). Pinned by
 `NewItemShowsItsValuesTest::testANewPlaceOnItsOwnOsmWayGetsTheChipAndNoBox`.
 
+Opening a road stretch's card turns the map's Surfaces switch on when it is
+off, through the switch itself (`#ovSurface`): OpenStreetMap's road lines and
+our own roads go on together, so the road around the stretch shows, and the
+road approved next draws over OSM's line at once.
+
 ### 5.2d What OSM said, so a curator can see what changed
 
 A rider can turn an asphalt road into a gravel one. Usually they are right,

@@ -1267,11 +1267,12 @@ export function renderDrawerBody(layer, f){
   if(pShape){
     const first = pShape.after ? 'after' : 'before';
     if(showPendingShape(pShape, first)) fitPendingShape(pShape, first);
-    /* Reviewing A: turn the surface skin on so the stretch has roads around it. */
+    /* Reviewing A: the Surfaces switch on, so the stretch has roads around it. Through the switch itself, as a
+       rider's tap: OpenStreetMap's lines and our own roads go on together, with the key and the On, so a road
+       approved next draws over OSM's line at once. */
     if(f.pending.letter === 'A' && surfaceTilesConfigured() && !surfaceTilesVisible()){
-      setSurfaceTiles(true);
       const btn = document.getElementById('ovSurface');
-      if(btn){ btn.hidden = false; btn.classList.add('on'); }
+      if(btn && !btn.hidden) btn.click(); else setSurfaceTiles(true);
     }
   } else {
     clearPendingShape();
