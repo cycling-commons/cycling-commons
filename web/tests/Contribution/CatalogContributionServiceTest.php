@@ -1088,6 +1088,29 @@ final class CatalogContributionServiceTest extends KernelTestCase
     }
 
     /**
+     * A second waiting road on the way another waiting road holds is not linked either: approving it would retire the
+     * first. It queues with its OSM question open, where the curator sees the clash.
+     */
+    public function testADrawnRoadOnAWayAWaitingRoadHoldsIsNotLinked(): void
+    {
+        $this->roadWays(['way/6571337']);
+        $this->wallonia();
+        $rider = $this->rider();
+        $road = [
+            'type' => 'road-surface',
+            'segment' => '{"a":[5.86,50.47],"b":[5.87,50.48],"line":[[5.86,50.47],[5.87,50.48]]}',
+            'details' => ['name' => 'Zuiderdijk', 'surface' => 'Asphalt'],
+        ];
+        $first = $this->service->submit('add', $road, $rider);
+        $second = $this->service->submit('add', $road, $rider);
+
+        $itemOf = fn ($r): Item => $this->em->find(Item::class, (int) $this->em->find(Submission::class, $r->submissionId)->getItemId());
+        self::assertSame('way/6571337', $itemOf($first)->getOsmRef(), 'the first road links itself');
+        self::assertFalse($itemOf($second)->osmAnswered(), 'the second one waits unlinked');
+        self::assertSame(['way/6571337'], $itemOf($second)->getAttributes()['waysSpanned'], 'its ways are kept');
+    }
+
+    /**
      * A road saved before roads linked themselves, or with no engine at hand, links when it is approved (owner
      * 2026-10-26, the Elbaweg): the approval needs no OSM answer for it.
      */

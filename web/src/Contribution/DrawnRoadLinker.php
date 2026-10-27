@@ -8,6 +8,7 @@ namespace App\Contribution;
 
 use App\Catalog\Entity\Item;
 use App\Catalog\Import\OsmLinker;
+use App\Catalog\ItemState;
 use App\Catalog\ItemType;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -51,7 +52,9 @@ final class DrawnRoadLinker
 
     /**
      * A new road surface linked to the way its line covers longest; false when it is answered already, is no road
-     * surface, names no way, or another served row holds that way (then it queues, where a curator sees the clash).
+     * surface, names no way, or another row holds that way: a served one, or another road still waiting (then it
+     * queues unlinked, and its OSM question shows the curator the clash). Two waiting roads on one way used to link
+     * both, and approving the second retired the first (the Zuiderdijk, sent twice two minutes apart, 2026-10-26).
      *
      * @param array<string, mixed> $attributes the item's attributes, with `waysSpanned`
      */
@@ -61,13 +64,23 @@ final class DrawnRoadLinker
         $main = \is_array($ways) ? ($ways[0] ?? null) : null;
         if ($item->osmAnswered() || ItemType::RoadSurface->letter() !== $item->getLetter()
             || !\is_string($main) || 1 !== preg_match('~^way/\d{1,16}$~', $main)
-            || $this->linker->refIsTaken($main, $item->getLetter(), (int) $item->getId())) {
+            || $this->linker->refIsTaken($main, $item->getLetter(), (int) $item->getId())
+            || $this->heldByAnotherWaitingRoad($main, (int) $item->getId())) {
             return false;
         }
         $item->answerOsm($main);
         $this->em->flush();
 
         return true;
+    }
+
+    /** True when another road surface still waiting for its decision holds this way as its `osm_ref`. */
+    private function heldByAnotherWaitingRoad(string $ref, int $itemId): bool
+    {
+        return false !== $this->em->getConnection()->fetchOne(
+            'SELECT 1 FROM item WHERE id <> :id AND letter = :letter AND state = :waiting AND osm_ref = :ref LIMIT 1',
+            ['id' => $itemId, 'letter' => ItemType::RoadSurface->letter(), 'waiting' => ItemState::Submitted->value, 'ref' => $ref],
+        );
     }
 
     /**

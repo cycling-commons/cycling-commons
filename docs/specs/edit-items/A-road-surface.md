@@ -56,9 +56,11 @@ covered). They are stored as `waysSpanned`, the longest first, at most 120,
 and the longest becomes the item's `osm_ref`, which answers its OSM question
 by construction (`CatalogContributionService::linkDrawnRoad()`), for a rider's
 road as for a curator's: a curator's own road applies at once, a rider's
-reaches the curator linked. Not when another served row holds that way
-(`OsmLinker::refIsTaken()`): then it queues unlinked, where a curator sees the
-clash. The ways are no value
+reaches the curator linked. Not when another row holds that way: a served
+one (`OsmLinker::refIsTaken()`), or another road surface still waiting for its
+decision (`DrawnRoadLinker`): then it queues unlinked, and its OSM question
+shows the curator the clash. Two waiting roads on one way would otherwise both
+link, and approving the second would retire the first. The ways are no value
 anybody gave, so no change card lists `waysSpanned` as a row
 (`ChangeValue::NOT_A_ROW`); the card's OSM chip names the way. A redrawn line of a waiting new road is read again. Without an engine
 nothing is linked, and the road waits for the curator's answer as before.
