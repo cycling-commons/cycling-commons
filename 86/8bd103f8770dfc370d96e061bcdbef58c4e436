@@ -1,0 +1,31 @@
+web/src/Contribution/DrawnRoadLinker.php
+  s_086f006d5a9290::t_142d53a9965854 11,55-57,67-68,77-83
+  s_086f006d5a9290::t_b34eb35eed419e 84-85
+web/tests/Contribution/CatalogContributionServiceTest.php
+  s_086f006d5a9290::t_142d53a9965854 1091-1112
+  s_086f006d5a9290::t_0b0c25f3130aa4 1090
+docs/specs/edit-items/A-road-surface.md
+  s_086f006d5a9290::t_45b6b915432c23 59-60
+  s_086f006d5a9290::t_a210babd05be4f 61-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "868bd103f8770dfc370d96e061bcdbef58c4e436",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_086f006d5a9290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97afd631-7f48-4430-aac8-2c62f5b7a119",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
