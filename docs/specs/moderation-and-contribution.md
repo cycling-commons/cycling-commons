@@ -124,6 +124,17 @@ and a climb with a stored line always gets its map, because the line is the item
 
 ### 1.2 Gating and search
 
+- **Where the form's map opens.** A link that names a spot (`?lat=&lng=&z=`,
+  the item's own place) opens there. Otherwise the map opens on the region or
+  country the rider last looked at on the map, read in the browser from the
+  map's stored scope (`cc-scope`) and never sent; on My area, or with nothing
+  stored, on the rider's base location at zoom 11; with neither, on Spa
+  (`5.86, 50.49`, zoom 12). Example: a rider who last looked at
+  `region:noord-holland` opens Contribute → Road surface on Noord-Holland. The
+  page brings each region's camera box and the rider's own base location
+  (`form_map_start()`, `FormMapStartExtension`, as `window.CC_FORM_START`)
+  only when the link names no spot; `form-start.js` (`window.Cc.formStart`)
+  picks the start. A country opens on the box round its regions.
 - **Step 1 gates on the location** (`refreshGate()` in `improve.js`): Next is
   disabled until `WZ.loc` is set (a pin placed for a point, both endpoints
   placed for a segment, or the location known from the entry point), and,

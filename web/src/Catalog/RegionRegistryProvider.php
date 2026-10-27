@@ -31,7 +31,7 @@ final class RegionRegistryProvider
      * Client code must never compare `bbox[0] <= lng && lng <= bbox[2]`; the
      * helpers in assets/map/scope.js exist so it does not have to.
      *
-     * @return list<array{id: int, slug: string, countryCode: string, bbox: array{0: float, 1: float, 2: float, 3: float}, adj: list<int>, outline: list<list<float>>, defaultMode: string}>
+     * @return list<array{id: int, slug: string, countryCode: string, bbox: array{0: float, 1: float, 2: float, 3: float}, view: array{0: float, 1: float, 2: float, 3: float}, adj: list<int>, outline: list<list<float>>, defaultMode: string}>
      */
     public function all(): array
     {

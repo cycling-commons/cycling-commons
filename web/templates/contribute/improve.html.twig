@@ -91,6 +91,10 @@
      improve.js step 1: a climb (letter N) mounts the shared three-point
      editor instead of the single-pin Locate. Only emitted here -
      the unbound branch above never reaches this template region. #}
+  {# Where the map opens when the link names no spot (form-start.js, moderation-and-contribution.md §1.2). #}
+  {% if item_lat|default(null) is null and app.request.query.get('lat') is empty %}
+  <script nonce="{{ csp_nonce() }}">window.CC_FORM_START = {{ form_map_start()|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+  {% endif %}
   <script nonce="{{ csp_nonce() }}">window.CC_ITEM = {{ {letter: item_type.letter, similar: similar_edit|default(false), lat: item_lat|default(null), lng: item_lng|default(null), route: current.route|default(null), grad: current.grad|default(null), steep: current.steep|default(null), steepPoint: current.steepPoint|default(null), gain: current.gain|default(null), avg: current.avgGradient|default(null), segment: current.segment|default(null)}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
   {% include 'contribute/_media_config.html.twig' with {max: 6} %}
   {# Every string improve.js renders itself (docs/specs/security-architecture.md §4.3).
@@ -671,6 +675,8 @@
 {# coords.js registers window.Cc.parseLatLng — the place-search box reads it at
    mount time so a coordinate copied off the map can be pasted straight in. #}
 <script src="{{ asset('contribute/coords.js') }}"></script>
+{# form-start.js registers window.Cc.formStart: where the map opens when the link names no spot. #}
+<script src="{{ asset('contribute/form-start.js') }}"></script>
 {# media-upload.js registers window.Cc.mountMediaUploads, which improve.js
    calls at mount time — so it has to be defined first. #}
 <script src="{{ asset('contribute/media-upload.js') }}"></script>

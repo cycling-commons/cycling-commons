@@ -44,8 +44,12 @@
   var _type = wiz.dataset.type || '';
   var _locMode = wiz.dataset.locationMode || 'point';
 
+  /* No spot in the link: the region the rider last looked at on the map, else their base location, else Spa
+     (form-start.js). The map's stored scope is read here and never sent. */
+  var storedScope = function () { try { return localStorage.getItem('cc-scope'); } catch (e) { return null; } };
+  var START = hasCoords ? { center: [initLng, initLat], zoom: isNaN(initZoom) ? 14 : initZoom } : window.Cc.formStart(storedScope(), window.CC_FORM_START);
+
   var DEFAULTS = {
-    center: hasCoords ? [initLng, initLat] : [5.86, 50.49],
     icon: wiz.dataset.icon || '✎'
   };
 
@@ -254,8 +258,10 @@
       return new maplibregl.Map({
         container: 'wmap',
         style: 'https://tiles.openfreemap.org/styles/liberty',
-        center: DEFAULTS.center,
-        zoom: hasCoords ? (isNaN(initZoom) ? 14 : initZoom) : 12,
+        center: START.center,
+        zoom: START.zoom,
+        bounds: START.bounds,
+        fitBoundsOptions: { padding: 24 },
         attributionControl: false
       });
     } catch (e) {
