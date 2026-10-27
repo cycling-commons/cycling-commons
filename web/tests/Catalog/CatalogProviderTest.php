@@ -367,6 +367,34 @@ final class CatalogProviderTest extends KernelTestCase
     }
 
     /**
+     * An approved place carries the OSM refs it claims, so the map hides OpenStreetMap's own line under it at once
+     * (owner 2026-10-27: an approved Blokdijk drew under OSM's red "surface not recorded" line until a reload).
+     */
+    public function testFeatureForItemCarriesTheOsmRefsTheItemClaims(): void
+    {
+        $bulk = $this->payload()['A'][0];
+        $db = static::getContainer()->get(\Doctrine\DBAL\Connection::class);
+        $was = $db->fetchOne('SELECT attributes FROM item WHERE id = :id', ['id' => $bulk['id']]);
+        $db->executeStatement(
+            "UPDATE item SET attributes = attributes || '{\"waysSpanned\": [\"way/73164964\", \"way/73164965\"]}'::jsonb WHERE id = :id",
+            ['id' => $bulk['id']],
+        );
+        try {
+            $one = static::getContainer()->get(CatalogProvider::class)->featureForItem($bulk['id']);
+
+            self::assertNotNull($one);
+            self::assertContains('way/73164964', $one['refs']);
+            self::assertContains('way/73164965', $one['refs']);
+            $all = $this->payload()['refs'];
+            foreach ($one['refs'] as $ref) {
+                self::assertContains($ref, $all, 'the same claim as the payload makes');
+            }
+        } finally {
+            $db->executeStatement('UPDATE item SET attributes = CAST(:a AS jsonb) WHERE id = :id', ['a' => $was, 'id' => $bulk['id']]);
+        }
+    }
+
+    /**
      * A submitted (not yet served) item must stay out of every payload, but a
      * curator reviewing it on the map needs its final form: `anyState` opens
      * the one-item mapper for that preview only (owner 2026-08-25).

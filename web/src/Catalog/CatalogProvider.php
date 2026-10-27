@@ -273,9 +273,28 @@ final class CatalogProvider
      *
      * @see docs/specs/moderation-and-contribution.md §6.3
      *
-     * @return array{letter: string, feature?: array{type: string, properties: array<string, mixed>, geometry: mixed}, climb?: array<string, mixed>, segment?: array<string, mixed>}|null
+     * It carries the OSM refs the item claims (ClaimedOsmRefs), so the map hides OpenStreetMap's own line or pin
+     * under it at once, as the payload's `refs` do after a reload.
+     *
+     * @return array{letter: string, feature?: array{type: string, properties: array<string, mixed>, geometry: mixed}, climb?: array<string, mixed>, segment?: array<string, mixed>, refs: list<string>}|null
      */
     public function featureForItem(int $itemId, bool $anyState = false): ?array
+    {
+        $out = $this->itemFeature($itemId, $anyState);
+        if (null === $out) {
+            return null;
+        }
+        /** @var list<string> $refs */
+        $refs = $this->db->fetchFirstColumn('SELECT ref FROM ('.ClaimedOsmRefs::selectSql(itemId: $itemId).') AS u ORDER BY ref');
+        $out['refs'] = $refs;
+
+        return $out;
+    }
+
+    /**
+     * @return array{letter: string, feature?: array{type: string, properties: array<string, mixed>, geometry: mixed}, climb?: array<string, mixed>, segment?: array<string, mixed>}|null
+     */
+    private function itemFeature(int $itemId, bool $anyState): ?array
     {
         $letter = $this->db->fetchOne('SELECT letter FROM item WHERE id = :id', ['id' => $itemId]);
         if (!\is_string($letter)) {

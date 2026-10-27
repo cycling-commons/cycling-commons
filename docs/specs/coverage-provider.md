@@ -1222,7 +1222,10 @@ the data-plane facts it consumes:
   The claim rule itself lives in one place, `App\Catalog\ClaimedOsmRefs`:
   `curatedRefs()` reads its SELECT, and the ride check's coverage arm
   (map-and-search.md §9) excludes the same refs, so a point hidden on the map
-  is never listed along a ride either.
+  is never listed along a ride either. An approval's response carries the
+  same rule for the one approved item (`ClaimedOsmRefs::selectSql(itemId:)`,
+  `refs` beside the feature), and the desk adds them to `CC_CURATED_REFS`, so
+  the tile twin goes at once (moderation-and-contribution.md §6.3).
 - **A catalog item borrows its OSM point's photo.** A served item with no
   `photo`/`photos` of its own (after `PhotoValidator::sift()`) that stands for
   an OSM point, through `source_ref` or `osm_ref`, carries

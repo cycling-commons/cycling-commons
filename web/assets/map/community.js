@@ -13,6 +13,7 @@ import { escPend, curatorMayEdit } from './util.js';
 import { osmAnsweredHtml } from './osm-question.js';
 import { postConfirm } from './confirm-post.js';
 import { voteHref } from './vote-link.js';
+import { updateCoverageScopeFilter } from './coverage.js';
 
 const CC_BIKES=['Road','Gravel','MTB','E-bike','Handbike','Recumbent','Trike','Tandem'];
 /* `metadata` leads: asking for a detail to be corrected is the common errand,
@@ -339,6 +340,14 @@ export function submitModeration(btn){
         }
       } catch (e) { /* no BroadcastChannel: keep old behaviour */ }
       let reopen = null;
+      /* The OSM refs the approved place claims: OpenStreetMap's own line or pin under it goes at once, as after a
+         reload (catalog-load.js CC_CURATED_REFS). The filters read the list when the layers below are applied again. */
+      if(res.item && Array.isArray(res.item.refs) && res.item.refs.length){
+        const held = new Set(window.CC_CURATED_REFS || []);
+        res.item.refs.forEach(r => held.add(r));
+        window.CC_CURATED_REFS = Array.from(held);
+        updateCoverageScopeFilter();
+      }
       if(res.item && res.item.feature && LETTER_KEY[res.item.letter]){
         const key = LETTER_KEY[res.item.letter];
         addCuratedFeature(key, res.item.feature);

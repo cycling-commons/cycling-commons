@@ -2115,7 +2115,11 @@ comes back as a climb (`climb`), and an A road stretch as a CC_SURFACE segment
 (`segment`, the same builder as the bulk payload, `surfaceSegment()`): the desk
 writes it into `CC_SURFACE.segments` and redraws the surface layer
 (`window.__ccApplySurface`), so the approved road takes the place of the pending
-line at once. R routes send no item and need a reload.
+line at once. R routes send no item and need a reload. The response also
+carries the OSM refs the item claims (`refs`, the `ClaimedOsmRefs` rule for
+that one item): the desk adds them to `CC_CURATED_REFS` and applies the tile
+filters again, so OpenStreetMap's own line or pin under the approved place goes
+at once, as after a reload.
 
 **The decision buttons are delegated, not bound per element.** The drawer body
 is re-rendered often (the async "Recent changes" fetch alone rewrites it after

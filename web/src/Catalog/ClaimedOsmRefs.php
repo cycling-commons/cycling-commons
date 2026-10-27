@@ -27,12 +27,14 @@ final class ClaimedOsmRefs
      * `$regionId` narrows every arm to one region, for the region slice the
      * map splices over its cached payload (catalog-data-model.md §9.1). The
      * value is an integer, cast by the caller, so this stays a plain SQL
-     * string the other callers can embed.
+     * string the other callers can embed. `$itemId` narrows it to one item,
+     * for the place an approval has just put on the map.
      */
-    public static function selectSql(?int $regionId = null): string
+    public static function selectSql(?int $regionId = null, ?int $itemId = null): string
     {
         $served = 'i.state IN '.ItemState::servedSqlTuple()
-            .(null === $regionId ? '' : ' AND '.CatalogStamps::regionSql('i', $regionId));
+            .(null === $regionId ? '' : ' AND '.CatalogStamps::regionSql('i', $regionId))
+            .(null === $itemId ? '' : ' AND i.id = '.$itemId);
         $sourced = "SELECT i.source_ref AS ref FROM item i WHERE i.source = 'osm' AND ".$served
             .' AND NOT (i.letter IN '.CoverageRetirement::lettersSqlTuple()
             .' AND '.CoverageRetirement::untouchedOsmSql('i').')';
