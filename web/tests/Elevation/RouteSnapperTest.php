@@ -239,4 +239,112 @@ final class RouteSnapperTest extends TestCase
 
         self::assertArrayNotHasKey('costing_options', $this->lastBody);
     }
+
+    /**
+     * A drawing editor's two taps on one street, with a shorter road beside it: the first line takes the other road,
+     * so it is kept off and the engine asked again, and the line follows the street (owner 2026-10-27, the Blokdijk at
+     * the N506: 1137 m along it, 836 m by the cycle path beside it).
+     */
+    public function testFollowKeepsTheLineOnTheTappedStreet(): void
+    {
+        $short = self::encode([[52.6565, 5.1426], [52.6600, 5.1450], [52.6628, 5.1490]]);
+        $along = self::encode([[52.6565, 5.1426], [52.6574, 5.1455], [52.6610, 5.1470], [52.6628, 5.1490]]);
+        $bodies = [];
+        $http = new MockHttpClient(static function (string $method, string $url, array $options) use (&$bodies, $short, $along): MockResponse {
+            $body = json_decode((string) $options['body'], true);
+            $bodies[] = ['url' => $url, 'body' => $body];
+            if (str_ends_with($url, '/locate')) {
+                $edge = static fn (array $names, float $m): array => ['distance' => $m, 'edge_info' => ['names' => $names]];
+
+                return new MockResponse((string) json_encode([
+                    ['edges' => [$edge(['Blokdijk'], 0.6), $edge(['Hemweg'], 0.6)]],
+                    ['edges' => [$edge(['Blokdijk'], 0.8), $edge(['De Hout', 'N506'], 0.8), $edge(['Provincialeweg'], 40.0)]],
+                ]));
+            }
+            $kept = isset($body['exclude_locations']);
+            $maneuvers = $kept
+                ? [['length' => 1.137, 'street_names' => ['Blokdijk'], 'begin_shape_index' => 0, 'end_shape_index' => 3]]
+                : [['length' => 0.008, 'street_names' => ['Hemweg'], 'begin_shape_index' => 0, 'end_shape_index' => 0],
+                    ['length' => 0.826, 'street_names' => ['Provincialeweg'], 'begin_shape_index' => 0, 'end_shape_index' => 2],
+                    ['length' => 0.013, 'street_names' => ['Blokdijk'], 'begin_shape_index' => 2, 'end_shape_index' => 2]];
+
+            return new MockResponse((string) json_encode(['trip' => ['legs' => [[
+                'shape' => $kept ? $along : $short,
+                'summary' => ['length' => $kept ? 1.137 : 0.848],
+                'maneuvers' => $maneuvers,
+            ]]]]));
+        });
+        $snapper = new RouteSnapper($http, new NullLogger(), 'http://valhalla.test');
+
+        $line = $snapper->follow([52.656464, 5.142613], [52.662804, 5.149018]);
+
+        self::assertNotNull($line);
+        self::assertSame(1137.0, $line['distanceM'], 'the line along the Blokdijk');
+        self::assertCount(3, $bodies, 'locate, the first line, the line kept on the street');
+        $first = $bodies[1]['body'];
+        self::assertSame('bicycle', $first['costing']);
+        self::assertSame(['shortest' => true, 'ignore_access' => true, 'ignore_oneways' => true, 'ignore_restrictions' => true], $first['costing_options']['bicycle'], 'no bike rule bends the line');
+        self::assertArrayNotHasKey('exclude_locations', $first);
+        // Kept off the cycle path only: the 8 m of Hemweg at the start is the junction, not a detour.
+        self::assertSame([['lat' => 52.66, 'lon' => 5.145]], $bodies[2]['body']['exclude_locations']);
+    }
+
+    /** Taps on no street in common: the first line, one ask of the engine. */
+    public function testFollowWithoutASharedStreetTakesTheFirstLine(): void
+    {
+        $shape = self::encode([[50.0, 5.0], [50.001, 5.001]]);
+        $routes = 0;
+        $http = new MockHttpClient(static function (string $method, string $url) use (&$routes, $shape): MockResponse {
+            if (str_ends_with($url, '/locate')) {
+                return new MockResponse((string) json_encode([
+                    ['edges' => [['distance' => 1.0, 'edge_info' => ['names' => ['Rue A']]]]],
+                    ['edges' => [['distance' => 1.0, 'edge_info' => ['names' => ['Rue B']]]]],
+                ]));
+            }
+            ++$routes;
+
+            return new MockResponse((string) json_encode(['trip' => ['legs' => [[
+                'shape' => $shape, 'summary' => ['length' => 0.2],
+                'maneuvers' => [['length' => 0.2, 'street_names' => ['Rue C'], 'begin_shape_index' => 0, 'end_shape_index' => 1]],
+            ]]]]));
+        });
+
+        $line = (new RouteSnapper($http, new NullLogger(), 'http://valhalla.test'))->follow([50.0, 5.0], [50.001, 5.001]);
+
+        self::assertNotNull($line);
+        self::assertSame(200.0, $line['distanceM']);
+        self::assertSame(1, $routes);
+    }
+
+    /** A street the engine cannot keep to: the first line, after FOLLOW_ROUNDS tries, never nothing. */
+    public function testFollowGivesTheFirstLineWhenTheStreetCannotBeKept(): void
+    {
+        $first = self::encode([[50.0, 5.0], [50.001, 5.001]]);
+        $other = self::encode([[50.0, 5.0], [50.0005, 5.002], [50.001, 5.001]]);
+        $routes = 0;
+        $http = new MockHttpClient(static function (string $method, string $url) use (&$routes, $first, $other): MockResponse {
+            if (str_ends_with($url, '/locate')) {
+                $at = [['edges' => [['distance' => 1.0, 'edge_info' => ['names' => ['Rue A']]]]]];
+
+                return new MockResponse((string) json_encode([$at[0], $at[0]]));
+            }
+            ++$routes;
+
+            return new MockResponse((string) json_encode(['trip' => ['legs' => [[
+                'shape' => 1 === $routes ? $first : $other, 'summary' => ['length' => 1 === $routes ? 0.2 : 0.4],
+                'maneuvers' => [['length' => 0.2, 'street_names' => ['Rue B'], 'begin_shape_index' => 0, 'end_shape_index' => 1]],
+            ]]]]));
+        });
+
+        $line = (new RouteSnapper($http, new NullLogger(), 'http://valhalla.test'))->follow([50.0, 5.0], [50.001, 5.001]);
+
+        self::assertNotNull($line);
+        self::assertSame(200.0, $line['distanceM'], 'the first line');
+        self::assertSame(RouteSnapper::FOLLOW_ROUNDS + 1, $routes);
+    }
+
+    public function testFollowWithAnEmptyUrlIsNull(): void
+    {
+        self::assertNull((new RouteSnapper(new MockHttpClient(), new NullLogger(), ''))->follow([50.0, 5.0], [50.001, 5.001]));
+    }
 }

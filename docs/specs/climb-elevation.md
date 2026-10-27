@@ -455,7 +455,7 @@ Both halves of the chain run on the server, against our own Valhalla:
 
 | | where it runs | endpoint |
 |---|---|---|
-| geometry | the server (`RouteSnapper`, via `POST /contribute/route`) | our Valhalla `/route`, `bicycle` costing, per continent (`ElevationEndpoints`) |
+| geometry | the server (`RouteSnapper::follow()`, via `POST /contribute/route`) | our Valhalla `/locate` and `/route`, `bicycle` costing with no bike rule (`FOLLOW_COSTING`), per continent (`ElevationEndpoints`) |
 | elevation | the server (`ElevationClient`) | our Valhalla `/height`, per continent (`ELEVATION_URLS`) |
 | validation | the server (`ClimbGeometry`) | - |
 
@@ -473,6 +473,20 @@ minute, is consumed after validation, so a malformed body costs no budget.
 two endpoints do not drift. The reply keeps OSRM's response shape (`routes[0]
 .geometry.coordinates`, `distance`; `code: NoRoute` with no route), which the
 editor parses; with no route the editor keeps the straight line.
+
+**The line follows the road as it lies.** The editors draw a road; nobody
+rides the line. So `RouteSnapper::follow()` asks the engine with no bike rule
+(`FOLLOW_COSTING`: `shortest`, `ignore_access`, `ignore_oneways`,
+`ignore_restrictions`): a road closed to bikes, a one-way street the other way
+and a turn ban are drawn as they are. And where both taps lie on one street
+(the names of the engine's edges within 15 m of each tap, `/locate`), the line
+stays on it: every stretch of the line longer than 30 m on another road is kept
+off (`exclude_locations` at its middle) and the engine asked again, at most
+`FOLLOW_ROUNDS` (4) times; a street it cannot keep to gives the first line.
+Measured on the Blokdijk at the N506 (West Friesland): 1137 m along the
+street, 836 m by the cycle path beside it, which the shortest way alone took.
+Pinned by `RouteSnapperTest::testFollowKeepsTheLineOnTheTappedStreet` and its
+three siblings.
 
 **The server never sees the road in the payload.** `ClimbGeometry` decodes and
 validates a posted line (pairs of finite numbers, within `MAX_POINTS`) and by

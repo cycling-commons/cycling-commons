@@ -18,8 +18,11 @@ A surface entry is a **segment**, not a point: the first action is to tap the **
 (Contrast: most types drop a single pin; rides need none.)
 
 **The line between them follows the road** (owner 2026-08-12). The two pins are snapped
-with the same bicycle router the climb editor uses — `/contribute/route` → our
-Valhalla — and the path it returns is what is drawn and what is stored. A
+by the same call the climb editor uses — `/contribute/route` → our
+Valhalla — and the path it returns is what is drawn and what is stored. It
+follows the road as it lies, with no bike rule, and stays on the street both
+pins are on ([climb-elevation.md](../climb-elevation.md) §3e, "The line
+follows the road as it lies"). A
 straight chord between two taps crosses fields, houses and the wrong bank of a
 river; on a map that reads as a mistake, because it is one. Measured on the
 hairpins above Francorchamps, the road wanders **563 m** from the chord.

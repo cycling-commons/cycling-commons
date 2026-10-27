@@ -72,7 +72,8 @@ final class RouteController extends AbstractController
             return new JsonResponse(['error' => 'rate_limited'], 429);
         }
 
-        $snapped = $snapper->snap($points['a'], $points['b']);
+        // A drawing editor's line follows the road as it lies (RouteSnapper::follow()).
+        $snapped = $snapper->follow($points['a'], $points['b']);
         if (null === $snapped) {
             // NoRoute is an answer, not an error — editor keeps the straight line.
             return new JsonResponse(['code' => 'NoRoute', 'routes' => []]);
