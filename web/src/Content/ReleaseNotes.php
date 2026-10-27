@@ -61,6 +61,34 @@ final class ReleaseNotes
      */
     public const array RELEASES = [
         [
+            'version' => '0.9.13-beta',
+            'date' => '2026-10-27',
+            'sections' => [
+                'public' => [
+                    'changelog.v0913_road_safety',
+                    'changelog.v0913_roads',
+                    'changelog.v0913_road_editor',
+                    'changelog.v0913_population',
+                    'changelog.v0913_fixes',
+                ],
+                'curator' => [
+                    'changelog.v0913_curator_review',
+                    'changelog.v0913_curator_roads',
+                    'changelog.v0913_curator_fixes',
+                ],
+            ],
+            'kinds' => [
+                'changelog.v0913_road_safety' => 'new',
+                'changelog.v0913_roads' => 'improved',
+                'changelog.v0913_road_editor' => 'improved',
+                'changelog.v0913_population' => 'new',
+                'changelog.v0913_fixes' => 'fixed',
+                'changelog.v0913_curator_review' => 'improved',
+                'changelog.v0913_curator_roads' => 'improved',
+                'changelog.v0913_curator_fixes' => 'fixed',
+            ],
+        ],
+        [
             'version' => '0.9.12-beta',
             'date' => '2026-10-26',
             'sections' => [
