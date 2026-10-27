@@ -289,6 +289,19 @@ export const surfaceStyle=cls=>SURFACE_STYLE[cls]||{color:'#4E8C84'};
 // One GeoJSON source for all A segments + shared casing + one line layer per class.
 export const SURFACE_CLS=Object.keys(SURFACE_STYLE).concat('other');   // 'other' = unknown class → default solid teal
 export const surfaceClsLayerIds=()=>SURFACE_CLS.map(c=>'surface-cls-'+c);
+/* One road look, ours and OpenStreetMap's alike (owner 2026-10-27: "for the end users it doesn't matter to recognize
+   where they come from"): the class line, a pale class's dark edge, and the quality dots. surface-tiles.js draws the
+   OSM layer with the same values. */
+export const SURFACE_W=['interpolate',['linear'],['zoom'],8,0.6,11,1.4,14,3,16,6,18,12];
+export const SURFACE_OPACITY=['interpolate',['linear'],['zoom'],8,0.5,12,0.85];
+export const SURFACE_EDGE_W=['interpolate',['linear'],['zoom'],8,1.2,11,2.4,14,4.4,16,7.6,18,13.6];
+export const SURFACE_EDGE_OPACITY=['interpolate',['linear'],['zoom'],8,0.4,12,0.7];
+/* The quality dots: 3.5 px under a 5.5 px cream casing from zoom 13, as on the OSM layer. Our roads keep theirs below
+   that zoom too (owner 2026-10-26: zoomed out "we lose the dots"), smaller there with the thinner line. */
+export const SM_DOT_W=['interpolate',['linear'],['zoom'],9,1.8,11,2.4,13,3.5];
+export const SM_CASE_W=['interpolate',['linear'],['zoom'],9,2.8,11,3.8,13,5.5];
+export const SM_DOT_DASH=[0.6,2.8];
+export const SM_CASE_DASH=[0.6*3.5/5.5,2.8*3.5/5.5];
 /* Quality tones for curated ticks — same palette as surface-tiles.js SM_TONE. */
 const CURATED_SM_TONE={excellent:'#1E8E4F',good:'#5FA845',intermediate:'#D9A62E',bad:'#D4763B',very_bad:'#C2402F'};
 export function renderSurfaceLayer(layer, visible){
@@ -316,19 +329,16 @@ export function renderSurfaceLayer(layer, visible){
   const data={type:'FeatureCollection',features:feats};
   if(map.getSource('surface-src')){ map.getSource('surface-src').setData(data); return feats.length; }
   map.addSource('surface-src',{type:'geojson',data});
-  /* A stretch with its quality recorded keeps its class line and its dots, but not the wide cream casing (owner
-     2026-10-26: "we do not need the yellow line between the dots, just the dots", and the class colour of the
-     Zuiderdijk must stay); a stretch without one keeps its casing as well. */
-  const NO_SM=['!',['has','sm']];
+  /* Drawn as the OSM layer draws a road: no casing of our own, only a pale class's dark edge (sand). The layer keeps
+     the id 'surface-case', which the stacking (liftInfoLayersAboveRoutes) and the selection halo place by. */
   map.addLayer({id:'surface-case',type:'line',source:'surface-src',
-    filter:NO_SM,
+    filter:['==',['get','cls'],'sand'],
     layout:{'line-cap':'round','line-join':'round'},
-    paint:{'line-color':'#FBF4E4','line-width':8,'line-opacity':.9}});
-  const w=['interpolate',['linear'],['zoom'],9,3,13,5,16,8];
+    paint:{'line-color':surfaceStyle('sand').edge,'line-width':SURFACE_EDGE_W,'line-opacity':SURFACE_EDGE_OPACITY}});
   const featAt=e=>layer.features[e.features[0].properties.idx];
   SURFACE_CLS.forEach(cls=>{
     const st=surfaceStyle(cls), id='surface-cls-'+cls;
-    const paint={'line-color':st.color,'line-width':w,'line-opacity':1};
+    const paint={'line-color':st.color,'line-width':SURFACE_W,'line-opacity':SURFACE_OPACITY};
     if(st.dash) paint['line-dasharray']=st.dash;
     map.addLayer({id,type:'line',source:'surface-src',
       filter:['==',['get','cls'],cls],
@@ -338,19 +348,16 @@ export function renderSurfaceLayer(layer, visible){
     map.on('mousemove',id,e=>{ const f=featAt(e); if(f) showTip(f.headline||featureSummary(f,D)||f.name, e.lngLat); });   
     map.on('mouseleave',id,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
   });
-  // Quality dots: the same stitch as the OSM skin, from the zoom our lines start (owner 2026-10-26: zoomed out "we
-  // lose the dots"), smaller when zoomed out. The cream under each dot keeps amber readable on any ground; a dash is
-  // measured in line widths, so the pattern keeps its rhythm as the width changes.
-  const dotW=['interpolate',['linear'],['zoom'],9,2.6,13,4.5,16,5.5];
-  const caseW=['interpolate',['linear'],['zoom'],9,4,13,7,16,8.5];
+  // Quality dots: the OSM layer's stitch (SM_DOT_W). The cream under each dot keeps amber readable on any ground; a
+  // dash is measured in line widths, so the pattern keeps its rhythm as the width changes.
   map.addLayer({id:'surface-q-case',type:'line',source:'surface-src',
     minzoom:9,
     filter:['has','sm'],
     layout:{'line-cap':'butt'},
     paint:{
       'line-color':'#FBF4E4',
-      'line-width':caseW,
-      'line-dasharray':[0.6*4.5/7, 2.8*4.5/7],
+      'line-width':SM_CASE_W,
+      'line-dasharray':SM_CASE_DASH,
       'line-opacity':0.9}});
   map.addLayer({id:'surface-q',type:'line',source:'surface-src',
     minzoom:9,
@@ -358,9 +365,9 @@ export function renderSurfaceLayer(layer, visible){
     layout:{'line-cap':'butt'},
     paint:{
       'line-color':['match',['get','sm'],...Object.entries(CURATED_SM_TONE).flat(),'rgba(0,0,0,0)'],
-      'line-width':dotW,
-      'line-dasharray':[0.6,2.8],
-      'line-opacity':0.95}});
+      'line-width':SM_DOT_W,
+      'line-dasharray':SM_DOT_DASH,
+      'line-opacity':0.9}});
   // The dots answer a click and a hover as the line under them does.
   map.on('click','surface-q',e=>{ if(plannerTakesLineClick(e)) return; const f=featAt(e); if(f) openDrawer(layer,f); });
   map.on('mouseenter','surface-q',()=>map.getCanvas().style.cursor='pointer');

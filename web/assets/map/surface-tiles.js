@@ -4,7 +4,7 @@
    toggle. SURFACE_STYLE is shared with A so a tile line and an A-item of the
    same class look the same. */
 import { map, flyToPin, holdLandTone } from './map-init.js';
-import { SURFACE_CLS, surfaceStyle } from './render.js';
+import { SURFACE_CLS, surfaceStyle, SURFACE_W, SURFACE_OPACITY, SURFACE_EDGE_W, SURFACE_EDGE_OPACITY, SM_DOT_DASH, SM_CASE_DASH } from './render.js';
 import { D, trVal } from './i18n.js';
 import { layerByKey } from './catalog.js';
 import { openDrawer } from './drawer.js';
@@ -100,19 +100,18 @@ function addClassifiedLayers(srcLayer, src, under) {
         layout: { 'line-cap': 'round', 'line-join': 'round', visibility: 'none' },
         paint: {
           'line-color': st.edge,
-          'line-width': ['interpolate', ['linear'], ['zoom'], 8, 1.2, 11, 2.4, 14, 4.4, 16, 7.6, 18, 13.6],
-          'line-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.4, 12, 0.7],
+          'line-width': SURFACE_EDGE_W,
+          'line-opacity': SURFACE_EDGE_OPACITY,
         },
       }, under);
     }
     const paint = {
       'line-color': st.color,
-      // Thinner than curated A at country zoom, where full weight is a smear;
-      // past the build's last zoom (13) the band keeps growing so at street
-      // zoom it covers the basemap's own road and the colour reads
-      // (owner 2026-10-14: a 3 px line beside a wider yellow road said nothing).
-      'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.6, 11, 1.4, 14, 3, 16, 6, 18, 12],
-      'line-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.5, 12, 0.85],
+      // The one road look our own roads share (render.js SURFACE_W): thin at country zoom, where full weight is a
+      // smear; past the build's last zoom (13) the band keeps growing so at street zoom it covers the basemap's own
+      // road and the colour reads (owner 2026-10-14: a 3 px line beside a wider yellow road said nothing).
+      'line-width': SURFACE_W,
+      'line-opacity': SURFACE_OPACITY,
     };
     if (st.dash) paint['line-dasharray'] = st.dash;
     map.addLayer({
@@ -149,7 +148,7 @@ function addClassifiedLayers(srcLayer, src, under) {
       paint: {
         'line-color': '#FBF4E4',
         'line-width': 5.5,
-        'line-dasharray': [0.6 * 3.5 / 5.5, 2.8 * 3.5 / 5.5],
+        'line-dasharray': SM_CASE_DASH,
         'line-opacity': 0.9,
       },
     }, under);
@@ -168,7 +167,7 @@ function addClassifiedLayers(srcLayer, src, under) {
           ...Object.entries(SM_TONE).flat(), 'rgba(0,0,0,0)'],
         'line-width': 3.5,
         // dash 0.6 + gap 2.8 line-widths ≈ a 2 px tick every 12 px at this width.
-        'line-dasharray': [0.6, 2.8],
+        'line-dasharray': SM_DOT_DASH,
         'line-opacity': 0.9,
       },
     }, under);

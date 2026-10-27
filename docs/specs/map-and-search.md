@@ -2066,7 +2066,7 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   the pool's own features, not the source, so they do not move. Clear hands
   back an empty set.
 - **A · Road surface** renders **consolidated**: ONE GeoJSON source for all
-  segments + one shared cream casing layer + **one line layer per surface
+  segments + one dark edge layer for sand (`surface-case`) + **one line layer per surface
   class** — MapLibre cannot data-drive `line-dasharray`, so dash/cap vary per
   class layer, not per feature. Style keys **primarily on `surface=`,
   secondarily on `smoothness=`** (avoiding CyclOSM's known bug that hides
@@ -2136,8 +2136,13 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   with `aria-pressed`; toggling one hides that class on *both* the curated and
   the tile layers, because a rider filtering to "gravel" means gravel, not
   gravel-from-one-source. Dash gaps in the key are **transparent**, not cream:
-  the curated layer has a white casing and the tile layer has none, so a painted
-  gap would make the key disagree with the map it explains.
+  neither layer draws a casing under its class lines, so a painted gap would
+  make the key disagree with the map it explains.
+- **Our roads look like OpenStreetMap's.** A rider does not need to tell whose
+  road it is, so the curated layer draws with the tile layer's own values,
+  shared from `render.js`: line width `SURFACE_W` (0.6 px at zoom 8 to 12 px at
+  18), opacity `SURFACE_OPACITY`, no casing of its own, and sand's dark edge
+  (`SURFACE_EDGE_W`). Pinned by `surface-width.test.cjs`.
 - **Quality ticks** (owner shape, 2026-08-12): surface QUALITY has a
   visual channel of its own — short coloured dashes drawn over the class lines
   (`surfq-*` layers in `surface-tiles.js`), green → amber → red from the OSM
@@ -2153,19 +2158,16 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   the rider-recorded smoothness rides the consolidated A source as `sm` and
   draws as `surface-q` in `render.js` (five form values, same palette:
   `CURATED_SM_TONE`, kept in step with `SM_TONE` by hand because surface-tiles
-  imports render). Unlike the skin's thin light lines, the curated
-  lines are wide and dark, so the curated ticks carry a cream casing tick
-  underneath (`surface-q-case`, dash scaled by the width ratio so the two
-  patterns stay in step) — an excellent-green tick on the paved slate is
-  invisible without it. The tile skin's ticks carry the same casing
-  (`surfq-case-<cc>`, under the `surfq-` prefix so applyClassVisibility
-  toggles and re-filters it with the ticks). A curated stretch with its quality recorded
-  keeps its class line and its dots but not the wide cream casing
-  (`surface-case` filtered to stretches without `sm`), so no cream band runs
-  between the dots, and the dots answer a click and a hover as the line
-  under them does. The curated dots show from zoom 9, where the curated lines start,
-  2.6 px wide at zoom 9 to 5.5 px at 16 with their casing in step; the tile
-  skin's ticks stay from zoom 13.
+  imports render). Every tick carries a cream casing tick underneath
+  (`surface-q-case` on ours, `surfq-case-<cc>` on the skin, under the `surfq-`
+  prefix so applyClassVisibility toggles and re-filters it with the ticks;
+  dash scaled by the width ratio so the two patterns stay in step), because an
+  excellent-green tick on the paved slate is invisible without it. The ticks
+  are 3.5 px under a 5.5 px casing on both layers (`SM_DOT_W`, `SM_CASE_W`,
+  `SM_DOT_DASH`, `SM_CASE_DASH`), and the curated dots answer a click and a
+  hover as the line under them does. The curated dots show from zoom 9, where
+  the curated lines start, growing to that size at zoom 13; the tile skin's
+  ticks stay from zoom 13.
 - **Class lines are SOLID; the dash channel belongs to quality**
   (owner 2026-08-14): once ticks stitched over the lines, gravel's own ochre
   dashes and an amber quality tick were two dash patterns fighting on one
