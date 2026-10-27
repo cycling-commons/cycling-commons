@@ -19,6 +19,7 @@ use App\Catalog\PlaceAuthor;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Community\ItemConfirmationService;
+use App\Contribution\DrawnRoadLinker;
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
 use App\Media\HeldPhotoNotRestored;
@@ -68,6 +69,8 @@ final class ModerationService
         private readonly PlaceAuthor $placeAuthor,
         // Whether a report led here, for the statement's source line (content-reports.md §7).
         private readonly ReportedSubjects $reported,
+        // A drawn road surface links itself before its approval asks for an OSM answer (edit-items/A-road-surface.md).
+        private readonly ?DrawnRoadLinker $roads = null,
     ) {
     }
 
@@ -121,6 +124,18 @@ final class ModerationService
         // A rejection's note is the facts of its statement of reasons (content-reports.md §7).
         if ('reject' === $decision && '' === trim((string) $note)) {
             throw new MissingReasonException('dsa_statement.desk.reject_note_required');
+        }
+
+        // A waiting drawn road surface links itself to the OSM roads under its line before the approval asks for an
+        // OSM answer; outside the transaction, as it asks the routing engine (DrawnRoadLinker).
+        if ('approve' === $decision && null !== $this->roads) {
+            $waiting = $this->em->find(Submission::class, $submissionId);
+            $road = null !== $waiting && SubmissionType::NewItem === $waiting->getType() && null !== $waiting->getItemId()
+                && $this->scopeProvider->allowsRegion($this->scopeProvider->scopeFor($curator), $waiting->getRegionId())
+                ? $this->em->find(Item::class, $waiting->getItemId()) : null;
+            if (null !== $road) {
+                $this->roads->linkWaiting($road);
+            }
         }
 
         return $this->refusable(function () use ($submissionId, $decision, $curator, $note, $rejectMediaIds): Submission {

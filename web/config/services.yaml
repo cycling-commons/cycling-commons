@@ -164,6 +164,12 @@ services:
             $valhallaUrl: '%env(ELEVATION_URL)%'
             $endpoints: '@App\Elevation\ElevationEndpoints'
     App\Contribution\BikeWayLocator: '@App\Contribution\ValhallaBikeWayLocator'
+    # The OSM ways under a drawn road surface (edit-items/A-road-surface.md): the same engine's /trace_attributes.
+    App\Contribution\ValhallaRoadWayLocator:
+        arguments:
+            $valhallaUrl: '%env(ELEVATION_URL)%'
+            $endpoints: '@App\Elevation\ElevationEndpoints'
+    App\Contribution\RoadWayLocator: '@App\Contribution\ValhallaRoadWayLocator'
     # The planner's map points on the road a bike would take (route-planner.md section 4.1): the same engine's /locate.
     App\Elevation\PointSnapper:
         arguments:
@@ -283,6 +289,9 @@ when@test:
         # private alias does not allow.
         App\Contribution\BikeWayLocator:
             alias: App\Contribution\ValhallaBikeWayLocator
+            public: true
+        App\Contribution\RoadWayLocator:
+            alias: App\Contribution\ValhallaRoadWayLocator
             public: true
 
         # Fetched directly by the credits tests. `autoconfigure` is NOT

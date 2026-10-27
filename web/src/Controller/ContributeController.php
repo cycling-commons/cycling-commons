@@ -589,8 +589,8 @@ final class ContributeController extends AbstractController
         $itemLat = \is_array($point) && is_numeric($point[1] ?? null) ? (float) $point[1] : null;
         $itemLng = \is_array($point) && is_numeric($point[0] ?? null) ? (float) $point[0] : null;
 
-        // A curator who came here from the queue's ✎ is correcting a detail; the
-        // decision itself lives on the map, so the review step points there
+        // A curator who came here from the queue's ✎ is correcting a detail;
+        // the decision itself lives on the map, so the review step points there
         // instead of leaving a greyed-out Submit (owner 2026-08-25).
         $pendingSubmissionId = null;
         if ($this->isGranted('ROLE_CURATOR')) {
@@ -600,14 +600,18 @@ final class ContributeController extends AbstractController
             );
             $pendingSubmissionId = false === $found ? null : (int) $found;
         }
+        // The queue's ✎ names the submission it opened (`sub`): a curator reviewing it, whoever wrote it, is in their
+        // curator role, so no "a change is waiting on this place" about the very change they review (owner
+        // 2026-10-26: "It is not about the person, but about the role").
+        $reviewing = null !== $pendingSubmissionId && $request->query->getInt('sub') === $pendingSubmissionId;
 
         // Two different facts, never merged into one sentence: a change of
         // your own is amended by what you send next (§7.3b), a stranger's is
         // a second review of possibly the same thing (§7.3c). Whichever one a
         // rider gets, the other would read as a lie.
         $user = $this->getUser();
-        $ownPending = $user instanceof User && null !== $this->contributions->openSubmissionFor((int) $item->getId(), $user);
-        $otherPendingSince = $ownPending
+        $ownPending = !$reviewing && $user instanceof User && null !== $this->contributions->openSubmissionFor((int) $item->getId(), $user);
+        $otherPendingSince = $ownPending || $reviewing
             ? null
             : $this->contributions->otherPendingSince((int) $item->getId(), $user instanceof User ? $user : null);
 

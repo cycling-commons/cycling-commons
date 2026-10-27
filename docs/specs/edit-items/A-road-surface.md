@@ -38,6 +38,34 @@ a real coordinate, and **both ends within 1 km of the pin they snapped from**.
 A segment may follow an actual ride — the demo includes a **gravel descent traced along the Spa · Sankt
 Vith loop** near its end, so a ride's real road type can be recorded.
 
+## A drawn road links itself
+
+A road surface drawn from start to end names no OpenStreetMap way of its own,
+and the add wizard's OSM question is built for single places: for a road it
+offered no right answer and was cleared as the stretch formed, so a curator's
+own road waited in the queue. So the server links it. When a new item's
+segment has a line and the form named no ways (no `_osm_ref`, no
+`_ways_spanned`, as a run picked from the map's own lines names),
+`RoadWayLocator::waysAlong()` asks our Valhalla which ways the line follows
+(`/trace_attributes`, `map_snap`, each edge's `way_id` and length summed per
+way; a way followed for less than 20 m is a junction crossed, not a road
+covered). They are stored as `waysSpanned`, the longest first, at most 120,
+and the longest becomes the item's `osm_ref`, which answers its OSM question
+by construction (`CatalogContributionService::linkDrawnRoad()`), for a rider's
+road as for a curator's: a curator's own road applies at once, a rider's
+reaches the curator linked. Not when another served row holds that way
+(`OsmLinker::refIsTaken()`): then it queues unlinked, where a curator sees the
+clash. A redrawn line of a waiting new road is read again. Without an engine
+nothing is linked, and the road waits for the curator's answer as before.
+
+A road saved before this, or with no engine at hand, is linked when it is
+approved (`ModerationService` runs the same `DrawnRoadLinker` before it asks
+for the OSM answer), so approving it needs no OSM answer either.
+
+A curator who opens a submission from the queue's ✎ (`sub=<id>`) reviews it in
+their curator role, whoever wrote it: the wizard shows no "a change is waiting
+on this place" about that very change, and points to the decision on the map.
+
 ## Correcting or confirming OSM's answer
 
 Most A segments a rider sees are not ours: they are the **OSM surface skin**, a

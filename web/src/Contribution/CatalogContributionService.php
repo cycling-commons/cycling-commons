@@ -68,6 +68,7 @@ final class CatalogContributionService implements ContributionStubInterface
         private readonly OsmLinker $linker,
         private readonly ItemConfirmationService $confirmations,
         private readonly BikeWayLocator $bikeWays,
+        private readonly DrawnRoadLinker $roads,
         private readonly RateLimiterFactoryInterface $elevationLimiter,
         private readonly RateLimiterFactoryInterface $routeSnapLimiter,
         private readonly WebsiteGate $websites,
@@ -225,6 +226,10 @@ final class CatalogContributionService implements ContributionStubInterface
                     $attributes['waysSpanned'] = \array_slice($spanned, 0, 120);
                 }
             }
+            // A road drawn from start to end names no ways of its own: the engine says which roads its line follows.
+            if (!isset($attributes['waysSpanned']) && null === ($payload['_osm_ref'] ?? null)) {
+                $attributes += $this->roads->waysFor($attributes['segment']['line'] ?? null);
+            }
         }
 
         // One item per OSM ref (docs/specs/osm-data-architecture.md §6).
@@ -272,6 +277,7 @@ final class CatalogContributionService implements ContributionStubInterface
         // never asked (catalog-data-model.md §5b) and their place queues as
         // before. The same tick box as on an edit marks it confirmed, with the
         // same drawer confirmation.
+        $this->linkDrawnRoad($submission, $attributes);
         $this->answerOsmIfCurator($submission, $by, $payload['_osm_answer'] ?? null);
         $applied = $this->applyIfCurator($submission, $by);
         $item = $applied && null !== $submission->getItemId() ? $this->em->find(Item::class, $submission->getItemId()) : null;
@@ -577,6 +583,10 @@ final class CatalogContributionService implements ContributionStubInterface
             $itemGeom = ($newItem && isset($attributes['segment']))
                 ? self::geomFor($attributes, (string) $item->getGeom())
                 : null;
+            // A redrawn road of a new item follows other roads: they are read again (linkDrawnRoad() below).
+            if (null !== $itemGeom && !isset($attributes['waysSpanned'])) {
+                $attributes += $this->roads->waysFor($attributes['segment']['line'] ?? null);
+            }
             /* What the first round stored beside the form (`_osm_ref`,
                `_osm_was`, `_replaces`, ...) is read on approval, and the
                revision's form does not carry it: kept, with this round's own
@@ -606,6 +616,9 @@ final class CatalogContributionService implements ContributionStubInterface
             // open suggestion on it found their own words waiting in the queue
             // (owner 2026-09-08). A revised NEW place applies on the same
             // rule as a fresh one: only with its OSM question answered.
+            if ($newItem) {
+                $this->linkDrawnRoad($open, $item->getAttributes());
+            }
             $applied = $this->applyIfCurator($open, $by);
 
             return new ContributionReceipt(
@@ -714,6 +727,19 @@ final class CatalogContributionService implements ContributionStubInterface
 
         $item->answerOsm($answer);
         $this->em->flush();
+    }
+
+    /**
+     * A new road surface's submission, linked by its line (DrawnRoadLinker).
+     *
+     * @param array<string, mixed> $attributes
+     */
+    private function linkDrawnRoad(Submission $submission, array $attributes): void
+    {
+        $item = null !== $submission->getItemId() ? $this->em->find(Item::class, $submission->getItemId()) : null;
+        if (null !== $item) {
+            $this->roads->link($item, $attributes);
+        }
     }
 
     private function isCurator(User|ApiAuthor $by): bool

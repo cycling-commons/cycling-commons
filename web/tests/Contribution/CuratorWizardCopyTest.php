@@ -107,6 +107,33 @@ final class CuratorWizardCopyTest extends WebTestCase
         self::assertSelectorTextContains('.wiz-waiting', 'You already have a change waiting');
     }
 
+    /**
+     * A curator who opens a submission from the queue's ✎ (`sub`) reviews it in their curator role, whoever wrote it
+     * (owner 2026-10-26: "It is not about the person, but about the role"): no "a change is waiting on this place"
+     * about the change itself, and the pointer to decide it on the map.
+     */
+    public function testACuratorReviewingFromTheQueueIsToldNothingIsWaiting(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $item = $this->seedItem();
+
+        $this->login($client, 'waiting-curator@example.com', ['ROLE_CURATOR']);
+        $me = $em->getRepository(User::class)->findOneBy(['email' => 'waiting-curator@example.com']);
+        self::assertNotNull($me);
+        self::seedPending($em, (int) $item->getId(), (int) $me->getId());
+        $sub = (int) $em->getConnection()->fetchOne('SELECT max(id) FROM submission WHERE item_id = :i', ['i' => $item->getId()]);
+
+        $client->request('GET', '/improve?item='.$item->getId().'&type=scenic-views&sub='.$sub);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('.wiz-waiting');
+        self::assertSelectorExists('#wz-curator-decide');
+
+        // Opened as a contributor, without `sub`, their own waiting change is still theirs to add to.
+        $client->request('GET', '/improve?item='.$item->getId().'&type=scenic-views');
+        self::assertSelectorTextContains('.wiz-waiting', 'You already have a change waiting');
+    }
+
     /** One waiting edit on an item, written straight in: the page only reads it. */
     private static function seedPending(EntityManagerInterface $em, int $itemId, int $userId): void
     {

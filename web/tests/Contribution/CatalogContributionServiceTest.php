@@ -17,9 +17,11 @@ use App\Catalog\ItemState;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Contribution\LimitReached;
+use App\Contribution\RoadWayLocator;
 use App\Elevation\ClimbProfiler;
 use App\Elevation\ElevationClient;
 use App\Entity\User;
+use App\Moderation\ModerationService;
 use App\Service\ContributionStubInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\NullLogger;
@@ -997,6 +999,136 @@ final class CatalogContributionServiceTest extends KernelTestCase
 
         $item = $this->em->find(Item::class, $this->em->find(Submission::class, $receipt->submissionId)->getItemId());
         self::assertSame(['way/111', 'way/222', 'way/444'], $item->getAttributes()['waysSpanned']);
+    }
+
+    /**
+     * The engine's answer for a drawn line, as a stub: the ways under it, the longest stretch first.
+     *
+     * @param list<string> $refs
+     */
+    private function roadWays(array $refs): void
+    {
+        // A fresh kernel, so the contribution service is built with the stub.
+        self::ensureKernelShutdown();
+        self::bootKernel();
+        static::getContainer()->set(RoadWayLocator::class, new class($refs) implements RoadWayLocator {
+            /** @param list<string> $refs */
+            public function __construct(private readonly array $refs)
+            {
+            }
+
+            public function waysAlong(array $line): array
+            {
+                return $this->refs;
+            }
+        });
+        $this->em = static::getContainer()->get(EntityManagerInterface::class);
+        $this->service = static::getContainer()->get(ContributionStubInterface::class);
+    }
+
+    /**
+     * A road surface drawn on the map links itself to the OpenStreetMap roads under its line (owner 2026-10-26: the
+     * form asked a curator "is this in OpenStreetMap?" about a road, lost the answer, and the curator's own road
+     * waited in the queue). The longest stretch is the item's OSM ref, every way it covers is in `waysSpanned`, and
+     * the OSM question is answered: a rider's road reaches the curator linked.
+     */
+    public function testADrawnRoadLinksItselfToTheOsmRoadsUnderIt(): void
+    {
+        $this->roadWays(['way/716714250', 'way/716714249']);
+        $this->wallonia();
+        $receipt = $this->service->submit('add', [
+            'type' => 'road-surface',
+            'segment' => '{"a":[5.86,50.47],"b":[5.87,50.48],"line":[[5.86,50.47],[5.865,50.475],[5.87,50.48]]}',
+            'details' => ['name' => 'Elbaweg', 'surface' => 'Asphalt'],
+        ], $this->rider());
+
+        $sub = $this->em->find(Submission::class, $receipt->submissionId);
+        self::assertSame(SubmissionStatus::Pending, $sub->getStatus(), 'a rider still waits for a curator');
+        $item = $this->em->find(Item::class, (int) $sub->getItemId());
+        self::assertSame('way/716714250', $item->getOsmRef());
+        self::assertTrue($item->osmAnswered());
+        self::assertSame(['way/716714250', 'way/716714249'], $item->getAttributes()['waysSpanned']);
+    }
+
+    public function testACuratorsDrawnRoadIsAppliedAtOnce(): void
+    {
+        $this->roadWays(['way/716714250']);
+        $this->wallonia();
+        $receipt = $this->service->submit('add', [
+            'type' => 'road-surface',
+            'segment' => '{"a":[5.86,50.47],"b":[5.87,50.48],"line":[[5.86,50.47],[5.87,50.48]]}',
+            'details' => ['name' => 'Elbaweg', 'surface' => 'Asphalt'],
+        ], $this->curator());
+
+        self::assertTrue($receipt->applied, 'linked by its own line, so the same approve step runs');
+        self::assertSame(SubmissionStatus::Approved, $this->em->find(Submission::class, $receipt->submissionId)->getStatus());
+    }
+
+    /** A road another served row already holds is not linked twice: the item queues, where a curator sees the clash. */
+    public function testADrawnRoadOnAWayAnotherRowHoldsIsNotLinked(): void
+    {
+        $this->roadWays(['way/716714250']);
+        $this->wallonia();
+        $first = $this->service->submit('add', [
+            'type' => 'road-surface',
+            'segment' => '{"a":[5.86,50.47],"b":[5.87,50.48],"line":[[5.86,50.47],[5.87,50.48]]}',
+            'details' => ['name' => 'Elbaweg', 'surface' => 'Asphalt'],
+        ], $this->curator());
+        self::assertTrue($first->applied);
+
+        $second = $this->service->submit('add', [
+            'type' => 'road-surface',
+            'segment' => '{"a":[5.861,50.471],"b":[5.869,50.479],"line":[[5.861,50.471],[5.869,50.479]]}',
+            'details' => ['name' => 'Elbaweg again', 'surface' => 'Gravel'],
+        ], $this->curator());
+        self::assertFalse($second->applied);
+        $item = $this->em->find(Item::class, (int) $this->em->find(Submission::class, $second->submissionId)->getItemId());
+        self::assertFalse($item->osmAnswered());
+    }
+
+    /**
+     * A road saved before roads linked themselves, or with no engine at hand, links when it is approved (owner
+     * 2026-10-26, the Elbaweg): the approval needs no OSM answer for it.
+     */
+    public function testAWaitingRoadLinksItselfWhenItIsApproved(): void
+    {
+        $this->roadWays([]);
+        $this->wallonia();
+        $rider = $this->rider();
+        $saved = $this->service->submit('add', [
+            'type' => 'road-surface',
+            'segment' => '{"a":[5.86,50.47],"b":[5.87,50.48],"line":[[5.86,50.47],[5.87,50.48]]}',
+            'details' => ['name' => 'Elbaweg', 'surface' => 'Asphalt'],
+        ], $rider);
+        $itemId = (int) $this->em->find(Submission::class, $saved->submissionId)->getItemId();
+        self::assertFalse($this->em->find(Item::class, $itemId)->osmAnswered(), 'no engine, no link');
+
+        $this->roadWays(['way/716714250', 'way/716714249']);
+        $curator = $this->curator();
+        static::getContainer()->get(ModerationService::class)->decide((int) $saved->submissionId, 'approve', $curator, null);
+
+        self::assertSame(SubmissionStatus::Approved, $this->em->find(Submission::class, $saved->submissionId)->getStatus());
+        $item = $this->em->find(Item::class, $itemId);
+        self::assertSame('way/716714250', $item->getOsmRef());
+        self::assertSame(['way/716714250', 'way/716714249'], $item->getAttributes()['waysSpanned']);
+    }
+
+    /** A run picked from the map's own lines keeps the ways the map named; the engine is not asked. */
+    public function testAPickedRunKeepsItsOwnWays(): void
+    {
+        $this->roadWays(['way/999']);
+        $this->wallonia();
+        $receipt = $this->service->submit('add', [
+            'type' => 'road-surface',
+            'segment' => '{"a":[5.86,50.47],"b":[5.87,50.48],"line":[[5.86,50.47],[5.87,50.48]]}',
+            '_osm_ref' => 'way/111',
+            '_ways_spanned' => 'way/111,way/222',
+            'details' => ['name' => 'Zuiderdijk run', 'surface' => 'Asphalt'],
+        ], $this->user());
+
+        $item = $this->em->find(Item::class, $this->em->find(Submission::class, $receipt->submissionId)->getItemId());
+        self::assertSame(['way/111', 'way/222'], $item->getAttributes()['waysSpanned']);
+        self::assertSame('way/111', $item->getOsmRef());
     }
 
     public function testAddSegmentWithoutSpannedRefsStoresNoAttribute(): void
