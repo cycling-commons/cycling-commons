@@ -40,9 +40,17 @@
 <div class="wrap" id="main">
   <div class="receipt">
     {{ include('contribute/_receipt_mark.html.twig') }}
-    {% if receipt.applied|default(false) %}
+    {% if receipt.waitingOn|default(null) %}
+    {# A curator's correction or confirmation of a rider's waiting new place: the place still waits for the decision. #}
+    <h2>{{ 'improve.receipt.waiting_heading'|trans }}</h2>
+    <p>{{ (receipt.confirmed|default(false) ? (receipt.applied ? 'improve.receipt.waiting_both_body' : 'improve.receipt.waiting_confirmed_body') : 'improve.receipt.waiting_body')|trans }}
+      <a href="{{ path('map') }}?pending={{ receipt.waitingOn }}">{{ 'improve.review.curator_decide_link'|trans }}</a></p>
+    {% elseif receipt.applied|default(false) %}
     <h2>{{ 'improve.receipt.applied_heading'|trans }}</h2>
     <p>{{ (receipt.confirmed|default(false) ? 'improve.receipt.applied_confirmed_body' : 'improve.receipt.applied_body')|trans }}</p>
+    {% elseif receipt.confirmed|default(false) %}
+    <h2>{{ 'improve.receipt.confirmed_heading'|trans }}</h2>
+    <p>{{ 'improve.receipt.confirmed_body'|trans }}</p>
     {% else %}
     <h2>{{ 'improve.receipt.heading'|trans }}</h2>
     <p>{{ 'improve.receipt.body'|trans }}</p>
@@ -51,7 +59,9 @@
        repeated the line above it and also claimed suggestions were "not yet
        persisted", which stopped being true once the moderation queue went in —
        the reference above is a real submission id. #}
+    {% if receipt.reference %}
     <p class="ref">{{ 'improve.receipt.reference'|trans }} {{ receipt.reference }}</p>
+    {% endif %}
     {# Two ways on, and the order is the point: the reference above is a real
        submission id, and Contributions is the page that tracks it, answers a
        curator's question on it, and shows the decision. Back to the map is the
@@ -582,6 +592,10 @@
         <h3 class="lc-h">{{ 'improve.lifecycle.heading_curator'|trans }}</h3>
         <p class="lc-funnel">{{ 'improve.lifecycle.funnel_curator'|trans }}</p>
       </div>
+      {% elseif reviewing_waiting|default(false) %}
+      {# A curator reviewing a rider's waiting new place: a correction goes into that place, which still waits. #}
+      <h3 class="lc-h">{{ 'improve.lifecycle.heading_curator'|trans }}</h3>
+      <p class="lc-funnel">{{ 'improve.lifecycle.funnel_review'|trans }}</p>
       {% elseif self_applies %}
       {# moderation-and-contribution.md 1.6: a curator's own edit is applied at
          once, so the promise must say so, not only the receipt. #}

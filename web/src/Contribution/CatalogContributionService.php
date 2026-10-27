@@ -526,6 +526,16 @@ final class CatalogContributionService implements ContributionStubInterface
         // No field/photo/pin change is not a contribution.
         $moved = self::pinMoved($payload, (float) $lat, (float) $lng);
         if ([] === $changes && !self::hasMedia($payload) && !$moved && !$this->ticksChanged($item, $payload, $by)) {
+            // A curator's "Mark it confirmed" tick is a contribution by itself.
+            if ($confirmNow && $by instanceof User && $this->isCurator($by) && $this->confirmNow($item, $by)) {
+                $waiting = $this->waitingNewPlace($item);
+
+                return new ContributionReceipt(
+                    null !== $waiting ? SubmissionRef::of($waiting) : '', 'improve', true, new \DateTimeImmutable(), $waiting?->getId(),
+                    confirmed: true,
+                    waitingOn: $waiting?->getId(),
+                );
+            }
             $this->reject('contribute.error.nothing_changed', 'details');
         }
 
@@ -635,6 +645,21 @@ final class CatalogContributionService implements ContributionStubInterface
             SubmissionRef::of($submission), 'improve', true, $submission->getCreatedAt(), $submission->getId(),
             applied: $applied,
             confirmed: $applied && $confirmNow && $this->confirmNow($item, $by),
+            // A correction to a rider's waiting new place is in that place now, and the place still waits.
+            waitingOn: $applied ? $this->waitingNewPlace($item)?->getId() : null,
+        );
+    }
+
+    /** The open new-place submission a waiting place belongs to, whoever sent it; null for a live place. */
+    private function waitingNewPlace(Item $item): ?Submission
+    {
+        if (ItemState::Submitted !== $item->getState()) {
+            return null;
+        }
+
+        return $this->em->getRepository(Submission::class)->findOneBy(
+            ['itemId' => $item->getId(), 'type' => SubmissionType::NewItem, 'status' => [SubmissionStatus::Pending, SubmissionStatus::NeedsInfo]],
+            ['id' => 'DESC'],
         );
     }
 

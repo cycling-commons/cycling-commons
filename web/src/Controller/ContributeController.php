@@ -643,6 +643,7 @@ final class ContributeController extends AbstractController
             'curator_writes_here' => $user instanceof User && $this->isGranted('ROLE_CURATOR')
                 && $scopes->allowsRegion($scopes->scopeFor($user), $item->getRegionId()),
             'pending_submission_id' => $pendingSubmissionId,
+            'reviewing_waiting' => $reviewing && ItemState::Submitted === $item->getState(),
             'own_pending' => $ownPending,
             'other_pending_since' => $otherPendingSince,
             'similar_edit' => null !== $openNew,

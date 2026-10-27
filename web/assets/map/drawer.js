@@ -737,8 +737,11 @@ function buildRecord(layer, f){
     const NEGATIVE_NOW = ['Out of order', 'Closed', 'Not there anymore', 'Gone — clear now', 'Reduced'];
     const assertsAbsence = chList.some(c => NEGATIVE_NOW.includes(c.now));
     // Not for a town or region text: there is no place to confirm.
+    // A place this curator already confirmed (the wizard's tick): said, not asked again; approval counts it.
     const alsoConfirm = ('B' !== s.letter && 'R' !== s.letter && 'text' !== s.type && !assertsAbsence)
-      ? `<label class="cc-mod-also"><input type="checkbox" class="cc-mod-confirm-cb"> ${D.alsoConfirm||'Also confirm — I know this place (counts as verified)'}</label>`
+      ? (s.confirmedByMe
+        ? `<p class="cc-mod-also done">✓ ${D.alsoConfirmed||'You already confirmed this place'}</p>`
+        : `<label class="cc-mod-also"><input type="checkbox" class="cc-mod-confirm-cb"> ${D.alsoConfirm||'Also confirm — I know this place (counts as verified)'}</label>`)
       : '';
     /* A town or region text is approved on its own form, where the curator
        decides whether the Wikipedia credit stays (moderation-and-contribution.md

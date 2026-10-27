@@ -65,6 +65,11 @@ for the OSM answer), so approving it needs no OSM answer either.
 A curator who opens a submission from the queue's ✎ (`sub=<id>`) reviews it in
 their curator role, whoever wrote it: the wizard shows no "a change is waiting
 on this place" about that very change, and points to the decision on the map.
+The curator may correct a value or tick "Mark it confirmed" first; either
+enables "Apply change", and the rider's new place still waits for the decision
+on the map (moderation-and-contribution.md §1.6, "A rider's waiting new place,
+reviewed by a curator"). With neither, the button stays grey, and the pointer
+says so.
 
 ## Correcting or confirming OSM's answer
 

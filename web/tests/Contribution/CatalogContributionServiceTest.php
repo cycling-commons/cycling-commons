@@ -16,6 +16,7 @@ use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
+use App\Community\ItemConfirmationService;
 use App\Contribution\LimitReached;
 use App\Contribution\RoadWayLocator;
 use App\Elevation\ClimbProfiler;
@@ -1111,6 +1112,110 @@ final class CatalogContributionServiceTest extends KernelTestCase
         $item = $this->em->find(Item::class, $itemId);
         self::assertSame('way/716714250', $item->getOsmRef());
         self::assertSame(['way/716714250', 'way/716714249'], $item->getAttributes()['waysSpanned']);
+    }
+
+    /**
+     * A curator corrects a rider's waiting road before deciding it: the value reaches the waiting place at once, and
+     * the rider's new place still waits for the decision on the map.
+     */
+    public function testACuratorCorrectsARidersWaitingRoadBeforeDecidingIt(): void
+    {
+        $this->roadWays(['way/716714250']);
+        $this->wallonia();
+        $saved = $this->service->submit('add', [
+            'type' => 'road-surface',
+            'segment' => '{"a":[5.86,50.47],"b":[5.87,50.48],"line":[[5.86,50.47],[5.87,50.48]]}',
+            'details' => ['name' => 'Zuiderdijk', 'surface' => 'Asphalt', 'smoothness' => 'Good'],
+        ], $this->rider());
+        $itemId = (int) $this->em->find(Submission::class, $saved->submissionId)->getItemId();
+
+        $receipt = $this->service->submit('improve', [
+            'type' => 'road-surface',
+            '_item_id' => $itemId,
+            'segment' => '{"a":[5.86,50.47],"b":[5.87,50.48],"line":[[5.86,50.47],[5.87,50.48]]}',
+            'details' => ['name' => 'Zuiderdijk', 'surface' => 'Asphalt', 'smoothness' => 'Bad'],
+        ], $this->curator());
+
+        self::assertTrue($receipt->applied);
+        $this->em->clear();
+        $item = $this->em->find(Item::class, $itemId);
+        self::assertSame(ItemState::Submitted, $item->getState(), 'still waiting for the decision');
+        self::assertSame('Bad', $item->getAttributes()['smoothness']);
+        self::assertSame(SubmissionStatus::Pending, $this->em->find(Submission::class, $saved->submissionId)->getStatus());
+        self::assertEquals(['smoothness' => ['was' => 'Good', 'now' => 'Bad']], $this->em->find(Submission::class, $receipt->submissionId)->getChanges());
+        self::assertSame($saved->submissionId, $receipt->waitingOn, 'the receipt points to the decision on the map');
+    }
+
+    /** A curator's tick alone, on a rider's waiting road: kept, no edit filed, and the approval makes it a full pin. */
+    public function testACuratorsTickOnAWaitingRoadVerifiesItWhenItIsApproved(): void
+    {
+        $this->roadWays(['way/716714250']);
+        $this->wallonia();
+        $saved = $this->service->submit('add', [
+            'type' => 'road-surface',
+            'segment' => '{"a":[5.86,50.47],"b":[5.87,50.48],"line":[[5.86,50.47],[5.87,50.48]]}',
+            'details' => ['name' => 'Zuiderdijk', 'surface' => 'Asphalt'],
+        ], $this->rider());
+        $itemId = (int) $this->em->find(Submission::class, $saved->submissionId)->getItemId();
+        $curator = $this->curator();
+
+        $receipt = $this->service->submit('improve', [
+            'type' => 'road-surface',
+            '_item_id' => $itemId,
+            'segment' => '{"a":[5.86,50.47],"b":[5.87,50.48],"line":[[5.86,50.47],[5.87,50.48]]}',
+            'details' => ['name' => 'Zuiderdijk', 'surface' => 'Asphalt'],
+            'confirmNow' => true,
+        ], $curator);
+
+        self::assertTrue($receipt->confirmed);
+        self::assertFalse($receipt->applied, 'nothing to apply');
+        self::assertSame($saved->submissionId, $receipt->waitingOn);
+        self::assertSame(1, (int) $this->em->getConnection()->fetchOne('SELECT count(*) FROM submission WHERE item_id = :i', ['i' => $itemId]), 'no edit filed');
+        self::assertSame(ItemState::Submitted, $this->em->find(Item::class, $itemId)->getState(), 'still waiting');
+        // The map card then says "You already confirmed this place" instead of asking again.
+        $confirmations = static::getContainer()->get(ItemConfirmationService::class);
+        self::assertSame([$itemId => true], $confirmations->vouchedAmong((int) $curator->getId(), [$itemId]));
+        self::assertSame([], $confirmations->vouchedAmong((int) $this->curator()->getId(), [$itemId]), 'another curator is still asked');
+
+        static::getContainer()->get(ModerationService::class)->decide((int) $saved->submissionId, 'approve', $curator, null);
+        $this->em->clear();
+        self::assertSame(ItemState::Verified, $this->em->find(Item::class, $itemId)->getState(), 'the curator\'s tick counts from the approval');
+    }
+
+    /** A curator's tick alone, on a live place: it is confirmed at once, and no edit is filed. */
+    public function testACuratorsTickAloneConfirmsALivePlace(): void
+    {
+        $this->wallonia();
+        $item = $this->item('P', '{"type":"Point","coordinates":[5.86,50.47]}')->setState(ItemState::Unverified);
+        $this->em->flush();
+
+        $receipt = $this->service->submit('improve', [
+            '_item_id' => $item->getId(),
+            'details' => ['name' => 'Existing'],
+            'confirmNow' => true,
+        ], $this->curator());
+
+        self::assertTrue($receipt->confirmed);
+        self::assertNull($receipt->waitingOn);
+        self::assertSame('', $receipt->reference);
+        $this->em->refresh($item);
+        self::assertSame(ItemState::Verified, $item->getState());
+        self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT count(*) FROM submission WHERE item_id = :i', ['i' => $item->getId()]));
+    }
+
+    /** A rider's tick is no contribution: the box is a curator's (moderation-and-contribution.md 1.6). */
+    public function testARidersTickAloneIsStillNothingChanged(): void
+    {
+        $this->wallonia();
+        $item = $this->item('P', '{"type":"Point","coordinates":[5.86,50.47]}')->setState(ItemState::Unverified);
+        $this->em->flush();
+
+        $this->expectException(ValidationFailedException::class);
+        $this->service->submit('improve', [
+            '_item_id' => $item->getId(),
+            'details' => ['name' => 'Existing'],
+            'confirmNow' => true,
+        ], $this->rider());
     }
 
     /** A run picked from the map's own lines keeps the ways the map named; the engine is not asked. */

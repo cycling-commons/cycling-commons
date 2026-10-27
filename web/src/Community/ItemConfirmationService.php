@@ -145,6 +145,64 @@ final class ItemConfirmationService
             ->setChangedBy((int) $user->getId()));
     }
 
+    /**
+     * Verify a place that has just gone live when its confirmations already earn it: a curator's, or enough riders'.
+     * A confirmation given while the place waited counts from its approval.
+     */
+    public function verifyIfVouched(Item $item): void
+    {
+        if (ItemState::Unverified !== $item->getState()) {
+            return;
+        }
+        $by = $this->db->fetchOne(
+            'SELECT user_id FROM item_confirmation
+              WHERE item_id = :id AND source <> :form AND stance IN (:stances)
+              ORDER BY by_curator DESC, id LIMIT 1',
+            ['id' => (int) $item->getId(), 'form' => ConfirmationSource::Form->value, 'stances' => array_map(static fn (ConfirmationStance $s): string => $s->value, ConfirmationStance::vouching())],
+            ['stances' => ArrayParameterType::STRING],
+        );
+        if (false === $by) {
+            return;
+        }
+        $user = $this->em->find(User::class, (int) $by);
+        if (null === $user) {
+            return;
+        }
+        if (!self::isCurator($user) && $this->vouchingTally($item) < $this->settings->get(SettingsRegistry::MAP_ITEM_VERIFY_THRESHOLD)) {
+            return;
+        }
+
+        $item->setState(ItemState::Verified);
+        $this->em->persist((new ChangeHistory())
+            ->setItemId((int) $item->getId())
+            ->setField('state')
+            ->setOldValue(ItemState::Unverified->value)
+            ->setNewValue(ItemState::Verified->value)
+            ->setChangedBy((int) $user->getId()));
+    }
+
+    /**
+     * Which of these places this rider vouches for, form answers excluded: id => true.
+     *
+     * @param list<int> $itemIds
+     *
+     * @return array<int, true>
+     */
+    public function vouchedAmong(int $userId, array $itemIds): array
+    {
+        if ([] === $itemIds) {
+            return [];
+        }
+        $ids = $this->db->fetchFirstColumn(
+            'SELECT item_id FROM item_confirmation
+              WHERE user_id = :u AND item_id IN (:ids) AND source <> :form AND stance IN (:stances)',
+            ['u' => $userId, 'ids' => $itemIds, 'form' => ConfirmationSource::Form->value, 'stances' => array_map(static fn (ConfirmationStance $s): string => $s->value, ConfirmationStance::vouching())],
+            ['ids' => ArrayParameterType::INTEGER, 'stances' => ArrayParameterType::STRING],
+        );
+
+        return array_fill_keys(array_map(intval(...), $ids), true);
+    }
+
     /** Curator or admin: the two roles whose single word settles the verified state (§10.1). */
     private static function isCurator(User $user): bool
     {

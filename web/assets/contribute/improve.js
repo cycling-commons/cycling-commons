@@ -157,12 +157,23 @@
     return null !== INITIAL_GEOM && geomSnapshot() !== INITIAL_GEOM;
   }
 
+  /* A curator's "Mark it confirmed" tick is a contribution by itself (moderation-and-contribution.md 1.6). */
+  function confirmTicked() {
+    var box = document.querySelector('[name="improve[confirmNow]"]');
+    return !!(box && box.checked);
+  }
+
   function nothingChanged() {
     if (ADD) return false;                       // a new place is all change
     if (WZ.media.length) return false;
+    if (confirmTicked()) return false;
     if (pinMoved() || geomChanged()) return false;
     return detailsSnapshot() === INITIAL_DETAILS;
   }
+
+  document.addEventListener('change', function (e) {
+    if (e.target && 'improve[confirmNow]' === e.target.name) refreshGate();
+  });
 
   /* Do not advance/submit mid-upload: unclaimed photos become orphans
      (docs/specs/photo-uploads.md §6). */

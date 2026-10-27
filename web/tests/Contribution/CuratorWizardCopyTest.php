@@ -134,6 +134,36 @@ final class CuratorWizardCopyTest extends WebTestCase
         self::assertSelectorTextContains('.wiz-waiting', 'You already have a change waiting');
     }
 
+    /**
+     * A curator reviewing a rider's waiting new place is not told their change goes on the map at once: it goes into
+     * the rider's submission, which waits for the decision.
+     */
+    public function testACuratorReviewingAWaitingPlaceIsToldItStillWaits(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $item = $this->seedItem()->setState(ItemState::Submitted);
+        $em->flush();
+
+        $this->login($client, 'waiting-review@example.com', ['ROLE_CURATOR']);
+        $rider = (new User())->setEmail('waiting-review-rider@example.com')->setPassword('x');
+        $em->persist($rider);
+        $em->flush();
+        $em->getConnection()->executeStatement(
+            "INSERT INTO submission (type, letter, item_id, user_id, status, title, geom, country_code, changes, payload, created_at)
+             VALUES ('new', 'P', :item, :uid, 'pending', 'Viewpoint', ST_SetSRID(ST_MakePoint(6.027, 50.426), 4326), 'BE',
+                     '{}', '{}', '2026-09-01 12:00:00+00')",
+            ['item' => $item->getId(), 'uid' => $rider->getId()],
+        );
+        $sub = (int) $em->getConnection()->fetchOne('SELECT max(id) FROM submission WHERE item_id = :i', ['i' => $item->getId()]);
+
+        $client->request('GET', '/improve?item='.$item->getId().'&type=scenic-views&sub='.$sub);
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('This place waits for your decision.', $html);
+        self::assertStringNotContainsString('this change goes on the map at once', $html);
+    }
+
     /** One waiting edit on an item, written straight in: the page only reads it. */
     private static function seedPending(EntityManagerInterface $em, int $itemId, int $userId): void
     {

@@ -594,6 +594,32 @@ ignored on an edit that queues, so a rider cannot tick past the review.
 Pinned by `CatalogContributionServiceTest::testACuratorsEditCanAlsoConfirmThePlace`
 and its two siblings.
 
+The tick alone is a contribution: a curator who changes no value and ticks the
+box can press "Apply change" (`improve.js` `confirmTicked()`), and the server
+records the confirmation with no edit filed. On a live place the receipt reads
+`improve.receipt.confirmed_body` and shows no reference. A rider's tick alone
+is still "nothing changed". Pinned by
+`testACuratorsTickAloneConfirmsALivePlace` and
+`testARidersTickAloneIsStillNothingChanged`.
+
+**A rider's waiting new place, reviewed by a curator.** Opened from the queue's
+✎ (`sub=<id>`), the place is still `submitted`, so nothing a curator does here
+puts it on the map. The lifecycle box reads `improve.lifecycle.funnel_review`
+instead of the curator funnel (`reviewing_waiting`). A changed value is an
+edit applied to the waiting place in the curator's area, and the rider's
+submission still waits; the receipt reads `improve.receipt.waiting_*` with a
+link to the decision on the map (`ContributionReceipt::$waitingOn`). A tick is
+kept on the waiting place without verifying it, and approval verifies it
+(`ItemConfirmationService::verifyIfVouched()`, run by
+`ModerationService::approveNew()`): a curator's confirmation, or enough
+riders', counts from the approval. The map card then reads "You already confirmed
+this place" (`d_also_confirmed`, from `ItemConfirmationService::vouchedAmong()`
+per viewing curator, `confirmedByMe`) instead of offering "Also confirm"
+again. Pinned by
+`testACuratorCorrectsARidersWaitingRoadBeforeDecidingIt`,
+`testACuratorsTickOnAWaitingRoadVerifiesItWhenItIsApproved` and
+`CuratorWizardCopyTest::testACuratorReviewingAWaitingPlaceIsToldItStillWaits`.
+
 **A curator's own new place, too (owner 2026-09-10: "I do not have to approve
 my own actions").** The same `applyIfCurator()` runs on a curator's NEW place
 at intake, under the same rule the desk button obeys: approval needs the OSM

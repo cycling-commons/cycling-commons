@@ -34,6 +34,7 @@ use App\Catalog\RouteRankingService;
 use App\Catalog\RouteRoads;
 use App\Catalog\Season;
 use App\Catalog\SurfaceVocabulary;
+use App\Community\ItemConfirmationService;
 use App\Coverage\CoverageManifest;
 use App\Coverage\RoadPiecesManifest;
 use App\Coverage\RoutesManifest;
@@ -71,7 +72,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 final class MapController extends AbstractController
 {
-    public function __construct(private readonly DeskSeen $deskSeen, private readonly RegionLabels $regionLabels, private readonly CountryTimezones $timezones, private readonly MapPresets $mapPresets)
+    public function __construct(private readonly DeskSeen $deskSeen, private readonly RegionLabels $regionLabels, private readonly CountryTimezones $timezones, private readonly MapPresets $mapPresets, private readonly ItemConfirmationService $confirmations)
     {
     }
 
@@ -202,11 +203,21 @@ final class MapController extends AbstractController
             // map can carry the unseen bar; the drawer posts the opening
             // (moderation-and-contribution.md §5.2f).
             $unseen = $this->deskSeen->unseenAmong((int) $user->getId(), SeenSubject::Submission, array_column($params['pending'], 'id'));
+            // The places this curator already confirmed (the wizard's tick or the drawer's "Still here?"): the card
+            // then says so instead of asking again (moderation-and-contribution.md §1.6).
+            $itemIds = [];
+            foreach ($params['pending'] as $p) {
+                if (null !== $p['itemId']) {
+                    $itemIds[] = $p['itemId'];
+                }
+            }
+            $mine = $this->confirmations->vouchedAmong((int) $user->getId(), $itemIds);
             foreach ($params['pending'] as $i => $p) {
                 if ('new' === $p['type'] && null !== $p['itemId']) {
                     $params['pending'][$i]['preview'] = $catalogProvider->featureForItem($p['itemId'], anyState: true);
                 }
                 $params['pending'][$i]['unseen'] = isset($unseen[$p['id']]);
+                $params['pending'][$i]['confirmedByMe'] = null !== $p['itemId'] && isset($mine[$p['itemId']]);
             }
             // Do not re-derive with is_granted(): setup-pending curators hold the role without this payload.
             $params['pending_is_curator'] = true;
@@ -482,7 +493,7 @@ final class MapController extends AbstractController
             'length' => 'd_length',
             'asDescribed' => 'd_as_described', 'surfaceCfQ' => 'd_surface_cf_q',
             'surfaceCfA' => 'd_surface_cf_a', 'notAsDescribed' => 'd_not_as_described',
-            'cfUseEditQ' => 'd_cf_use_edit_q', 'cfUseEdit' => 'd_cf_use_edit', 'alsoConfirm' => 'd_also_confirm',
+            'cfUseEditQ' => 'd_cf_use_edit_q', 'cfUseEdit' => 'd_cf_use_edit', 'alsoConfirm' => 'd_also_confirm', 'alsoConfirmed' => 'd_also_confirmed',
             'routeNetwork' => 'd_route_network', 'routeRef' => 'd_route_ref',
             'routesHere' => 'd_routes_here', 'routeSurfaceHint' => 'd_route_surface_hint',
             'knoopTitle' => 'd_knoop_title', 'knoopHint' => 'd_knoop_hint',

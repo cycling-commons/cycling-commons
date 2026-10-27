@@ -19,8 +19,10 @@ final readonly class ContributionReceipt
         public ?int $submissionId = null,
         /** True when the change was applied at once: a curator's own edit (moderation-and-contribution.md §1.6). */
         public bool $applied = false,
-        /** True when the curator also ticked "Mark it confirmed" on an applied edit (moderation-and-contribution.md §1.6). */
+        /** True when the curator ticked "Mark it confirmed" (moderation-and-contribution.md §1.6), with an applied edit or alone. */
         public bool $confirmed = false,
+        /** The rider's waiting new-place submission a curator's correction or confirmation went to; it still waits for the decision. */
+        public ?int $waitingOn = null,
     ) {
     }
 }

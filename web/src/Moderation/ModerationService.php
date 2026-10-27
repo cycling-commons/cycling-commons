@@ -428,6 +428,8 @@ final class ModerationService
         $item->setState(ItemState::Unverified);
         $this->history($item, $submission, $curator, 'state', ItemState::Submitted->value, ItemState::Unverified->value);
         $this->carryOwnAnswer($item, $submission);
+        // A curator who confirmed the place while it waited settles it now, as their confirmation would on a live place.
+        $this->confirmations->verifyIfVouched($item);
 
         // One place, one row: what this place replaces (the same OSM point
         // held by another row, and the similar places the rider left ticked)
