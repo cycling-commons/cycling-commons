@@ -1,0 +1,80 @@
+web/assets/map/drawer.js
+  s_086f006d5a9290::t_81bbf0c2a3e4dd 742-743
+  s_086f006d5a9290::t_bea7199aaa3928 744
+web/src/Controller/ContributeController.php
+  s_086f006d5a9290::t_4ad1202d6cc622 646
+web/tests/Contribution/CuratorWizardCopyTest.php
+  s_086f006d5a9290::t_feec3b20741483 137-166
+web/src/Controller/MapController.php
+  s_086f006d5a9290::t_df2e4e23c3e36b 208-214
+  s_086f006d5a9290::t_5495f1527fa25b 37
+  s_086f006d5a9290::t_81bbf0c2a3e4dd 75,206-207,220,496
+web/src/Moderation/ModerationService.php
+  s_086f006d5a9290::t_f5f463a8dff5b7 431-432
+docs/specs/edit-items/A-road-surface.md
+  s_086f006d5a9290::t_bad7d4fa511b5d 68-70
+  s_086f006d5a9290::t_6369642d13d9c1 71-72
+web/src/Service/ContributionReceipt.php
+  s_086f006d5a9290::t_f5f463a8dff5b7 22,24-25
+web/src/Contribution/CatalogContributionService.php
+  s_086f006d5a9290::t_f5f463a8dff5b7 529-538,648-662
+web/tests/Contribution/CatalogContributionServiceTest.php
+  s_086f006d5a9290::t_a33f533c113718 1122-1128,1130-1131,1140-1141
+  s_086f006d5a9290::t_e46a0b634c7ef8 1117-1121,1129,1132-1139,1142-1144
+  s_086f006d5a9290::t_f944b95df57530 19
+  s_086f006d5a9290::t_74231a9e87ab63 1175-1178
+  s_086f006d5a9290::t_1833b8a1861106 1145
+  s_086f006d5a9290::t_524ec8165c133e 1146-1174,1179-1219
+  s_086f006d5a9290::t_627a27c7cabf47 1220
+web/assets/contribute/improve.js
+  s_086f006d5a9290::t_4ad1202d6cc622 160-165,169,174-176
+  s_086f006d5a9290::t_9a6e85898a2f31 177
+web/translations/messages.de.yaml
+  s_086f006d5a9290::t_98b2fd44d7f870 2360,2363-2364
+  s_086f006d5a9290::t_81bbf0c2a3e4dd 1749
+  s_086f006d5a9290::t_4ad1202d6cc622 2312,2329,2361-2362,2365
+web/templates/contribute/improve.html.twig
+  s_086f006d5a9290::t_4ad1202d6cc622 43-48,51-53,62,64,595-598
+web/translations/messages.fr.yaml
+  s_086f006d5a9290::t_81bbf0c2a3e4dd 1744
+  s_086f006d5a9290::t_98b2fd44d7f870 2355,2358-2359
+  s_086f006d5a9290::t_4ad1202d6cc622 2307,2324,2356-2357,2360
+web/translations/messages.en.yaml
+  s_086f006d5a9290::t_81bbf0c2a3e4dd 2347
+  s_086f006d5a9290::t_4ad1202d6cc622 1329,1346,1377-1382
+web/translations/messages.es.yaml
+  s_086f006d5a9290::t_98b2fd44d7f870 1387,1390-1391
+  s_086f006d5a9290::t_81bbf0c2a3e4dd 2354
+  s_086f006d5a9290::t_4ad1202d6cc622 1339,1356,1388-1389,1392
+web/translations/messages.nl.yaml
+  s_086f006d5a9290::t_98b2fd44d7f870 2357,2360-2361
+  s_086f006d5a9290::t_4ad1202d6cc622 2309,2326,2358-2359,2362
+  s_086f006d5a9290::t_81bbf0c2a3e4dd 1746
+docs/specs/moderation-and-contribution.md
+  s_086f006d5a9290::t_bad7d4fa511b5d 597-614,619-622
+  s_086f006d5a9290::t_9e3d5657291b56 615-618
+web/src/Community/ItemConfirmationService.php
+  s_086f006d5a9290::t_f5f463a8dff5b7 148-183
+  s_086f006d5a9290::t_81bbf0c2a3e4dd 184-205
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b449367965819caa2695dfab10af3575ead2fd7e",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_086f006d5a9290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97afd631-7f48-4430-aac8-2c62f5b7a119",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
