@@ -108,7 +108,7 @@ final class NewItemShowsItsValuesTest extends WebTestCase
             ->setCountryCode('NL')
             ->setState(ItemState::Submitted)->setSource(ItemSource::Osm)->setSourceRef('way/999043')
             ->answerOsm('way/999043')
-            ->setAttributes(['surface' => 'Asphalt']);
+            ->setAttributes(['surface' => 'Asphalt', 'smoothness' => 'Very bad']);
         $em->persist($item);
         $em->flush();
 
@@ -118,7 +118,10 @@ final class NewItemShowsItsValuesTest extends WebTestCase
             ->setTitle('Zuiderdijk')
             ->setGeom('{"type":"Point","coordinates":[5.1076,52.6637]}')
             ->setCountryCode('NL')
-            ->setChanges(['surface' => ['was' => null, 'now' => 'Asphalt']])
+            ->setChanges([
+                'surface' => ['was' => null, 'now' => 'Asphalt'],
+                'segment' => ['was' => null, 'now' => ['a' => [5.1076, 52.6637], 'b' => [5.1201, 52.6503], 'line' => [[5.1076, 52.6637], [5.1201, 52.6503]]]],
+            ])
             ->setPayload([]);
         $em->persist($sub);
         $em->flush();
@@ -134,5 +137,12 @@ final class NewItemShowsItsValuesTest extends WebTestCase
         self::assertSame(['state' => 'linked', 'ref' => 'way/999043', 'candidates' => []], $card['osm'], 'the chip');
         self::assertNull($card['replacesOsm'], 'its own way is no box');
         self::assertSame([], $card['replaces']);
+
+        // On the map: Before draws nothing of ours (the map's own layer shows the road as OSM has it), After draws
+        // the road as the surface layer will, its smoothness read from the place.
+        self::assertTrue($card['shape']['before']['nothing'] ?? false);
+        self::assertSame('paved', $card['shape']['after']['cls']);
+        self::assertSame('very_bad', $card['shape']['after']['sm']);
+        self::assertArrayNotHasKey('nothing', $card['shape']['after']);
     }
 }

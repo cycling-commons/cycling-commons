@@ -2167,6 +2167,8 @@ switch, and the map draws whichever side is selected:
   is the default, because the curator is there to judge the proposal.
 - **Before** — muted grey and dashed, the shape the item has today.
 
+A road stretch draws its sides as the surface layer will (§5.2c).
+
 Both sides travel in the pending payload (`SubmissionQueue::shapeSides()`, keyed
 `shape`) rather than being read from the loaded catalog: a brand-new climb has
 no current feature to compare against, and a changed `route` with an unchanged
@@ -2189,21 +2191,23 @@ source**, because removing a source still in use by a sibling layer throws, and
 a throw there leaves the old side on screen while the switch says otherwise. The
 switch is delegated off `document` like every other card control (§5.2).
 
-### 5.2c The Before side never claims a road is unrecorded (owner 2026-08-31)
+### 5.2c A road stretch draws as the map will draw it
 
-A new stretch has a Before, and it is the same road (owner 2026-08-12): a
-missing Before tells a curator nothing about what the proposal replaces.
+The Before of a new stretch draws nothing of ours (`nothing: true` on the
+side, route kept so the map can frame it): WE held nothing for that way, and
+the map's own surface layer under it shows the road as OpenStreetMap has it,
+with its red "Surface not recorded" dots where OSM records no surface. The
+switch still offers Before, so the curator compares that with the After.
 
-`shapeSides()` cannot know whether the road's surface is recorded: a new
-stretch means WE held nothing for that way, and OSM's surface tags live in the
-tile artifact and never reach the query. So the Before is drawn in the neutral
-before-style: where the stretch sits, without claiming what was known about
-it, and never in the legend's red "Surface not recorded" dashes. The cost is
-that a genuinely untagged road does not stand out here. Getting that signal
-means asking the tile under the way what class it carries, a client-side
-question; the `unrecorded` key stays in the shape's type and `pending-shape.js`
-styles it, so the answer has somewhere to land. §5.2d records the baseline that
-would make it answerable.
+Each drawn side of a stretch carries its surface class (`cls`,
+`SurfaceVocabulary::tileClassFor()`) and smoothness (`sm`, `very_bad` style),
+read from the change, else from the place (a new place holds what it
+proposes). `pending-shape.js` draws it as the map draws every road (`render.js`
+`SURFACE_W`, map-and-search.md "Our roads look like OpenStreetMap's"): the
+class colour and the quality dots over it, fully opaque, on a soft dark edge
+that keeps the reviewed road apart from the roads around it. A climb keeps its
+gradient colours (§5.2b). Pinned by
+`NewItemShowsItsValuesTest::testANewPlaceOnItsOwnOsmWayGetsTheChipAndNoBox`.
 
 ### 5.2d What OSM said, so a curator can see what changed
 

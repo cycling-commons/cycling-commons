@@ -303,7 +303,7 @@ export const SM_CASE_W=['interpolate',['linear'],['zoom'],9,2.8,11,3.8,13,5.5];
 export const SM_DOT_DASH=[0.6,2.8];
 export const SM_CASE_DASH=[0.6*3.5/5.5,2.8*3.5/5.5];
 /* Quality tones for curated ticks — same palette as surface-tiles.js SM_TONE. */
-const CURATED_SM_TONE={excellent:'#1E8E4F',good:'#5FA845',intermediate:'#D9A62E',bad:'#D4763B',very_bad:'#C2402F'};
+export const CURATED_SM_TONE={excellent:'#1E8E4F',good:'#5FA845',intermediate:'#D9A62E',bad:'#D4763B',very_bad:'#C2402F'};
 export function renderSurfaceLayer(layer, visible){
   const feats=[];
   /* Neither the rung gate nor the scope gate. Road surface is an OVERLAY, not

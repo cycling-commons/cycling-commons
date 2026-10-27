@@ -658,7 +658,7 @@ function buildRecord(layer, f){
       : (s.now
         ? `<div class="cc-mod-diff"><div class="cc-mod-diff-h">${D.proposedChange||'Proposed change'}</div>${s.was?`<div class="cc-mod-was">${escPend(s.was)}</div>`:''}<div class="cc-mod-now">${escPend(s.now)}</div></div>`
         : '');
-    /* Before/after switch when a shape exists; unrecorded Before is a valid side for new surface. */
+    /* Before/after switch when a shape exists; a new road's empty Before (`nothing`) is a valid side. */
     const hasBefore = !!(s.shape && s.shape.before);
     const hasAfter = !!(s.shape && s.shape.after);
     const shapeSwitch = (hasBefore || hasAfter)
