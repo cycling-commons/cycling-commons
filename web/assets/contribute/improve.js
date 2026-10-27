@@ -69,6 +69,20 @@
 
   var BAG = window.CC_IMPROVE_I18N || {};
 
+  /* The OpenStreetMap ways under a drawn road as links, "Oosterblokker (way/581720829) · …", into `el`: under the map
+     and on the review step alike (edit-items/A-road-surface.md, "The form reads the road it follows"). */
+  function appendWayLinks(el, ways) {
+    ways.forEach(function (w, i) {
+      if (i) el.appendChild(document.createTextNode(' · '));
+      var a = document.createElement('a');
+      a.href = 'https://www.openstreetmap.org/' + w.ref;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = (w.name || t('osm_way_unnamed')) + ' (' + w.ref + ')';
+      el.appendChild(a);
+    });
+  }
+
   function t(key, vars) {
     var s = typeof BAG[key] === 'string' ? BAG[key] : '';
     if (vars) {
@@ -725,6 +739,7 @@
             var seg = { a: WZ.loc.a, b: WZ.loc.b };
             if (anyRouted()) seg.line = capLine(fullLine(), 2900);
             if (fSeg) fSeg.value = JSON.stringify(seg);
+            lookupWays(seg.line || null);
             if (ro) ro.textContent = '✓ ' + fmt(placed[0].getLngLat()) + ' → ' + fmt(placed[1].getLngLat());
           }
         } else {
@@ -751,6 +766,61 @@
         // hidden lat/lng inputs are written with `.value =`, which fires no
         // event, so a listener has no other way to know the pin moved.
         document.dispatchEvent(new CustomEvent('cc:loc', { detail: WZ.loc }));
+      };
+
+      /* The roads under the drawn line (edit-items/A-road-surface.md, "The form reads the road it follows"): named
+         under the map with a link to each OSM way, and on a new road the name, road type and surface of the longest
+         fill the fields the rider left empty, or that hold what an earlier line filled. Asked once per line, a moment
+         after it settles. */
+      var waysEl = document.getElementById('wz-osmways');
+      var waysKey = '';
+      var waysTimer = null;
+      var touched = {};
+      ['name', 'roadType', 'surface'].forEach(function (k) {
+        var el = document.querySelector('[name="improve[details][' + k + ']"]');
+        if (el) el.addEventListener('change', function () { touched[k] = true; });
+        if (el) el.addEventListener('input', function () { touched[k] = true; });
+      });
+      var filled = {};   // what this lookup wrote, so a redrawn road replaces it while the rider has not changed it
+      var fillEmpty = function (k, v) {
+        var el = document.querySelector('[name="improve[details][' + k + ']"]');
+        if (!el || !v || touched[k] || (el.value && el.value !== filled[k])) return;
+        if (el.tagName === 'SELECT' && !Array.prototype.some.call(el.options, function (o) { return o.value === v; })) return;
+        el.value = v;
+        filled[k] = v;
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+        touched[k] = false;
+      };
+      var showWays = function (ways) {
+        WZ.osmWays = ways;   // the review step names them too
+        if (!waysEl) return;
+        waysEl.textContent = '';
+        if (!ways.length) { waysEl.hidden = true; return; }
+        waysEl.appendChild(document.createTextNode(t('osm_ways') + ' '));
+        appendWayLinks(waysEl, ways);
+        waysEl.hidden = false;
+      };
+      var lookupWays = function (line) {
+        var key = line ? line.length + ':' + line[0].join(',') + ':' + line[line.length - 1].join(',') : '';
+        if (key === waysKey) return;
+        waysKey = key;
+        clearTimeout(waysTimer);
+        if (!line) { showWays([]); return; }
+        waysTimer = setTimeout(function () {
+          fetch('/contribute/road-ways', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CC-Token': window.CC_ROUTE_TOKEN || '' },
+            body: JSON.stringify({ line: line })
+          }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+            if (!d || key !== waysKey) return;   // superseded by a newer line
+            showWays(Array.isArray(d.ways) ? d.ways : []);
+            if (ADD) {
+              fillEmpty('name', d.name);
+              fillEmpty('roadType', d.roadType);
+              fillEmpty('surface', d.surface);
+            }
+          }).catch(function () { /* no answer: the rider fills the form as before */ });
+        }, 400);
       };
 
       var announceMove = function () {
@@ -1321,6 +1391,12 @@
     // No Location row when the pin is untouched; no category row (duplicates the step eyebrow).
     RC.clear(rb);
     if (locTxt) rb.appendChild(RC.kvRow(t('label_location'), locTxt));
+    // The OpenStreetMap ways the drawn road links to, as under the map.
+    if (WZ.osmWays && WZ.osmWays.length) {
+      var osmRow = RC.kvRow(t('label_osm'), '');
+      appendWayLinks(osmRow.lastChild, WZ.osmWays);
+      rb.appendChild(osmRow);
+    }
     fieldRows.forEach(function (row) { rb.appendChild(row); });
 
     var note = document.getElementById('wz-nochange');

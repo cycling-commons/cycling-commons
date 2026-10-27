@@ -1022,6 +1022,11 @@ final class CatalogContributionServiceTest extends KernelTestCase
             {
                 return $this->refs;
             }
+
+            public function roadsAlong(array $line): array
+            {
+                return array_map(static fn (string $ref): array => ['ref' => $ref, 'metres' => 100, 'name' => null, 'highway' => null], $this->refs);
+            }
         });
         $this->em = static::getContainer()->get(EntityManagerInterface::class);
         $this->service = static::getContainer()->get(ContributionStubInterface::class);

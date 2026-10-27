@@ -36,6 +36,12 @@ final class ValhallaRoadWayLocator implements RoadWayLocator
     #[\Override]
     public function waysAlong(array $line): array
     {
+        return array_map(static fn (array $road): string => $road['ref'], $this->roadsAlong($line));
+    }
+
+    #[\Override]
+    public function roadsAlong(array $line): array
+    {
         if ('' === $this->valhallaUrl || \count($line) < 2) {
             return [];
         }
@@ -47,7 +53,7 @@ final class ValhallaRoadWayLocator implements RoadWayLocator
                     'shape' => array_map(static fn (array $p): array => ['lat' => $p[0], 'lon' => $p[1]], $latLng),
                     'costing' => 'bicycle',
                     'shape_match' => 'map_snap',
-                    'filters' => ['attributes' => ['edge.way_id', 'edge.length'], 'action' => 'include'],
+                    'filters' => ['attributes' => ['edge.way_id', 'edge.length', 'edge.names', 'edge.road_class', 'edge.use'], 'action' => 'include'],
                 ],
                 'timeout' => 8,
             ])->toArray(false);
@@ -57,15 +63,43 @@ final class ValhallaRoadWayLocator implements RoadWayLocator
             return [];
         }
         $metres = [];
+        $facts = [];
         foreach (\is_array($data['edges'] ?? null) ? $data['edges'] : [] as $edge) {
             $way = \is_array($edge) && is_numeric($edge['way_id'] ?? null) ? (int) $edge['way_id'] : 0;
-            if ($way > 0 && is_numeric($edge['length'] ?? null)) {
-                $metres[$way] = ($metres[$way] ?? 0.0) + (float) $edge['length'] * 1000.0;
+            if ($way <= 0 || !is_numeric($edge['length'] ?? null)) {
+                continue;
+            }
+            $metres[$way] = ($metres[$way] ?? 0.0) + (float) $edge['length'] * 1000.0;
+            if (!isset($facts[$way])) {
+                $names = \is_array($edge['names'] ?? null) ? $edge['names'] : [];
+                $facts[$way] = [
+                    'name' => \is_string($names[0] ?? null) && '' !== $names[0] ? $names[0] : null,
+                    'highway' => self::highway(\is_string($edge['use'] ?? null) ? $edge['use'] : '', \is_string($edge['road_class'] ?? null) ? $edge['road_class'] : ''),
+                ];
             }
         }
         $metres = array_filter($metres, static fn (float $m): bool => $m >= self::MIN_M);
         arsort($metres);
+        $out = [];
+        foreach (\array_slice($metres, 0, self::MAX_WAYS, true) as $way => $m) {
+            $out[] = ['ref' => 'way/'.$way, 'metres' => (int) round($m)] + $facts[$way];
+        }
 
-        return \array_slice(array_map(static fn (int $way): string => 'way/'.$way, array_keys($metres)), 0, self::MAX_WAYS);
+        return $out;
+    }
+
+    /**
+     * The OSM `highway` kind an edge stands for, from the engine's `use` and `road_class`; null where it names none
+     * the road form knows (a service road, a motorway).
+     */
+    private static function highway(string $use, string $roadClass): ?string
+    {
+        return match ($use) {
+            'cycleway' => 'cycleway',
+            'footway', 'path', 'pedestrian', 'sidewalk', 'bridleway', 'mountain_bike' => 'path',
+            'track' => 'track',
+            'living_street' => 'living_street',
+            default => \in_array($roadClass, ['primary', 'secondary', 'tertiary', 'unclassified', 'residential'], true) ? $roadClass : null,
+        };
     }
 }

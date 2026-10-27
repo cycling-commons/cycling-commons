@@ -1254,6 +1254,9 @@ improve:
     readout_confirm: '✓ ◎ ubicación fijada — comprueba que está bien'
     readout_expanded: '✓ ◎ ubicación fijada — pulsa en el mapa o arrastra la chincheta para moverla'
     readout_segment_prefilled: '✓ Tramo prerrellenado — arrastra un pin para ajustar; clic derecho en la línea fija un punto y la parte anterior se mantiene'
+    osm_ways: "En OpenStreetMap:"
+    osm_way_unnamed: "Carretera sin nombre"
+    label_osm: "OpenStreetMap"
     readout_segment_start: '◎ Pulsa el inicio del tramo'
     readout_segment_end: '◎ Ahora pulsa el final del tramo'
     readout_climb_foot: '◎ Pulsa en el mapa para fijar el pie del puerto'
@@ -5531,7 +5534,7 @@ changelog:
   v0912_fixes: "<b>Entre las correcciones menores:</b> una región sin curador propio vuelve a decirlo, al editar un texto de región se recuerda de dónde viene tu texto, el visor de fotos de calle muestra la última foto en la que hiciste clic y se detiene al cerrarlo, y el límite de una región ya no parece un camino de grava."
   v0913_road_safety: "<b>La seguridad vial en el mapa.</b> Si una carretera te da un carril bici separado, una franja ciclista o la calzada compartida con los coches tiene ahora su propio interruptor entre las capas del mapa, con leyenda, y se ve desde el zoom 12."
   v0913_roads: "<b>Un solo aspecto para cada carretera.</b> Los firmes añadidos en Cycling Commons se ven igual que los de OpenStreetMap."
-  v0913_road_editor: "<b>Añadir un firme.</b> La línea entre tus dos toques sigue la carretera que tocaste, también donde las bicis no pueden circular, y la carretera que añades se enlaza sola con la carretera de OpenStreetMap que hay debajo."
+  v0913_road_editor: "<b>Añadir un firme.</b> La línea entre tus dos toques sigue la carretera que tocaste, también donde las bicis no pueden circular. El formulario nombra las carreteras de OpenStreetMap bajo la línea y rellena el nombre y el tipo de la carretera."
   v0913_population: "<b>De dónde viene una población.</b> La población de una región puede llevar un enlace a su fuente."
   v0913_fixes: "<b>Entre las correcciones menores:</b> en un teléfono, la guía del planificador ya no se esconde detrás del cajón izquierdo."
   v0913_curator_review: "<b>Corregir antes de aprobar.</b> Puedes corregir o confirmar el nuevo lugar de un ciclista antes de aprobarlo, y tu confirmación cuenta cuando lo haces."

@@ -2234,6 +2234,9 @@ improve:
     readout_confirm: '✓ ◎ Ort gesetzt — prüfe, ob er stimmt'
     readout_expanded: '✓ ◎ Ort gesetzt — tippe auf die Karte oder ziehe die Markierung, um ihn zu verschieben'
     readout_segment_prefilled: '✓ Abschnitt vorbelegt — ziehe einen Pin zum Anpassen; Rechtsklick auf die Linie setzt einen Punkt fest, der Teil davor bleibt stehen'
+    osm_ways: "Auf OpenStreetMap:"
+    osm_way_unnamed: "Straße ohne Namen"
+    label_osm: "OpenStreetMap"
     readout_segment_start: '◎ Tippe auf den Anfang des Abschnitts'
     readout_segment_end: '◎ Tippe jetzt auf das Ende des Abschnitts'
     readout_climb_foot: '◎ Tippe auf die Karte, um den Fuß des Anstiegs zu setzen'
@@ -5504,7 +5507,7 @@ changelog:
   v0912_fixes: "<b>Unter den kleineren Korrekturen:</b> Eine Region ohne eigenen Kurator sagt das wieder; wer einen Regionstext bearbeitet, muss nicht erneut angeben, woher der Text stammt; die Straßenfotos zeigen das zuletzt angeklickte Foto und hören beim Schließen auf zu spielen; und die Grenze einer Region sieht nicht mehr wie ein Schotterweg aus."
   v0913_road_safety: "<b>Verkehrssicherheit auf der Karte.</b> Ob eine Straße dir einen eigenen Radweg, einen Radfahrstreifen oder die Fahrbahn mit den Autos bietet, hat jetzt einen eigenen Schalter bei den Kartenebenen, mit Legende, und ist ab Zoom 12 zu sehen."
   v0913_roads: "<b>Ein Aussehen für jede Straße.</b> Beläge, die auf Cycling Commons hinzugefügt wurden, sehen aus wie die von OpenStreetMap."
-  v0913_road_editor: "<b>Einen Belag hinzufügen.</b> Die Linie zwischen deinen zwei Tipps folgt der Straße, die du angetippt hast, auch wo Fahrräder nicht fahren dürfen, und die Straße, die du hinzufügst, verknüpft sich selbst mit der OpenStreetMap-Straße darunter."
+  v0913_road_editor: "<b>Einen Belag hinzufügen.</b> Die Linie zwischen deinen zwei Tipps folgt der Straße, die du angetippt hast, auch wo Fahrräder nicht fahren dürfen. Das Formular nennt die OpenStreetMap-Straßen unter der Linie und füllt Name und Art der Straße aus."
   v0913_population: "<b>Woher eine Einwohnerzahl kommt.</b> Die Einwohnerzahl einer Region kann einen Link zu ihrer Quelle tragen."
   v0913_fixes: "<b>Unter den kleineren Korrekturen:</b> Auf einem Telefon versteckt sich die Anleitung des Planers nicht mehr hinter der linken Schublade."
   v0913_curator_review: "<b>Korrigieren vor dem Freigeben.</b> Du kannst den neuen Ort eines Fahrers korrigieren oder bestätigen, bevor du ihn freigibst, und deine Bestätigung zählt, sobald du das tust."

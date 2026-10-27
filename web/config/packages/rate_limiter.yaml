@@ -194,7 +194,8 @@ framework:
             interval: '1 minute'
             cache_pool: cache.elevation_limiter
         # Climb-editor and route-editor road snap: the SAME upstream Valhalla,
-        # reached through /contribute/route. Login alone is not a quota. The budget
+        # reached through /contribute/route, and /contribute/road-ways, which reads
+        # the roads under a drawn line. Login alone is not a quota. The budget
         # is larger than elevation's because one edit snaps per leg: dragging a
         # route with a dozen control points is a dozen calls, and improve.js
         # re-snaps the touched legs on every drag.

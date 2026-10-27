@@ -2231,6 +2231,9 @@ improve:
     readout_confirm: '✓ ◎ locatie ingesteld — controleer of ze klopt'
     readout_expanded: '✓ ◎ locatie ingesteld — tik op de kaart of sleep de speld om ze te verplaatsen'
     readout_segment_prefilled: '✓ Stuk vooraf ingevuld — sleep een speld om aan te passen; rechtsklik op de lijn om een punt vast te zetten, het deel ervoor blijft staan'
+    osm_ways: "Op OpenStreetMap:"
+    osm_way_unnamed: "Weg zonder naam"
+    label_osm: "OpenStreetMap"
     readout_segment_start: '◎ Tik op het begin van het segment'
     readout_segment_end: '◎ Tik nu op het einde van het segment'
     readout_climb_foot: '◎ Tik op de kaart om de voet van de klim in te stellen'
@@ -5503,7 +5506,7 @@ changelog:
   v0912_fixes: "<b>Onder de kleinere verbeteringen:</b> een regio zonder eigen regiobeheerder zegt dat weer; wie een regiotekst bewerkt, hoeft niet opnieuw te zeggen waar de tekst vandaan komt; de straatfoto's tonen de foto waarop je het laatst klikte en stoppen als je ze sluit; en de grens van een regio lijkt niet meer op een grindweg."
   v0913_road_safety: "<b>Verkeersveiligheid op de kaart.</b> Of een weg je een vrijliggend fietspad, een fietsstrook of de rijbaan met auto's geeft, heeft nu een eigen knop bij de kaartlagen, met een legenda, en is te zien vanaf zoom 12."
   v0913_roads: "<b>Eén uiterlijk voor elke weg.</b> Wegdekken die op Cycling Commons zijn toegevoegd zien er net zo uit als die van OpenStreetMap."
-  v0913_road_editor: "<b>Een wegdek toevoegen.</b> De lijn tussen je twee tikken volgt de weg die je aantikte, ook waar fietsen niet mogen rijden, en de weg die je toevoegt koppelt zichzelf aan de OpenStreetMap-weg eronder."
+  v0913_road_editor: "<b>Een wegdek toevoegen.</b> De lijn tussen je twee tikken volgt de weg die je aantikte, ook waar fietsen niet mogen rijden. Het formulier noemt de OpenStreetMap-wegen onder de lijn en vult de naam en het soort weg in."
   v0913_population: "<b>Waar een inwonertal vandaan komt.</b> Het inwonertal van een regio kan een link naar zijn bron hebben."
   v0913_fixes: "<b>Onder de kleinere verbeteringen:</b> op een telefoon verstopt de uitleg van de planner zich niet meer achter de linkerlade."
   v0913_curator_review: "<b>Verbeteren voor je goedkeurt.</b> Je kunt de nieuwe plek van een fietser verbeteren of bevestigen voor je haar goedkeurt, en je bevestiging telt zodra je dat doet."

@@ -118,6 +118,9 @@
     readout_segment_start: 'improve.step1.readout_segment_start'|trans,
     readout_segment_end: 'improve.step1.readout_segment_end'|trans,
     readout_segment_prefilled: 'improve.step1.readout_segment_prefilled'|trans,
+    osm_ways: 'improve.step1.osm_ways'|trans,
+    osm_way_unnamed: 'improve.step1.osm_way_unnamed'|trans,
+    label_osm: 'improve.step1.label_osm'|trans,
     readout_climb_foot: 'improve.step1.readout_climb_foot'|trans,
     readout_climb_summit: 'improve.step1.readout_climb_summit'|trans,
     readout_climb_set: 'improve.step1.readout_climb_set'|trans,
@@ -298,6 +301,8 @@
       <span id="wzUndo" role="button" tabindex="0" hidden>{{ 'js.climb_undo'|trans }}</span>
       <span id="wzReset" role="button" tabindex="0">{{ 'improve.step1.reset'|trans }}</span>
     </div>
+    {# The OpenStreetMap ways a drawn road follows, each a link; improve.js fills it (edit-items/A-road-surface.md). #}
+    <p id="wz-osmways" class="osm-ways" hidden></p>
     {% if similar_on %}
       {# Places near the pin that may be the same place, for everyone adding
          or correcting one, and again on the rider's own place while it waits

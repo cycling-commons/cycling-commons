@@ -78,6 +78,33 @@ on the map (moderation-and-contribution.md §1.6, "A rider's waiting new place,
 reviewed by a curator"). With neither, the button stays grey, and the pointer
 says so.
 
+## The form reads the road it follows
+
+Once the line between the two taps settles, the add form asks
+`POST /contribute/road-ways` which roads it follows (`DrawnRoadFacts`, the
+same guard, token and quota as `/contribute/route`). The engine matches the
+line to its ways (`RoadWayLocator::roadsAlong()`, `/trace_attributes` with
+each edge's name, `road_class` and `use`), the longest first.
+
+Example: a line from the Zittend crossing south-west along the Oosterblokker
+answers `way/581720829` "Oosterblokker", 285 m, and `way/6576390`
+"Binnenwijzend", 173 m, both `tertiary`.
+
+- Under the map: "On OpenStreetMap:" and each way as a link to
+  `https://www.openstreetmap.org/way/<id>`, named, in a new tab; at most
+  eight. The review step repeats them in an "OpenStreetMap" row under the
+  location.
+- On a new road, the longest way fills Name ("Oosterblokker"), Road type
+  (`RoadType::fromHighway()`, "Local road") and Surface. A field the rider
+  changed is never overwritten; a field this lookup filled is refilled when
+  the line is redrawn on another road.
+- The surface is the class our road pieces hold for that way
+  (`coverage_way_surface`, `SurfaceVocabulary::fromTileClass()`, `paved` =
+  "Asphalt"), never the engine's own grade, which guesses one for a way
+  OpenStreetMap records none for. A way newer than our last build fills no
+  surface.
+- No answer (no engine, a refused call) leaves the form as it is.
+
 ## Correcting or confirming OSM's answer
 
 Most A segments a rider sees are not ours: they are the **OSM surface skin**, a

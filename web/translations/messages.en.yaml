@@ -1245,6 +1245,9 @@ improve:
     readout_confirm: '✓ ◎ location set — check it looks right'
     readout_expanded: '✓ ◎ location set — tap the map or drag the pin to move it'
     readout_segment_prefilled: '✓ Stretch prefilled — drag either pin to adjust; right-click the line to pin a point so the part before it stays put'
+    osm_ways: "On OpenStreetMap:"
+    osm_way_unnamed: "Road without a name"
+    label_osm: "OpenStreetMap"
     readout_segment_start: '◎ Tap the start of the segment'
     readout_segment_end: '◎ Now tap the end of the segment'
     readout_climb_foot: '◎ Tap the map to set the foot of the climb'
@@ -5521,7 +5524,7 @@ changelog:
   v0912_fixes: "<b>Among smaller fixes:</b> a region without a curator of its own says so again, an edit of a region text remembers where your text came from, the street-level viewer shows the photo you clicked last and stops playing when you close it, and the border of a region no longer looks like a gravel road."
   v0913_road_safety: "<b>Road safety on the map.</b> Whether a road gives you a separate path, a bike lane or the road shared with cars now has its own switch among the map overlays, with a key, and shows from zoom 12."
   v0913_roads: "<b>One look for every road.</b> Road surfaces added on Cycling Commons look the same as the ones from OpenStreetMap."
-  v0913_road_editor: "<b>Adding a road surface.</b> The line between your two taps follows the road you tapped, also where bikes may not ride, and the road you add links itself to the OpenStreetMap road under it."
+  v0913_road_editor: "<b>Adding a road surface.</b> The line between your two taps follows the road you tapped, also where bikes may not ride. The form names the OpenStreetMap roads under the line and fills in the road's name and type."
   v0913_population: "<b>Where a population comes from.</b> A region's population can carry a link to its source."
   v0913_fixes: "<b>Among smaller fixes:</b> on a phone, the planner's guide no longer hides behind the left drawer."
   v0913_curator_review: "<b>Correct before you approve.</b> You can correct or confirm a rider's new place before you approve it, and your confirmation counts when you do."

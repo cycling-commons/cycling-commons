@@ -145,6 +145,9 @@ h1.disp{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.5r
 }
 .maplibregl-canvas{filter:none}  /* no per-frame filter chain on the WebGL canvas (same call as map.css) */
 .readout{display:flex;align-items:center;justify-content:space-between;gap:1rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:#4a4d40;flex-wrap:wrap}
+/* The OpenStreetMap ways under a drawn road, each a link. */
+.osm-ways{margin:.4rem 0 0;font-size:.85rem;color:#4a4d40}
+.osm-ways a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 .readout #wzReset,.readout #wzUndo{color:var(--clay);cursor:pointer;text-transform:uppercase;letter-spacing:.1em;font-size:.72rem}
 .readout #wzUndo{margin-left:auto}
 /* How to place a climb — read before the map, not after a mistake. */

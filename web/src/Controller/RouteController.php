@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Contribution\DrawnRoadFacts;
 use App\Elevation\RouteSnapper;
 use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -86,5 +87,52 @@ final class RouteController extends AbstractController
                 'distance' => $snapped['distanceM'],
             ]],
         ]);
+    }
+
+    /** The most points a drawn road may send, as the stored segment line (edit-items/A-road-surface.md). */
+    private const int MAX_LINE_POINTS = 3000;
+
+    /**
+     * What OpenStreetMap says about the road a line in the add form follows (edit-items/A-road-surface.md, "The
+     * form reads the road it follows"): the ways under it and the name, road type and surface of the longest. The
+     * same guard and quota as the road snap, which the form calls just before.
+     */
+    #[Route('/contribute/road-ways', name: 'contribute_road_ways', methods: ['POST'])]
+    public function roadWays(
+        Request $request,
+        DrawnRoadFacts $facts,
+        RateLimiterFactoryInterface $routeSnapLimiter,
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$this->isGranted('ROLE_USER') || !$user instanceof User) {
+            throw new HttpException(Response::HTTP_UNAUTHORIZED, 'authentication_required');
+        }
+        if (!$this->isCsrfTokenValid('route-snap', (string) $request->headers->get('X-CC-Token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
+        $payload = json_decode($request->getContent(), true);
+        $raw = \is_array($payload) ? ($payload['line'] ?? null) : null;
+        if (!\is_array($raw) || \count($raw) < 2 || \count($raw) > self::MAX_LINE_POINTS) {
+            return new JsonResponse(['error' => 'bad_request'], 400);
+        }
+        $line = [];
+        foreach ($raw as $p) {
+            if (!\is_array($p) || !is_numeric($p[0] ?? null) || !is_numeric($p[1] ?? null)) {
+                return new JsonResponse(['error' => 'bad_request'], 400);
+            }
+            $lng = (float) $p[0];
+            $lat = (float) $p[1];
+            if ($lat < -90.0 || $lat > 90.0 || $lng < -180.0 || $lng > 180.0) {
+                return new JsonResponse(['error' => 'bad_request'], 400);
+            }
+            $line[] = [$lng, $lat];
+        }
+
+        if (!$routeSnapLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
+            return new JsonResponse(['error' => 'rate_limited'], 429);
+        }
+
+        return new JsonResponse($facts->of($line));
     }
 }
