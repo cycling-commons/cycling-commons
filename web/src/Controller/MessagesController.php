@@ -199,6 +199,28 @@ final class MessagesController extends AbstractController
     }
 
     /**
+     * The reader marks every message addressed to them read at once ("Mark all as read"), and comes back to the
+     * shelf they were on. Their own sent messages are never unread, so nothing of theirs changes.
+     *
+     * @see docs/specs/moderation-and-contribution.md §7.5a
+     */
+    #[Route('/account/messages/read-all', name: 'messages_read_all', methods: ['POST'])]
+    public function readAll(Request $request, MessageService $messages): Response
+    {
+        if (!$this->isCsrfTokenValid('message-read-all', $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+        /** @var User $user */
+        $user = $this->getUser();
+        $messages->markAllRead((int) $user->getId());
+        $this->addFlash('success', 'messages.marked_all_read');
+
+        $category = MessageCategory::tryFrom($request->request->getString('cat'));
+
+        return $this->redirectToRoute('messages', null !== $category ? ['cat' => $category->value] : []);
+    }
+
+    /**
      * Change rows keyed by submission id. `userId` is the access rule — refId is not.
      *
      * @param list<UserMessage> $list

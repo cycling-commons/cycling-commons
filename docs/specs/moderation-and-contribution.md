@@ -2684,9 +2684,16 @@ wrong:
      message read (`App\EventSubscriber\OpenedByLinkSubscriber`), and only
      when it is addressed to the signed-in reader; any other id is ignored.
    Each message opened lowers the unread count by exactly one; opening it
-   again changes nothing. `MessageService::markOpened()` is the one write;
-   `markRead($userId, $ids)` and `markAllRead()` remain for callers that name
-   what they mean. There is no "mark all as read" button.
+   again changes nothing. `MessageService::markOpened()` is the write for one
+   message; `markRead($userId, $ids)` remains for callers that name what they
+   mean.
+   - **all at once, on purpose**: while anything is unread, the shelves end in
+     "Mark all as read" (`form.msg-readall`, `POST /account/messages/read-all`,
+     `messages_read_all`, CSRF id `message-read-all`). It marks every message
+     addressed to the reader read (`MessageService::markAllRead()`; their own
+     sent messages are never unread), says "All your messages are marked as
+     read.", and comes back to the shelf the reader was on, without the Unread
+     switch, which would now show nothing. Loading a page still marks nothing.
 
 Unread is also *visible*, not just counted: an unread row carries the unseen
 bar (§5.2f), the one mark every list uses for an item its reader has not

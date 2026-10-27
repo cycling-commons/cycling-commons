@@ -3434,6 +3434,8 @@ account:
 messages:
   photo_alt: 'The photo this message is about'
   title: 'Your messages'
+  mark_all_read: "Mark all as read"
+  marked_all_read: "All your messages are marked as read."
   empty: 'No messages yet. Decisions on your contributions will appear here.'
   filter.label: 'Filter messages'
   filter.all: 'All'

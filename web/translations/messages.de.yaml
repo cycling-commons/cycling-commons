@@ -3420,6 +3420,8 @@ account:
 messages:
   photo_alt: 'Das Foto, um das es in dieser Nachricht geht'
   title: 'Deine Nachrichten'
+  mark_all_read: "Alle als gelesen markieren"
+  marked_all_read: "Alle deine Nachrichten sind als gelesen markiert."
   empty: 'Noch keine Nachrichten. Entscheidungen zu deinen Beiträgen erscheinen hier.'
   filter.label: 'Nachrichten filtern'
   filter.all: 'Alle'

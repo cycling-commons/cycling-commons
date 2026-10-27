@@ -290,4 +290,44 @@ final class MessageOpenedTest extends WebTestCase
 
         return $found;
     }
+
+    /**
+     * "Mark all as read" takes every message addressed to the reader off the count at once, and comes back to the
+     * shelf the reader was on. Somebody else's messages stay unread.
+     */
+    public function testMarkAllAsReadClearsTheCountAndKeepsTheShelf(): void
+    {
+        $client = static::createClient();
+        $rider = $this->user('all');
+        $other = $this->user('other');
+        $this->approved($rider, 'Fountain A');
+        $this->approved($rider, 'Fountain B');
+        $this->approved($other, 'Fountain C');
+        $client->loginUser($rider);
+
+        $crawler = $client->request('GET', '/account/messages?cat=contributions');
+        $form = $crawler->filter('form.msg-readall');
+        self::assertCount(1, $form, 'offered while something is unread');
+        $client->submit($form->form());
+
+        self::assertResponseRedirects('/account/messages?cat=contributions');
+        self::assertSame(0, $this->svc()->unreadCount((int) $rider->getId()));
+        self::assertSame(1, $this->svc()->unreadCount((int) $other->getId()), 'only the reader\'s own messages');
+        $crawler = $client->followRedirect();
+        self::assertCount(0, $crawler->filter('.msg-row.msg-new'));
+        self::assertCount(0, $crawler->filter('form.msg-readall'), 'nothing left to mark');
+    }
+
+    public function testMarkAllAsReadNeedsItsToken(): void
+    {
+        $client = static::createClient();
+        $rider = $this->user('token');
+        $this->approved($rider, 'Fountain A');
+        $client->loginUser($rider);
+
+        $client->request('POST', '/account/messages/read-all', ['_token' => 'wrong']);
+
+        self::assertResponseStatusCodeSame(403);
+        self::assertSame(1, $this->svc()->unreadCount((int) $rider->getId()));
+    }
 }

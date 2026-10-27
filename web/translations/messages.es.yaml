@@ -3442,6 +3442,8 @@ account:
 messages:
   photo_alt: 'La foto de la que trata este mensaje'
   title: 'Tus mensajes'
+  mark_all_read: "Marcar todo como leído"
+  marked_all_read: "Todos tus mensajes están marcados como leídos."
   empty: 'Todavía no hay mensajes. Aquí aparecerán las decisiones sobre tus aportaciones.'
   filter.label: 'Filtrar mensajes'
   filter.all: 'Todos'

@@ -35,3 +35,8 @@
 .msg-statement dd p{margin:0 0 .3rem}
 .msg-statement a{color:var(--clay);text-decoration:underline;text-underline-offset:2px}
 .msg-statement code{font-family:var(--mono);font-size:.8rem}
+/* "Mark all as read": a quiet action at the end of the shelves, in the "Open message" voice. */
+.msg-readall{display:inline-flex;margin:0}
+.msg-readall button{background:none;border:0;padding:.3rem 0;cursor:pointer;font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);text-decoration:underline;text-underline-offset:2px}
+.msg-readall button:hover{color:var(--trail)}
+.msg-readall button:focus-visible{outline:2px solid var(--trail);outline-offset:2px}

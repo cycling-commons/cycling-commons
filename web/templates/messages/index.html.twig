@@ -64,6 +64,14 @@
          aria-pressed="{{ filter_unread ? 'true' : 'false' }}">
         {{ 'messages.filter.unread'|trans }} <b data-count-of="messages" data-count-keep-zero>{{ counts.unread }}</b>
       </a>
+      {# Every message addressed to the reader read at once (§7.5a), back on the same shelf. #}
+      {% if counts.unread > 0 %}
+        <form method="post" action="{{ path('messages_read_all') }}" class="msg-readall">
+          <input type="hidden" name="_token" value="{{ csrf_token('message-read-all') }}">
+          {% if filter_category %}<input type="hidden" name="cat" value="{{ filter_category }}">{% endif %}
+          <button type="submit">{{ 'messages.mark_all_read'|trans }}</button>
+        </form>
+      {% endif %}
     </nav>
   {% endif %}
   {% if messages is not empty %}

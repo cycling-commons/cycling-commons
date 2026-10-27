@@ -3419,6 +3419,8 @@ account:
 messages:
   photo_alt: 'De foto waar dit bericht over gaat'
   title: 'Jouw berichten'
+  mark_all_read: "Alles als gelezen markeren"
+  marked_all_read: "Al je berichten zijn als gelezen gemarkeerd."
   empty: 'Nog geen berichten. Beslissingen over je bijdragen verschijnen hier.'
   filter.label: 'Berichten filteren'
   filter.all: 'Alle'

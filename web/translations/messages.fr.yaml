@@ -3415,6 +3415,8 @@ account:
 messages:
   photo_alt: 'La photo dont parle ce message'
   title: 'Vos messages'
+  mark_all_read: "Tout marquer comme lu"
+  marked_all_read: "Tous vos messages sont marqués comme lus."
   empty: 'Pas encore de message. Les décisions sur vos contributions apparaîtront ici.'
   filter.label: 'Filtrer les messages'
   filter.all: 'Tous'
