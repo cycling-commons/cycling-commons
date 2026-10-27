@@ -22,7 +22,10 @@ use App\Contribution\RoadWayLocator;
 use App\Elevation\ClimbProfiler;
 use App\Elevation\ElevationClient;
 use App\Entity\User;
+use App\Moderation\ApprovalRevoker;
+use App\Moderation\ModerationScope;
 use App\Moderation\ModerationService;
+use App\Moderation\SubmissionQueue;
 use App\Service\ContributionStubInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\NullLogger;
@@ -1070,7 +1073,10 @@ final class CatalogContributionServiceTest extends KernelTestCase
         self::assertSame(SubmissionStatus::Approved, $this->em->find(Submission::class, $receipt->submissionId)->getStatus());
     }
 
-    /** A road another served row already holds is not linked twice: the item queues, where a curator sees the clash. */
+    /**
+     * A road on another stretch of a way a served row already holds is not linked twice: the item queues, where a
+     * curator sees the clash.
+     */
     public function testADrawnRoadOnAWayAnotherRowHoldsIsNotLinked(): void
     {
         $this->roadWays(['way/716714250']);
@@ -1084,7 +1090,7 @@ final class CatalogContributionServiceTest extends KernelTestCase
 
         $second = $this->service->submit('add', [
             'type' => 'road-surface',
-            'segment' => '{"a":[5.861,50.471],"b":[5.869,50.479],"line":[[5.861,50.471],[5.869,50.479]]}',
+            'segment' => '{"a":[5.861,50.471],"b":[5.863,50.473],"line":[[5.861,50.471],[5.863,50.473]]}',
             'details' => ['name' => 'Elbaweg again', 'surface' => 'Gravel'],
         ], $this->curator());
         self::assertFalse($second->applied);
@@ -1113,6 +1119,111 @@ final class CatalogContributionServiceTest extends KernelTestCase
         self::assertSame('way/6571337', $itemOf($first)->getOsmRef(), 'the first road links itself');
         self::assertFalse($itemOf($second)->osmAnswered(), 'the second one waits unlinked');
         self::assertSame(['way/6571337'], $itemOf($second)->getAttributes()['waysSpanned'], 'its ways are kept');
+    }
+
+    /**
+     * A second road on the stretch of a road we hold adds what it brings to that road: the card shows only the new
+     * value, the approval writes it onto the road, which keeps its OSM reference, and the second road is closed into
+     * it. A curator's tick on the second road counts for the road, and a revoke takes the value back.
+     */
+    public function testASecondRoadOnTheSameStretchAddsWhatItBringsToTheFirst(): void
+    {
+        $this->roadWays(['way/6571337']);
+        $this->wallonia();
+        $rider = $this->rider();
+        $line = '{"a":[5.86,50.47],"b":[5.87,50.48],"line":[[5.86,50.47],[5.87,50.48]]}';
+        $first = $this->service->submit('add', [
+            'type' => 'road-surface', 'segment' => $line,
+            'details' => ['name' => 'Zuiderdijk', 'surface' => 'Asphalt', 'smoothness' => 'Good'],
+        ], $rider);
+        $second = $this->service->submit('add', [
+            'type' => 'road-surface', 'segment' => $line,
+            'details' => ['name' => 'Zuiderdijk', 'surface' => 'Asphalt', 'smoothness' => 'Good', 'lit' => 'Yes'],
+        ], $rider);
+        $firstId = (int) $this->em->find(Submission::class, $first->submissionId)->getItemId();
+        $secondId = (int) $this->em->find(Submission::class, $second->submissionId)->getItemId();
+        $curator = $this->curator();
+        $moderation = static::getContainer()->get(ModerationService::class);
+        $moderation->decide((int) $first->submissionId, 'approve', $curator, null);
+
+        $card = null;
+        foreach (static::getContainer()->get(SubmissionQueue::class)->filtered(ModerationScope::global(), null, null, null) as $row) {
+            if ($row['id'] === $second->submissionId) {
+                $card = $row;
+            }
+        }
+        self::assertNotNull($card);
+        self::assertSame(['id' => $firstId, 'name' => 'Zuiderdijk'], $card['addsTo']);
+        self::assertSame([['key' => 'lit', 'was' => null, 'now' => 'Yes']], $card['changes'], 'only what the road does not hold');
+        self::assertNull($card['osm'], 'no OSM question: the road keeps its own');
+        self::assertSame([], $card['replaces']);
+
+        $this->service->submit('improve', [
+            'type' => 'road-surface', '_item_id' => $secondId, 'segment' => $line,
+            'details' => ['name' => 'Zuiderdijk', 'surface' => 'Asphalt', 'smoothness' => 'Good', 'lit' => 'Yes'],
+            'confirmNow' => true,
+        ], $curator);
+        $moderation->decide((int) $second->submissionId, 'approve', $curator, null);
+        $this->em->clear();
+
+        $road = $this->em->find(Item::class, $firstId);
+        self::assertSame('Yes', $road->getAttributes()['lit']);
+        self::assertSame('way/6571337', $road->getOsmRef(), 'the road keeps its OSM reference');
+        self::assertSame(ItemState::Verified, $road->getState(), 'the curator\'s tick on the second road counts for the road');
+        self::assertSame(ItemState::Retired, $this->em->find(Item::class, $secondId)->getState());
+        self::assertSame($firstId, $moderation->placeOf($this->em->find(Submission::class, $second->submissionId)), 'the map is sent the road');
+
+        static::getContainer()->get(ApprovalRevoker::class)->revoke((int) $second->submissionId, $this->em->find(User::class, $curator->getId()), 'Not this road');
+        $this->em->clear();
+        self::assertArrayNotHasKey('lit', $this->em->find(Item::class, $firstId)->getAttributes());
+        self::assertSame(ItemState::Submitted, $this->em->find(Item::class, $secondId)->getState());
+    }
+
+    /** A curator's own road on the stretch of a road we hold adds to that road at once, as their own changes apply. */
+    public function testACuratorsRoadOnTheSameStretchAddsToTheRoadAtOnce(): void
+    {
+        $this->roadWays(['way/716714250']);
+        $this->wallonia();
+        $line = '{"a":[5.86,50.47],"b":[5.87,50.48],"line":[[5.86,50.47],[5.87,50.48]]}';
+        $first = $this->service->submit('add', [
+            'type' => 'road-surface', 'segment' => $line, 'details' => ['name' => 'Elbaweg', 'surface' => 'Asphalt'],
+        ], $this->curator());
+        $second = $this->service->submit('add', [
+            'type' => 'road-surface', 'segment' => $line, 'details' => ['name' => 'Elbaweg', 'surface' => 'Asphalt', 'lit' => 'No'],
+        ], $this->curator());
+
+        self::assertTrue($second->applied);
+        $this->em->clear();
+        $road = $this->em->find(Item::class, (int) $this->em->find(Submission::class, $first->submissionId)->getItemId());
+        self::assertSame('No', $road->getAttributes()['lit']);
+        self::assertSame(ItemState::Retired, $this->em->find(Item::class, (int) $this->em->find(Submission::class, $second->submissionId)->getItemId())->getState());
+    }
+
+    /** A road on a part of a longer road we hold is a stretch of its own: it adds to nothing. */
+    public function testARoadOnPartOfALongerRoadIsAStretchOfItsOwn(): void
+    {
+        $this->roadWays(['way/6571337']);
+        $this->wallonia();
+        $rider = $this->rider();
+        $first = $this->service->submit('add', [
+            'type' => 'road-surface', 'segment' => '{"a":[5.86,50.47],"b":[5.87,50.48],"line":[[5.86,50.47],[5.87,50.48]]}',
+            'details' => ['name' => 'Zuiderdijk', 'surface' => 'Asphalt'],
+        ], $rider);
+        $part = $this->service->submit('add', [
+            'type' => 'road-surface', 'segment' => '{"a":[5.86,50.47],"b":[5.862,50.472],"line":[[5.86,50.47],[5.862,50.472]]}',
+            'details' => ['name' => 'Zuiderdijk', 'surface' => 'Gravel'],
+        ], $rider);
+        static::getContainer()->get(ModerationService::class)->decide((int) $first->submissionId, 'approve', $this->curator(), null);
+
+        foreach (static::getContainer()->get(SubmissionQueue::class)->filtered(ModerationScope::global(), null, null, null) as $row) {
+            if ($row['id'] === $part->submissionId) {
+                self::assertNull($row['addsTo']);
+                self::assertNotNull($row['osm'], 'its OSM question stays');
+
+                return;
+            }
+        }
+        self::fail('the part is in the queue');
     }
 
     /**

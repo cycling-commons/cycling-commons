@@ -8,6 +8,7 @@ namespace App\Moderation;
 
 use App\Catalog\Entity\Item;
 use App\Catalog\Import\OsmCandidates;
+use App\Catalog\ItemState;
 use App\Catalog\ItemType;
 use App\Catalog\Links\LinkSafety;
 use App\Catalog\Links\SafeBrowsing;
@@ -51,10 +52,11 @@ final class SubmissionQueue
         private readonly OsmCandidates $osmCandidates,
         private readonly ReplacedPlaces $replacedPlaces,
         private readonly SubmissionChangeSummary $changeSummary,
+        private readonly SameStretchRoad $stretches,
     ) {
     }
 
-    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,rows:list<array{label: string, was: ?string, now: string, diff?: list<array{type: 'eq'|'del'|'ins', text: string}>}>,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, nothing?: true, cls?: ?string, sm?: ?string}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, nothing?: true, cls?: ?string, sm?: ?string}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,corrected:bool,textTarget:?string,revoked:?array{when:string,reason:string},lang:string,basedOn:?string,code:?string}> */
+    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,rows:list<array{label: string, was: ?string, now: string, diff?: list<array{type: 'eq'|'del'|'ins', text: string}>}>,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, nothing?: true, cls?: ?string, sm?: ?string}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, nothing?: true, cls?: ?string, sm?: ?string}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,addsTo:?array{id:int,name:string},corrected:bool,textTarget:?string,revoked:?array{when:string,reason:string},lang:string,basedOn:?string,code:?string}> */
     public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?int $byUser = null, ?string $letter = null): array
     {
         [$where, $params] = $this->openFilters($country, $region, $type, $q, $byUser, $letter);
@@ -234,7 +236,7 @@ final class SubmissionQueue
     /**
      * Map pending layer: pending only, plus optional `$focusId` for a needs-info pin.
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,rows:list<array{label: string, was: ?string, now: string, diff?: list<array{type: 'eq'|'del'|'ins', text: string}>}>,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, nothing?: true, cls?: ?string, sm?: ?string}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, nothing?: true, cls?: ?string, sm?: ?string}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,corrected:bool,textTarget:?string,revoked:?array{when:string,reason:string},lang:string,basedOn:?string,code:?string}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,rows:list<array{label: string, was: ?string, now: string, diff?: list<array{type: 'eq'|'del'|'ins', text: string}>}>,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, nothing?: true, cls?: ?string, sm?: ?string}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, nothing?: true, cls?: ?string, sm?: ?string}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,addsTo:?array{id:int,name:string},corrected:bool,textTarget:?string,revoked:?array{when:string,reason:string},lang:string,basedOn:?string,code:?string}>
      */
     public function pendingForMap(ModerationScope $scope, ?int $focusId = null): array
     {
@@ -580,7 +582,7 @@ final class SubmissionQueue
      *                                     via $params, never interpolated
      * @param array<string, mixed> $params bound query parameters
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,rows:list<array{label: string, was: ?string, now: string, diff?: list<array{type: 'eq'|'del'|'ins', text: string}>}>,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, nothing?: true, cls?: ?string, sm?: ?string}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, nothing?: true, cls?: ?string, sm?: ?string}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,corrected:bool,textTarget:?string,revoked:?array{when:string,reason:string},lang:string,basedOn:?string,code:?string}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,rows:list<array{label: string, was: ?string, now: string, diff?: list<array{type: 'eq'|'del'|'ins', text: string}>}>,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, nothing?: true, cls?: ?string, sm?: ?string}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, nothing?: true, cls?: ?string, sm?: ?string}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,addsTo:?array{id:int,name:string},corrected:bool,textTarget:?string,revoked:?array{when:string,reason:string},lang:string,basedOn:?string,code:?string}>
      */
     private function rows(ModerationScope $scope, string $where, array $params, ?int $limit = null, int $offset = 0): array
     {
@@ -598,7 +600,7 @@ final class SubmissionQueue
                     CASE WHEN s.payload->\'_corrected\' IS NULL THEN 0 ELSE 1 END AS corrected,
                     s.payload->\'_revoked\'->-1 AS revoked,
                     CASE WHEN s.type = \'text\' THEN s.payload->>\'target\' END AS text_target,
-                    it.attributes AS item_attributes, it.letter AS item_letter, it.osm_ref, it.osm_checked_at,
+                    it.attributes AS item_attributes, it.letter AS item_letter, it.osm_ref, it.osm_checked_at, it.name AS item_name, it.state AS item_state,
                     ST_Y(ST_PointOnSurface(it.geom)) AS item_lat, ST_X(ST_PointOnSurface(it.geom)) AS item_lng,
                     rr.body_text AS rider_reply,
                     u.public_profile, u.display_name, u.uuid AS user_uuid, u.pseudonym,
@@ -632,8 +634,14 @@ final class SubmissionQueue
 
         $linkFlags = $this->linkFlags($rows);
         $osmBySubmission = $this->osmQuestion($rows);
+        $roadsUnder = $this->roadsUnder($rows);
 
-        return array_map(function (array $r) use ($now, $photosBySubmission, $rejectedByItem, $linkFlags, $osmBySubmission): array {
+        return array_map(function (array $r) use ($now, $photosBySubmission, $rejectedByItem, $linkFlags, $osmBySubmission, $roadsUnder): array {
+            /* A new road on a stretch we hold adds to that road: the card is that road's change (SameStretchRoad). */
+            $road = $roadsUnder[(int) $r['id']] ?? null;
+            $newAttributes = null === $road ? null : json_decode((string) $r['item_attributes'], true);
+            $added = null === $road ? [] : SameStretchRoad::additions($road['name'], $road['attributes'], (string) $r['item_name'], \is_array($newAttributes) ? $newAttributes : []);
+
             return [
                 'id' => (int) $r['id'],
                 /* What the card names it by (SubmissionRef). */
@@ -651,7 +659,9 @@ final class SubmissionQueue
                 'when' => RelativeTime::ago(new \DateTimeImmutable((string) $r['created_at']), $now),
                 'body' => (string) $r['body'],
                 /* What changed, one labelled row per field, as the rider's own list shows it. */
-                'rows' => $this->labelledChanges((string) $r['changes'], (string) $r['letter'], self::textTarget($r['text_target'] ?? null)),
+                'rows' => null !== $road
+                    ? $this->changeSummary->rowsFor((string) $r['letter'], $added, null)
+                    : $this->labelledChanges((string) $r['changes'], (string) $r['letter'], self::textTarget($r['text_target'] ?? null)),
                 // needs_info reaches the map only via ?pending=<id>.
                 'status' => (string) $r['status'],
                 'asked' => null !== $r['decision_note'] && '' !== $r['decision_note'] ? (string) $r['decision_note'] : null,
@@ -660,13 +670,17 @@ final class SubmissionQueue
                 'priorRejection' => null !== $r['item_id'] ? ($rejectedByItem[(int) $r['item_id']] ?? null) : null,
                 'photos' => $photosBySubmission[(int) $r['id']] ?? [],
                 /* Proposed shape for the drawer before/after switch (docs/specs/moderation-and-contribution.md §5.2b). */
-                'shape' => self::shapeSides((string) $r['changes'], \is_string($r['item_attributes'] ?? null) ? $r['item_attributes'] : null),
+                'shape' => null !== $road
+                    ? self::roadSides($road, $added)
+                    : self::shapeSides((string) $r['changes'], \is_string($r['item_attributes'] ?? null) ? $r['item_attributes'] : null),
                 /* Per-field changes for the drawer; labels stay client-side. */
-                'changes' => self::changeRows(
-                    (string) $r['changes'],
-                    SubmissionType::NewItem->value === (string) $r['type'],
-                    null !== $r['item_attributes'] ? (string) $r['item_attributes'] : null,
-                ),
+                'changes' => null !== $road
+                    ? self::changeRows(json_encode($added, \JSON_THROW_ON_ERROR))
+                    : self::changeRows(
+                        (string) $r['changes'],
+                        SubmissionType::NewItem->value === (string) $r['type'],
+                        null !== $r['item_attributes'] ? (string) $r['item_attributes'] : null,
+                    ),
                 /* Safe Browsing flag on proposed links; never silently reject. */
                 'linkFlag' => $linkFlags[(int) $r['id']] ?? null,
                 /* A scenic view far from a bike way that the rider overruled (scenic-views.md). */
@@ -674,11 +688,13 @@ final class SubmissionQueue
                 /* Rider photos the proposed pin would hide until a curator confirms them (scenic-views.md §8). */
                 'photosHiddenByMove' => self::photosHiddenByMove($r),
                 /* The OSM identity of a new place, open or answered (catalog-data-model.md §5b). */
-                'osm' => $osmBySubmission[(int) $r['id']] ?? null,
+                'osm' => null !== $road ? null : ($osmBySubmission[(int) $r['id']] ?? null),
                 /* What approving retires: same OSM point, or ticked by the rider (catalog-data-model.md §5a). */
-                'replaces' => $this->replaces($r),
+                'replaces' => null !== $road ? [] : $this->replaces($r),
                 /* The OSM point it holds once approved: the free pin that goes (§5a). */
-                'replacesOsm' => $this->replacesOsm($r),
+                'replacesOsm' => null !== $road ? null : $this->replacesOsm($r),
+                /* The road on the map a new road adds to; its line and OSM answer stay. */
+                'addsTo' => null !== $road ? ['id' => $road['id'], 'name' => $road['name']] : null,
                 /* A Text proposal a curator corrected before deciding (moderation-and-contribution.md §3.1b). */
                 'corrected' => 1 === (int) $r['corrected'],
                 /* The language it is written in (moderation-and-contribution.md §3.1d). */
@@ -691,6 +707,34 @@ final class SubmissionQueue
                 'textTarget' => self::textTarget($r['text_target'] ?? null),
             ];
         }, $rows);
+    }
+
+    /**
+     * The served road each waiting new road surface lies on, by submission id (SameStretchRoad).
+     *
+     * @param list<array<string, mixed>> $rows
+     *
+     * @return array<int, array{id: int, name: string, attributes: array<string, mixed>, route: list<array{0: float, 1: float}>}>
+     */
+    private function roadsUnder(array $rows): array
+    {
+        $items = [];
+        foreach ($rows as $r) {
+            if (SubmissionType::NewItem->value === (string) $r['type'] && null !== $r['item_id']
+                && ItemType::RoadSurface->letter() === (string) $r['letter'] && ItemState::Submitted->value === ($r['item_state'] ?? null)
+                && \in_array((string) $r['status'], ['pending', 'needs_info'], true)) {
+                $items[(int) $r['id']] = (int) $r['item_id'];
+            }
+        }
+        $roads = $this->stretches->servedFor(array_values(array_unique($items)));
+        $out = [];
+        foreach ($items as $sid => $itemId) {
+            if (isset($roads[$itemId])) {
+                $out[$sid] = $roads[$itemId];
+            }
+        }
+
+        return $out;
     }
 
     /**
@@ -1136,6 +1180,38 @@ final class SubmissionQueue
         $after = $side('now');
 
         return (null === $before && null === $after) ? null : ['before' => $before, 'after' => $after];
+    }
+
+    /**
+     * Before/after of a new road added to the road it lies on: the road's own line both sides, as the map draws it
+     * now and with the values the new road brings.
+     *
+     * @param array{id: int, name: string, attributes: array<string, mixed>, route: list<array{0: float, 1: float}>} $road
+     * @param array<string, array{was: mixed, now: mixed}>                                                           $added
+     *
+     * @return array{before: array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: null, cls: ?string, sm: ?string}, after: array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: null, cls: ?string, sm: ?string}}|null
+     */
+    private static function roadSides(array $road, array $added): ?array
+    {
+        if (\count($road['route']) < 2) {
+            return null;
+        }
+        $side = static function (array $attrs) use ($road): array {
+            $surface = $attrs['surface'] ?? null;
+            $smoothness = $attrs['smoothness'] ?? null;
+
+            return [
+                'route' => $road['route'], 'grad' => [], 'steep' => null,
+                'cls' => SurfaceVocabulary::tileClassFor(\is_string($surface) ? $surface : null),
+                'sm' => self::smoothnessKey(\is_string($smoothness) ? $smoothness : null),
+            ];
+        };
+        $after = $road['attributes'];
+        foreach ($added as $field => $pair) {
+            $after[$field] = $pair['now'];
+        }
+
+        return ['before' => $side($road['attributes']), 'after' => $side($after)];
     }
 
     /**

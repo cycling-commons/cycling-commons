@@ -52,9 +52,10 @@ final class DrawnRoadLinker
 
     /**
      * A new road surface linked to the way its line covers longest; false when it is answered already, is no road
-     * surface, names no way, or another row holds that way: a served one, or another road still waiting (then it
-     * queues unlinked, and its OSM question shows the curator the clash). Two waiting roads on one way used to link
-     * both, and approving the second retired the first (the Zuiderdijk, sent twice two minutes apart, 2026-10-26).
+     * surface, names no way, or another row holds that way: a served one, or another road still waiting. Then it
+     * queues unlinked: on the same stretch as a road we hold it adds to that road when approved (SameStretchRoad), on
+     * another stretch its OSM question shows the curator the clash. Two roads linked to one way would otherwise have
+     * the second's approval retire the first.
      *
      * @param array<string, mixed> $attributes the item's attributes, with `waysSpanned`
      */

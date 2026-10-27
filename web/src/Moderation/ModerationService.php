@@ -71,6 +71,8 @@ final class ModerationService
         private readonly ReportedSubjects $reported,
         // A drawn road surface links itself before its approval asks for an OSM answer (edit-items/A-road-surface.md).
         private readonly ?DrawnRoadLinker $roads = null,
+        // A new road on a stretch we already hold adds to that road (edit-items/A-road-surface.md).
+        private readonly ?SameStretchRoad $stretches = null,
     ) {
     }
 
@@ -159,11 +161,13 @@ final class ModerationService
                     if (null !== $submission->getItemId() && null === $item) {
                         throw new \InvalidArgumentException(sprintf('Cannot approve submission %d: its target item %d no longer exists', $submissionId, $submission->getItemId()));
                     }
+                    // A new road on a stretch we already hold adds to that road, which keeps its own OSM answer.
+                    $into = SubmissionType::NewItem === $submission->getType() && null !== $item ? $this->roadItLiesOn($item) : null;
                     // catalog-data-model.md §5b: a new place is not admitted
                     // until somebody has said which OSM object it is, or that
                     // there is none. Checked before the status changes so a
                     // refusal leaves the submission exactly as it was.
-                    if (SubmissionType::NewItem === $submission->getType() && null !== $item && !$item->osmAnswered()) {
+                    if (SubmissionType::NewItem === $submission->getType() && null !== $item && null === $into && !$item->osmAnswered()) {
                         throw new OsmUnansweredException('Link this place to OSM, or record that it has no OSM counterpart, before approving it.');
                     }
                     // moderation-and-contribution.md §3.1b: a text whose language
@@ -180,7 +184,9 @@ final class ModerationService
                     $submission->setStatus(SubmissionStatus::Approved);
                     if (null !== $item) {
                         match ($submission->getType()) {
-                            SubmissionType::NewItem => $this->approveNew($item, $submission, $curator),
+                            SubmissionType::NewItem => null !== $into
+                                ? $this->addToRoad($into, $item, $submission, $curator)
+                                : $this->approveNew($item, $submission, $curator),
                             SubmissionType::Edit => $this->applyEdit($item, $submission, $curator),
                             SubmissionType::Hazard, SubmissionType::Photo, SubmissionType::Text => throw new \LogicException(sprintf('Approval of %s submissions is not supported yet', $submission->getType()->value)),
                         };
@@ -449,6 +455,64 @@ final class ModerationService
                 $this->messages->sendStatement($author, (int) $old->getId(), self::retiredStatement($old, null));
             }
         }
+    }
+
+    /**
+     * The place an approved submission left on the map: its own item, or, for a new road added to the road it lies
+     * on, that road (the `replaced_by` its approval recorded on the new road, while the new road stays retired).
+     */
+    public function placeOf(Submission $submission): ?int
+    {
+        $id = $submission->getItemId();
+        if (null === $id) {
+            return null;
+        }
+        $into = $this->em->getConnection()->fetchOne(
+            "SELECT h.new_value FROM change_history h JOIN item i ON i.id = h.item_id AND i.state = :retired
+              WHERE h.item_id = :item AND h.submission_id = :submission AND h.field = 'replaced_by' ORDER BY h.id DESC LIMIT 1",
+            ['item' => $id, 'submission' => (int) $submission->getId(), 'retired' => ItemState::Retired->value],
+        );
+
+        return is_numeric($into) ? (int) $into : $id;
+    }
+
+    /** The served road a waiting new road surface lies on, or null (SameStretchRoad). */
+    private function roadItLiesOn(Item $item): ?Item
+    {
+        if (null === $this->stretches || ItemState::Submitted !== $item->getState() || ItemType::RoadSurface->letter() !== $item->getLetter()) {
+            return null;
+        }
+        $id = $this->stretches->servedIdFor((int) $item->getId());
+
+        return null === $id ? null : $this->em->find(Item::class, $id);
+    }
+
+    /**
+     * Approve a new road that lies on a road we hold (edit-items/A-road-surface.md, "A road on a stretch we hold
+     * adds to it"): the values it brings go onto the road on the map, each a history row of this submission, and the
+     * new road is closed into it, retired and pointing to it, so a revoke puts both back. The road keeps its line and
+     * its OSM answer. A confirmation given on the new road while it waited counts for the road.
+     */
+    private function addToRoad(Item $road, Item $new, Submission $submission, User $curator): void
+    {
+        $attributes = $road->getAttributes();
+        $added = SameStretchRoad::additions($road->getName(), $attributes, $new->getName(), $new->getAttributes());
+        foreach ($added as $field => $pair) {
+            if (Item::NAME_FIELD === $field) {
+                $road->setName((string) $pair['now']);
+            } else {
+                $attributes[$field] = $pair['now'];
+            }
+            $this->history($road, $submission, $curator, $field, $pair['was'], $pair['now']);
+        }
+        if ([] !== $added) {
+            $road->setAttributes($attributes);
+        }
+
+        $new->setState(ItemState::Retired);
+        $this->history($new, $submission, $curator, 'state', ItemState::Submitted->value, ItemState::Retired->value);
+        $this->history($new, $submission, $curator, 'replaced_by', null, (int) $road->getId());
+        $this->confirmations->carryVouches($new, $road);
     }
 
     /**

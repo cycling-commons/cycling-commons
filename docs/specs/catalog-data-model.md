@@ -438,6 +438,11 @@ nobody holds, else the point of the first row it retires,
 OpenStreetMap entry", "OpenStreetMap · node/… · stays the OSM reference"),
 because that point's free pin leaves our map. A rejection retires nothing.
 
+A new road surface on the stretch of a road we hold replaces nothing: it adds
+its values to that road, and it is the new road that is retired, pointing to
+the road (edit-items/A-road-surface.md, "A road on a stretch we hold adds to
+it").
+
 **While the new place waits.** The rider's own new place, still
 `submitted`, opens in the wizard with the same list and the same known-places
 dots, the place itself and its OSM point left off it, and the ticks it was sent

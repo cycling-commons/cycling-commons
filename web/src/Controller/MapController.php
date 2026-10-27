@@ -953,6 +953,9 @@ final class MapController extends AbstractController
                 'replacesOurs' => $t->trans('improve.similar.from_ours'),
                 'replacesOsm' => $t->trans('moderate.replaces.osm_takes'),
                 'replacesOsmHead' => $t->trans('moderate.replaces.osm_heading'),
+                // A new road on a stretch we hold adds to that road (edit-items/A-road-surface.md).
+                'roadHead' => $t->trans('moderate.replaces.road_heading'),
+                'roadNothing' => $t->trans('moderate.replaces.road_nothing'),
                 'replacesMetres' => $t->trans('improve.similar.metres', ['%m%' => '%m%']),
                 'osmUnanswered' => $t->trans('moderate.error.osm_unanswered'),
                 // A town or region text is approved on its own form, where the

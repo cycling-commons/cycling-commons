@@ -182,6 +182,25 @@ final class ItemConfirmationService
     }
 
     /**
+     * The confirmations a waiting place got, counted for the place it was closed into (a new road added to the road
+     * it lies on, edit-items/A-road-surface.md): each vouching confirmation, form answers excluded, by somebody who
+     * has none on that place yet, and the place verified when they earn it.
+     */
+    public function carryVouches(Item $from, Item $into): void
+    {
+        $this->db->executeStatement(
+            'INSERT INTO item_confirmation (item_id, user_id, stance, created_at, updated_at, source, by_curator)
+             SELECT :into, f.user_id, f.stance, f.created_at, NOW(), f.source, f.by_curator
+               FROM item_confirmation f
+              WHERE f.item_id = :from AND f.user_id IS NOT NULL AND f.source <> :form AND f.stance IN (:stances)
+                AND NOT EXISTS (SELECT 1 FROM item_confirmation i WHERE i.item_id = :into AND i.user_id = f.user_id)',
+            ['into' => (int) $into->getId(), 'from' => (int) $from->getId(), 'form' => ConfirmationSource::Form->value, 'stances' => array_map(static fn (ConfirmationStance $s): string => $s->value, ConfirmationStance::vouching())],
+            ['stances' => ArrayParameterType::STRING],
+        );
+        $this->verifyIfVouched($into);
+    }
+
+    /**
      * Which of these places this rider vouches for, form answers excluded: id => true.
      *
      * @param list<int> $itemIds

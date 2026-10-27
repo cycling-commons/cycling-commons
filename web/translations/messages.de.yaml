@@ -3072,6 +3072,8 @@ moderate:
     heading: 'Die Freigabe ersetzt diese Orte'
     osm_heading: 'Die Freigabe ergänzt diesen OpenStreetMap-Eintrag'
     osm_takes: 'bleibt der OSM-Verweis'
+    road_heading: 'Die Freigabe ergänzt diese Straße auf der Karte'
+    road_nothing: 'Sie bringt keinen Wert, den die Straße nicht schon hat.'
   empty:
     heading: 'Warteschlange leer'
     body: 'Nichts mehr zu prüfen. Super.'
@@ -5512,7 +5514,7 @@ changelog:
   v0913_fixes: "<b>Unter den kleineren Korrekturen:</b> Auf einem Telefon versteckt sich die Anleitung des Planers nicht mehr hinter der linken Schublade."
   v0913_curator_review: "<b>Korrigieren vor dem Freigeben.</b> Du kannst den neuen Ort eines Fahrers korrigieren oder bestätigen, bevor du ihn freigibst, und deine Bestätigung zählt, sobald du das tust."
   v0913_curator_roads: "<b>Straßen auf der Prüfkarte.</b> Vorher und Nachher zeigen eine Straße so, wie die Karte sie zeichnen wird, eine freigegebene Straße bleibt sofort auf der Karte, und eine Straße auf ihrem OpenStreetMap-Weg ergänzt diesen Weg, statt ihn zu ersetzen."
-  v0913_curator_fixes: "<b>Unter den kleineren Korrekturen:</b> Eine zweite Straße auf demselben OpenStreetMap-Weg ersetzt die erste nicht mehr, wenn du sie freigibst, und eine Karte zeigt keinen Wert mehr, der sich nicht geändert hat."
+  v0913_curator_fixes: "<b>Unter den kleineren Korrekturen:</b> Eine zweite Straße auf demselben Abschnitt ergänzt die erste um das, was sie mitbringt, wenn du sie freigibst, und eine Karte zeigt keinen Wert mehr, der sich nicht geändert hat."
   v0911_region_links: "<b>Quellen im Geografietext.</b> Der Geografietext einer Region kann jetzt seine Quellen verlinken, wie sein Text zu Geschichte, Natur und Kultur."
   v0911_region_editor: "<b>Speichern und weiter.</b> Wer einen Schritt des Regionseditors speichert, kommt zum nächsten."
   v0911_translations: "<b>Einfacher übersetzen.</b> Eine Übersetzung behält die Wikipedia-Nennung ihres Originals, darum fragt das Formular nicht mehr, woher sie stammt."

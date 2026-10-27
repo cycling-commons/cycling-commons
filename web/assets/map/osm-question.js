@@ -59,3 +59,11 @@ export function replacesHtml(replaces, D, osmRef) {
     : '';
   return retires + adds;
 }
+
+/* A new road on a stretch we hold adds to that road (edit-items/A-road-surface.md): the card's rows are what it
+   brings, and with none it says so. */
+export function addsToHtml(addsTo, D, changes) {
+  if (!addsTo) return '';
+  const nothing = Array.isArray(changes) && changes.length ? '' : `<p>${escPend(D.roadNothing || 'It brings no value the road does not hold already.')}</p>`;
+  return `<div class="cc-mod-replaces cc-mod-replaces-osm"><div class="cc-mod-ctx-h">${escPend(D.roadHead || 'Approving adds to this road on the map')}</div><ul><li>${escPend(addsTo.name || (D.osmUnnamed || 'Unnamed'))} · #${Number(addsTo.id)}</li></ul>${nothing}</div>`;
+}

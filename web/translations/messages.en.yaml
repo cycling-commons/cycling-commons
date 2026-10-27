@@ -3086,6 +3086,8 @@ moderate:
     heading: 'Approving replaces these places'
     osm_heading: 'Approving adds to this OpenStreetMap entry'
     osm_takes: 'stays the OSM reference'
+    road_heading: 'Approving adds to this road on the map'
+    road_nothing: 'It brings no value the road does not hold already.'
   empty:
     heading: 'Queue clear'
     body: 'Nothing left to review. Nice.'
@@ -5529,7 +5531,7 @@ changelog:
   v0913_fixes: "<b>Among smaller fixes:</b> on a phone, the planner's guide no longer hides behind the left drawer."
   v0913_curator_review: "<b>Correct before you approve.</b> You can correct or confirm a rider's new place before you approve it, and your confirmation counts when you do."
   v0913_curator_roads: "<b>Roads on the review map.</b> Before and After show a road as the map will draw it, an approved road stays on the map at once, and a road on its OpenStreetMap way adds to that way instead of replacing it."
-  v0913_curator_fixes: "<b>Among smaller fixes:</b> a second road on the same OpenStreetMap way no longer replaces the first when you approve it, and a card no longer lists a value that did not change."
+  v0913_curator_fixes: "<b>Among smaller fixes:</b> a second road on the same stretch adds what it brings to the first when you approve it, and a card no longer lists a value that did not change."
   v0911_region_links: "<b>Sources in the geography text.</b> A region's geography text can link its sources now, as its history, nature and culture text does."
   v0911_region_editor: "<b>Save and go on.</b> Saving a step of the region editor opens the next one."
   v0911_translations: "<b>Simpler translations.</b> A translation keeps the Wikipedia credit of its original, so the form no longer asks where it comes from."

@@ -366,9 +366,11 @@ final class ModerateController extends AbstractController
                 return $this->redirectToRoute('moderate_submissions');
             }
 
+            // The place the approval left on the map: the new road's own, or the road it was added to.
+            $placeId = 'approve' === $data['decision'] ? $this->moderation->placeOf($submission) : null;
             // docs/specs/moderation-and-contribution.md (A curator's confirmation verifies the item) — best-effort after approve.
-            if ('approve' === $data['decision'] && '1' === ($data['and_confirm'] ?? null) && null !== $submission->getItemId()) {
-                $item = $this->em->find(Item::class, $submission->getItemId());
+            if ('1' === ($data['and_confirm'] ?? null) && null !== $placeId) {
+                $item = $this->em->find(Item::class, $placeId);
                 if (null !== $item && \in_array(ConfirmationStance::Exists, ItemType::fromParam($item->getLetter())->confirmationStances(), true)) {
                     $this->confirmations->record($item, $user, ConfirmationStance::Exists);
                     $this->em->flush();
@@ -382,9 +384,7 @@ final class ModerateController extends AbstractController
                     'persisted' => true,
                     'decision' => $data['decision'],
                     'submission_id' => $submission->getId(),
-                    'item' => 'approve' === $data['decision'] && null !== $submission->getItemId()
-                        ? $catalog->featureForItem($submission->getItemId())
-                        : null,
+                    'item' => null !== $placeId ? $catalog->featureForItem($placeId) : null,
                 ]);
             }
 

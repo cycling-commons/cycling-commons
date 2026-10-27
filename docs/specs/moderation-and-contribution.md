@@ -612,7 +612,10 @@ link to the decision on the map (`ContributionReceipt::$waitingOn`). A tick is
 kept on the waiting place without verifying it, and approval verifies it
 (`ItemConfirmationService::verifyIfVouched()`, run by
 `ModerationService::approveNew()`): a curator's confirmation, or enough
-riders', counts from the approval. The map card then reads "You already confirmed
+riders', counts from the approval. A waiting road that is added to the road it
+lies on carries its confirmations to that road
+(`ItemConfirmationService::carryVouches()`, edit-items/A-road-surface.md, "A
+road on a stretch we hold adds to it"). The map card then reads "You already confirmed
 this place" (`d_also_confirmed`, from `ItemConfirmationService::vouchedAmong()`
 per viewing curator, `confirmedByMe`) instead of offering "Also confirm"
 again. Pinned by
@@ -2119,7 +2122,8 @@ line at once. R routes send no item and need a reload. The response also
 carries the OSM refs the item claims (`refs`, the `ClaimedOsmRefs` rule for
 that one item): the desk adds them to `CC_CURATED_REFS` and applies the tile
 filters again, so OpenStreetMap's own line or pin under the approved place goes
-at once, as after a reload.
+at once, as after a reload. A new road added to the road it lies on
+sends that road (`ModerationService::placeOf()`).
 
 **The decision buttons are delegated, not bound per element.** The drawer body
 is re-rendered often (the async "Recent changes" fetch alone rewrites it after
@@ -2220,6 +2224,11 @@ Opening a road stretch's card turns the map's Surfaces switch on when it is
 off, through the switch itself (`#ovSurface`): OpenStreetMap's road lines and
 our own roads go on together, so the road around the stretch shows, and the
 road approved next draws over OSM's line at once.
+
+A new road on the stretch of a road we hold is that road's change: both sides
+draw the road's own line, Before with its values and After with the new road's
+added, and the rows are only what the new road brings (edit-items/A-road-surface.md,
+"A road on a stretch we hold adds to it").
 
 ### 5.2d What OSM said, so a curator can see what changed
 

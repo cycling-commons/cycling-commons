@@ -58,9 +58,10 @@ by construction (`CatalogContributionService::linkDrawnRoad()`), for a rider's
 road as for a curator's: a curator's own road applies at once, a rider's
 reaches the curator linked. Not when another row holds that way: a served
 one (`OsmLinker::refIsTaken()`), or another road surface still waiting for its
-decision (`DrawnRoadLinker`): then it queues unlinked, and its OSM question
-shows the curator the clash. Two waiting roads on one way would otherwise both
-link, and approving the second would retire the first. The ways are no value
+decision (`DrawnRoadLinker`): then it queues unlinked. On the same stretch as a
+road we hold it adds to that road (next section); on another stretch of the
+way its OSM question shows the curator the clash. Two roads linked to one way
+would otherwise have the second's approval retire the first. The ways are no value
 anybody gave, so no change card lists `waysSpanned` as a row
 (`ChangeValue::NOT_A_ROW`); the card's OSM chip names the way. A redrawn line of a waiting new road is read again. Without an engine
 nothing is linked, and the road waits for the curator's answer as before.
@@ -104,6 +105,42 @@ answers `way/581720829` "Oosterblokker", 285 m, and `way/6576390`
   OpenStreetMap records none for. A way newer than our last build fills no
   surface.
 - No answer (no engine, a refused call) leaves the form as it is.
+
+## A road on a stretch we hold adds to it
+
+A rider may draw a road we already hold, with something the road lacks: the
+Zuiderdijk sent a second time, now with "Lit at night?" answered. That second
+road is an addition to the first, not a second road and not its replacement
+(`App\Moderation\SameStretchRoad`).
+
+The same stretch: each line lies within 15 m of the other for at least 80 % of
+its length (`NEAR_M`, `SHARE`), measured on the item geometry. A road on a part
+of a longer road, or running on past it, is a stretch of its own and is decided
+as any new road.
+
+While it waits, its card is the road's change, on the desk and on the map:
+
+- the rows are what it brings (`SameStretchRoad::additions()`): every value it
+  gives that the road does not hold, the name among them, as "was → now";
+  its line and its OSM ways are no values;
+- a box "Approving adds to this road on the map" names the road and its id, and
+  says so when the new road brings nothing new;
+- Before and After both draw the road's own line, with its values now and with
+  the new ones;
+- no OSM question and no "replaces" box: the road keeps its own answer.
+
+Approving writes those values onto the road, each a `change_history` row of
+the submission, credited to the rider. The road keeps its line, its id and its
+OSM reference. The new road is closed into it: `retired`, with `replaced_by`
+the road. A confirmation given on the new road while it waited (a curator's
+"Mark it confirmed") counts for the road (`ItemConfirmationService::carryVouches()`),
+and verifies it when it earns that. The map is sent the road
+(`ModerationService::placeOf()`), so it draws at once with its new values. A
+curator's own road on a stretch we hold applies the same way, at once. A revoke
+puts both back: the road loses the values, the new road waits again.
+
+Two waiting roads on one stretch: whichever is approved first is the road, and
+the other then adds to it.
 
 ## Correcting or confirming OSM's answer
 

@@ -3067,6 +3067,8 @@ moderate:
     heading: 'L''approbation remplace ces lieux'
     osm_heading: 'L''approbation complète cette entrée OpenStreetMap'
     osm_takes: 'reste la référence OSM'
+    road_heading: 'L''approbation complète cette route de la carte'
+    road_nothing: 'Elle n''apporte aucune valeur que la route n''a pas déjà.'
   empty:
     heading: 'File vide'
     body: 'Plus rien à examiner. Parfait.'
@@ -5507,7 +5509,7 @@ changelog:
   v0913_fixes: "<b>Parmi les petites corrections :</b> sur un téléphone, le guide du planificateur ne se cache plus derrière le tiroir de gauche."
   v0913_curator_review: "<b>Corriger avant d'approuver.</b> Vous pouvez corriger ou confirmer le nouveau lieu d'un cycliste avant de l'approuver, et votre confirmation compte au moment où vous l'approuvez."
   v0913_curator_roads: "<b>Les routes sur la carte de révision.</b> Avant et Après montrent une route comme la carte la dessinera, une route approuvée reste aussitôt sur la carte, et une route sur sa voie OpenStreetMap complète cette voie au lieu de la remplacer."
-  v0913_curator_fixes: "<b>Parmi les petites corrections :</b> une deuxième route sur la même voie OpenStreetMap ne remplace plus la première quand vous l'approuvez, et une carte n'affiche plus une valeur qui n'a pas changé."
+  v0913_curator_fixes: "<b>Parmi les petites corrections :</b> une deuxième route sur le même tronçon ajoute ce qu'elle apporte à la première quand vous l'approuvez, et une carte n'affiche plus une valeur qui n'a pas changé."
   v0911_region_links: "<b>Des sources dans le texte de géographie.</b> Le texte de géographie d'une région peut maintenant lier ses sources, comme son texte d'histoire, de nature et de culture."
   v0911_region_editor: "<b>Enregistrer et continuer.</b> Enregistrer une étape de l'éditeur de région ouvre la suivante."
   v0911_translations: "<b>Des traductions plus simples.</b> Une traduction garde le crédit Wikipédia de son original, le formulaire ne demande donc plus d'où elle vient."

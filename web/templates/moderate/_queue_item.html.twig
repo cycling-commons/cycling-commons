@@ -153,6 +153,14 @@
       {% endif %}
       {# An OpenStreetMap point this place takes over: it adds to it, and the point stays its reference. Only our map
          draws this place for it. The place's own OSM object is the chip above, not this box. #}
+      {# A new road on a stretch we hold adds to that road: the rows above are what it brings (SameStretchRoad). #}
+      {% if item.addsTo|default(null) %}
+        <div class="q-replaces q-replaces-osm">
+          <span class="q-replaces-h">{{ 'moderate.replaces.road_heading'|trans }}</span>
+          <ul><li>{{ item.addsTo.name ?: ('moderate.osm.unnamed'|trans) }} &middot; #{{ item.addsTo.id }}</li></ul>
+          {% if item.changes|default([]) is empty %}<p>{{ 'moderate.replaces.road_nothing'|trans }}</p>{% endif %}
+        </div>
+      {% endif %}
       {% if item.replacesOsm|default(null) %}
         <div class="q-replaces q-replaces-osm">
           <span class="q-replaces-h">{{ 'moderate.replaces.osm_heading'|trans }}</span>

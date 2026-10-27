@@ -23,7 +23,7 @@ import { shareQuery } from './share-links.js';
 import { addPhotoHref } from './add-photo.js';
 import { watchCommonsPhoto, photoWaitRef } from './commons-photo.js';
 import { wantsHiddenPhotos, hiddenPhotosHtml, galleryWithConfirmed, pinMoveHidesHtml } from './hidden-photos.js';
-import { osmQuestionHtml, replacesHtml } from './osm-question.js';
+import { addsToHtml, osmQuestionHtml, replacesHtml } from './osm-question.js';
 import { townPinSvg } from './town-pin.js';
 import { fanPin, fanRingFor, pinElFor, pinElAt } from './pin-fan.js';
 import { setSurfaceTiles, surfaceTilesVisible, surfaceTilesConfigured } from './surface-tiles.js';
@@ -726,7 +726,7 @@ function buildRecord(layer, f){
       }
     }
     // catalog-data-model.md §5b — a new place's OSM question, asked where it is approved.
-    const osmQ = 'new' === s.type ? osmQuestionHtml(s.osm, D) + replacesHtml(s.replaces, D, s.replacesOsm) : '';
+    const osmQ = 'new' === s.type ? osmQuestionHtml(s.osm, D) + replacesHtml(s.replaces, D, s.replacesOsm) + addsToHtml(s.addsTo, D, s.changes) : '';
     /* The language it is written in (moderation-and-contribution.md §3.1d). */
     const lang = escPend(String(s.lang || 'en').toUpperCase());
     const langTag = ` <span class="cc-mod-lang" title="${escPend((D.langTitle || 'Written in %lang%').replace('%lang%', lang))}">${lang}</span>`;
