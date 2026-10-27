@@ -1,0 +1,36 @@
+docs/specs/climb-elevation.md
+  s_086f006d5a9290::t_eda00303f3f38e 458,477-489
+  s_086f006d5a9290::t_67c42a7f1eb831 490
+docs/specs/edit-items/A-road-surface.md
+  s_086f006d5a9290::t_eda00303f3f38e 21-25
+web/src/Elevation/RouteSnapper.php
+  s_086f006d5a9290::t_048d0794c4166f 212
+  s_086f006d5a9290::t_ff2a031c5c85ca 213
+  s_086f006d5a9290::t_82c459b674d614 31-45,74-211,214-237
+  s_086f006d5a9290::t_36c2b10d478829 238
+web/tests/Elevation/RouteSnapperTest.php
+  s_086f006d5a9290::t_c7aae865204b86 242-349
+web/src/Controller/RouteController.php
+  s_086f006d5a9290::t_82c459b674d614 75-76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "949ae483af75579e9ca60c8dcb522e97e0d5cffc",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_086f006d5a9290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97afd631-7f48-4430-aac8-2c62f5b7a119",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
