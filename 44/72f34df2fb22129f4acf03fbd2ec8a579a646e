@@ -1,0 +1,53 @@
+web/templates/map/index.html.twig
+  s_086f006d5a9290::t_ae08a56b84620b 749,1010
+web/assets/map/road-safety.js
+  s_086f006d5a9290::t_ae08a56b84620b 53-55,70-71,118,227-229,385
+web/translations/messages.fr.yaml
+  s_086f006d5a9290::t_ae08a56b84620b 1603,1889
+pipeline/coverage/roadpieces.py
+  s_086f006d5a9290::t_2650c93ffd1f59 12-16,52-53,68,101-106,126,144-145
+web/tests/js/road-safety.test.mjs
+  s_086f006d5a9290::t_88a1b76f86c209 51-52,58-64
+  s_086f006d5a9290::t_d3a09532e2e0b8 65-66
+web/translations/messages.es.yaml
+  s_086f006d5a9290::t_ae08a56b84620b 2213,2499
+web/translations/messages.nl.yaml
+  s_086f006d5a9290::t_ae08a56b84620b 1605,1891
+docs/specs/traffic-measurements.md
+  s_086f006d5a9290::t_734400b068d1a7 75,99-103,634-640,643
+web/translations/messages.de.yaml
+  s_086f006d5a9290::t_ae08a56b84620b 1608,1894
+web/assets/lib/road-safety.js
+  s_086f006d5a9290::t_ae08a56b84620b 55,62
+web/translations/messages.en.yaml
+  s_086f006d5a9290::t_ae08a56b84620b 2206,2492
+web/src/Controller/MapController.php
+  s_086f006d5a9290::t_ae08a56b84620b 575
+pipeline/tests/test_roadpieces.py
+  s_086f006d5a9290::t_998bae32d8bbc1 140
+  s_086f006d5a9290::t_2650c93ffd1f59 15,53-61,73-74,86,103
+web/tests/js/road-safety-key.test.cjs
+  s_086f006d5a9290::t_bffbcb89242569 49-50,64-70
+  s_086f006d5a9290::t_c43c5099fb1332 71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4472f34df2fb22129f4acf03fbd2ec8a579a646e",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_086f006d5a9290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97afd631-7f48-4430-aac8-2c62f5b7a119",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
