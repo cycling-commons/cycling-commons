@@ -1,0 +1,73 @@
+web/tests/js/replaces-box.test.mjs
+  s_086f006d5a9290::t_9869523ee1f4fb 24-29
+  s_086f006d5a9290::t_d29cf8c99157d7 1-18,20-23,30-32
+  s_086f006d5a9290::t_3d946eb4d383c0 19
+web/assets/map/osm-question.js
+  s_086f006d5a9290::t_6e5443cf15c7ed 45-46
+  s_086f006d5a9290::t_596da541661248 43-44
+  s_086f006d5a9290::t_9869523ee1f4fb 52-53
+  s_086f006d5a9290::t_a52561ba87a9de 41-42,55-60
+web/tests/Moderation/NewItemShowsItsValuesTest.php
+  s_086f006d5a9290::t_6e5443cf15c7ed 110
+  s_086f006d5a9290::t_c24365b8148f97 111,121-124
+  s_086f006d5a9290::t_290793bb6f0120 94-109,112-120,125-137
+web/tests/Contribution/MaterializeFlowTest.php
+  s_086f006d5a9290::t_b7a441743875a8 247-260
+web/src/Moderation/SubmissionQueue.php
+  s_086f006d5a9290::t_6e5443cf15c7ed 732
+  s_086f006d5a9290::t_44408163fccb90 718-720,729-731,736
+web/translations/messages.en.yaml
+  s_086f006d5a9290::t_a52561ba87a9de 3074
+  s_086f006d5a9290::t_0e952a4e200f97 3075
+docs/specs/catalog-data-model.md
+  s_086f006d5a9290::t_f9193028b76dd9 430-432
+  s_086f006d5a9290::t_5e98474b9e413d 433-439
+web/templates/moderate/_queue_item.html.twig
+  s_086f006d5a9290::t_9869523ee1f4fb 148-149
+  s_086f006d5a9290::t_5e98474b9e413d 154-155
+  s_086f006d5a9290::t_a52561ba87a9de 143,156-159
+  s_086f006d5a9290::t_f8244c44b98a0b 160-161
+web/src/Contribution/SubmissionChangeSummary.php
+  s_086f006d5a9290::t_a52561ba87a9de 92-96
+web/tests/Contribution/SubmissionChangeSummaryTest.php
+  s_086f006d5a9290::t_a52561ba87a9de 52-64
+web/src/Controller/ContributeController.php
+  s_086f006d5a9290::t_180ec9b740d1e6 306-315
+web/translations/messages.nl.yaml
+  s_086f006d5a9290::t_a52561ba87a9de 3059
+  s_086f006d5a9290::t_2c5ac8945b225c 3060
+web/translations/messages.de.yaml
+  s_086f006d5a9290::t_a52561ba87a9de 3060
+  s_086f006d5a9290::t_c44b3adabcb3bd 3061
+web/translations/messages.es.yaml
+  s_086f006d5a9290::t_a52561ba87a9de 3081
+  s_086f006d5a9290::t_f212eded06eb6c 3082
+web/translations/messages.fr.yaml
+  s_086f006d5a9290::t_a52561ba87a9de 3055
+  s_086f006d5a9290::t_36792d311f5cba 3056
+docs/specs/edit-items/A-road-surface.md
+  s_086f006d5a9290::t_4641aae00b030a 414-419
+web/src/Controller/MapController.php
+  s_086f006d5a9290::t_baf1b4553b5e8d 944
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "91cdf72360395347a6bb5e379d21f7203817c45e",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_086f006d5a9290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97afd631-7f48-4430-aac8-2c62f5b7a119",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
