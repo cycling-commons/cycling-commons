@@ -1,0 +1,31 @@
+web/tests/js/review-surfaces-switch.test.cjs
+  s_086f006d5a9290::t_68cdb6ff604b76 1-24
+web/assets/map/drawer.js
+  s_086f006d5a9290::t_68cdb6ff604b76 1270
+  s_086f006d5a9290::t_2ac88d0db4dc07 1271-1272
+  s_086f006d5a9290::t_ce0657a391b32b 1275
+docs/specs/moderation-and-contribution.md
+  s_086f006d5a9290::t_68cdb6ff604b76 2215-2217
+  s_086f006d5a9290::t_e71e542e97be36 2218-2219
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "612ca980139272cb0c105cf2f4219f12b97a8b44",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_086f006d5a9290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97afd631-7f48-4430-aac8-2c62f5b7a119",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
