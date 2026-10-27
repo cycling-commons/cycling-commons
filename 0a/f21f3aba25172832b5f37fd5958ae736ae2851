@@ -1,0 +1,40 @@
+docs/specs/moderation-and-contribution.md
+  s_086f006d5a9290::t_454290b1ba289f 1316-1317,1365-1369,1397-1399,1403-1405
+web/tests/Contribution/SubmissionChangeSummaryTest.php
+  s_086f006d5a9290::t_78212bef269c74 39-51
+web/tests/Moderation/RegionFactsTest.php
+  s_086f006d5a9290::t_afa2d2f2a0dcaa 162
+  s_086f006d5a9290::t_f558eddc71cf0e 210-243,281-283
+  s_086f006d5a9290::t_ced8f7f821fb98 168
+web/src/Contribution/PlaceTextProposals.php
+  s_086f006d5a9290::t_32e2d6f7e2473b 457,469-470,473,492-497,501-502
+web/assets/styles/page/contribute/place-text.css
+  s_086f006d5a9290::t_53261c16279e6f 152
+web/src/Catalog/RegionFacts.php
+  s_086f006d5a9290::t_32e2d6f7e2473b 17,52-61,87-88,93,103,111,144,154,163-164,172-173,181-182,184,190-192
+web/templates/contribute/region_edit.html.twig
+  s_086f006d5a9290::t_53261c16279e6f 125-130
+web/src/Contribution/SubmissionChangeSummary.php
+  s_086f006d5a9290::t_78212bef269c74 110-113,118-120
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0af21f3aba25172832b5f37fd5958ae736ae2851",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_086f006d5a9290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97afd631-7f48-4430-aac8-2c62f5b7a119",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
