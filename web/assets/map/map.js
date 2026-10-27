@@ -133,6 +133,36 @@ import { layerGlyph } from './icons.js';
   initCuratorKeys();
 
 
+  /* A · Road surface. A function because it also runs on catalog hot-refresh and after a desk approval
+     (window.__ccApplySurface), so it sits outside populateCatalogLayers(), where the hook can reach it. */
+  function populateSurfaceA(){
+    if(!window.CC_SURFACE) return;
+    layerByKey['surface'].features = CC_SURFACE.segments.map(s=>{
+      const rec = schemaRows('A', s, s.id);
+      // Length leads: great-circle over the drawn path, in the rider's unit.
+      const _km = (s.path||[]).reduce((acc,p,i,a)=>{
+        if(!i) return 0;
+        const [la1,lo1]=a[i-1],[la2,lo2]=p, r=Math.PI/180;
+        const dp=(la2-la1)*r, dl=(lo2-lo1)*r;
+        const h=Math.sin(dp/2)**2+Math.cos(la1*r)*Math.cos(la2*r)*Math.sin(dl/2)**2;
+        return acc+6371*2*Math.asin(Math.sqrt(h));
+      },0);
+      if(_km>0.01) rec.unshift({label:D.length||'Length', value:uKm(_km)});
+      return attachPhotos({
+        id:s.id, rid:s.rid, name:s.name, headline:`${trVal(s.surface)} · ${trVal(s.smoothness)}`, cur:(s.cls!=='paved'), edit:'road-surface',
+        geom:{path:s.path}, surfaceClass:s.cls, width:s.width, smoothness:s.smoothness,
+        // The OSM way it stands for: the card's "How safe did it feel?" opens on it (traffic-measurements.md section 10).
+        wayId:s.wayId,
+        /* Who filed it. Every other layer's drawer names the rider; this shape
+           carried no contributor, so the drawer cited OSM for values a rider
+           typed. by:0 is a rider who has not made their profile public, and
+           reads as "Shared anonymously" rather than as nobody. */
+        by:s.by, byName:s.byName, byUuid:s.byUuid, srcType:s.srcType,
+        source:isRiderSource(s.srcType) ? sourceLabel(s.srcType) : 'OSM (surface=*)',
+        record:rec
+      }, s);   // `photo` / `photos` as served, already through PhotoValidator
+    });
+  }
   /* Catalog layers from the payload's variables. Run at boot, and again by
      the tab-return refresh (__ccApplyCatalog) once a fresh payload has landed,
      so climbs, routes and hazards follow an approval like the pools do. */
@@ -204,35 +234,6 @@ import { layerGlyph } from './icons.js';
         return rec;
       })()
     };
-    });
-  }
-  // A · Road surface. A function because it also runs on catalog hot-refresh.
-  function populateSurfaceA(){
-    if(!window.CC_SURFACE) return;
-    layerByKey['surface'].features = CC_SURFACE.segments.map(s=>{
-      const rec = schemaRows('A', s, s.id);
-      // Length leads: great-circle over the drawn path, in the rider's unit.
-      const _km = (s.path||[]).reduce((acc,p,i,a)=>{
-        if(!i) return 0;
-        const [la1,lo1]=a[i-1],[la2,lo2]=p, r=Math.PI/180;
-        const dp=(la2-la1)*r, dl=(lo2-lo1)*r;
-        const h=Math.sin(dp/2)**2+Math.cos(la1*r)*Math.cos(la2*r)*Math.sin(dl/2)**2;
-        return acc+6371*2*Math.asin(Math.sqrt(h));
-      },0);
-      if(_km>0.01) rec.unshift({label:D.length||'Length', value:uKm(_km)});
-      return attachPhotos({
-        id:s.id, rid:s.rid, name:s.name, headline:`${trVal(s.surface)} · ${trVal(s.smoothness)}`, cur:(s.cls!=='paved'), edit:'road-surface',
-        geom:{path:s.path}, surfaceClass:s.cls, width:s.width, smoothness:s.smoothness,
-        // The OSM way it stands for: the card's "How safe did it feel?" opens on it (traffic-measurements.md section 10).
-        wayId:s.wayId,
-        /* Who filed it. Every other layer's drawer names the rider; this shape
-           carried no contributor, so the drawer cited OSM for values a rider
-           typed. by:0 is a rider who has not made their profile public, and
-           reads as "Shared anonymously" rather than as nobody. */
-        by:s.by, byName:s.byName, byUuid:s.byUuid, srcType:s.srcType,
-        source:isRiderSource(s.srcType) ? sourceLabel(s.srcType) : 'OSM (surface=*)',
-        record:rec
-      }, s);   // `photo` / `photos` as served, already through PhotoValidator
     });
   }
   populateSurfaceA();
@@ -368,6 +369,13 @@ import { layerGlyph } from './icons.js';
   window.__ccApplyCatalog = () => {
     populateCatalogLayers();   // includes populateSurfaceA()
     refreshPools();
+    rebuildItemIndex();
+    setSurfaceTiles(surfaceTilesVisible());
+    render();
+  };
+  // An approved road stretch, added to CC_SURFACE by the desk (community.js): the surface layer only.
+  window.__ccApplySurface = () => {
+    populateSurfaceA();
     rebuildItemIndex();
     setSurfaceTiles(surfaceTilesVisible());
     render();

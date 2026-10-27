@@ -273,7 +273,7 @@ final class CatalogProvider
      *
      * @see docs/specs/moderation-and-contribution.md §6.3
      *
-     * @return array{letter: string, feature?: array{type: string, properties: array<string, mixed>, geometry: mixed}, climb?: array<string, mixed>}|null
+     * @return array{letter: string, feature?: array{type: string, properties: array<string, mixed>, geometry: mixed}, climb?: array<string, mixed>, segment?: array<string, mixed>}|null
      */
     public function featureForItem(int $itemId, bool $anyState = false): ?array
     {
@@ -285,6 +285,13 @@ final class CatalogProvider
             $rows = $this->itemRows('N', onlyId: $itemId, anyState: $anyState);
 
             return [] === $rows ? null : ['letter' => 'N', 'climb' => $this->climbFromRow($rows[0])];
+        }
+        // A road stretch joins the surface layer, in the shape the page's CC_SURFACE carries.
+        if ('A' === $letter) {
+            $rows = $this->itemRows('A', onlyId: $itemId, anyState: $anyState);
+            $seg = [] === $rows ? null : $this->surfaceSegment($rows[0]);
+
+            return null === $seg ? null : ['letter' => 'A', 'segment' => $seg];
         }
         if (!\in_array($letter, self::POOL_LETTERS, true)) {
             return null;
@@ -600,55 +607,71 @@ final class CatalogProvider
     {
         $segments = [];
         foreach ($this->itemRows('A', regionId: $regionId) as $row) {
-            // Only the photos PhotoValidator shows on this segment, as feature() does.
-            $attrs = PublicPhotos::of(PhotoValidator::sift($this->decode($row['attributes']), PhotoPlace::of($row['letter'], $row['pin_lat'], $row['pin_lng']))['attributes']);
-            $seg = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source']] + $attrs;
-            // Derive `cls` at serve time; a stored cls is never second-guessed.
-            if (!isset($seg['cls'])) {
-                $cls = SurfaceVocabulary::tileClassFor(\is_string($seg['surface'] ?? null) ? $seg['surface'] : null);
-                if (null !== $cls) {
-                    $seg['cls'] = $cls;
-                }
+            $seg = $this->surfaceSegment($row);
+            if (null !== $seg) {
+                $segments[] = $seg;
             }
-            // docs/specs/map-and-search.md §12 — absent key = community.
-            if ($row['verified']) {
-                $seg['v'] = 1;
-            }
-            if (null !== $row['region_id']) {
-                $seg['rid'] = (int) $row['region_id'];
-            }
-            /* Who filed it, on the same terms as every other layer
-               ({@see mapRow()}): named only with consent, fail-closed to
-               anonymous. A road surface is a rider's work as much as a water
-               tap is, and this shape carried no contributor at all, so the
-               drawer fell back to citing OSM for values a rider typed
-               (owner-reported 2026-08-31). OSM is still the source of the LINE,
-               which is what srcType and the provenance line under the name say.
-               Duplicated from mapRow() rather than shared because the two build
-               different shapes; the consent rule is what has to stay identical,
-               and SurfaceContributorTest pins that. */
-            if (null !== ($row['by_name'] ?? null)) {
-                $public = (bool) $row['by_public'];
-                $seg['by'] = $public ? 1 : 0;
-                if ($public) {
-                    $seg['byName'] = (string) $row['by_name'];
-                    $seg['byUuid'] = (string) $row['by_uuid'];
-                }
-            }
-            if (str_starts_with($row['source_ref'], 'way/')) {
-                $seg['wayId'] = (int) substr($row['source_ref'], 4);
-            }
-            /** @var array{type?: string, coordinates: list<array{0: float, 1: float}>} $geo */
-            $geo = $this->decode($row['geom']);
-            // Skip a non-line: flipping vertex pairs would corrupt the whole payload.
-            if ('LineString' !== ($geo['type'] ?? null)) {
-                continue;
-            }
-            $seg['path'] = $this->flip($geo['coordinates']);
-            $segments[] = $seg;
         }
 
         return $segments;
+    }
+
+    /**
+     * One road stretch in the CC_SURFACE.segments shape, or null for a row that is not a line.
+     *
+     * @param array<string, mixed> $row
+     *
+     * @return array<string, mixed>|null
+     */
+    private function surfaceSegment(array $row): ?array
+    {
+        // Only the photos PhotoValidator shows on this segment, as feature() does.
+        $attrs = PublicPhotos::of(PhotoValidator::sift($this->decode($row['attributes']), PhotoPlace::of($row['letter'], $row['pin_lat'], $row['pin_lng']))['attributes']);
+        $seg = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source']] + $attrs;
+        // Derive `cls` at serve time; a stored cls is never second-guessed.
+        if (!isset($seg['cls'])) {
+            $cls = SurfaceVocabulary::tileClassFor(\is_string($seg['surface'] ?? null) ? $seg['surface'] : null);
+            if (null !== $cls) {
+                $seg['cls'] = $cls;
+            }
+        }
+        // docs/specs/map-and-search.md §12 — absent key = community.
+        if ($row['verified']) {
+            $seg['v'] = 1;
+        }
+        if (null !== $row['region_id']) {
+            $seg['rid'] = (int) $row['region_id'];
+        }
+        /* Who filed it, on the same terms as every other layer
+           ({@see mapRow()}): named only with consent, fail-closed to
+           anonymous. A road surface is a rider's work as much as a water
+           tap is, and this shape carried no contributor at all, so the
+           drawer fell back to citing OSM for values a rider typed
+           (owner-reported 2026-08-31). OSM is still the source of the LINE,
+           which is what srcType and the provenance line under the name say.
+           Duplicated from mapRow() rather than shared because the two build
+           different shapes; the consent rule is what has to stay identical,
+           and SurfaceContributorTest pins that. */
+        if (null !== ($row['by_name'] ?? null)) {
+            $public = (bool) $row['by_public'];
+            $seg['by'] = $public ? 1 : 0;
+            if ($public) {
+                $seg['byName'] = (string) $row['by_name'];
+                $seg['byUuid'] = (string) $row['by_uuid'];
+            }
+        }
+        if (str_starts_with($row['source_ref'], 'way/')) {
+            $seg['wayId'] = (int) substr($row['source_ref'], 4);
+        }
+        /** @var array{type?: string, coordinates: list<array{0: float, 1: float}>} $geo */
+        $geo = $this->decode($row['geom']);
+        // Skip a non-line: flipping vertex pairs would corrupt the whole payload.
+        if ('LineString' !== ($geo['type'] ?? null)) {
+            return null;
+        }
+        $seg['path'] = $this->flip($geo['coordinates']);
+
+        return $seg;
     }
 
     /**

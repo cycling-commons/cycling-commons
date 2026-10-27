@@ -26,7 +26,7 @@ stale without the build saying so.
 | `stored-tag-keys` | **47** | tag keys the harvest keeps on a coverage row; every other key is dropped at parse time | `pipeline/contract/coverage-contract.json` |
 | `drawer-tag-whitelist` | **36** | of those keys the POI drawer is allowed to render | `web/src/Coverage/CoverageRepository.php` |
 | `map-modules` | **86** | JavaScript modules the map is split into | `web/assets/map/` |
-| `map-js-lines` | **374** | lines in `map.js` itself, which is imports plus the boot sequence | `web/assets/map/map.js` |
+| `map-js-lines` | **382** | lines in `map.js` itself, which is imports plus the boot sequence | `web/assets/map/map.js` |
 | `seeded-pins` | **30** | hand-authored pins `make course-data` seeds | `web/src/Catalog/Command/SeedManualCatalogCommand.php` |
 | `api-rate-limit-per-minute` | **120** | requests a minute per client address on the public API | `web/config/packages/rate_limiter.yaml` |
 | `api-bbox-max-degrees` | **10.0** | widest bbox `/v1/search` and `/v1/routes` accept, on either axis | `web/src/Api/V1/ApiResponder.php` |

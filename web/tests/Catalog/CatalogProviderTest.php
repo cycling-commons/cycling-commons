@@ -350,6 +350,23 @@ final class CatalogProviderTest extends KernelTestCase
     }
 
     /**
+     * featureForItem() serves A · road stretches too, in the CC_SURFACE shape: an approved road joins the surface
+     * layer at once, where it used to vanish with the pending line until a reload.
+     */
+    public function testFeatureForItemRebuildsARoadStretchInItsOwnShape(): void
+    {
+        $bulk = $this->payload()['A'][0];
+
+        $one = static::getContainer()->get(CatalogProvider::class)->featureForItem($bulk['id']);
+
+        self::assertNotNull($one);
+        self::assertSame('A', $one['letter']);
+        self::assertArrayNotHasKey('feature', $one);
+        // Byte-identical to the bulk payload's entry: one builder, two callers.
+        self::assertSame($bulk, $one['segment'] ?? null);
+    }
+
+    /**
      * A submitted (not yet served) item must stay out of every payload, but a
      * curator reviewing it on the map needs its final form: `anyState` opens
      * the one-item mapper for that preview only (owner 2026-08-25).

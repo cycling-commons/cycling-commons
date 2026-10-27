@@ -2110,9 +2110,12 @@ uses, so a live-inserted feature can never drift from the served one), and the
 drawer inserts it into the pool it belongs to (`addCuratedFeature()`,
 idempotent by item id); the map's pools are built once, at boot, so without
 this the place would appear nowhere until a reload. It joins as a **community** pin (dashed, `v` absent):
-approved is not confirmed, and only a rider's confirmation flips that. Letters
-whose payload is not a feature collection (A segments, R routes) send
-no item and need a reload.
+approved is not confirmed, and only a rider's confirmation flips that. A climb
+comes back as a climb (`climb`), and an A road stretch as a CC_SURFACE segment
+(`segment`, the same builder as the bulk payload, `surfaceSegment()`): the desk
+writes it into `CC_SURFACE.segments` and redraws the surface layer
+(`window.__ccApplySurface`), so the approved road takes the place of the pending
+line at once. R routes send no item and need a reload.
 
 **The decision buttons are delegated, not bound per element.** The drawer body
 is re-rendered often (the async "Recent changes" fetch alone rewrites it after

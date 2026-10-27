@@ -345,6 +345,18 @@ export function submitModeration(btn){
         const p = res.item.feature.properties || {};
         const g = (res.item.feature.geometry||{}).coordinates || [];
         reopen = () => openDrawer(layerByKey[key], osmDrawer(layerByKey[key], p, [g[1], g[0]], p.src));
+      } else if(res.item && res.item.segment){
+        /* An approved road stretch joins the surface layer at once, as a reload would draw it: the pending line is
+           gone with the drawer, and without this the road vanished until a hard refresh. */
+        const seg = res.item.segment;
+        if(!window.CC_SURFACE) window.CC_SURFACE = { segments: [] };
+        const list = window.CC_SURFACE.segments || (window.CC_SURFACE.segments = []);
+        const at = list.findIndex(x => String(x.id) === String(seg.id));
+        if(at >= 0) list[at] = seg; else list.push(seg);
+        if(typeof window.__ccApplySurface === 'function') window.__ccApplySurface();
+        const lyr = layerByKey['surface'];
+        const f = lyr && (lyr.features||[]).find(x => String(x.id) === String(seg.id));
+        if(f) reopen = () => openDrawer(lyr, f);
       } else if(res.item && res.item.climb){
         const lyr = layerByKey['climbs'];
         if(lyr){
