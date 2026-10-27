@@ -59,8 +59,8 @@ final readonly class SubmissionChangeSummary
         uksort($changes, static fn (int|string $a, int|string $b): int => self::factOrder((string) $a) <=> self::factOrder((string) $b));
 
         foreach ($changes as $field => $pair) {
-            if (!\is_array($pair)) {
-                // Skip a payload that is not {was, now}.
+            if (!\is_array($pair) || \in_array($field, ChangeValue::NOT_A_ROW, true)) {
+                // Skip a payload that is not {was, now}, and a field nobody gave.
                 continue;
             }
             $was = $pair['was'] ?? null;

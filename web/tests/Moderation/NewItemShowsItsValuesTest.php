@@ -56,6 +56,8 @@ final class NewItemShowsItsValuesTest extends WebTestCase
                 'traffic' => 'Car-free',
                 // A shape, which is reviewed on the map and never as text.
                 'segment' => ['a' => [5.1076, 52.6637], 'b' => [5.1201, 52.6503], 'line' => [[5.1076, 52.6637]]],
+                // Filled by the server, named by the OSM chip.
+                'waysSpanned' => ['way/999042'],
             ]);
         $em->persist($item);
         $em->flush();
@@ -86,6 +88,7 @@ final class NewItemShowsItsValuesTest extends WebTestCase
             self::assertContains($field, $keys, "the curator must see the proposed {$field}");
         }
         self::assertNotContains('segment', $keys, 'a shape is reviewed on the map, never as text');
+        self::assertNotContains('waysSpanned', $keys, 'the OSM ways are no value anybody gave');
 
         $bySurface = array_values(array_filter($card['changes'], static fn (array $c): bool => 'surface' === $c['key']));
         self::assertSame('Asphalt', $bySurface[0]['now']);

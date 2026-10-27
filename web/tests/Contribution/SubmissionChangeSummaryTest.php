@@ -62,6 +62,18 @@ final class SubmissionChangeSummaryTest extends TestCase
         self::assertSame('Asphalt', $rows[0]['now']);
     }
 
+    /** A road's OSM ways are filled by the server and named by the card's OSM chip: no row. */
+    public function testARoadsOsmWaysAreNoRow(): void
+    {
+        $sub = $this->submission('A', [
+            'surface' => ['was' => null, 'now' => 'Asphalt'],
+            'waysSpanned' => ['was' => null, 'now' => ['way/6571337', 'way/6571344']],
+        ]);
+        $rows = $this->summary()->rows($sub);
+
+        self::assertSame(['Asphalt'], array_column($rows, 'now'));
+    }
+
     public function testATownOrRegionTextIsNamedWithItsLanguage(): void
     {
         $sub = $this->submission('', ['text:nl' => ['was' => 'Oud.', 'now' => 'Nieuw.']]);

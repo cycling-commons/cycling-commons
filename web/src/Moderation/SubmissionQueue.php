@@ -1169,6 +1169,10 @@ final class SubmissionQueue
             if (\in_array($field, self::SHAPE_FIELDS, true)) {
                 continue;
             }
+            // A field nobody gave is no row (a road's OSM ways: the OSM chip names them).
+            if (\in_array($field, ChangeValue::NOT_A_ROW, true)) {
+                continue;
+            }
             // Skip a payload that is not {was, now}.
             if (!\is_array($pair)) {
                 continue;

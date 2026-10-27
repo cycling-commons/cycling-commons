@@ -18,6 +18,12 @@ final class ChangeValue
     private const float EARTH_M = 6371000.0;
 
     /**
+     * Fields the server fills that are no value anybody gave: a road's OSM ways (`waysSpanned`), which the card's OSM
+     * chip names. No change card lists them as a row.
+     */
+    public const array NOT_A_ROW = ['waysSpanned'];
+
+    /**
      * @param mixed $value the raw stored value for $field
      */
     public static function format(string $field, mixed $value): string
