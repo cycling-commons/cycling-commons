@@ -103,10 +103,11 @@ final class MapController extends AbstractController
 
         $user = $this->getUser();
         // Road pieces: the ride review matches against them, the curator's
-        // measured-traffic layer draws on them, and a signed-in rider picks a
-        // road on them to say how safe it felt (traffic-measurements.md §2,
-        // §4.6, §10). The browser reads their tiles only once one of those opens.
-        $withRoadPieces = null !== $roadPieces && ($scoutReview || $user instanceof User);
+        // measured-traffic layer draws on them, a signed-in rider picks a
+        // road on them to say how safe it felt, and everyone sees them as the
+        // Road safety overlay (traffic-measurements.md §2, §4.6, §10). The
+        // browser reads their tiles only once one of those opens.
+        $withRoadPieces = null !== $roadPieces;
         if ($withRoadPieces && !$scoutReview) {
             $roadPieces->prefetch();
         }

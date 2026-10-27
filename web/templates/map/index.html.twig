@@ -257,6 +257,9 @@
         <h3>{{ 'map.map_overlays'|trans }}</h3>
         <button class="layer ov-row" id="ovSurface" type="button" hidden aria-pressed="false"><span class="sw" style="--c:#C8923A;--ic:#101E16"><i class="sw-g">▰</i></span><span class="nm">{{ 'map.surfaces'|trans }}</span><span class="ct">{{ 'map.overlay_off'|trans }}</span></button>
         <button class="layer ov-row" id="ovRoutes" type="button" hidden aria-pressed="false"><span class="sw" style="--c:#7A4FCF;--ic:#EFE6D4"><i class="sw-g">⤳</i></span><span class="nm">{{ 'map.route_network'|trans }}</span><span class="ct">{{ 'map.overlay_off'|trans }}</span></button>
+        {# Road safety (traffic-measurements.md section 10): who a road is shared with, cycle path, cycle lane or
+           cars, on the road-piece tiles; shown once those are built (road-safety.js, panels.js). #}
+        <button class="layer ov-row" id="ovRoadSafety" type="button" hidden aria-pressed="false"><span class="sw" style="--c:#7A3FB8;--ic:#F3EBD8"><i class="sw-g">⇄</i></span><span class="nm">{{ 'map.road_safety_layer'|trans }}</span><span class="ct">{{ 'map.overlay_off'|trans }}</span></button>
         {# Roads a bike may not ride, faded on the basemap; on unless the rider turns it off (map-and-search.md section 4.1). #}
         <button class="layer ov-row" id="ovFadeRoads" type="button" aria-pressed="true" title="{{ 'map.fade_roads_hint'|trans }}"><span class="sw" style="--c:#B9B2A2;--ic:#101E16"><i class="sw-g">▱</i></span><span class="nm">{{ 'map.fade_roads'|trans }}</span><span class="ct">{{ 'map.overlay_on'|trans }}</span></button>
         {# 3D relief: the slopes shaded and the ground raised, only where nginx proxies the relief tiles. #}
@@ -737,6 +740,14 @@
         <div class="mkp-row"><span class="mkp-sw"><span class="mk-line" style="border-top-color:#8A5A32" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'map.legend_route_mtb'|trans }}</b></div></div>
         <div class="mkp-row"><span class="mkp-sw"><span class="mk-knoop" aria-hidden="true">42</span></span><div class="mkp-t"><b>{{ 'legend.line_knoop_h'|trans }}</b><span>{{ 'legend.line_knoop_t'|trans }}</span></div></div>
       </div>
+      {# Road safety (traffic-measurements.md section 10): who a road is shared with, as the Road safety overlay and
+         the mode to mark a road draw it; the same colours as the overlay key box (#roadSafetyKey). #}
+      <div class="grp" id="mk-road-safety">
+        <h3>{{ 'map.road_safety_layer'|trans }}</h3>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-line" style="border-top-color:#2F6FDB" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'map.legend_rs_path'|trans }}</b></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-line" style="border-top-color:#E8A33D" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'map.legend_rs_lane'|trans }}</b></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-line" style="border-top-color:#7A3FB8" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'map.legend_rs_shared'|trans }}</b></div></div>
+      </div>
       {# The ride review's own lines (traffic-measurements.md section 3.1), on
          the review page only: nowhere else draws them. #}
       {% if scout_review|default(false) %}
@@ -986,6 +997,18 @@
            Belgian screen is these - so the key names them rather than leaving a
            rider to work out that the circles are junctions. An explanation, in
            the quality-note style. #}
+      </div>
+      {# Road safety key (traffic-measurements.md section 10): the colours the road pieces are drawn in, while the
+         Road safety overlay or the mode to mark a road is on. Each row switches its type, as the surface and route
+         rows do (road-safety.js toggleRoadType()); the colours are LABEL_COLOURS (road-safety-key.test.cjs). #}
+      <div class="rkey" id="roadSafetyKey" hidden>
+        <h4><button type="button" class="lg-eye" data-eye-for="roadSafetyKey" aria-pressed="true" aria-label="{{ 'map.legend_all_aria'|trans }}" title="{{ 'map.legend_all_aria'|trans }}">{{ ccEye }}</button>{{ 'map.road_safety_layer'|trans }}</h4>
+        <div class="skey">
+          <button type="button" class="skey-row" data-rs-label="p" aria-pressed="true"><span class="skey-ln" style="--sc:#2F6FDB"></span>{{ 'map.legend_rs_path'|trans }}</button>
+          <button type="button" class="skey-row" data-rs-label="l" aria-pressed="true"><span class="skey-ln" style="--sc:#E8A33D"></span>{{ 'map.legend_rs_lane'|trans }}</button>
+          <button type="button" class="skey-row" data-rs-label="r" aria-pressed="true"><span class="skey-ln" style="--sc:#7A3FB8"></span>{{ 'map.legend_rs_shared'|trans }}</button>
+        </div>
+        <div class="skey-note" id="roadSafetyKeyZoom" hidden>{{ 'map.legend_rs_zoom'|trans }}</div>
       </div>
       {# The ride review's step 2 lines (traffic-measurements.md section 3.1).
          scout-traffic.js shows it while step 2 is on screen, with a row only

@@ -476,20 +476,23 @@ def build_routes_pmtiles(way_files: dict[str, list[Path]], node_files: dict[str,
 
 
 def build_roadpieces_pmtiles(files: dict[str, list[Path]], out_path: Path) -> None:
-    """tippecanoe -> the road-piece artifact for traffic matching: one
-    `roadpieces_<cc>` layer per country, z14 only
+    """tippecanoe -> the road-piece artifact for traffic matching and the Road
+    safety overlay: one `roadpieces_<cc>` layer per country, z12 to z14
     (docs/specs/traffic-measurements.md §2).
 
-    The browser snaps a ride to these lines, so every way stays, at full
-    detail, at the one zoom the matcher reads: no thinning, no simplification,
-    and the way id is the feature id (the GeoJSON `id`), because the summary a
-    rider sends names the way by it.
+    The browser snaps a ride to these lines at z14, so every way stays there at
+    full detail: no thinning, no simplification at the top zoom
+    (`--simplify-only-low-zooms`), and the way id is the feature id (the GeoJSON
+    `id`), because the summary a rider sends names the way by it. z12 and z13
+    hold every way too, simplified, for the overlay zoomed out: the Dutch tiles
+    grow from 52 to 124 MB, about 350 KB of road lines a phone screen at z12
+    (z11 would be about 1.2 MB a screen).
     """
     cmd = [
         "tippecanoe", "-o", str(out_path), "--force", "--quiet",
-        "--minimum-zoom", "14", "--maximum-zoom", "14",
+        "--minimum-zoom", "12", "--maximum-zoom", "14",
         "--no-feature-limit", "--no-tile-size-limit",
-        "--no-line-simplification", "--no-simplification-of-shared-nodes",
+        "--simplify-only-low-zooms", "--no-simplification-of-shared-nodes",
     ]
     for cc in sorted(files):
         for path in files[cc]:
@@ -499,7 +502,7 @@ def build_roadpieces_pmtiles(files: dict[str, list[Path]], out_path: Path) -> No
 
 # Bumped whenever a builder's tippecanoe flags change: the rebuild rule
 # (coverage-provider.md §3) cannot see a flag change in the input files.
-TILE_PROFILE = {"coverage": "1", "surface": "1", "routes": "1", "gaps": "1", "roadpieces": "1"}
+TILE_PROFILE = {"coverage": "1", "surface": "1", "routes": "1", "gaps": "1", "roadpieces": "2"}
 
 
 def artifact_bounds(path) -> list[float]:

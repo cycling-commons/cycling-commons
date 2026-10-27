@@ -55,8 +55,15 @@ family next to the surface family (`pipeline/coverage/roadpieces.py`, run with
 (`roadpieces-<cc>.pmtiles`), published under `roadpieces/<cc>/<stamp>/` and
 listed in `roadpieces/manifest.json` in the same shape as the surface manifest.
 
-**Zoom and geometry.** z14 only (tippecanoe minimum and maximum zoom 14), no
-feature dropping, feature id = way id. One source layer per country, `roadpieces_<cc>`.
+**Zoom and geometry.** z12 to z14 (tippecanoe minimum zoom 12, maximum 14),
+no feature dropping at any zoom, feature id = way id. z14 is full detail
+(`--simplify-only-low-zooms`): the ride matcher reads z14 only. z12 and z13
+hold every way too, simplified, for the Road safety overlay zoomed out (section 10).
+Measured on the Dutch data on dev: 52 MB with z14 only, 124 MB from z12
+(91 MB from z13, 152 MB from z11), and about 350 KB of road lines a phone
+screen at z12 (about 1.2 MB at z11, so not built). Tiles built before
+2026-10-26 hold z14 only; `TILE_PROFILE["roadpieces"]` is 2, so every country
+rebuilds once. One source layer per country, `roadpieces_<cc>`.
 
 **Properties.**
 
@@ -609,8 +616,22 @@ feel?" with a **Mark a road** button (`#roadSafetyGo`), which turns on the
 road-safety mode (`web/assets/map/road-safety.js`): the panel closes, the road
 pieces of §2 are drawn over the map in the colour of their label (blue cycle
 path, amber cycle lane, purple shared road, `LABEL_COLOURS` in
-`traffic-colours.js`) from zoom 14 (the tiles hold z14 only; below it the card
-says "Zoom in to pick a road"), and a click on one picks it, within 8 px. A
+`traffic-colours.js`) from zoom 12 (`VIEW_ZOOM`; tiles from before z12 was
+built draw from 14), and a click on one picks it, within 8 px, from zoom 14
+(`PIECE_ZOOM`; below it the card says "Zoom in to pick a road").
+
+**The Road safety overlay.** The same lines are their own row in Map overlays, **Road safety**
+(`#ovRoadSafety`, `map.road_safety_layer`), for everyone, signed in or not,
+shown once the road pieces are built anywhere (`roadSafetyLayerAvailable()`).
+While the overlay or the mode draws them, the overlay key box at the
+bottom-right corner shows their key (`#roadSafetyKey`): Cycle path, bikes
+only (blue); Cycle lane on the road (amber); Shared with cars (purple). Each
+row switches its road type on and off, as the surface and route rows do
+(`toggleRoadType()`), and the eye on its heading switches all three. Below
+the zoom the tiles hold, the key says "Zoom in to see the road types."
+(`#roadSafetyKeyZoom`). Leaving the mode leaves the lines on while the
+overlay is on. The Key rail panel lists the same three colours, read only
+(`#mk-road-safety`). A
 Ctrl+click (Cmd+click on a Mac) adds another road, or takes a picked one away
 again, for one answer over several roads (owner 2026-10-19: "User should be
 able to CTRL + click multiple road pieces together"), at most `MAX_ROADS = 50`

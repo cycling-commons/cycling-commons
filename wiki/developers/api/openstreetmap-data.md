@@ -19,7 +19,7 @@ own `osmium tags-filter` expression list:
 | `points` | places: drinking water, food, repair, shelter, sleep, climbs and the other kinds of the [data catalog](../../data-catalog.md) | nodes and ways |
 | `surface` | the roads whose surface the map colours | ways |
 | `routes` | signed cycle and mountain-bike routes, and the numbered junctions of node networks | relations and nodes |
-| `roadpieces` | every road, used to match a ride to the roads it took | ways |
+| `roadpieces` | every road, used to match a ride to the roads it took and drawn as the Road safety overlay | ways |
 
 The tags behind `points` and `surface` live in one file, the coverage contract
 `pipeline/contract/coverage-contract.json`. It is the single source of truth: the pipeline reads

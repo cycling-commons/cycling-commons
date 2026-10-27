@@ -99,11 +99,13 @@ test('an unfinished mark is not sent', () => {
   assert.equal(markPayload(null, { ...when, felt: 'safe' }), null);
 });
 
-test('the mode draws the road pieces from zoom 14 and says to zoom in below it', () => {
+test('the mode draws the road pieces from zoom 12, picks a road from zoom 14 and says to zoom in below it', () => {
+  // Drawn from VIEW_ZOOM (owner 2026-10-26: "Zoom a bit out and the colors are gone"); a click picks only from 14.
   assert.match(mode, /PIECE_ZOOM/);
-  assert.match(mode, /minzoom: PIECE_ZOOM/);
+  assert.match(mode, /minzoom: VIEW_ZOOM/);
   assert.match(mode, /roadSafetyZoom/);
-  assert.match(mode, /eachSourceInView\(map, 'roadpieces', 'roadpieces', PIECE_ZOOM/);
+  assert.match(mode, /else if \(map\.getZoom\(\) < PIECE_ZOOM\) h\.textContent = t\('roadSafetyZoom'/);
+  assert.match(mode, /eachSourceInView\(map, 'roadpieces', 'roadpieces', VIEW_ZOOM/);
 });
 
 test('map clicks belong to the mode while it is on: no drawer, no scope change, no stop', () => {

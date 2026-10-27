@@ -1793,7 +1793,10 @@ two places, sized to their audience:
   The route type rows (national, regional and node network, mountain bike,
   and the numbered junctions) switch their type on and off as the surface
   rows do (owner 2026-10-15; `routes-tiles.js` `toggleRouteGroup()`); the
-  Routes overlay row in Layers still turns the whole network off. The panel opens from the
+  Routes overlay row in Layers still turns the whole network off. The Road
+  safety overlay (traffic-measurements.md section 10) has its own key box
+  the same way: cycle path, cycle lane and shared road, each row switching
+  its type (`road-safety.js` `toggleRoadType()`). The panel opens from the
   rail's Key button only; a corner button for it would read as that box's
   toggle, so the corner holds the bug circle and the box and nothing else. The
   rail button shows the panel's open state (`aria-expanded`). It carries the

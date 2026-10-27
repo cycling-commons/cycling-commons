@@ -56,13 +56,14 @@ final class ScoutReviewPageTest extends WebTestCase
         self::assertStringContainsString('"filled":{"scenery":{"4":"viewpoint"}}', $html);
     }
 
-    public function testThePlainMapDoesNotFetchThem(): void
+    /** The plain map lists the road pieces for the Road safety overlay (traffic-measurements.md §10), never the review's token. */
+    public function testThePlainMapListsTheRoadPiecesButNotTheReviewToken(): void
     {
         $client = static::createClient();
         $client->request('GET', '/map');
 
         self::assertResponseIsSuccessful();
-        self::assertStringNotContainsString('"roadpieces"', (string) $client->getResponse()->getContent());
+        self::assertStringContainsString('"roadpieces"', (string) $client->getResponse()->getContent());
         self::assertStringNotContainsString('CC_TRAFFIC_TOKEN', (string) $client->getResponse()->getContent());
     }
 }

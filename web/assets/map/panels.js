@@ -16,6 +16,7 @@ import { mapToast, clearRevealPin } from './drawer.js';
 import { layerGlyph } from './icons.js';
 import { refilterClusters, updateConfMarkers } from './osm-pools.js';
 import { trafficLayerAvailable, setTrafficLayer, trafficLayerVisible } from './traffic-layer.js';
+import { roadSafetyLayerAvailable, setRoadSafetyLayer, roadSafetyLayerVisible, roadSafetyKeyShown } from './road-safety.js';
 import { curScope, inScope } from './scope-ui.js';
 import { modeToShow } from './filters.js';
 import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible,
@@ -154,6 +155,13 @@ export function initLayerList(){
     };
   }
 
+  // Road safety (road-safety.js): who a road is shared with, for everyone, on the road-piece tiles.
+  const roadSafetyBtn=document.getElementById('ovRoadSafety');
+  if(roadSafetyBtn && roadSafetyLayerAvailable()){
+    roadSafetyBtn.hidden=false;
+    roadSafetyBtn.onclick=()=>paintOverlay(roadSafetyBtn, setRoadSafetyLayer(!roadSafetyLayerVisible()));
+  }
+
   // Roads a bike may not ride, faded (map-init.js), the rider's switch, kept in this browser.
   const fadeBtn=document.getElementById('ovFadeRoads');
   if(fadeBtn){ paintOverlay(fadeBtn, highwayFadeOn()); fadeBtn.onclick=()=>paintOverlay(fadeBtn, setHighwayFade(!highwayFadeOn())); }
@@ -178,6 +186,8 @@ export function initLayerList(){
   /* Legend shows only what is on the map. Surface key: tile skin OR curated
      A layer with shown > 0 (ticked-but-empty must not explain six colours). */
   const surfaceKey=document.getElementById('surfaceKey'), routesKey=document.getElementById('routesKey');
+  // Shown while the Road safety overlay or the mode to mark a road draws the road types; road-safety.js says so with cc:legend.
+  const roadSafetyKey=document.getElementById('roadSafetyKey');
   // The ride review's step 2 key; scout-traffic.js shows it and says so with cc:legend.
   const scoutKey=document.getElementById('scoutKey');
   const surfaceLayer=layerByKey['surface'];   // a lookup object, not a function
@@ -186,8 +196,9 @@ export function initLayerList(){
   function syncLegend(){
     if(surfaceKey) surfaceKey.hidden=!surfaceOnMap();
     if(routesKey) routesKey.hidden=!routesTilesVisible();
+    if(roadSafetyKey) roadSafetyKey.hidden=!roadSafetyKeyShown();
     const legendEl=document.querySelector('.legend');
-    if(legendEl) legendEl.hidden=!!(surfaceKey?.hidden && routesKey?.hidden && (scoutKey?.hidden ?? true));
+    if(legendEl) legendEl.hidden=!!(surfaceKey?.hidden && routesKey?.hidden && (roadSafetyKey?.hidden ?? true) && (scoutKey?.hidden ?? true));
   }
   /* Filters show only what there is to filter. Gated on total, never shown
      (shown already has the chips applied — filtering to nothing must not hide the chips). */

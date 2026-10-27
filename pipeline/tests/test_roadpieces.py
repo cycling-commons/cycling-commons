@@ -92,25 +92,29 @@ def test_a_feature_carries_the_way_id_and_only_set_flags(tmp_path):
 
 
 def test_the_build_command_keeps_every_piece_at_z14_with_its_id(tmp_path, monkeypatch):
-    # The browser matches against full geometry at one zoom: no other zoom,
-    # no dropped or simplified line, and the way id as the feature id.
+    # The browser matches against full geometry at z14: no dropped line, no
+    # simplified one at z14, and the way id as the feature id. The Road safety
+    # overlay draws them zoomed out (owner 2026-10-26: "Zoom a bit out and the
+    # colors are gone"), so z12 and z13 hold every way too, simplified.
     from coverage import tiles
     captured = {}
     monkeypatch.setattr(tiles, "_run", lambda cmd: captured.setdefault("cmd", cmd))
     tiles.build_roadpieces_pmtiles({"NL": [tmp_path / "a.geojsonl", tmp_path / "b.geojsonl"]},
                                    tmp_path / "out.pmtiles")
     cmd = captured["cmd"]
-    assert cmd[cmd.index("--minimum-zoom") + 1] == "14"
+    assert cmd[cmd.index("--minimum-zoom") + 1] == "12"
     assert cmd[cmd.index("--maximum-zoom") + 1] == "14"
-    for flag in ("--no-feature-limit", "--no-tile-size-limit", "--no-line-simplification",
+    for flag in ("--no-feature-limit", "--no-tile-size-limit", "--simplify-only-low-zooms",
                  "--no-simplification-of-shared-nodes"):
         assert flag in cmd
     assert "--drop-densest-as-needed" not in cmd
+    assert "--no-line-simplification" not in cmd, "the lower zooms are simplified"
+    assert tiles.TILE_PROFILE["roadpieces"] == "2", "a flag change rebuilds every country"
     layers = [cmd[i + 1] for i, a in enumerate(cmd) if a == "-L"]
     assert [l.split(":")[0] for l in layers] == ["roadpieces_nl", "roadpieces_nl"]
 
 
-def test_a_real_build_holds_the_pieces_at_z14(tmp_path):
+def test_a_real_build_holds_the_pieces_from_z12_to_z14(tmp_path):
     import shutil
     import subprocess
     if shutil.which("tippecanoe") is None:
@@ -125,7 +129,7 @@ def test_a_real_build_holds_the_pieces_at_z14(tmp_path):
     out = tmp_path / "roadpieces-nl.pmtiles"
     tiles.build_roadpieces_pmtiles({"NL": [lines]}, out)
     show = subprocess.run(["pmtiles", "show", str(out)], capture_output=True, text=True, check=True).stdout
-    assert "min zoom: 14" in show and "max zoom: 14" in show
+    assert "min zoom: 12" in show and "max zoom: 14" in show
     assert "roadpieces_nl" in show
 
 

@@ -12,7 +12,11 @@
 
    While the mode is on the map's clicks are claimed (picking.js), so no
    drawer opens, the scope does not change and the planner adds no stop.
-   Escape and the close button leave it. */
+   Escape and the close button leave it.
+
+   The same lines are the Road safety overlay (Map overlays, owner 2026-10-26: "Road safety is still beta sort of
+   as you can only see it when you are in the add road safety mode"): on for everyone, without the mode, from
+   VIEW_ZOOM, with their key in the legend (#roadSafetyKey), whose rows switch a road type on and off. */
 import { map } from './map-init.js';
 import { D, tpl } from './i18n.js';
 import { familyConfigured, eachSourceInView, NO_VALIDATE } from './tile-sources.js';
@@ -28,6 +32,11 @@ const t = (k, fallback) => (D && D[k]) || fallback;
 /* Pixels around a click in which a road counts as hit: a thumb is wider than a line. */
 const HIT_PX = 8;
 const NONE = ['==', ['id'], -1];
+/* The road types show from this zoom: the road-piece tiles hold zoom 12 to 14, simplified below 14 (tiles built
+   before 2026-10-26 hold 14 only, and draw from 14). Zoom 12 by the owner's choice (2026-10-26): about 350 KB of
+   road lines a phone screen on the Dutch data, where zoom 11 was about 1.2 MB. Picking a road still waits for
+   PIECE_ZOOM, full detail. */
+export const VIEW_ZOOM = 12;
 
 let cfg = null;          // window.CC_ROAD_SAFETY: {url, token}
 let on = false;
@@ -38,23 +47,28 @@ let felt = null;
 let touched = false;     // the rider changed the time: keep it for the next road
 let sending = false;
 const layers = [];       // {line, pick}
+let viewOn = false;      // the Road safety overlay, with or without the mode
+const hiddenLabels = new Set();   // the road types the key's rows switched off
+const shown = () => on || viewOn;
+const labelFilter = () => ['!', ['in', ['get', 'l'], ['literal', [...hiddenLabels]]]];
 
 function paint(sourceId, sourceLayer) {
   const line = sourceId + '-safety';
   const pick = line + '-pick';
   if (map.getLayer(line)) return;
-  const visibility = on ? 'visible' : 'none';
+  const visibility = shown() ? 'visible' : 'none';
   map.addLayer({
-    id: line, type: 'line', source: sourceId, 'source-layer': sourceLayer, minzoom: PIECE_ZOOM,
+    id: line, type: 'line', source: sourceId, 'source-layer': sourceLayer, minzoom: VIEW_ZOOM,
+    filter: labelFilter(),
     layout: { 'line-cap': 'round', 'line-join': 'round', visibility },
     paint: {
       'line-color': ['match', ['get', 'l'], 'p', LABEL_COLOURS.p, 'l', LABEL_COLOURS.l, LABEL_COLOURS.r],
-      'line-width': ['interpolate', ['linear'], ['zoom'], 14, 3, 18, 8],
+      'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1.5, 14, 3, 18, 8],
       'line-opacity': 0.75,
     },
   });
   map.addLayer({
-    id: pick, type: 'line', source: sourceId, 'source-layer': sourceLayer, minzoom: PIECE_ZOOM,
+    id: pick, type: 'line', source: sourceId, 'source-layer': sourceLayer, minzoom: VIEW_ZOOM,
     filter: pickFilter(),
     layout: { 'line-cap': 'round', 'line-join': 'round', visibility },
     paint: { 'line-color': '#FF5A1F', 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 7, 18, 14], 'line-opacity': 0.95 },
@@ -63,7 +77,45 @@ function paint(sourceId, sourceLayer) {
 }
 
 function mount() {
-  eachSourceInView(map, 'roadpieces', 'roadpieces', PIECE_ZOOM, (key, sourceId) => paint(sourceId, 'roadpieces_' + key));
+  eachSourceInView(map, 'roadpieces', 'roadpieces', VIEW_ZOOM, (key, sourceId) => paint(sourceId, 'roadpieces_' + key));
+}
+
+/* The key's note "Zoom in to see the road types" while the lines are on but the zoom is under what the tiles hold
+   (a source says its own minzoom once loaded). */
+function keyNote() {
+  const note = el('roadSafetyKeyZoom');
+  if (!note) return;
+  const ids = layers.map(l => l.line).filter(id => map.getLayer(id));
+  const from = ids.length ? Math.min(...ids.map(id => { const s = map.getSource(map.getLayer(id).source); return s && Number.isFinite(s.minzoom) && s.minzoom > 0 ? s.minzoom : PIECE_ZOOM; })) : VIEW_ZOOM;
+  note.hidden = !shown() || map.getZoom() >= Math.max(VIEW_ZOOM, from);
+}
+
+/* The legend shows the key while the lines are on (panels.js syncLegend()). */
+function legend() {
+  document.dispatchEvent(new Event('cc:legend'));
+  keyNote();
+}
+
+/** Whether the road pieces are built anywhere, so the overlay has something to draw. */
+export const roadSafetyLayerAvailable = () => familyConfigured('roadpieces', 'roadpieces');
+export const roadSafetyLayerVisible = () => viewOn;
+/** Whether the road types are on the map, by the overlay or the mode: the legend shows their key. */
+export const roadSafetyKeyShown = () => shown();
+
+/** The Road safety overlay on or off; true when on. */
+export function setRoadSafetyLayer(visible) {
+  viewOn = !!visible && roadSafetyLayerAvailable();
+  if (shown()) mount();
+  show(shown());
+  legend();
+  return viewOn;
+}
+
+/** A key row: one road type (p cycle path, l cycle lane, r shared road) on or off; true when it shows. */
+export function toggleRoadType(label) {
+  if (hiddenLabels.has(label)) hiddenLabels.delete(label); else hiddenLabels.add(label);
+  layers.forEach(({ line }) => { if (map.getLayer(line)) map.setFilter(line, labelFilter(), NO_VALIDATE); });
+  return !hiddenLabels.has(label);
 }
 
 function show(visible) {
@@ -232,9 +284,10 @@ function onKey(e) {
 }
 
 function onMove() {
-  if (!on) return;
+  if (!shown()) return;
   mount();
-  hint();
+  if (on) hint();
+  keyNote();
 }
 
 async function send(e) {
@@ -286,6 +339,7 @@ function start() {
     show(true);
   }
   hint();
+  legend();
 }
 
 function stop() {
@@ -296,7 +350,8 @@ function stop() {
   map.getContainer().classList.remove('cc-rs-on');
   releaseMapClicks();
   choose([]);
-  show(false);
+  show(viewOn);
+  legend();
   const card = el('roadSafety');
   if (card) card.hidden = true;
   const go = el('roadSafetyGo');
@@ -325,6 +380,11 @@ export async function markWay(way, lngLat) {
 }
 
 export function initRoadSafety() {
+  // The overlay draws for everyone, also where the mode is not offered (the ride review, a guest).
+  map.on('moveend', onMove);
+  document.querySelectorAll('.skey-row[data-rs-label]').forEach(b => {
+    b.addEventListener('click', () => b.setAttribute('aria-pressed', toggleRoadType(b.dataset.rsLabel) ? 'true' : 'false'));
+  });
   cfg = window.CC_ROAD_SAFETY || null;
   const go = el('roadSafetyGo');
   if (!cfg || !go) return;
@@ -339,7 +399,6 @@ export function initRoadSafety() {
   el('roadSafetyForm')?.addEventListener('submit', send);
   document.querySelectorAll('#roadSafety [data-felt]').forEach(b => b.addEventListener('click', () => setFelt(b.dataset.felt)));
   ['roadSafetyBands', 'roadSafetyDays', 'roadSafetyQuarters'].forEach(id => el(id)?.addEventListener('change', () => { touched = true; paintWhen(); }));
-  map.on('moveend', onMove);
   // Back from signing in (the guest's link in the tools panel): the mode opens at once.
   const params = new URLSearchParams(window.location.search);
   if (params.get('road-safety') === '1') {

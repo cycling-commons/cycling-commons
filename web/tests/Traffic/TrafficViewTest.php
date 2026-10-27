@@ -201,13 +201,18 @@ final class TrafficViewTest extends WebTestCase
         self::assertStringContainsString('id="roadSafetyGo"', $html);
     }
 
-    public function testAGuestMapHasNoRoadPiecesAndIsAskedToSignIn(): void
+    /**
+     * A guest sees the Road safety overlay (§10): the road pieces are public OpenStreetMap data, so the map lists
+     * them for everyone; marking a road still asks to sign in.
+     */
+    public function testAGuestMapHasTheRoadPiecesForTheOverlayAndIsAskedToSignInToMark(): void
     {
         $client = static::createClient();
         $page = $client->request('GET', '/map');
 
         $html = (string) $client->getResponse()->getContent();
-        self::assertStringNotContainsString('"roadpieces":', $html);
+        self::assertStringContainsString('"roadpieces":', $html);
+        self::assertStringContainsString('id="ovRoadSafety"', $html);
         self::assertStringNotContainsString('id="roadSafetyGo"', $html);
         $signIn = $page->filter('a[data-road-safety-login]');
         self::assertCount(1, $signIn);
