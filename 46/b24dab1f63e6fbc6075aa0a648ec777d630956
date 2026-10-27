@@ -1,0 +1,36 @@
+web/tests/Moderation/NewItemShowsItsValuesTest.php
+  s_086f006d5a9290::t_19dad48da0ee78 59-60,91
+docs/specs/edit-items/A-road-surface.md
+  s_086f006d5a9290::t_45b6b915432c23 61-63
+web/src/Moderation/SubmissionQueue.php
+  s_086f006d5a9290::t_ac0e683cfcc70d 1172-1173
+  s_086f006d5a9290::t_e644bee0f9e859 1174-1175
+web/tests/Contribution/SubmissionChangeSummaryTest.php
+  s_086f006d5a9290::t_19dad48da0ee78 65-76
+web/src/Contribution/ChangeValue.php
+  s_086f006d5a9290::t_19dad48da0ee78 21-25
+  s_086f006d5a9290::t_3e106e39c4c277 20
+web/src/Contribution/SubmissionChangeSummary.php
+  s_086f006d5a9290::t_19dad48da0ee78 62-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "46b24dab1f63e6fbc6075aa0a648ec777d630956",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_086f006d5a9290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97afd631-7f48-4430-aac8-2c62f5b7a119",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
