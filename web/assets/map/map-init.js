@@ -13,6 +13,19 @@ export const map = (function(){
   if(window.__ccMapOpts) return new maplibregl.Map(window.__ccMapOpts);
   throw new Error('map-init: no MapLibre instance and no options — map.js must be booted by catalog-load.js');
 })();
+/* A layer whose click opens something is bound through onLayerClick(), never map.on('click', id) itself: the id
+   joins clickLayerIds(), and click-to-scope (scope-ui.js) leaves a click on any of them alone. A click on an
+   OpenStreetMap road opens its card, never also switches the region (docs/specs/map-and-search.md §4.5). */
+const clickLayers = new Set();
+export function onLayerClick(id, fn){
+  clickLayers.add(id);
+  map.on('click', id, fn);
+}
+export function offLayerClick(id, fn){
+  clickLayers.delete(id);
+  map.off('click', id, fn);
+}
+export const clickLayerIds = () => [...clickLayers];
 /* Our layers skip MapLibre's per-layer style check (docs/specs/map-and-search.md §2; owner 2026-10-17: opening
    the planner took seconds in Firefox). Style.addLayer checks a new layer against a serialized copy of the WHOLE
    style, so n layers copy the style n times, and switching the route and surface lines on adds about 300 layers

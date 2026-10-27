@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /* Layer render, filters, view mode.
    @see docs/specs/map-and-search.md §4, §5 */
-import { map, flyToPin, styleReady } from './map-init.js';
+import { map, flyToPin, styleReady, onLayerClick, offLayerClick } from './map-init.js';
 import { showTip, hideTip } from './sheet.js';
 import { I18N, D, LAYER_L10N, tpl, trVal, DIFF_LABELS, CC_SEASON_LABEL } from './i18n.js';
 import { escPend, safeHref, stars, slug, txtOn, gradColor, DIFF_PURPLE, haversine,
@@ -69,7 +69,7 @@ export function updateHeatFilter(){
 
 export let markers = [];
 export const dynamicIds=[];
-export const boundLayerIds=new Set();   // delegated click/hover handlers are attached once per id
+const boundLayerIds=new Set();   // delegated click/hover handlers are attached once per id
 /* Click-time lookup: a stale closure would reopen the pre-edit feature after community swap. */
 export const layerTarget=new Map();     // layer id -> {layer, f}
 /* Handler functions stored so map.off() can use the same reference map.on() was given. */
@@ -87,7 +87,7 @@ function bindLayer(id){
   const onMenu=e=>{ const t=layerTarget.get(id); if(t && offerToRide(planPlace(t.layer, t.f)) && e.originalEvent){ e.originalEvent.preventDefault(); e.originalEvent.ccTaken=true; } };
   const onEnter=()=>map.getCanvas().style.cursor='pointer';
   const onLeave=()=>map.getCanvas().style.cursor='';
-  map.on('click',id,onClick);
+  onLayerClick(id,onClick);
   map.on('contextmenu',id,onMenu);
   map.on('mouseenter',id,onEnter);
   map.on('mouseleave',id,onLeave);
@@ -97,7 +97,7 @@ function bindLayer(id){
 /* Everything a layer id owns, released together. */
 function unbindLayer(id){
   const handlers=boundHandlers.get(id);
-  if(handlers) handlers.forEach(([type,fn])=>map.off(type,id,fn));
+  if(handlers) handlers.forEach(([type,fn])=>'click'===type ? offLayerClick(id,fn) : map.off(type,id,fn));
   boundHandlers.delete(id);
   boundLayerIds.delete(id);
   layerTarget.delete(id);
@@ -343,7 +343,7 @@ export function renderSurfaceLayer(layer, visible){
     map.addLayer({id,type:'line',source:'surface-src',
       filter:['==',['get','cls'],cls],
       layout:{'line-cap':st.cap||'round','line-join':'round'},paint});
-    map.on('click',id,e=>{ if(plannerTakesLineClick(e)) return; const f=featAt(e); if(f) openDrawer(layer,f); });
+    onLayerClick(id,e=>{ if(plannerTakesLineClick(e)) return; const f=featAt(e); if(f) openDrawer(layer,f); });
     map.on('mouseenter',id,()=>map.getCanvas().style.cursor='pointer');
     map.on('mousemove',id,e=>{ const f=featAt(e); if(f) showTip(f.headline||featureSummary(f,D)||f.name, e.lngLat); });   
     map.on('mouseleave',id,()=>{ map.getCanvas().style.cursor=''; hideTip(); });
@@ -369,7 +369,7 @@ export function renderSurfaceLayer(layer, visible){
       'line-dasharray':SM_DOT_DASH,
       'line-opacity':0.9}});
   // The dots answer a click and a hover as the line under them does.
-  map.on('click','surface-q',e=>{ if(plannerTakesLineClick(e)) return; const f=featAt(e); if(f) openDrawer(layer,f); });
+  onLayerClick('surface-q',e=>{ if(plannerTakesLineClick(e)) return; const f=featAt(e); if(f) openDrawer(layer,f); });
   map.on('mouseenter','surface-q',()=>map.getCanvas().style.cursor='pointer');
   map.on('mousemove','surface-q',e=>{ const f=featAt(e); if(f) showTip(f.headline||featureSummary(f,D)||f.name, e.lngLat); });
   map.on('mouseleave','surface-q',()=>{ map.getCanvas().style.cursor=''; hideTip(); });

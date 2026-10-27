@@ -3,7 +3,7 @@
    docs/specs/route-domain.md): signed corridors + knooppunt numbers from their
    own PMTiles artifact. Off until asked. A corridor click opens the surface
    drawer for that way. */
-import { map, flyToPin } from './map-init.js';
+import { map, flyToPin, onLayerClick } from './map-init.js';
 import { D } from './i18n.js';
 import { layerByKey } from './catalog.js';
 import { openDrawer } from './drawer.js';
@@ -91,7 +91,7 @@ function addRouteLayers(key, src, under) {
           'line-opacity': LINE_OPACITY,
         },
       }, under);
-      map.on('click', id, e => { if(plannerTakesLineClick(e)) return; openRouteDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry, srcLayer); });
+      onLayerClick(id, e => { if(plannerTakesLineClick(e)) return; openRouteDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry, srcLayer); });
       map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
     });
@@ -114,7 +114,7 @@ function addRouteLayers(key, src, under) {
           'line-opacity': 1,
         },
       }, under);
-      map.on('click', selId, e => { if(plannerTakesLineClick(e)) return; openRouteDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry, srcLayer); });
+      onLayerClick(selId, e => { if(plannerTakesLineClick(e)) return; openRouteDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry, srcLayer); });
       map.on('mouseenter', selId, () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', selId, () => { map.getCanvas().style.cursor = ''; });
     }
@@ -155,7 +155,7 @@ function addRouteLayers(key, src, under) {
       },
       paint: { 'text-color': '#5B3A9E' },
     }, under);
-    map.on('click', discId, e => openKnoopDrawer(e.features[0].properties, e.lngLat));
+    onLayerClick(discId, e => openKnoopDrawer(e.features[0].properties, e.lngLat));
     map.on('mouseenter', discId, () => { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', discId, () => { map.getCanvas().style.cursor = ''; });
   });

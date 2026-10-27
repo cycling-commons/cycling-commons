@@ -3,7 +3,7 @@
    their own PMTiles artifact, drawn under curated A items. Off until the rail
    toggle. SURFACE_STYLE is shared with A so a tile line and an A-item of the
    same class look the same. */
-import { map, flyToPin, holdLandTone } from './map-init.js';
+import { map, flyToPin, holdLandTone, onLayerClick } from './map-init.js';
 import { SURFACE_CLS, surfaceStyle, SURFACE_W, SURFACE_OPACITY, SURFACE_EDGE_W, SURFACE_EDGE_OPACITY, SM_DOT_DASH, SM_CASE_DASH } from './render.js';
 import { D, trVal } from './i18n.js';
 import { layerByKey } from './catalog.js';
@@ -125,7 +125,7 @@ function addClassifiedLayers(srcLayer, src, under) {
       layout: { 'line-cap': st.cap || 'round', 'line-join': 'round', visibility: 'none' },
       paint,
     }, under);
-    map.on('click', id, e => plannerTakesLineClick(e) || openSurfaceDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry,
+    onLayerClick(id, e => plannerTakesLineClick(e) || openSurfaceDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry,
       { source: src, sourceLayer: srcLayer }));
     map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
@@ -252,7 +252,7 @@ function addTodoLayer(srcLayer, src, under) {
       'line-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0.5, 13, 0.7],
     },
   }, under);
-  map.on('click', id, e => plannerTakesLineClick(e) || openSurfaceDrawer(
+  onLayerClick(id, e => plannerTakesLineClick(e) || openSurfaceDrawer(
     { ...e.features[0].properties, cls: 'unverified' }, e.lngLat, e.features[0].geometry,
     { source: src, sourceLayer: srcLayer }));
   map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
@@ -303,7 +303,7 @@ export function addGapsGrid() {
     // Hairline so the grid reads as a grid rather than a stain.
     paint: { 'line-color': surfaceStyle('unverified').color, 'line-width': 0.4, 'line-opacity': 0.35 },
   }, under);
-  map.on('click', GAPS_FILL, e => plannerTakesLineClick(e) || openGapsDrawer(e.features[0].properties, e.lngLat));
+  onLayerClick(GAPS_FILL, e => plannerTakesLineClick(e) || openGapsDrawer(e.features[0].properties, e.lngLat));
   map.on('mouseenter', GAPS_FILL, () => { map.getCanvas().style.cursor = 'pointer'; });
   map.on('mouseleave', GAPS_FILL, () => { map.getCanvas().style.cursor = ''; });
   gapsAdded = true;

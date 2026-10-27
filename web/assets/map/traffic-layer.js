@@ -6,7 +6,7 @@
    Felt safety (§10) rides along per way and group: the popup says felt safe,
    mixed or unsafe, and a road with felt safety and no measured traffic yet is
    drawn grey. */
-import { map } from './map-init.js';
+import { map, onLayerClick } from './map-init.js';
 import { D, tpl } from './i18n.js';
 import { familyConfigured, eachSourceInView } from './tile-sources.js';
 import { colourFor, perWay, feltPerWay, FELT_ONLY_COLOUR } from '../lib/traffic-colours.js';
@@ -60,7 +60,7 @@ function paint(sourceId, sourceLayer) {
     },
   });
   layerIds.push({ id, sourceId, sourceLayer });
-  map.on('click', id, onClick);
+  onLayerClick(id, onClick);
   applyStates();
 }
 

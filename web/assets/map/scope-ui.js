@@ -3,14 +3,14 @@
    curScope/inScope/scopeToken/scopeLabel, the chip rail, the header, applyScope
    (the one visual update path), and the pan-away widen prompt.
    State lives in window.CCScope (scope.js); chip decisions in scope-chips.js. */
-import { map, fitMapTo } from './map-init.js';
+import { map, fitMapTo, clickLayerIds } from './map-init.js';
 import { I18N, D, tpl } from './i18n.js';
 import { escPend } from './util.js';
 import { setSpotlight, setCountrySpotlight, setCircleSpotlight } from './spotlight.js';
 import { mode } from './catalog.js';
 import { refilterClusters, updateConfMarkers } from './osm-pools.js';
 import { updateCoverageScopeFilter, fetchCoverageCounts } from './coverage.js';
-import { updateHeatFilter, render, boundLayerIds, surfaceClsLayerIds } from './render.js';
+import { updateHeatFilter, render } from './render.js';
 import { refreshBestOf } from './panels.js';
 import { COVERAGE_KEYS, COVERAGE_CCS } from './coverage.js';
 import { isPicking } from './picking.js';
@@ -615,15 +615,15 @@ export function initAreaNudge(){
 export function initClickToScope(){
     // Click-to-scope (docs/specs/map-and-search.md §4.5): left-click on empty
     // map scopes to the region under the point. Query only feature-layer ids
-    // (not the whole style — basemap polygons would always look "non-empty").
+    // (not the whole style — basemap polygons would always look "non-empty"):
+    // every layer bound through onLayerClick(), plus the coverage pins and
+    // corrections, which one map-wide handler opens.
     function selectableLayers(){
-      const ids=['mly-img','mly-cov','cov-sel-icon'];
+      const ids=['cov-sel-icon', ...clickLayerIds()];
       COVERAGE_KEYS.forEach(([key])=>COVERAGE_CCS.forEach(cc=>{
         const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
         ids.push(id);
       }));
-      boundLayerIds.forEach(id=>ids.push(id));
-      surfaceClsLayerIds().forEach(id=>ids.push(id));
       corrLayerIds().forEach(id=>ids.push(id));
       return ids.filter(id=>map.getLayer(id));
     }
@@ -636,9 +636,9 @@ export function initClickToScope(){
       if(await coverageClick(e.lngLat.lng, e.lngLat.lat)) return;
       const r=await window.CCScope.regionOfPointPrecise(e.lngLat.lng, e.lngLat.lat);
       if(!r) return;
-      // Same-region click is a no-op: don't re-fit / re-fetch / re-render.
-      const s=curScope();
-      if(s.kind==='region' && s.regionIds[0]===r.id) return;
+      // A click inside what the map already draws (the region, the country, My area) does nothing: only a click
+      // in a dimmed region outside it moves the scope there.
+      if((curScope().regionIds||[]).includes(r.id)) return;
       window.CCScope.setRegion(r.slug);
     });
 }

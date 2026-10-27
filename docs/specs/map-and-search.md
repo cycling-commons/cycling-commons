@@ -1469,6 +1469,17 @@ This section owns region scoping: the Search & region panel's Region group
   so the click lands in the region actually under it, not the nearest bbox
   centre. A single candidate never fetches (the common case stays instant);
   inside no candidate polygon it falls back to nearest-centre.
+  Only a click on empty map scopes: a click on anything the map opens a card
+  for is left alone. Every such layer is bound through `onLayerClick()`
+  (`map-init.js`), which puts its id on `clickLayerIds()`, and the scope
+  click skips those, the coverage pins and the corrections. An empty click
+  inside what the map already draws does nothing either: a region of the
+  scope's own (`regionIds`, for a single region, a country and My area alike).
+  Only a click in a dimmed region outside the scope moves the scope there.
+  Example: with My area on, a click on the OpenStreetMap road Koggeweg at zoom
+  15 opens its card, a click in the meadow beside it does nothing, and the map
+  stays at zoom 15 in My area both times; a click in a dimmed Overijssel
+  switches to Overijssel. Pinned by `click-to-scope-layers.test.cjs`.
 - **Three-tier region spotlight.** For a single named-region scope,
   the active region's border-neighbours (`region.adj`) render at a **middle** dim
   tone — lighter than the fully-outside world (`0.08` vs `0.15`, a warm dark `#2A2614`; owner 2026-10-19: "Make these areas a bit less gray", `MASK_COLOUR` in `spotlight.js`), darker than the
