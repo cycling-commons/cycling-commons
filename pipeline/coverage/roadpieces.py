@@ -9,6 +9,11 @@ separate path beside it):
 - ``l`` cycle lane: a painted lane on a road with cars;
 - ``r`` shared road: the rider rides where the cars drive.
 
+``a`` marks a cycle lane that is advisory (``cycleway:lane=advisory``, the
+Dutch suggestiestrook: a dashed line, red asphalt, cars may drive on it when
+they must). It stays an ``l`` piece, so a traffic line reads it as a lane; the
+map draws it apart.
+
 The browser snaps a ride to these pieces, so a way a bike may not use is left
 out entirely: a rider can never be placed on it. ``s`` marks a road that says a
 separately mapped cycle path runs beside it, which lets the matcher prefer that
@@ -44,6 +49,8 @@ _ROAD_HIGHWAYS = frozenset({
     "service", "track", "road", "busway",
 })
 _CYCLEWAY_KEYS = ("cycleway", "cycleway:left", "cycleway:right", "cycleway:both")
+# What kind of lane: `exclusive` (cars may not use it) or `advisory` (they may).
+_LANE_KEYS = ("cycleway:lane", "cycleway:both:lane", "cycleway:left:lane", "cycleway:right:lane")
 # The selector for `osmium tags-filter`: every way with a highway tag. The
 # label rules then decide; a narrower filter would have to repeat them.
 SELECTOR = "w/highway"
@@ -58,6 +65,7 @@ class RoadPiece:
     sidepath: bool                   # the road says a separate path runs beside it
     highway: str
     coords: list[tuple[float, float]]   # [(lon, lat), …] as drawn
+    advisory: bool = False           # a lane cars may drive on (`a`)
 
 
 def label_way(tags: dict[str, str]) -> tuple[str, bool] | None:
@@ -90,6 +98,12 @@ def label_way(tags: dict[str, str]) -> tuple[str, bool] | None:
     return ("r", "separate" in cycleways)
 
 
+def advisory_lane(tags: dict[str, str]) -> bool:
+    """True when the way's cycle lane is advisory on every side that says which kind it is."""
+    kinds = {tags.get(k, "") for k in _LANE_KEYS} - {""}
+    return "advisory" in kinds and "exclusive" not in kinds
+
+
 class _Collector(osmium.SimpleHandler):
     """Streams labelled ways, geometry included (needs locations on the reader)."""
 
@@ -109,7 +123,7 @@ class _Collector(osmium.SimpleHandler):
         if len(coords) < 2:
             return
         label, sidepath = labelled
-        self._emit(RoadPiece(w.id, label, sidepath, tags["highway"], coords))
+        self._emit(RoadPiece(w.id, label, sidepath, tags["highway"], coords, label == "l" and advisory_lane(tags)))
 
 
 def stream_roadpieces(osm_path: Path, emit: Callable[[RoadPiece], None]) -> None:
@@ -127,6 +141,8 @@ def feature_json(piece: RoadPiece, region: int | None = None) -> str:
     props: dict[str, object] = {"l": piece.label, "h": piece.highway}
     if piece.sidepath:
         props["s"] = 1
+    if piece.advisory:
+        props["a"] = 1
     if region is not None:
         props["g"] = region
     return json.dumps({

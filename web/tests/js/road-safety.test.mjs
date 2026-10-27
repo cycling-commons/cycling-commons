@@ -48,11 +48,20 @@ test('a local date past New Year is the next quarter', () => {
 
 test('a picked piece is its way, label, region and country', () => {
   assert.deepEqual(pieceOf({ id: 4521877, properties: { l: 'r', g: 12, h: 'residential' } }, 'roadpieces_nl'),
-    { way: 4521877, label: 'r', region: 12, cc: 'nl' });
-  assert.deepEqual(pieceOf({ id: 9, properties: { l: 'p' } }, 'roadpieces_be'), { way: 9, label: 'p', region: null, cc: 'be' });
+    { way: 4521877, label: 'r', region: 12, cc: 'nl', advisory: false });
+  assert.deepEqual(pieceOf({ id: 9, properties: { l: 'p' } }, 'roadpieces_be'), { way: 9, label: 'p', region: null, cc: 'be', advisory: false });
   assert.equal(pieceOf({ id: 9, properties: { l: 'x' } }, 'roadpieces_be'), null, 'no label, no piece');
   assert.equal(pieceOf({ id: undefined, properties: { l: 'r' } }, 'roadpieces_be'), null, 'no way id, no piece');
   assert.equal(pieceOf({ id: 9, properties: { l: 'r' } }, 'surface_be').cc, null);
+});
+
+test('an advisory lane is a lane that says so; the mark it sends is a lane', () => {
+  const piece = pieceOf({ id: 6576390, properties: { l: 'l', a: 1, g: 3 } }, 'roadpieces_nl');
+  assert.equal(piece.advisory, true);
+  assert.equal(piece.label, 'l');
+  assert.equal(pieceOf({ id: 9, properties: { l: 'r', a: 1 } }, 'roadpieces_nl').advisory, false, 'only a lane is advisory');
+  const sent = markPayload([piece], { bands: [1], dayTypes: ['workday'], quarters: ['2026-Q4'], felt: 'safe' });
+  assert.deepEqual(sent && sent.roads, [{ way: 6576390, label: 'l', region: 3 }], 'nothing new leaves the browser');
 });
 
 test('the mark sent is exactly the endpoint\'s shape and nothing more', () => {

@@ -12,7 +12,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
-from coverage.roadpieces import feature_json, label_way, stream_roadpieces  # noqa: E402
+from coverage.roadpieces import advisory_lane, feature_json, label_way, stream_roadpieces  # noqa: E402
 
 
 def test_ways_a_bike_may_not_ride_are_left_out():
@@ -50,6 +50,15 @@ def test_a_road_with_a_separately_drawn_path_is_flagged():
     assert label_way({"highway": "secondary", "cycleway:left": "lane", "cycleway:right": "separate"}) == ("l", True)
 
 
+def test_an_advisory_lane_is_told_apart():
+    # The suggestiestrook: a dashed line on red asphalt, cars may drive on it.
+    assert advisory_lane({"highway": "tertiary", "cycleway": "lane", "cycleway:lane": "advisory"})
+    assert advisory_lane({"highway": "tertiary", "cycleway:both": "lane", "cycleway:both:lane": "advisory"})
+    assert not advisory_lane({"highway": "tertiary", "cycleway": "lane", "cycleway:lane": "exclusive"})
+    assert not advisory_lane({"highway": "tertiary", "cycleway": "lane"}), "a lane that does not say is no advisory lane"
+    assert not advisory_lane({"highway": "tertiary", "cycleway:left:lane": "advisory", "cycleway:right:lane": "exclusive"})
+
+
 MINI = """<?xml version='1.0' encoding='UTF-8'?>
 <osm version="0.6">
   <node id="1" lat="52.0000" lon="5.0000"/>
@@ -61,6 +70,8 @@ MINI = """<?xml version='1.0' encoding='UTF-8'?>
     <tag k="highway" v="secondary"/><tag k="cycleway:right" v="separate"/></way>
   <way id="200"><nd ref="4"/><nd ref="5"/><tag k="highway" v="cycleway"/></way>
   <way id="300"><nd ref="1"/><nd ref="4"/><tag k="highway" v="motorway"/></way>
+  <way id="400"><nd ref="2"/><nd ref="5"/><tag k="highway" v="tertiary"/>
+    <tag k="cycleway" v="lane"/><tag k="cycleway:lane" v="advisory"/></way>
 </osm>
 """
 
@@ -72,7 +83,7 @@ def test_the_stream_emits_labelled_pieces_with_their_way_id(tmp_path):
     stream_roadpieces(osm, got.append)
 
     by_id = {p.way_id: p for p in got}
-    assert sorted(by_id) == [100, 200]
+    assert sorted(by_id) == [100, 200, 400]
     assert by_id[100].label == "r" and by_id[100].sidepath
     assert by_id[200].label == "p" and not by_id[200].sidepath
     assert by_id[100].coords[0] == (5.0, 52.0)
@@ -89,6 +100,7 @@ def test_a_feature_carries_the_way_id_and_only_set_flags(tmp_path):
     assert feats[100]["properties"] == {"l": "r", "h": "secondary", "s": 1}
     assert feats[200]["properties"] == {"l": "p", "h": "cycleway"}
     assert feats[200]["geometry"]["type"] == "LineString"
+    assert feats[400]["properties"] == {"l": "l", "h": "tertiary", "a": 1}, "an advisory lane stays a lane"
 
 
 def test_the_build_command_keeps_every_piece_at_z14_with_its_id(tmp_path, monkeypatch):
@@ -125,7 +137,7 @@ def test_a_real_build_holds_the_pieces_from_z12_to_z14(tmp_path):
     osm = tmp_path / "mini.osm"
     osm.write_text(MINI, encoding="utf-8")
     lines = tmp_path / "nl.geojsonl"
-    assert extract_region(osm, lines) == 2
+    assert extract_region(osm, lines) == 3
     out = tmp_path / "roadpieces-nl.pmtiles"
     tiles.build_roadpieces_pmtiles({"NL": [lines]}, out)
     show = subprocess.run(["pmtiles", "show", str(out)], capture_output=True, text=True, check=True).stdout

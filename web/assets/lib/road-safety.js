@@ -52,14 +52,14 @@ export function markDefaults(unixS, offsetS, holidays) {
  * The road piece a map feature is: its way (the feature id), its label, the
  * region the tile names and the country of its tile's source layer.
  *
- * @returns {{way: number, label: string, region: number|null, cc: string|null}|null}
+ * @returns {{way: number, label: string, region: number|null, cc: string|null, advisory: boolean}|null}
  */
 export function pieceOf(feature, sourceLayer) {
   const way = feature && feature.id;
   const p = (feature && feature.properties) || {};
   if (!Number.isInteger(way) || way < 1 || !LABELS.includes(p.l)) return null;
   const m = /^roadpieces_([a-z]{2})$/.exec(String(sourceLayer || ''));
-  return { way, label: p.l, region: Number.isInteger(p.g) && p.g > 0 ? p.g : null, cc: m ? m[1] : null };
+  return { way, label: p.l, region: Number.isInteger(p.g) && p.g > 0 ? p.g : null, cc: m ? m[1] : null, advisory: 'l' === p.l && 1 === p.a };
 }
 
 /**

@@ -50,7 +50,9 @@ const layers = [];       // {line, pick}
 let viewOn = false;      // the Road safety overlay, with or without the mode
 const hiddenLabels = new Set();   // the road types the key's rows switched off
 const shown = () => on || viewOn;
-const labelFilter = () => ['!', ['in', ['get', 'l'], ['literal', [...hiddenLabels]]]];
+/* A road's type in the key: its label, or `a` for an advisory lane (a lane piece marked `a: 1`, cars may use it). */
+const ROAD_TYPE = ['case', ['==', ['get', 'a'], 1], 'a', ['get', 'l']];
+const labelFilter = () => ['!', ['in', ROAD_TYPE, ['literal', [...hiddenLabels]]]];
 
 function paint(sourceId, sourceLayer) {
   const line = sourceId + '-safety';
@@ -65,6 +67,8 @@ function paint(sourceId, sourceLayer) {
       'line-color': ['match', ['get', 'l'], 'p', LABEL_COLOURS.p, 'l', LABEL_COLOURS.l, LABEL_COLOURS.r],
       'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1.5, 14, 3, 18, 8],
       'line-opacity': 0.75,
+      // An advisory lane dashed, as its line on the road.
+      'line-dasharray': ['case', ['==', ['get', 'a'], 1], ['literal', [2, 1.5]], ['literal', [1, 0]]],
     },
   });
   map.addLayer({
@@ -111,7 +115,7 @@ export function setRoadSafetyLayer(visible) {
   return viewOn;
 }
 
-/** A key row: one road type (p cycle path, l cycle lane, r shared road) on or off; true when it shows. */
+/** A key row: one road type (p cycle path, l cycle lane, a advisory lane, r shared road) on or off; true when it shows. */
 export function toggleRoadType(label) {
   if (hiddenLabels.has(label)) hiddenLabels.delete(label); else hiddenLabels.add(label);
   layers.forEach(({ line }) => { if (map.getLayer(line)) map.setFilter(line, labelFilter(), NO_VALIDATE); });
@@ -220,7 +224,9 @@ function choose(next) {
   const first = picked[0];
   const name = el('roadSafetyPiece');
   if (name) name.textContent = picked.length === 1
-    ? t('roadSafetyLabel' + first.label.toUpperCase(), { p: 'Cycle path', l: 'Cycle lane', r: 'Shared road' }[first.label])
+    ? (first.advisory
+      ? t('roadSafetyLabelA', 'Advisory lane')
+      : t('roadSafetyLabel' + first.label.toUpperCase(), { p: 'Cycle path', l: 'Cycle lane', r: 'Shared road' }[first.label]))
     : tpl(t('roadSafetyMany', '{n} roads'), { n: picked.length });
   const sw = el('roadSafetySw');
   if (sw) sw.style.setProperty('--c', picked.every(p => p.label === first.label) ? LABEL_COLOURS[first.label] : 'currentColor');
@@ -376,7 +382,7 @@ export async function markWay(way, lngLat) {
   if (!on) return;
   if (!found) { status(t('roadSafetyNotPiece', 'This road is not in the road data, so it cannot be marked.')); return; }
   last = { way, label: found.label, at: [lngLat.lng, lngLat.lat] };
-  choose([{ way, label: found.label, region: found.region, cc: found.cc }]);
+  choose([{ way, label: found.label, region: found.region, cc: found.cc, advisory: found.advisory }]);
 }
 
 export function initRoadSafety() {

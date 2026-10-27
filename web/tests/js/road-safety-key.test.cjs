@@ -46,7 +46,8 @@ test('the road types draw from zoom 12, and picking a road still waits for zoom 
 
 test('each key row switches its road type, and the overlay keeps drawing when the mode ends', () => {
   assert.match(rs, /export function toggleRoadType\(label\)\{?/);
-  assert.match(rs, /const labelFilter = \(\) => \['!', \['in', \['get', 'l'\], \['literal', \[\.\.\.hiddenLabels\]\]\]\];/);
+  assert.match(rs, /const ROAD_TYPE = \['case', \['==', \['get', 'a'\], 1\], 'a', \['get', 'l'\]\];/);
+  assert.match(rs, /const labelFilter = \(\) => \['!', \['in', ROAD_TYPE, \['literal', \[\.\.\.hiddenLabels\]\]\]\];/);
   assert.match(rs, /releaseMapClicks\(\);\n  choose\(\[\]\);\n  show\(viewOn\);/);
 });
 
@@ -59,4 +60,12 @@ test('the Key panel carries the road safety colours too, read only', () => {
 test('a road-safety layer is added with no second argument: that slot names the layer to draw under', () => {
   // An options object there made MapLibre refuse the layer, and the overlay drew nothing (owner 2026-10-26).
   for (const m of rs.matchAll(/map\.addLayer\(\{[\s\S]*?\n  \}(,[^)]*)?\);/g)) assert.equal(m[1], undefined, m[0].slice(0, 60));
+});
+
+test('an advisory lane draws dashed, in the lane colour, with its own key row (traffic-measurements.md section 10)', () => {
+  const key = twig.slice(twig.indexOf('<div class="rkey" id="roadSafetyKey" hidden>'), twig.indexOf('id="roadSafetyKeyZoom"'));
+  assert.match(key, /data-rs-label="a" aria-pressed="true"><span class="skey-ln dash" style="--sc:#E8A33D"><\/span>\{\{ 'map\.legend_rs_advisory'\|trans \}\}/);
+  assert.match(rs, /'line-dasharray': \['case', \['==', \['get', 'a'\], 1\], \['literal', \[2, 1\.5\]\], \['literal', \[1, 0\]\]\],/);
+  const grp = twig.slice(twig.indexOf('<div class="grp" id="mk-road-safety">'), twig.indexOf('{# The ride review\'s own lines'));
+  assert.ok(grp.includes('border-top-color:#E8A33D;border-top-style:dashed'), 'the Key panel too');
 });

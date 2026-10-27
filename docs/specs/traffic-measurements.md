@@ -72,6 +72,7 @@ rebuilds once. One source layer per country, `roadpieces_<cc>`.
 | `l` | `p`, `l`, `r` | label: cycle **p**ath, cycle **l**ane, shared **r**oad |
 | `h` | OSM `highway` value | road class, for styling |
 | `s` | `1` or absent | the road says a separately mapped cycle path runs beside it |
+| `a` | `1` or absent | an `l` piece whose lane is advisory: cars may drive on it (the map's own mark, never sent in a traffic line or a safety mark) |
 | `g` | region id or absent | the operational region that owns the piece's middle vertex (`Owners.region()` in `pipeline/coverage/ownership.py`, the owner rule: smallest region, a small snap band at borders); absent when no region owns it |
 
 **Selection and labels**, applied in order:
@@ -95,6 +96,11 @@ rebuilds once. One source layer per country, `roadpieces_<cc>`.
    `track`, `road`, `busway`).
 5. `s=1` on a road or lane road whose `cycleway[:left|:right|:both]` is
    `separate`.
+6. `a=1` on an `l` piece whose lane kind says `advisory` and never
+   `exclusive` (`cycleway:lane`, `cycleway:both:lane`, `cycleway:left:lane`,
+   `cycleway:right:lane`): the Dutch suggestiestrook, a dashed line on red
+   asphalt that cars may use. A lane whose kind is not tagged is no advisory
+   lane. The piece stays `l`.
 
 `roadpieces.py` is an input of every extract's stamp (`run.py`
 `ROADPIECES_RULES`), so a change to the rules rebuilds the extracts and a
@@ -625,12 +631,16 @@ built draw from 14), and a click on one picks it, within 8 px, from zoom 14
 shown once the road pieces are built anywhere (`roadSafetyLayerAvailable()`).
 While the overlay or the mode draws them, the overlay key box at the
 bottom-right corner shows their key (`#roadSafetyKey`): Cycle path, bikes
-only (blue); Cycle lane on the road (amber); Shared with cars (purple). Each
-row switches its road type on and off, as the surface and route rows do
-(`toggleRoadType()`), and the eye on its heading switches all three. Below
+only (blue); Cycle lane on the road (amber); Advisory lane, cars may use it
+(amber, dashed: an `l` piece with `a=1`, drawn dashed as its line on the
+road); Shared with cars (purple). Each row switches its road type on and off,
+as the surface and route rows do (`toggleRoadType()`, an advisory lane its own
+type `a` there), and the eye on its heading switches all four. A picked
+advisory lane is named "Advisory lane" on the card, and its mark is sent as an
+`l` road. Below
 the zoom the tiles hold, the key says "Zoom in to see the road types."
 (`#roadSafetyKeyZoom`). Leaving the mode leaves the lines on while the
-overlay is on. The Key rail panel lists the same three colours, read only
+overlay is on. The Key rail panel lists the same four rows, read only
 (`#mk-road-safety`). A
 Ctrl+click (Cmd+click on a Mac) adds another road, or takes a picked one away
 again, for one answer over several roads (owner 2026-10-19: "User should be

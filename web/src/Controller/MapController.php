@@ -572,7 +572,7 @@ final class MapController extends AbstractController
             // Felt safety (traffic-measurements.md §10): the curator popup, and the rider's road-safety mode.
             'trafficFeltSafe' => 'd_traffic_felt_safe', 'trafficFeltMixed' => 'd_traffic_felt_mixed', 'trafficFeltUnsafe' => 'd_traffic_felt_unsafe',
             'roadSafetyZoom' => 'd_road_safety_zoom', 'roadSafetyPick' => 'd_road_safety_pick', 'roadSafetyMany' => 'd_road_safety_many', 'roadSafetyMore' => 'd_road_safety_more', 'roadSafetyTooMany' => 'd_road_safety_too_many', 'roadSafetyFilling' => 'd_road_safety_filling', 'roadSafetyMax' => 'd_road_safety_max', 'roadSafetyAsk' => 'd_road_safety_ask', 'roadSafetyNotPiece' => 'd_road_safety_not_piece', 'roadSafetyNoTiles' => 'd_road_safety_no_tiles',
-            'roadSafetyLabelP' => 'd_road_safety_label_p', 'roadSafetyLabelL' => 'd_road_safety_label_l', 'roadSafetyLabelR' => 'd_road_safety_label_r',
+            'roadSafetyLabelP' => 'd_road_safety_label_p', 'roadSafetyLabelL' => 'd_road_safety_label_l', 'roadSafetyLabelA' => 'd_road_safety_label_a', 'roadSafetyLabelR' => 'd_road_safety_label_r',
             'roadSafetyQuarter' => 'd_road_safety_quarter', 'roadSafetyQuarterNow' => 'd_road_safety_quarter_now',
             'roadSafetySending' => 'd_road_safety_sending', 'roadSafetySent' => 'd_road_safety_sent',
             'roadSafetyLimited' => 'd_road_safety_limited', 'roadSafetyFailed' => 'd_road_safety_failed',

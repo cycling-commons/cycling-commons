@@ -746,6 +746,7 @@
         <h3>{{ 'map.road_safety_layer'|trans }}</h3>
         <div class="mkp-row"><span class="mkp-sw"><span class="mk-line" style="border-top-color:#2F6FDB" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'map.legend_rs_path'|trans }}</b></div></div>
         <div class="mkp-row"><span class="mkp-sw"><span class="mk-line" style="border-top-color:#E8A33D" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'map.legend_rs_lane'|trans }}</b></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-line" style="border-top-color:#E8A33D;border-top-style:dashed" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'map.legend_rs_advisory'|trans }}</b></div></div>
         <div class="mkp-row"><span class="mkp-sw"><span class="mk-line" style="border-top-color:#7A3FB8" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'map.legend_rs_shared'|trans }}</b></div></div>
       </div>
       {# The ride review's own lines (traffic-measurements.md section 3.1), on
@@ -1006,6 +1007,7 @@
         <div class="skey">
           <button type="button" class="skey-row" data-rs-label="p" aria-pressed="true"><span class="skey-ln" style="--sc:#2F6FDB"></span>{{ 'map.legend_rs_path'|trans }}</button>
           <button type="button" class="skey-row" data-rs-label="l" aria-pressed="true"><span class="skey-ln" style="--sc:#E8A33D"></span>{{ 'map.legend_rs_lane'|trans }}</button>
+          <button type="button" class="skey-row" data-rs-label="a" aria-pressed="true"><span class="skey-ln dash" style="--sc:#E8A33D"></span>{{ 'map.legend_rs_advisory'|trans }}</button>
           <button type="button" class="skey-row" data-rs-label="r" aria-pressed="true"><span class="skey-ln" style="--sc:#7A3FB8"></span>{{ 'map.legend_rs_shared'|trans }}</button>
         </div>
         <div class="skey-note" id="roadSafetyKeyZoom" hidden>{{ 'map.legend_rs_zoom'|trans }}</div>
