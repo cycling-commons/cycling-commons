@@ -1128,7 +1128,7 @@ nothing is a promise the map cannot keep.
 | Climb traffic `#trf` | `Climbs.tr` | |
 | Climb effort `#effortf` | `Climbs.effort` | narrowing semantics keep a climb with no value honest |
 | Stay accessibility `#accessf` | `WhereToSleep.accessibility` | **multi-select** (see below) |
-| Stay Bike-friendly `#labelf` | `WhereToSleep.cyclistLabel`, tile prop `cyl` | **one opt-in chip** (see below) |
+| Stay Bike-friendly `#labelf` | `WhereToSleep.cyclistLabel`, `WhereToSleep.bikeStorage`, tile prop `cyl` | **one opt-in chip** (see below) |
 
 - **`accessibility` is a multi-select** (`FieldKind::MultiSelect`, list<string>).
   A stay is routinely step-free *and* handbike-friendly, and a single select
@@ -1143,11 +1143,15 @@ nothing is a promise the map cannot keep.
   unaffected.
 - **Bike-friendly is one opt-in chip (`.f-optin`), not a group.** A rider
   cannot tell Bett+Bike from Accueil Vélo from a generic bike-friendly tag, so
-  the filter asks one question. Off, nothing is hidden; on, only a stay with
-  any cyclist label passes (`bikeFriendlyMatch()` in `assets/map/filters.js`).
+  the filter asks one question. Off, nothing is hidden; on, a stay passes with
+  any cyclist label, or with Secure bike storage `Yes — locked room` or
+  `Yes — garage/shed` (`bikeFriendlyMatch()` in `assets/map/filters.js`). A
+  rider who gave a stay a locked room for the bike has told us what a cyclist
+  checks first, with no certificate. `On request` and `No` do not pass.
   Coverage stays match on `has cyl` (`applyStaysAccessFilter()` in
-  `assets/map/render.js`); pool stays match their stored `cyclistLabel`, or the
-  `cyl` of their tile. It counts in the pill while it is on and Show all turns
+  `assets/map/render.js`), since OSM has no storage answer; pool stays match
+  their stored `cyclistLabel` or the `cyl` of their tile, or their stored
+  `bikeStorage`. It counts in the pill while it is on and Show all turns
   it off. The stays row in the layer list counts what
   the chip leaves: the coverage part comes from the kept stays numbers
   (coverage-provider.md §11), the pool part from the pins themselves. A map preset stores it as `bikeFriendly`

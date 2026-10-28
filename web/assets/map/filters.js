@@ -13,10 +13,17 @@ export function attrMatch(value, activeSet, allSet){
   return value ? activeSet.has(value) : true;
 }
 
-/* The stays Bike-friendly chip (coverage-provider.md §4, `cyl`), opt-in:
-   while it is on, only a stay with a cyclist label passes. */
-export function bikeFriendlyMatch(labels, on){
-  return !on || (Array.isArray(labels) && labels.length > 0);
+/* The stays Bike-friendly chip (map-and-search.md §4.3), opt-in: while it is
+   on, a stay passes with a cyclist label (its stored `cyclistLabel`, or the
+   `cyl` of its tile) or with secure bike storage a rider gave. Example:
+   {bikeStorage: 'Yes — garage/shed'} passes, {bikeStorage: 'On request'} does
+   not. The storage values are the stay form's (CatalogFormRegistry). */
+export const SECURE_BIKE_STORAGE = new Set(['Yes — locked room', 'Yes — garage/shed']);
+export function bikeFriendlyMatch(stay, on){
+  if(!on) return true;
+  const p = stay || {};
+  const labels = Array.isArray(p.cyclistLabel) && p.cyclistLabel.length ? p.cyclistLabel : tileLabels(p.cyl);
+  return labels.length > 0 || SECURE_BIKE_STORAGE.has(p.bikeStorage);
 }
 
 /* How many coverage stays the stays chips leave, from the server's kept numbers

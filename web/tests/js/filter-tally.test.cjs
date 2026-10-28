@@ -87,16 +87,34 @@ test('narrowing two facets hides the union, not the intersection', async () => {
 
 test('Bike-friendly off keeps every stay', async () => {
   const { bikeFriendlyMatch } = await load();
-  assert.equal(bikeFriendlyMatch([], false), true);
+  assert.equal(bikeFriendlyMatch({}, false), true);
   assert.equal(bikeFriendlyMatch(undefined, false), true);
 });
 
 test('Bike-friendly on keeps only the stays with a cyclist label', async () => {
   const { bikeFriendlyMatch } = await load();
-  assert.equal(bikeFriendlyMatch(['Bett+Bike'], true), true);
-  assert.equal(bikeFriendlyMatch(['Bett+Bike', 'Accueil Vélo'], true), true);
-  assert.equal(bikeFriendlyMatch([], true), false);
+  assert.equal(bikeFriendlyMatch({cyclistLabel: ['Bett+Bike']}, true), true);
+  assert.equal(bikeFriendlyMatch({cyclistLabel: ['Bett+Bike', 'Accueil Vélo']}, true), true);
+  assert.equal(bikeFriendlyMatch({cyl: 'Accueil Vélo'}, true), true, 'the label of its tile');
+  assert.equal(bikeFriendlyMatch({cyclistLabel: [], cyl: 'Bett+Bike'}, true), true);
+  assert.equal(bikeFriendlyMatch({cyclistLabel: []}, true), false);
+  assert.equal(bikeFriendlyMatch({}, true), false);
   assert.equal(bikeFriendlyMatch(undefined, true), false);
+});
+
+test('Bike-friendly on also keeps a stay with secure bike storage', async () => {
+  const { bikeFriendlyMatch } = await load();
+  assert.equal(bikeFriendlyMatch({bikeStorage: 'Yes — locked room'}, true), true);
+  assert.equal(bikeFriendlyMatch({bikeStorage: 'Yes — garage/shed'}, true), true);
+  assert.equal(bikeFriendlyMatch({bikeStorage: 'On request'}, true), false);
+  assert.equal(bikeFriendlyMatch({bikeStorage: 'No'}, true), false);
+});
+
+// A renamed form value would let every stored storage answer drop out of the chip.
+test('the secure bike storage values are the stay form values', async () => {
+  const { SECURE_BIKE_STORAGE } = await load();
+  const form = require('node:fs').readFileSync(path.join(ROOT, 'src/Catalog/CatalogFormRegistry.php'), 'utf8');
+  for (const v of SECURE_BIKE_STORAGE) assert.ok(form.includes(`'${v}'`), v);
 });
 
 test('Bike-friendly narrows while it is ON, the opposite of the others', async () => {

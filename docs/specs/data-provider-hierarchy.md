@@ -1153,7 +1153,7 @@ directory of private people.
 
 **Cyclist labels.** PIVOT has no field for Wallonia's "Bienvenue Vélo" label,
 so no PIVOT stay passes the Bike-friendly chip until a rider sets its Cyclist
-label.
+label, or gives it Secure bike storage as a locked room or a garage/shed.
 
 **Refresh.** PIVOT changes as the tourist offices edit it: the newest
 `DATE_MODIFICATION` on 2026-10-22 was 2026-10-19. The row's

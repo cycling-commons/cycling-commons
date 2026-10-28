@@ -14,7 +14,7 @@ import { covShownCount, coverageTotal, syncCoverageLayers, covIconFilter,
          COVERAGE_CCS, COVERAGE_ON, COVERAGE_KEYS } from './coverage.js';
 import { openDrawer, planPlace } from './drawer.js';
 import { NO_VALIDATE } from './tile-sources.js';
-import { attrMatch, bikeFriendlyMatch, tileLabels, routeBikeMatch, readRouteBikes, startBikes, narrowingCount, climbChipsMatch, modeShows, placeKey, createShownAnyway } from './filters.js';
+import { attrMatch, bikeFriendlyMatch, routeBikeMatch, readRouteBikes, startBikes, narrowingCount, climbChipsMatch, modeShows, placeKey, createShownAnyway } from './filters.js';
 import { fanPin, fanOffsetOf, scheduleFanOut } from './pin-fan.js';
 import { plannerTakesLineClick } from './plan-state.js';
 
@@ -391,7 +391,7 @@ export const ALL_TRAF=new Set(['Traffic-free','Quiet','Moderate','Busy']);
 /* attrMatch lives in filters.js (pure; answers 'why is my data missing?'). */
 export { attrMatch };
 export let activeEffort=chipSet('effortf'), activeAccess=chipSet('accessf');
-// The stays Bike-friendly chip (#labelf, .f-optin): on narrows to labelled stays.
+// The stays Bike-friendly chip (#labelf, .f-optin): on narrows to labelled stays and stays with secure bike storage.
 const bikeFriendlyChip = () => !!document.querySelector('#labelf .chip.on');
 export let bikeFriendlyOn = bikeFriendlyChip();
 
@@ -403,7 +403,7 @@ export function syncFacetChips(){
 // The stays chips (accessibility, Bike-friendly) as one exported predicate
 // (osm-pools.js, listed-place.js): a stay passes when it passes both.
 export const staysAccessible = p => attrMatch(p.accessibility, activeAccess, ALL_ACCESS)
-  && bikeFriendlyMatch(Array.isArray(p.cyclistLabel) && p.cyclistLabel.length ? p.cyclistLabel : tileLabels(p.cyl), bikeFriendlyOn);
+  && bikeFriendlyMatch(p, bikeFriendlyOn);
 // Stays coverage tiles narrow on the stays chips; clustered stays in updateConfMarkers.
 export function applyStaysAccessFilter(){
   // docs/specs/coverage-provider.md §6: coverage stays' icons narrow on the flat `acc` and `cyl` tile props.
