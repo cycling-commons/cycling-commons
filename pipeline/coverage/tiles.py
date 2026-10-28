@@ -44,16 +44,20 @@ _FOOD_SQL = ("CASE WHEN tags ? 'shop' OR tags->>'amenity' IN "
              "('cafe', 'fast_food', 'restaurant', 'bar', 'pub') THEN true END")
 
 # O's cyclist labels, the rule of cyclistLabels() in web/assets/map/osm-tags.js:
-# Bett+Bike is bettundbike=yes or a Bett+Bike reference without bettundbike=no;
-# Accueil Vélo is award:accueilvelo as yes, an award year, or a range whose end
-# is this year or later (the CASE keeps the cast off values the regex refused);
-# bike_friend=yes counts only when no named label is there.
+# Bett+Bike is bettundbike=yes or a Bett+Bike reference (bett_and_bike:ref or
+# ref:bettundbike) without bettundbike=no; Accueil Vélo is award:accueilvelo as
+# yes, an award year, or a range whose end is this year or later (the CASE keeps
+# the cast off values the regex refused), or Accueil Vélo named in ref:FR:label
+# or label; bike_friend=yes counts only when no named label is there.
 _AV = "lower(btrim(tags->>'award:accueilvelo'))"
+_AV_NAMED = "'(^|;)\\s*accueil v[eé]lo\\s*(;|$)'"
 _BETT_BIKE_SQL = ("(lower(btrim(tags->>'bettundbike')) = 'yes' OR "
                   "(coalesce(lower(btrim(tags->>'bettundbike')), '') <> 'no' AND "
-                  "coalesce(btrim(tags->>'bett_and_bike:ref'), '') <> ''))")
+                  "(coalesce(btrim(tags->>'bett_and_bike:ref'), '') <> '' OR "
+                  "coalesce(btrim(tags->>'ref:bettundbike'), '') <> '')))")
 _ACCUEIL_VELO_SQL = ("(" + _AV + " ~ '^(yes|\\d{4})$' OR CASE WHEN " + _AV + " ~ '^\\d{4}\\s*-\\s*\\d{4}$' "
-                     "THEN right(" + _AV + ", 4)::int >= extract(year FROM current_date) ELSE false END)")
+                     "THEN right(" + _AV + ", 4)::int >= extract(year FROM current_date) ELSE false END "
+                     "OR lower(tags->>'ref:FR:label') ~ " + _AV_NAMED + " OR lower(tags->>'label') ~ " + _AV_NAMED + ")")
 _CYCLIST_SQL = ("NULLIF(concat_ws(';', "
                 "CASE WHEN " + _BETT_BIKE_SQL + " THEN 'Bett+Bike' END, "
                 "CASE WHEN " + _ACCUEIL_VELO_SQL + " THEN 'Accueil Vélo' END, "

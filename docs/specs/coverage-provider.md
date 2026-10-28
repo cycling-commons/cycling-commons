@@ -217,23 +217,32 @@ for F only and words them in its Bikes on board row (§5). OSM carries them on
 ferries far more than on stations: in the Netherlands extract 368 of 580 ferry
 routes and 28 of 884 ferry terminals carry `bicycle`, and no station does.
 
-`bettundbike`, `bett_and_bike:ref`, `award:accueilvelo` and `bike_friend` are
-the cyclist-welcome labels OSM records on a place to sleep (O). The drawer
+`bettundbike`, `bett_and_bike:ref`, `ref:bettundbike`, `award:accueilvelo`,
+`ref:FR:label`, `label` and `bike_friend` are the cyclist-welcome labels OSM
+records on a place to sleep (O). The drawer
 reads them for O only (`cyclistLabels` in `assets/map/osm-tags.js`) and shows
 them in its Cyclist label row, as the choices of the stay form's
 `cyclistLabel` field, so a stored value replaces the OSM fact as one row:
 
 - **Bett+Bike** (ADFC, Germany and Austria): `bettundbike=yes`, or a
-  `bett_and_bike:ref` such as `NRW-1540` without `bettundbike=no`.
+  reference such as `NRW-1540` in `bett_and_bike:ref` or `ref:bettundbike`,
+  without `bettundbike=no`.
 - **Accueil Vélo** (France Vélo Tourisme): `award:accueilvelo` as `yes`, an
   award year (`2024`), or a range whose end is this year or later
-  (`2026-2029`). A range that has ended (`2014-2024`) gives no label.
+  (`2026-2029`). A range that has ended (`2014-2024`) gives no label. Accueil
+  Vélo named as one item of `ref:FR:label` or `label` counts too, with or
+  without the accent (`Gîtes de France;Accueil Velo`).
 - **Bike-friendly**: `bike_friend=yes`, only when no named label is there.
 
 A `no` or a value the rule cannot read gives no row. Worldwide on 2026-10-21,
 taginfo counted 497 objects with `bettundbike`, 191 with `bett_and_bike:ref`,
 312 with `award:accueilvelo` and 302 with `bike_friend` (most of those in
-Denmark).
+Denmark). On the stays of the onboarded extracts (2026-10-28), only Germany
+(433 `bettundbike`, 159 `bett_and_bike:ref`, 26 `ref:bettundbike`, 26
+`bike_friend`) and France (185 `award:accueilvelo`, 13 Accueil Vélo in
+`ref:FR:label` or `label`) carry labels in numbers; Belgium has 3, Luxembourg
+and the Netherlands 1 each, and the other extracts none. The Dutch Fietsers
+Welkom! and the Italian Albergabici have no OSM tag.
 
 `duration`, `seasonal` and `toll` are a ferry route's crossing time, season and
 fare, which the drawer shows beside its `opening_hours`, `fee` and website
@@ -790,7 +799,7 @@ across the credits.
 | `potable` | B | water kind glyph: `yes` / `no` / absent (nobody said), derived from OSM `drinking_water` and `amenity` tags (data-provider-hierarchy.md §6.3a) |
 | `food` | B | `true` for the shop and eatery half of letter B, absent for the water half; picks the food kind glyph |
 | `acc` | O | stays accessibility filter |
-| `cyl` | O (when labelled) | stays Bike-friendly filter (any value passes): the labels `cyclistLabels()` reads from `bettundbike`, `bett_and_bike:ref`, `award:accueilvelo` and `bike_friend` (§2.1), `;`-joined in a fixed order (`Bett+Bike;Accueil Vélo`); the year in an Accueil Vélo range is judged at tile-build time |
+| `cyl` | O (when labelled) | stays Bike-friendly filter (any value passes): the labels `cyclistLabels()` reads from `bettundbike`, `bett_and_bike:ref`, `ref:bettundbike`, `award:accueilvelo`, `ref:FR:label`, `label` and `bike_friend` (§2.1), `;`-joined in a fixed order (`Bett+Bike;Accueil Vélo`); the year in an Accueil Vélo range is judged at tile-build time |
 | `cd` | all (when dated) | OSM `check_date`, only when it is a full `YYYY-MM-DD`, truncated to the day. A witness inside the freshness window drops the `?` badge on the coverage disc (data-provider-hierarchy.md §6.7.7, rung 8); the map compares it as a string to `window.CC_WITNESS_CUTOFF` |
 | `grp` | all (the one member that stands for a folded group) | the group's size (§3 step 5): five or more points of one kind close together, two or more for water, ride the tiles as this one feature; absent on every other feature |
 

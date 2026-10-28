@@ -127,6 +127,10 @@ def test_export_carries_the_cyclist_label_by_the_drawer_rule(db, tmp_path):
         "node/910000008": {"bike_friend": "yes"},
         "node/910000009": {"bettundbike": "yes", "award:accueilvelo": "yes", "bike_friend": "yes"},
         "node/910000010": {},
+        "node/910000011": {"ref:bettundbike": "NRW-68"},
+        "node/910000012": {"ref:FR:label": "Gîtes de France;Accueil Velo"},
+        "node/910000013": {"label": "Accueil Vélo"},
+        "node/910000014": {"label": "Gîtes de France"},
     }
     for i, (ref, extra) in enumerate(rows.items()):
         db.execute(
@@ -146,6 +150,10 @@ def test_export_carries_the_cyclist_label_by_the_drawer_rule(db, tmp_path):
         "node/910000008": "Bike-friendly",
         "node/910000009": "Bett+Bike;Accueil Vélo",
         "node/910000010": None,
+        "node/910000011": "Bett+Bike",
+        "node/910000012": "Accueil Vélo",
+        "node/910000013": "Accueil Vélo",
+        "node/910000014": None,
     }
 
 

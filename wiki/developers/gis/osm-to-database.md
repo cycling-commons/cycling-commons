@@ -206,8 +206,9 @@ The 47 kept keys split into seven groups, and they are easy to double-count:
   `height` (a viewpoint's altitude, the way it faces, how far a waterfall drops), and for getting
   there `bicycle` and `bicycle:fee` (whether a bike may come aboard, and whether it costs extra)
   and a ferry route's `duration`, `seasonal` and `toll` (crossing time, season, fare), and for
-  places to sleep `bettundbike`, `bett_and_bike:ref`, `award:accueilvelo` and `bike_friend` (the
-  cyclist labels Bett+Bike, Accueil Vélo and bike-friendly). A
+  places to sleep `bettundbike`, `bett_and_bike:ref`, `ref:bettundbike`, `award:accueilvelo`,
+  `ref:FR:label`, `label` and `bike_friend` (the cyclist labels Bett+Bike, Accueil Vélo and
+  bike-friendly). A
   `website`, `contact:website` or `url` whose host answers with a parking page or does not answer
   at all is kept in the store and left out of the drawer, on the verdict a worker sweep keeps per
   host (`web/src/Links/WebsiteSweep.php`).
@@ -239,14 +240,14 @@ overlapping things: 47 stored keys in total, 36 of which the drawer's whitelist 
 can never ask for a key the pipeline already threw away).
 
 Three numbers, one table. A key can be in more than one set, which is exactly why 11 + 26 + 4 + 3 + 1
-and 36 are both correct and describe different things.
+and 38 are both correct and describe different things.
 
 | set | what it is for | how many |
 |---|---|---|
 | **selector** | decides whether an object is kept at all, and is re-read at tile-build time to derive the type label | 11 |
-| **drawer** | `TAG_WHITELIST`: the keys the item panel is allowed to render | 36 |
-| **tile-derived** | read into a short tile property rather than shown as text: `amenity`, `award:accueilvelo`, `bett_and_bike:ref`, `bettundbike`, `bike_friend`, `check_date`, `drinking_water`, `shop`, `wheelchair` | 9 |
-| **stored** | the union, and the only thing the harvest actually keeps | 47 |
+| **drawer** | `TAG_WHITELIST`: the keys the item panel is allowed to render | 38 |
+| **tile-derived** | read into a short tile property rather than shown as text: `amenity`, `award:accueilvelo`, `bett_and_bike:ref`, `bettundbike`, `bike_friend`, `check_date`, `drinking_water`, `label`, `ref:bettundbike`, `ref:FR:label`, `shop`, `wheelchair` | 12 |
+| **stored** | the union, and the only thing the harvest actually keeps | 50 |
 
 Three keys sit in all three sets (`amenity`, `drinking_water`, `shop`), because the pin's colour,
 the panel's wording and the selector all have to agree about the same fact. One key, `wikipedia`, is

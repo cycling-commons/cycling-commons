@@ -204,6 +204,16 @@ test('a stay with a cyclist label names the scheme', () => {
   assert.deepEqual(cyclistLabels({bike_friend:'yes'}, 2026), ['Bike-friendly']);
 });
 
+test('the other ways OSM names a scheme count too', () => {
+  assert.deepEqual(cyclistLabels({'ref:bettundbike':'NRW-68'}, 2026), ['Bett+Bike']);
+  assert.deepEqual(cyclistLabels({'ref:FR:label':'Accueil Vélo'}, 2026), ['Accueil Vélo']);
+  assert.deepEqual(cyclistLabels({'ref:FR:label':'Gîtes de France;Accueil Velo'}, 2026), ['Accueil Vélo']);
+  assert.deepEqual(cyclistLabels({label:'Accueil Vélo'}, 2026), ['Accueil Vélo']);
+  assert.deepEqual(cyclistLabels({label:'Gîtes de France'}, 2026), [], 'another label is no cyclist label');
+  assert.deepEqual(cyclistLabels({label:'Pas Accueil Vélo'}, 2026), [], 'only the whole name counts');
+  assert.deepEqual(cyclistLabels({bettundbike:'no', 'ref:bettundbike':'NRW-68'}, 2026), []);
+});
+
 test('an Accueil Vélo year is the award year; a range that has ended is no label', () => {
   assert.deepEqual(cyclistLabels({'award:accueilvelo':'2024'}, 2026), ['Accueil Vélo']);
   assert.deepEqual(cyclistLabels({'award:accueilvelo':'2026-2029'}, 2026), ['Accueil Vélo']);

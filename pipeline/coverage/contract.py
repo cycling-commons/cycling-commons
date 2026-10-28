@@ -25,7 +25,7 @@ LETTERS = frozenset("BCDFGOPQ")
 # test_tiles.py pins this constant to the SQL so the two cannot drift.
 TILE_DERIVED_TAG_KEYS = frozenset({
     "amenity", "award:accueilvelo", "bett_and_bike:ref", "bettundbike", "bike_friend",
-    "check_date", "drinking_water", "shop", "wheelchair",
+    "check_date", "drinking_water", "label", "ref:bettundbike", "ref:FR:label", "shop", "wheelchair",
 })
 
 # Tag keys parse.py writes itself, never read from OSM: what a ferry dock

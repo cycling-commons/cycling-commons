@@ -29,7 +29,7 @@ Bike-friendly stays riders actually used — gîtes and B&Bs with secure storage
 | Tourist office | url (`officeWeb`): the stay's tourist office, for a stay without a website of its own. Tourisme Wallonie PIVOT fills it with the stay's Maison du Tourisme ([data-provider-hierarchy.md §10](../data-provider-hierarchy.md)); an organisation, never a person | `[provider]` |
 | Secure bike storage | select(Yes — locked room / Yes — garage/shed / On request / No) | `[edit]` |
 | Drying / washing for kit | select(Unknown / Yes / No) | `[edit]` |
-| Cyclist label | multiselect(Bett+Bike / Accueil Vélo / Bike-friendly); nothing ticked means not stated. The drawer shows the OSM labels (`bettundbike`, `bett_and_bike:ref`, `award:accueilvelo`, `bike_friend`) in the same row until a stored value replaces them ([coverage-provider.md §2.1](../coverage-provider.md)) | `[OSM]` |
+| Cyclist label | multiselect(Bett+Bike / Accueil Vélo / Bike-friendly); nothing ticked means not stated. The drawer shows the OSM labels (`bettundbike`, `bett_and_bike:ref`, `ref:bettundbike`, `award:accueilvelo`, `ref:FR:label`, `label`, `bike_friend`) in the same row until a stored value replaces them ([coverage-provider.md §2.1](../coverage-provider.md)) | `[OSM]` |
 | Booking link | url | `[edit]` |
 | Note for riders | textarea | `[edit]` |
 

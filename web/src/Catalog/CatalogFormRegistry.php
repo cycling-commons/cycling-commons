@@ -148,7 +148,7 @@ final class CatalogFormRegistry
                     CatalogField::url('officeWeb', 'Tourist office', placeholder: 'https://… (its tourist office, when the stay has no site)'),
                     CatalogField::select('bikeStorage', 'Secure bike storage', ['Yes — locked room', 'Yes — garage/shed', 'On request', 'No']),
                     CatalogField::select('dryingWashing', 'Drying / washing for kit', self::UNKNOWN_YES_NO),
-                    // Multi: the OSM harvest fills it from bettundbike, award:accueilvelo and bike_friend (coverage-provider.md §5).
+                    // Multi: the OSM harvest fills it from the Bett+Bike, Accueil Vélo and bike_friend tags (coverage-provider.md §2.1).
                     CatalogField::multiselect('cyclistLabel', 'Cyclist label', ['Bett+Bike', 'Accueil Vélo', 'Bike-friendly']),
                     CatalogField::url('bookingLink', 'Booking link', placeholder: 'https://… (booking platform, if any)'),
                     CatalogField::textarea('note', 'Note for riders', 'What makes it good for cyclists?'),

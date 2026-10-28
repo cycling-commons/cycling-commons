@@ -60,6 +60,10 @@ final class CoverageStayFacetCountTest extends KernelTestCase
             'node/810008' => [['bike_friend' => 'yes'], true],
             'node/810009' => [['bike_friend' => 'no'], false],
             'node/810010' => [[], false],
+            'node/810011' => [['ref:bettundbike' => 'NRW-68'], true],
+            'node/810012' => [['ref:FR:label' => 'Gîtes de France;Accueil Velo'], true],
+            'node/810013' => [['label' => 'Accueil Vélo'], true],
+            'node/810014' => [['label' => 'Gîtes de France'], false],
         ];
         foreach ($cases as $ref => [$tags]) {
             $this->stay($ref, $tags);
@@ -68,7 +72,7 @@ final class CoverageStayFacetCountTest extends KernelTestCase
             $got = $this->db->fetchOne('SELECT coverage_poi_cyclist(tags) FROM coverage_poi WHERE ref = :ref', ['ref' => $ref]);
             self::assertSame($labelled, (bool) $got, $ref);
         }
-        self::assertSame(['cyl' => 5, 'acc' => 0, 'cyl_acc' => 0], $this->coverage->stayFacetCounts());
+        self::assertSame(['cyl' => 8, 'acc' => 0, 'cyl_acc' => 0], $this->coverage->stayFacetCounts());
     }
 
     public function testTheStayFacetsAreCountedPerScopeAndFollowTheShownRule(): void
