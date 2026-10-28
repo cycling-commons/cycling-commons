@@ -1238,20 +1238,34 @@ the map relies on:
   bike-tagged layer; nothing else is preference-filtered. Applies in **both**
   modes, composing with (never replacing) the mode/best-of filters.
 - **Predicate (`prefMatch()`, `routeBikeMatch()` in `filters.js`, unknown ≠
-  unsuitable):** visible iff no bike chip is on, or
+  unsuitable):** a chip that is on is used, as in every chip row. Visible iff
+  some bike chip is on and
   `!f.bikeTypes || f.bikeTypes.length === 0 || overlap(f.bikeTypes, chips on)`.
-  Only a *declared* non-overlap hides a route.
+  Only a *declared* non-overlap hides a route while a chip is on; no chip on
+  keeps no route.
+- **No bike, no route:** turning the last chip off also turns the Recommended
+  routes switch off (`initPrefBikes()` in `panels.js`), so the switch never
+  reads On over an empty map. Whatever turns the switch on again (its row,
+  Select all, a preset, a route opened from a link) with no chip on brings back
+  the start set (`routeBikesFollowSwitch()` in `render.js`, run by every
+  `render()`). Example: a rider with Road saved turns Road off, the only chip
+  on; Recommended routes reads Off and no route is drawn. Turning Recommended
+  routes on again turns Road on.
 - **Never silent, never locked:** the group "Routes for your bikes"
   (`#prefBikes`) shows one chip per bike type (`ALL_BIKES` in `render.js`,
   the `BikeType` values), each `aria-pressed`. The rider's saved bikes
-  (`CC_PREFS.bikes`) start on, and every chip can be turned on or off: a rider
-  with Road saved sees Road on and the seven others off, and turning Gravel on
-  as well shows the routes for either bike plus the routes that declare no
-  bike type. The chips that are on persist in `localStorage` key
-  **`cc-pref-filter:<user id>`** (`PREF_FILTER_KEY` in `render.js`) as a JSON
-  list (`readPrefBikes()`): nothing stored means the saved bikes on. The group
-  counts once in the filter pill while any chip is on, and Show all turns
-  every chip off. A visitor sees the same chips, all off.
+  (`CC_PREFS.bikes`) start on, every bike when none is saved
+  (`startBikes()`), and every chip can be turned on or off: a rider with Road
+  saved sees Road on and the seven others off, and turning Gravel on as well
+  shows the routes for either bike plus the routes that declare no bike type.
+  The row is `.f-match`. The chips that are on persist in `localStorage` key
+  **`cc-route-bikes:<user id>`** (`ROUTE_BIKES_KEY` in `render.js`) as a JSON
+  list (`readRouteBikes()`): nothing stored, or an empty list, means the start
+  set, because the map opens with Recommended routes on. The older key
+  `cc-pref-filter:<user id>` is read once when the new one is empty: there an
+  empty list or `off` meant no filter, so it reads as every bike. The group
+  counts once in the filter pill while some but not all chips are on, and Show
+  all turns every chip on. A visitor sees the same chips, all on.
 
 ### 4.5 Region / My-area scope
 

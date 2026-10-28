@@ -35,25 +35,38 @@ export function tileLabels(cyl){
   return String(cyl ?? '').split(';').filter(Boolean);
 }
 
-/* Routes for your bikes (map-and-search.md §4.4): a route for any chosen bike
-   stays, a route that declares no bike type always stays; no chip on, no filter. */
+/* Routes for your bikes (map-and-search.md §4.4): a chip that is on is used, as in every chip row. A route for a bike
+   that is on stays, a route that declares no bike type stays while any chip is on, and no chip on keeps no route.
+   Example: Road on keeps a Road route and one with no bike type, and hides an MTB route. */
 export function routeBikeMatch(bikeTypes, activeBikes){
-  if(!activeBikes || !activeBikes.size) return true;
+  if(!activeBikes || !activeBikes.size) return false;
   if(!Array.isArray(bikeTypes) || !bikeTypes.length) return true;   // undeclared → keep
   return bikeTypes.some(t => activeBikes.has(t));
 }
 
-/* The bike chips remembered in this browser, kept to the bike types the map
-   has: a JSON list, or the old single chip's on/off. Nothing stored, or a value
-   that does not read, means the rider's saved bikes on. */
-export function readPrefBikes(stored, riderBikes, allBikes){
-  const mine = Array.isArray(riderBikes) ? riderBikes : [];
-  if(stored === 'off') return [];
-  if(stored == null || stored === 'on') return mine.slice();
-  try{
-    const list = JSON.parse(stored);
-    return Array.isArray(list) ? (allBikes || []).filter(b => list.includes(b)) : mine.slice();
-  }catch(e){ return mine.slice(); }
+/** The bike chips a route row starts with: the rider's saved bikes, every bike when none is saved. */
+export function startBikes(riderBikes, allBikes){
+  const all = allBikes || [];
+  const mine = all.filter(b => (riderBikes || []).includes(b));
+  return mine.length ? mine : all.slice();
+}
+
+/* The route bike chips remembered in this browser, kept to the bike types the map has. `stored` is the JSON list
+   under the current key; an empty or unreadable one, or none, is the start set (startBikes), because the map opens
+   with Recommended routes on. `legacy` is the key from before a chip that is on was used: there an empty list, or
+   'off', meant no filter, so it reads as every bike; 'on' meant the saved bikes.
+   Example: legacy '[]' → all eight bikes; stored '["MTB"]' → ['MTB']. */
+export function readRouteBikes(stored, legacy, riderBikes, allBikes){
+  const all = allBikes || [], start = startBikes(riderBikes, all);
+  const list = v => { try{ const l = JSON.parse(v); return Array.isArray(l) ? all.filter(b => l.includes(b)) : null; }catch(e){ return null; } };
+  if(stored != null){
+    const l = list(stored);
+    return l && l.length ? l : start;
+  }
+  if(legacy == null || legacy === 'on') return start;
+  if(legacy === 'off') return all.slice();
+  const l = list(legacy);
+  return !l ? start : l.length ? l : all.slice();
 }
 
 /* A Best of chip row as the /map/best-of query reads it (docs/specs/map-and-search.md §4.0): a chip that is on is
@@ -71,7 +84,7 @@ export function narrowed(activeSet, allSet){
   return !!(activeSet && allSet) && activeSet.size < allSet.size;
 }
 
-// The four chip facets narrow by deselection (.f-match). Preference and Bike-friendly are .f-optin.
+// The four chip facets and the route bikes narrow by deselection (.f-match). Bike-friendly is .f-optin.
 const FACETS = ['surface', 'traffic', 'effort', 'access'];
 
 /** How many filter groups are currently making the map show less. */
@@ -81,7 +94,10 @@ export function narrowingCount(state){
     const g = state[key];
     if(g && narrowed(g.active, g.all)) n++;
   }
-  if(state.prefFilterOn) n++;   // .f-optin: these narrow while they are ON
+  // Route bikes with no chip on are the Recommended routes switch off, not a filter.
+  const rb = state.routeBikes;
+  if(rb && rb.active && rb.active.size && narrowed(rb.active, rb.all)) n++;
+  // .f-optin: narrows while it is ON
   if(state.bikeFriendlyOn) n++;
   return n;
 }

@@ -11,7 +11,7 @@ import { CATALOG, catalogRows, catalogUtility, catalogVotable, catalogModeration
          active, layerByKey, mode, setMode,
          resolveInitialMode, MODE_LS_KEY } from './catalog.js';
 import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
-         applyStaysAccessFilter, syncFacetChips, prefFilterEnabled, setPrefFilter, prefBikes, setPrefBikes } from './render.js';
+         applyStaysAccessFilter, syncFacetChips, prefBikes, setPrefBikes, paintPrefBikes, ALL_BIKES } from './render.js';
 import { mapToast, clearRevealPin } from './drawer.js';
 import { layerGlyph } from './icons.js';
 import { refilterClusters, updateConfMarkers } from './osm-pools.js';
@@ -285,8 +285,8 @@ export function initFilterPill(){
     document.querySelectorAll('#filters .f-optin .chip').forEach(c=>{
       c.classList.remove('on'); c.setAttribute('aria-pressed','false');
     });
-    // Preference state lives in render.js, not the class; setPrefFilter remembers it.
-    if(prefFilterEnabled()) setPrefFilter(false);
+    // Route bike state lives in render.js, not the class: every bike back on, remembered.
+    setPrefBikes(ALL_BIKES); paintPrefBikes();
     syncFacetChips();
     applyStaysAccessFilter();
     // Best-of facets are f-match too, all chips back on: the only reset the server must hear.
@@ -504,23 +504,28 @@ export function initChips(){
   // Generic chip toggle; climb/pref/area handlers below reassign onclick.
   document.querySelectorAll('.grp .chips .chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
   // Routes for your bikes: one chip per bike type, the saved bikes on at first, every chip
-  // changeable; later onclick overrides the generic binder above.
+  // changeable; later onclick overrides the generic binder above. The last chip off turns
+  // Recommended routes off: no bike, no route (docs/specs/map-and-search.md §4.4).
   (function initPrefBikes(){
     const box=document.getElementById('prefBikes'), grp=document.getElementById('prefGrp');
     if(!box||!grp) return;
     grp.hidden=false;
     const chips=[...box.querySelectorAll('.chip')];
-    const sync=()=>chips.forEach(c=>{ const on=prefBikes().has(c.dataset.v); c.classList.toggle('on', on); c.setAttribute('aria-pressed', on?'true':'false'); });
     chips.forEach(c=>{
       const flip=()=>{
         const next=new Set(prefBikes());
         if(next.has(c.dataset.v)) next.delete(c.dataset.v); else next.add(c.dataset.v);
-        setPrefBikes([...next]); sync(); render(); updateCounts();
+        setPrefBikes([...next]);
+        if(!next.size && active.has('experience')){
+          active.delete('experience');
+          const row=document.querySelector('#layers .layer[data-key="experience"]'); if(row) row.classList.add('off');
+        }
+        paintPrefBikes(); render(); updateCounts();
       };
       c.onclick=flip;
       c.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); flip(); } };
     });
-    sync();
+    paintPrefBikes();
   })();
   // "Set my area" cold-start (docs/specs/map-and-search.md §4.5). Round to 2dp
   // before the point leaves the page. Must bind after the generic chip toggler.

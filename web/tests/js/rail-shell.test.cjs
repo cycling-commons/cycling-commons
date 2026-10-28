@@ -512,12 +512,25 @@ test('a hit frames itself before the scope draws over it', () => {
   assert.ok(ride.includes('keepCameraForNextScope()'), 'the ride check must claim the camera for its own framing');
 });
 
-test('Routes for your bikes is one chip per bike type, an opt-in group', () => {
+test('Routes for your bikes is one chip per bike type, a chip that is on is used', () => {
   const s = panelSrc('p-layers');
   const grp = s.slice(s.indexOf('id="prefGrp"'), s.indexOf('</div>', s.indexOf('id="prefBikes"')));
-  assert.ok(/class="chips f-optin" id="prefBikes"/.test(grp), 'no opt-in #prefBikes row');
+  assert.ok(/class="chips f-match" id="prefBikes"/.test(grp), 'the #prefBikes row is not .f-match');
   for (const b of ['Road', 'Gravel', 'MTB', 'E-bike', 'Handbike', 'Recumbent', 'Trike', 'Tandem']) {
     assert.ok(grp.includes(`data-v="${b}"`), `no ${b} chip`);
   }
   assert.ok(!s.includes('id="prefFilter"'), 'the single preference chip is still there');
+});
+
+// docs/specs/map-and-search.md §4.4: no bike, no route. Pinned in the source, as the map tests do.
+test('the last route bike off turns Recommended routes off, and the switch on brings the bikes back', () => {
+  const panels = read('assets/map/panels.js'), render = read('assets/map/render.js');
+  const flip = panels.slice(panels.indexOf('function initPrefBikes'), panels.indexOf('function initAreaPrompt'));
+  assert.ok(/if\(!next\.size && active\.has\('experience'\)\)\{\s*active\.delete\('experience'\)/.test(flip), 'the last chip off leaves the switch on');
+  assert.ok(flip.includes(`.layer[data-key="experience"]`) && flip.includes(`classList.add('off')`), 'the layer row does not read Off');
+  const follow = render.slice(render.indexOf('function routeBikesFollowSwitch'), render.indexOf('export function prefMatch'));
+  assert.ok(/active\.has\('experience'\)/.test(follow) && follow.includes('setPrefBikes(startBikes(PREFS.bikes, ALL_BIKES))'), 'the switch on does not bring back the start set');
+  assert.ok(/export function render\(\)\{\s*routeBikesFollowSwitch\(\);/.test(render), 'render() does not keep the bikes in step with the switch');
+  const reset = panels.slice(panels.indexOf('reset.onclick'), panels.indexOf('export function initRailChrome'));
+  assert.ok(reset.includes('setPrefBikes(ALL_BIKES)'), 'Show all does not turn every route bike on');
 });

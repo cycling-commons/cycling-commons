@@ -23,6 +23,9 @@ const ALL_TRAF = new Set(['Traffic-free', 'Quiet', 'Moderate', 'Busy']);
 const ALL_EFFORT = new Set(['Steady', 'Challenging', 'Tough', 'Very steep']);
 const ALL_ACCESS = new Set(['Step-free access', 'Handbike-friendly', 'Wheelchair-accessible']);
 
+const ALL_BIKES = ['Road', 'Gravel', 'MTB', 'E-bike', 'Handbike', 'Recumbent', 'Trike', 'Tandem'];
+const bikes = (...on) => ({active: new Set(on), all: new Set(ALL_BIKES)});
+
 // The state shape render.js hands the rules: each facet is what is selected
 // now, beside the full vocabulary it was selected from.
 const state = (over = {}) => ({
@@ -30,7 +33,7 @@ const state = (over = {}) => ({
   traffic: {active: new Set(ALL_TRAF), all: ALL_TRAF},
   effort: {active: new Set(ALL_EFFORT), all: ALL_EFFORT},
   access: {active: new Set(ALL_ACCESS), all: ALL_ACCESS},
-  prefFilterOn: false,
+  routeBikes: {active: new Set(ALL_BIKES), all: new Set(ALL_BIKES)},
   bikeFriendlyOn: false,
   ...over,
 });
@@ -49,9 +52,11 @@ test('each group counts once, however many chips it lost', async () => {
   })), 2);
 });
 
-test('the preference chip narrows while it is ON, the opposite of the others', async () => {
+test('the route bikes narrow by deselection, like the facets; none on is the layer off, not a filter', async () => {
   const { narrowingCount } = await load();
-  assert.equal(narrowingCount(state({prefFilterOn: true})), 1);
+  assert.equal(narrowingCount(state({routeBikes: bikes('Road')})), 1);
+  assert.equal(narrowingCount(state({routeBikes: bikes(...ALL_BIKES)})), 0, 'every bike on narrows nothing');
+  assert.equal(narrowingCount(state({routeBikes: bikes()})), 0, 'no bike on turns Recommended routes off');
 });
 
 test('a climb with no value for an attribute survives every narrowing', async () => {
@@ -94,10 +99,10 @@ test('Bike-friendly on keeps only the stays with a cyclist label', async () => {
   assert.equal(bikeFriendlyMatch(undefined, true), false);
 });
 
-test('Bike-friendly narrows while it is ON, like the preference chip', async () => {
+test('Bike-friendly narrows while it is ON, the opposite of the others', async () => {
   const { narrowingCount } = await load();
   assert.equal(narrowingCount(state({bikeFriendlyOn: true})), 1);
-  assert.equal(narrowingCount(state({bikeFriendlyOn: true, prefFilterOn: true})), 2);
+  assert.equal(narrowingCount(state({bikeFriendlyOn: true, routeBikes: bikes('Road')})), 2);
 });
 
 test('a tile cyl value reads as the same label list', async () => {
@@ -114,20 +119,30 @@ test('routes for your bikes: a route for any chosen bike stays, an undeclared ro
   assert.equal(routeBikeMatch(['MTB'], road), false, 'only a declared non-overlap hides a route');
   assert.equal(routeBikeMatch([], road), true, 'unknown is not unsuitable');
   assert.equal(routeBikeMatch(undefined, road), true);
-  assert.equal(routeBikeMatch(['MTB'], new Set()), true, 'no bike chip on, no filter');
+  assert.equal(routeBikeMatch(['MTB'], new Set()), false, 'no bike chip on keeps no route');
+  assert.equal(routeBikeMatch([], new Set()), false, 'not even one that names no bike');
 });
 
-test('the remembered bike chips: the saved bikes at first, any bike type after, the old on/off read', async () => {
-  const { readPrefBikes } = await load();
+test('the route bikes start on the saved bikes, every bike when none is saved', async () => {
+  const { startBikes } = await load();
+  assert.deepEqual(startBikes(['Gravel', 'Road'], ALL_BIKES), ['Road', 'Gravel']);
+  assert.deepEqual(startBikes([], ALL_BIKES), ALL_BIKES, 'a visitor starts with every bike on');
+  assert.deepEqual(startBikes(['Unicycle'], ALL_BIKES), ALL_BIKES, 'an unknown saved bike counts as none');
+});
+
+test('the remembered route bikes: the start set at first, any bike type after, the old key read the old way', async () => {
+  const { readRouteBikes } = await load();
   const mine = ['Road'];
-  const all = ['Road', 'Gravel', 'MTB', 'E-bike', 'Handbike', 'Recumbent', 'Trike', 'Tandem'];
-  assert.deepEqual(readPrefBikes(null, mine, all), mine, 'first visit: the saved bikes on');
-  assert.deepEqual(readPrefBikes(null, [], all), [], 'a visitor starts with no bike chip on');
-  assert.deepEqual(readPrefBikes('on', mine, all), mine);
-  assert.deepEqual(readPrefBikes('off', mine, all), []);
-  assert.deepEqual(readPrefBikes('["MTB","Gravel","Unicycle"]', mine, all), ['Gravel', 'MTB'], 'a bike not saved can be on; an unknown type is dropped');
-  assert.deepEqual(readPrefBikes('[]', mine, all), []);
-  assert.deepEqual(readPrefBikes('{oops', mine, all), mine, 'an unreadable value reads as the first visit');
+  assert.deepEqual(readRouteBikes(null, null, mine, ALL_BIKES), mine, 'first visit: the saved bikes on');
+  assert.deepEqual(readRouteBikes(null, null, [], ALL_BIKES), ALL_BIKES, 'a visitor starts with every bike on');
+  assert.deepEqual(readRouteBikes('["MTB","Gravel","Unicycle"]', null, mine, ALL_BIKES), ['Gravel', 'MTB'], 'a bike not saved can be on; an unknown type is dropped');
+  assert.deepEqual(readRouteBikes('[]', null, mine, ALL_BIKES), mine, 'none on was the layer off; the map opens with it on');
+  assert.deepEqual(readRouteBikes('{oops', null, mine, ALL_BIKES), mine, 'an unreadable value reads as the first visit');
+  assert.deepEqual(readRouteBikes('["MTB"]', '[]', mine, ALL_BIKES), ['MTB'], 'the new key wins over the old one');
+  assert.deepEqual(readRouteBikes(null, '[]', mine, ALL_BIKES), ALL_BIKES, 'old empty list meant no filter: every bike');
+  assert.deepEqual(readRouteBikes(null, 'off', mine, ALL_BIKES), ALL_BIKES, 'old off meant no filter: every bike');
+  assert.deepEqual(readRouteBikes(null, 'on', mine, ALL_BIKES), mine);
+  assert.deepEqual(readRouteBikes(null, '["Gravel"]', mine, ALL_BIKES), ['Gravel']);
 });
 
 test('the stays count narrows with the stays chips, from the server\'s kept numbers', async () => {

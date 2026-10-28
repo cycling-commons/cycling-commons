@@ -297,8 +297,9 @@
          f-match / f-optin say which way a group narrows, and the pill's reset
          reads those classes. All four chip facets share attrMatch()'s rule
          (render.js): every chip on hides nothing, and deselecting one hides
-         items that cannot be confirmed to match. The preference chip is the
-         other kind - it narrows only while it is ON.
+         items that cannot be confirmed to match. The route bikes follow the
+         same direction: a chip that is on is used. Bike-friendly is the other
+         kind - it narrows only while it is ON.
 
          The Discipline chips (#disc) were RETIRED on 2026-08-03, the same call
          that removed the loop planner and the Freshness chips the day before
@@ -312,13 +313,13 @@
         <h3>{{ 'map.filters_head'|trans }}</h3>
 
         {# Routes for your bikes (map-and-search.md §4.4), first of the filters:
-           one chip per bike type, the rider's saved bikes on at first and every
-           chip changeable. Never silent - the chips are the visible "your bikes
-           are filtering routes" affordance and their own opt-out. #}
+           one chip per bike type, the rider's saved bikes on at first (every
+           bike when none is saved) and every chip changeable. A chip that is on
+           is used; the last one off turns Recommended routes off. #}
         <div id="prefGrp" hidden>
           <h4 class="fh">{{ 'map.pref_filter'|trans }}</h4>
           {# One chip per bike type; the rider's saved bikes start on (panels.js). #}
-          <div class="chips f-optin" id="prefBikes">
+          <div class="chips f-match" id="prefBikes">
             <span class="chip" data-v="Road" role="button" tabindex="0" aria-pressed="false">{{ 'map.bike_road'|trans }}</span><span class="chip" data-v="Gravel" role="button" tabindex="0" aria-pressed="false">{{ 'map.bike_gravel'|trans }}</span>
             <span class="chip" data-v="MTB" role="button" tabindex="0" aria-pressed="false">{{ 'map.bike_mtb'|trans }}</span><span class="chip" data-v="E-bike" role="button" tabindex="0" aria-pressed="false">{{ 'map.bike_ebike'|trans }}</span>
             <span class="chip" data-v="Handbike" role="button" tabindex="0" aria-pressed="false">{{ 'map.bike_handbike'|trans }}</span><span class="chip" data-v="Recumbent" role="button" tabindex="0" aria-pressed="false">{{ 'map.bike_recumbent'|trans }}</span>

@@ -14,7 +14,7 @@ import { covShownCount, coverageTotal, syncCoverageLayers, covIconFilter,
          COVERAGE_CCS, COVERAGE_ON, COVERAGE_KEYS } from './coverage.js';
 import { openDrawer, planPlace } from './drawer.js';
 import { NO_VALIDATE } from './tile-sources.js';
-import { attrMatch, bikeFriendlyMatch, tileLabels, routeBikeMatch, readPrefBikes, narrowingCount, climbChipsMatch, modeShows, placeKey, createShownAnyway } from './filters.js';
+import { attrMatch, bikeFriendlyMatch, tileLabels, routeBikeMatch, readRouteBikes, startBikes, narrowingCount, climbChipsMatch, modeShows, placeKey, createShownAnyway } from './filters.js';
 import { fanPin, fanOffsetOf, scheduleFanOut } from './pin-fan.js';
 import { plannerTakesLineClick } from './plan-state.js';
 
@@ -422,23 +422,37 @@ export function applyStaysAccessFilter(){
 }
 
 // docs/specs/map-and-search.md §4.4: Routes for your bikes, one chip per bike
-// type (BikeType), the rider's saved bikes on at first, any chip can be changed
-// and is remembered in this browser; unknown ≠ unsuitable.
+// type (BikeType), the rider's saved bikes on at first (every bike when none is
+// saved), any chip can be changed and is remembered in this browser; a chip that
+// is on is used, and unknown ≠ unsuitable.
 export const ALL_BIKES = ['Road','Gravel','MTB','E-bike','Handbike','Recumbent','Trike','Tandem'];
-export const PREF_FILTER_KEY = 'cc-pref-filter:'+(PREFS.uid||'anon');
-const storedPref = (()=>{ try{ return localStorage.getItem(PREF_FILTER_KEY); }catch(e){ return null; } })();
-let prefBikesOn = new Set(readPrefBikes(storedPref, PREFS.bikes, ALL_BIKES));
-export let prefFilterOn = prefBikesOn.size > 0;
-export const prefFilterEnabled = () => prefFilterOn;
+const ALL_BIKES_SET = new Set(ALL_BIKES);
+const ROUTE_BIKES_KEY = 'cc-route-bikes:'+(PREFS.uid||'anon');
+const LEGACY_BIKES_KEY = 'cc-pref-filter:'+(PREFS.uid||'anon');
+const readKey = k => { try{ return localStorage.getItem(k); }catch(e){ return null; } };
+let prefBikesOn = new Set(readRouteBikes(readKey(ROUTE_BIKES_KEY), readKey(LEGACY_BIKES_KEY), PREFS.bikes, ALL_BIKES));
 export const prefBikes = () => prefBikesOn;
 /** Set the bike chips that are on, kept to the map's bike types, and remember them. */
 export function setPrefBikes(list){
   prefBikesOn = new Set((list || []).filter(b => ALL_BIKES.includes(b)));
-  prefFilterOn = prefBikesOn.size > 0;
-  try{ localStorage.setItem(PREF_FILTER_KEY, JSON.stringify([...prefBikesOn])); }catch(e){ /* private mode */ }
+  try{ localStorage.setItem(ROUTE_BIKES_KEY, JSON.stringify([...prefBikesOn])); }catch(e){ /* private mode */ }
 }
-/** The rider's saved bikes on, or none (Show all). */
-export function setPrefFilter(on){ setPrefBikes(on ? PREFS.bikes : []); }
+/** The route bike chips as the state says, pressed or not. */
+export function paintPrefBikes(){
+  document.querySelectorAll('#prefBikes .chip').forEach(c=>{
+    const on=prefBikesOn.has(c.dataset.v);
+    c.classList.toggle('on', on); c.setAttribute('aria-pressed', on?'true':'false');
+  });
+}
+/* No route bike chip on is the Recommended routes switch off (panels.js turns it off with the last chip). Whatever
+   turns the switch on again, the layer row, Select all, a preset or a route opened from a link, brings back the
+   start set: the rider's saved bikes, every bike when none is saved. */
+function routeBikesFollowSwitch(){
+  if(!active.has('experience') || prefBikesOn.size) return;
+  setPrefBikes(startBikes(PREFS.bikes, ALL_BIKES));
+  paintPrefBikes();
+  updateCounts();
+}
 export function prefMatch(f){ return routeBikeMatch(f.bikeTypes, prefBikesOn); }
 /* Chip state in the shape filters.js takes, rebuilt each pass. */
 export function chipState(){
@@ -447,7 +461,7 @@ export function chipState(){
     traffic: {active: activeTraffic, all: ALL_TRAF},
     effort: {active: activeEffort, all: ALL_EFFORT},
     access: {active: activeAccess, all: ALL_ACCESS},
-    prefFilterOn,
+    routeBikes: {active: prefBikesOn, all: ALL_BIKES_SET},
     bikeFriendlyOn,
   };
 }
@@ -514,6 +528,7 @@ export function updateCounts(){
   document.dispatchEvent(new CustomEvent('cc:counts'));
 }
 export function render(){
+  routeBikesFollowSwitch();
   // Style not ready: skip — map 'load' runs render() itself.
   if(!styleReady()) return;
   markers.forEach(m=>m.remove()); markers=[];
