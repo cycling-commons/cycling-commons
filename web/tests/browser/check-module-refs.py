@@ -31,12 +31,78 @@ def strip(src):
     # builds its HTML as `...${escPend(x)}...`, and those ${} interiors are real
     # code. Blanking the whole literal hid a live `escPend is not defined` in
     # lightbox.js. Keep the interiors, drop only the literal text around them.
-    def _tpl(m):
-        return ';'.join(re.findall(r'\$\{([^{}]*)\}', m.group(0)))
-    src = re.sub(r'`(?:\\.|[^`\\])*`', _tpl, src)
+    # A template can sit inside another one's ${}, as in
+    # `<a href="${esc(`${cfg.href}?mode=add`)}">`: a regex pairs the wrong
+    # backticks there and reads the inner text (`mode`) as code, so the
+    # literals are walked instead.
+    src = _templates(src)
     src = re.sub(r"'(?:\\.|[^'\\\n])*'", "''", src)
     src = re.sub(r'"(?:\\.|[^"\\\n])*"', '""', src)
     return src
+
+def _templates(src):
+    """Every template literal replaced by its ${} interiors joined with `;`,
+    nested templates included. Example: `a${x}b${y(`c${z}`)}` gives
+    `x;y(z)`. A quoted string inside an interior is kept whole, so a brace in
+    it does not end the interior."""
+    out, i, n = [], 0, len(src)
+
+    def template(i):
+        # src[i] is the opening backtick; returns (code, index after the close).
+        parts, i = [], i + 1
+        while i < n and src[i] != '`':
+            if src[i] == '\\':
+                i += 2
+            elif src.startswith('${', i):
+                code, i = interior(i + 2)
+                parts.append(code)
+            else:
+                i += 1
+        return ';'.join(parts), i + 1
+
+    def interior(i):
+        # Code up to the matching }, with nested templates and quotes handled.
+        buf, depth = [], 0
+        while i < n:
+            c = src[i]
+            if c == '`':
+                code, i = template(i)
+                buf.append(code)
+                continue
+            if c in '\'"':
+                j = i + 1
+                while j < n and src[j] != c and src[j] != '\n':
+                    j += 2 if src[j] == '\\' else 1
+                buf.append(src[i:j + 1])
+                i = j + 1
+                continue
+            if c == '{':
+                depth += 1
+            elif c == '}':
+                if depth == 0:
+                    return ''.join(buf), i + 1
+                depth -= 1
+            buf.append(c)
+            i += 1
+        return ''.join(buf), i
+
+    while i < n:
+        c = src[i]
+        if c == '`':
+            code, i = template(i)
+            out.append(code)
+        elif c in '\'"':
+            # A quote outside a template is copied as is; it may hold a backtick.
+            j = i + 1
+            while j < n and src[j] != c and src[j] != '\n':
+                j += 2 if src[j] == '\\' else 1
+            out.append(src[i:j + 1])
+            i = j + 1
+        else:
+            out.append(c)
+            i += 1
+    return ''.join(out)
+
 
 def read(name):
     return io.open(os.path.join(ROOT, name), encoding='utf-8').read()
