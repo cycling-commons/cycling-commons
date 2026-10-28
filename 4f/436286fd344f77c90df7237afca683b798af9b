@@ -1,0 +1,55 @@
+web/tests/js/osm-tags.test.mjs
+  s_67793f5a47d54a::t_21754bda6a72eb 207-216
+pipeline/tests/test_tiles.py
+  s_67793f5a47d54a::t_21754bda6a72eb 130-133,153-156
+wiki/developers/gis/osm-to-database.md
+  s_67793f5a47d54a::t_4a2f6df1a8f5da 209-211,249
+  s_67793f5a47d54a::t_3bde450fda5e4a 243,248,250
+web/tests/Coverage/CoverageStayFacetCountTest.php
+  s_67793f5a47d54a::t_21754bda6a72eb 63-66,75
+docs/specs/data-source-register.md
+  s_67793f5a47d54a::t_4a2f6df1a8f5da 196
+wiki/developers/numbers.md
+  s_67793f5a47d54a::t_fccea3104df7e9 26-27
+docs/specs/coverage-provider.md
+  s_67793f5a47d54a::t_4a2f6df1a8f5da 220-222,228-229,232-234,240-245,802
+pipeline/coverage/contract.py
+  s_67793f5a47d54a::t_c84354b134c762 28
+pipeline/contract/coverage-contract.json
+  s_67793f5a47d54a::t_c84354b134c762 355,363-364
+web/migrations/Version20261028020000.php
+  s_67793f5a47d54a::t_8c786ba80f63b5 1-86
+web/assets/map/osm-tags.js
+  s_67793f5a47d54a::t_c84354b134c762 165-171,176-177,180-181
+pipeline/coverage/tiles.py
+  s_67793f5a47d54a::t_c84354b134c762 47-51,53,56-57,59-60
+web/src/Coverage/CoverageRepository.php
+  s_67793f5a47d54a::t_c84354b134c762 79
+web/src/Catalog/CatalogFormRegistry.php
+  s_67793f5a47d54a::t_c84354b134c762 151
+docs/specs/edit-items/O-where-to-sleep.md
+  s_67793f5a47d54a::t_8da27fd0b910d3 32
+docs/specs/map-and-search.md
+  s_67793f5a47d54a::t_71d9146cf611fc 1150-1151
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4f436286fd344f77c90df7237afca683b798af9b",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_67793f5a47d54a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "88348d02-d37c-4d89-afe7-71c6be4fa8c1",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
