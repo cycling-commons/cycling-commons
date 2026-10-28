@@ -147,21 +147,21 @@ input.is-invalid{border-bottom-color:var(--clay)}
 /* Map presets (docs/specs/map-presets.md section 4) */
 #map-presets .help{font-size:.90rem;color:#595c4d;line-height:1.5;margin:0 0 .9rem;max-width:68ch}
 #map-presets .mp-foot .help,#map-presets .mp-list .help{margin:0}
-.mp-list{display:grid;gap:.7rem}
-.mp-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.3rem .9rem;background:#fff8ea;border:1px solid rgba(20,22,14,.12);border-radius:9px;padding:.75rem .9rem}
+.mp-list{display:grid;gap:1rem}
+.mp-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.75rem 1rem;background:#fff8ea;border:1px solid rgba(20,22,14,.12);border-radius:9px;padding:1.1rem 1.3rem}
 .mp-card.default{border-color:var(--trail);box-shadow:inset 3px 0 0 var(--trail)}
 .mp-nm{font-family:var(--serif);font-weight:700;font-size:1.02rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
-.mp-tag{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;background:var(--trail);color:var(--ink);padding:.12rem .4rem;border-radius:3px}
-.mp-sum{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:.3rem;font-size:.8rem}
-.mp-chip{display:inline-flex;align-items:center;gap:.3rem;background:#efe6d4;border-radius:4px;padding:.12rem .45rem}
-.mp-ic{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:4px;background:var(--c);color:var(--ic,#fff);flex:none}
-.mp-ic svg{width:11px;height:11px}
+.mp-tag{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;background:#F6B898;color:var(--ink);border:1px solid #C2410C;padding:.12rem .4rem;border-radius:3px}
+.mp-sum{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:.5rem;font-size:.85rem}
+.mp-chip{display:inline-flex;align-items:center;gap:.45rem;background:#efe6d4;border-radius:4px;padding:.38rem .7rem}
+.mp-ic{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;background:var(--c);color:var(--ic,#fff);flex:none}
+.mp-ic svg{width:14px;height:14px}
 .mp-acts{display:flex;gap:.4rem;align-items:start}
 .mp-acts button{background:transparent;border:1px solid rgba(20,22,14,.25);border-radius:4px;font-family:var(--mono);font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;padding:.28rem .5rem;cursor:pointer;color:var(--ink)}
-.mp-foot{display:flex;justify-content:flex-start;align-items:center;margin:.8rem 0 0;gap:.9rem}
+.mp-foot{display:flex;justify-content:flex-start;align-items:center;margin:1.1rem 0 0;gap:.9rem}
 .btn.ghost{background:transparent;color:var(--ink);border:1px solid rgba(20,22,14,.3);font-weight:500}
 .btn.ghost:hover{background:rgba(20,22,14,.05)}
-.mp-editor{margin-top:.9rem;background:#fff8ea;border:1px dashed rgba(20,22,14,.3);border-radius:9px;padding:.9rem 1rem}
+.mp-editor{margin-top:.9rem;background:#fff8ea;border:1px dashed rgba(20,22,14,.3);border-radius:9px;padding:1.1rem 1.3rem}
 .mp-editor[hidden]{display:none}
 /* the page's own underline input, as narrow as the page's other fields */
 #mpName{max-width:22rem}
@@ -180,7 +180,8 @@ input.is-invalid{border-bottom-color:var(--clay)}
 .mp-tog[aria-checked=true]::after{left:16px}
 .mp-pchips{display:flex;flex-wrap:wrap;gap:.35rem}
 .mp-pchip{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;padding:.28rem .6rem;border:1px solid rgba(20,22,14,.3);border-radius:30px;cursor:pointer;background:transparent;color:var(--ink)}
-.mp-pchip.on{background:var(--trail);border-color:var(--trail)}
+/* Full trail orange on cream glares behind small text: the map's peach fill with a deep-orange edge (map.css --chip-on-bg). */
+.mp-pchip.on{background:#F6B898;border-color:#C2410C}
 .mp-facet{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;margin:.3rem 0}
 .mp-flbl{font-size:.8rem;color:#5a5d4d;margin-right:.2rem}
 .mp-default{display:flex;gap:.5rem;align-items:center;font-size:.88rem;cursor:pointer;margin-top:.6rem}
