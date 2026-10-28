@@ -1,0 +1,33 @@
+tools/composer-audit-prepush.sh
+  s_67793f5a47d54a::t_ee8c3a1e5edd5d 7
+  s_67793f5a47d54a::t_796c22ab2e0912 1-6,8-32
+.pre-commit-config.yaml
+  s_67793f5a47d54a::t_eba247e83a94f3 69-80
+CONTRIBUTING.md
+  s_67793f5a47d54a::t_eba247e83a94f3 194-199
+docs/specs/dev-environment.md
+  s_67793f5a47d54a::t_eba247e83a94f3 496-502
+web/composer.lock
+  s_67793f5a47d54a::t_9d96850fb8b4dd 5950,5954,5958-5959,6015,6035,6611,6615,6619-6620,6672,6692,12482,12486,12490-12491,12516,12562,12570,13774,13778,13782-13783,13790,13795,13819,13839
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b8df9cbb574fa19c92b13afdb6fa17bda82c3294",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_67793f5a47d54a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "88348d02-d37c-4d89-afe7-71c6be4fa8c1",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
