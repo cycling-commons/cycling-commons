@@ -5533,6 +5533,7 @@ changelog:
   v0913_road_editor: "<b>Adding a road surface.</b> The line between your two taps follows the road you tapped, also where bikes may not ride. The form names the OpenStreetMap roads under the line and fills in the road's name and type."
   v0913_add_here: "<b>Add from the map.</b> Right-click the map to add a road surface, a water stop or any other place right there."
   v0913_bike_chips: "<b>Chips that mean what they show.</b> A season or bike chip that is on is used, and one that is off is not, in Best of, in Routes for your bikes and in your presets. Turn every bike off under Routes for your bikes, and Recommended routes switches off too."
+  v0913_bike_friendly: "<b>Bike-friendly stays riders vouch for.</b> The Bike-friendly chip now also shows a stay where a rider found a locked room or a garage for the bike, and it finds more Bett+Bike and Accueil Vélo stays."
   v0913_population: "<b>Where a population comes from.</b> A region's population can carry a link to its source."
   v0913_fixes: "<b>Among smaller fixes:</b> on a phone, the planner's guide no longer hides behind the left drawer, a click on a road no longer moves the map, and the add form's map opens where you were looking."
   v0913_curator_review: "<b>Correct before you approve.</b> You can correct or confirm a rider's new place before you approve it, and your confirmation counts when you do."

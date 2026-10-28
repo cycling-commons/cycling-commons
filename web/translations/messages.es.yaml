@@ -5543,6 +5543,7 @@ changelog:
   v0913_road_editor: "<b>Añadir un firme.</b> La línea entre tus dos toques sigue la carretera que tocaste, también donde las bicis no pueden circular. El formulario nombra las carreteras de OpenStreetMap bajo la línea y rellena el nombre y el tipo de la carretera."
   v0913_add_here: "<b>Añadir desde el mapa.</b> Haz clic derecho en el mapa para añadir allí un firme, un punto de agua o cualquier otro lugar."
   v0913_bike_chips: "<b>Chips que hacen lo que muestran.</b> Un chip de temporada o de bici activado cuenta, y uno desactivado no, en Lo mejor, en Rutas para tus bicis y en tus preajustes. Desactiva todas las bicis en Rutas para tus bicis y las Rutas recomendadas se desactivan también."
+  v0913_bike_friendly: "<b>Alojamientos aptos para ciclistas, según los ciclistas.</b> El chip Apto para ciclistas muestra ahora también un alojamiento donde un ciclista encontró una sala cerrada o un garaje para la bici, y encuentra más alojamientos Bett+Bike y Accueil Vélo."
   v0913_population: "<b>De dónde viene una población.</b> La población de una región puede llevar un enlace a su fuente."
   v0913_fixes: "<b>Entre las correcciones menores:</b> en un teléfono, la guía del planificador ya no se esconde detrás del cajón izquierdo, un clic en una carretera ya no mueve el mapa, y el mapa del formulario para añadir se abre donde estabas mirando."
   v0913_curator_review: "<b>Corregir antes de aprobar.</b> Puedes corregir o confirmar el nuevo lugar de un ciclista antes de aprobarlo, y tu confirmación cuenta cuando lo haces."
