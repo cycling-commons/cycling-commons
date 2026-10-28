@@ -917,7 +917,6 @@ settings:
   presets_delete_confirm: "Deze preset verwijderen?"
   presets_name: "Naam"
   presets_facets: "Facetten per laag"
-  presets_facets_help: "Een facet met alle chips aan blijft zoals de kaart hem heeft."
   presets_use_for: "Gebruik deze preset voor"
   presets_use_map: "Standaard"
   presets_use_plan: "Rit plannen"
@@ -1214,6 +1213,7 @@ map:
   confirmed: 'Bevestigd'
   everything: 'Alles'
   all_bikes: 'Alle fietsen'
+  no_bike: "Geen fiets"
   season_spring: 'Lente'
   season_summer: 'Zomer'
   season_autumn: 'Herfst'
@@ -1586,6 +1586,7 @@ map:
   best_season: 'Beste van · seizoen'
   best_bike: 'Beste van · fiets'
   all_seasons: 'Alle seizoenen'
+  no_season: "Geen seizoen"
   filters_hide: 'Filters verbergen {x} plaatsen'
   filters_hide_one: 'Filters verbergen 1 plaats'
   filters_narrowing: 'Filters beperken deze kaart'

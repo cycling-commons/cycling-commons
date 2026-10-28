@@ -42,8 +42,10 @@
     out.push(`<span class="mp-chip"><i class="mp-ic" style="--c:#101E16"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm0 4.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7Z" fill="currentColor"/></svg></i>${esc((CAT.modes || {})[s.mode] || s.mode)}</span>`);
     (CAT.layers || []).forEach(l => { if ((s.layers || []).includes(l.key)) out.push(`<span class="mp-chip">${icon(l.svg, l.color)}${esc(l.label)}</span>`); });
     (CAT.overlays || []).forEach(o => { if ((s.overlays || []).includes(o.key)) out.push(`<span class="mp-chip">${icon(o.svg, o.color, '#101E16')}${esc(o.label)}</span>`); });
-    (s.seasons || []).forEach(v => out.push(`<span class="mp-chip">${esc(seasonLabel(v))}</span>`));
-    (s.bikes || []).forEach(v => out.push(`<span class="mp-chip">${esc(bikeLabel(v))}</span>`));
+    // Every chip of a row on reads as one "All seasons" / "All bikes" chip; none on adds no chip.
+    const row = (on, all, allText, label) => (on.length && on.length === all.length) ? out.push(`<span class="mp-chip">${esc(allText)}</span>`) : on.forEach(v => out.push(`<span class="mp-chip">${esc(label(v))}</span>`));
+    row(s.seasons || [], CAT.seasons || [], T.allSeasons || 'All seasons', seasonLabel);
+    row(s.bikes || [], CAT.bikes || [], T.allBikes || 'All bikes', bikeLabel);
     return out.join('');
   }
 
@@ -59,7 +61,7 @@
   }
 
   function openEditor(p) {
-    editing = p ? JSON.parse(JSON.stringify(p)) : { id: null, name: '', uses: presets.length === 0 ? ['map'] : [], settings: { mode: 'all', layers: (CAT.layers || []).map(l => l.key), overlays: [], seasons: [], bikes: [], facets: {}, bikeFriendly: false } };
+    editing = p ? JSON.parse(JSON.stringify(p)) : { id: null, name: '', uses: presets.length === 0 ? ['map'] : [], settings: { mode: 'all', layers: (CAT.layers || []).map(l => l.key), overlays: [], seasons: (CAT.seasons || []).map(x => x.value), bikes: (CAT.bikes || []).map(x => x.value), facets: {}, bikeFriendly: false } };
     const s = editing.settings;
     const ed = $('mpEditor'); ed.hidden = false;
     $('mpName').value = editing.name;
@@ -77,7 +79,15 @@
     const bf = CAT.bikeFriendly || {};
     $('mpBikeFriendly').innerHTML = chip('yes', bf.chip || 'Bike-friendly', s.bikeFriendly === true);
     $('mpUse').innerHTML = CTX.map(c => chip(c, useLabel(c), usesOf(editing).includes(c))).join('');
+    dimEmptyRows();
     ed.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  /* A chip row with no chip on uses nothing on the map, so the row is dimmed: the season, bike, surface and route
+     rows as a whole field, each facet as its own line. "Use this preset for" and the single Stays chip stay as
+     they are: none on is an ordinary state there. */
+  function dimEmptyRows() {
+    ['mpSeasons', 'mpBikes', 'mpSurfaces', 'mpRoutes'].forEach(id => { const el = $(id); el.closest('.field').classList.toggle('mp-none', !el.querySelector('.mp-pchip.on')); });
+    $('mpFacets').querySelectorAll('.mp-facet').forEach(f => f.classList.toggle('mp-none', !f.querySelector('.mp-pchip.on')));
   }
   function readEditor() {
     const s = editing.settings;
@@ -102,7 +112,7 @@
   $('mpCancel').addEventListener('click', () => { $('mpEditor').hidden = true; editing = null; });
   $('mpMode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $('mpMode').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); });
   ['mpLayers', 'mpOverlays'].forEach(id => $(id).addEventListener('click', e => { const t = e.target.closest('.mp-tog'); if (!t) return; const row = t.closest('.mp-row'), on = t.getAttribute('aria-checked') !== 'true'; t.setAttribute('aria-checked', String(on)); row.classList.toggle('off', !on); }));
-  ['mpSeasons', 'mpBikes', 'mpFacets', 'mpBikeFriendly', 'mpUse', 'mpSurfaces', 'mpRoutes'].forEach(id => $(id).addEventListener('click', e => { const c = e.target.closest('.mp-pchip'); if (c) c.classList.toggle('on'); }));
+  ['mpSeasons', 'mpBikes', 'mpFacets', 'mpBikeFriendly', 'mpUse', 'mpSurfaces', 'mpRoutes'].forEach(id => $(id).addEventListener('click', e => { const c = e.target.closest('.mp-pchip'); if (c) { c.classList.toggle('on'); dimEmptyRows(); } }));
   $('mpUse').addEventListener('click', e => {
     const c = e.target.closest('.mp-pchip'); if (!c) return;
     const on = [...$('mpUse').querySelectorAll('.mp-pchip.on')].map(x => useLabel(x.dataset.v));

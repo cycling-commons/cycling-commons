@@ -917,7 +917,6 @@ settings:
   presets_delete_confirm: "Diese Voreinstellung löschen?"
   presets_name: "Name"
   presets_facets: "Facetten je Ebene"
-  presets_facets_help: "Eine Facette, bei der alle Chips an sind, bleibt so, wie die Karte sie hat."
   presets_use_for: "Diese Voreinstellung verwenden für"
   presets_use_map: "Standard"
   presets_use_plan: "Fahrt planen"
@@ -1217,6 +1216,7 @@ map:
   confirmed: 'Bestätigt'
   everything: 'Alles'
   all_bikes: 'Alle Räder'
+  no_bike: "Kein Rad"
   season_spring: 'Frühling'
   season_summer: 'Sommer'
   season_autumn: 'Herbst'
@@ -1589,6 +1589,7 @@ map:
   best_season: 'Das Beste · Saison'
   best_bike: 'Das Beste · Rad'
   all_seasons: 'Alle Jahreszeiten'
+  no_season: "Keine Jahreszeit"
   filters_hide: 'Filter verbergen {x} Orte'
   filters_hide_one: 'Filter verbergen 1 Ort'
   filters_narrowing: 'Filter schränken diese Karte ein'

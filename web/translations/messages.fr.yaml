@@ -915,7 +915,6 @@ settings:
   presets_delete_confirm: "Supprimer ce préréglage ?"
   presets_name: "Nom"
   presets_facets: "Facettes par couche"
-  presets_facets_help: "Une facette dont toutes les puces sont actives reste telle que la carte la tient."
   presets_use_for: "Utiliser ce préréglage pour"
   presets_use_map: "Par défaut"
   presets_use_plan: "Planifier une sortie"
@@ -1212,6 +1211,7 @@ map:
   confirmed: 'Confirmé'
   everything: 'Tout'
   all_bikes: 'Tous vélos'
+  no_bike: "Aucun vélo"
   season_spring: 'Printemps'
   season_summer: 'Été'
   season_autumn: 'Automne'
@@ -1584,6 +1584,7 @@ map:
   best_season: 'Meilleur de · saison'
   best_bike: 'Meilleur de · vélo'
   all_seasons: 'Toutes les saisons'
+  no_season: "Aucune saison"
   filters_hide: 'Les filtres masquent {x} lieux'
   filters_hide_one: 'Les filtres masquent 1 lieu'
   filters_narrowing: 'Les filtres restreignent cette carte'

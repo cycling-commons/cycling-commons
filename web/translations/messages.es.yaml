@@ -920,7 +920,6 @@ settings:
   presets_delete_confirm: "¿Borrar este preajuste?"
   presets_name: "Nombre"
   presets_facets: "Facetas por capa"
-  presets_facets_help: "Una faceta con todos los chips activos se deja como la tiene el mapa."
   presets_use_for: "Usar este preajuste para"
   presets_use_map: "Predeterminado"
   presets_use_plan: "Planificar una salida"
@@ -1821,6 +1820,7 @@ map:
   confirmed: 'Confirmado'
   everything: 'Todo'
   all_bikes: 'Todas las bicis'
+  no_bike: "Ninguna bici"
   season_spring: 'Primavera'
   season_summer: 'Verano'
   season_autumn: 'Otoño'
@@ -2197,6 +2197,7 @@ map:
   best_season: 'Lo mejor · temporada'
   best_bike: 'Lo mejor · bici'
   all_seasons: 'Todas las temporadas'
+  no_season: "Ninguna temporada"
   filters_hide: 'Los filtros ocultan {x} lugares'
   filters_hide_one: 'Los filtros ocultan 1 lugar'
   filters_narrowing: 'Los filtros están limitando este mapa'

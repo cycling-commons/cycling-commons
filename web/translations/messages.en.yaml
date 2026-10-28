@@ -917,7 +917,6 @@ settings:
   presets_delete_confirm: "Delete this preset?"
   presets_name: "Name"
   presets_facets: "Per-layer facets"
-  presets_facets_help: "A facet with every chip on is left as the map has it."
   presets_use_for: "Use this preset for"
   presets_use_map: "Default"
   presets_use_plan: "Plan a ride"
@@ -1815,6 +1814,7 @@ map:
   confirmed: 'Confirmed'
   everything: 'Everything'
   all_bikes: 'All bikes'
+  no_bike: "No bike"
   season_spring: 'Spring'
   season_summer: 'Summer'
   season_autumn: 'Autumn'
@@ -2190,6 +2190,7 @@ map:
   best_season: 'Best of · season'
   best_bike: 'Best of · bike'
   all_seasons: 'All seasons'
+  no_season: "No season"
   filters_hide: 'Filters are hiding {x} places'
   filters_hide_one: 'Filters are hiding 1 place'
   filters_narrowing: 'Filters are narrowing this map'

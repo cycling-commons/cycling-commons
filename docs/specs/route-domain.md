@@ -915,7 +915,9 @@ absent list narrows by nothing** — no seasons aggregates across every season,
 no bikes across every bike type. Unknown parts are dropped rather than
 rejected, the same forgiving rule the `region` CSV follows, so a stale
 bookmark degrades to a wider answer instead of a 400; the literal `all` is
-accepted for `bike` and means the same as omitting it.
+accepted for `bike` and means the same as omitting it. The map sends an empty
+list only when every chip of the row is on, and sends no request when none is
+(map-and-search.md §4.0, `bestOfParam()`).
 
 Response: `{season: [...], bike: [...], ids}` — the echoed facets are LISTS,
 and the ranked route ids come best first, with **rank encoded by array

@@ -44,7 +44,10 @@ The settings, as stored and as sent (`MapPreset::settings`, JSON):
   surface has no layer row, the `surface` overlay switches it, owner
   2026-10-21; a preset saved with it as a layer loses it there). `overlays` lists the overlay
   rows that are on, `surface` and `routes`. `seasons` and `bikes` are the
-  Best of chips that are on (`BikeType` values; season words lower-case).
+  Best of chips that are on (`BikeType` values; season words lower-case):
+  every one is every season or bike, an empty list is none, and Best of then
+  shows no route. A new preset holds every one; `Version20261028010000`
+  sets a stored empty list to every one.
   `facets` maps a chip group id (`sqf`, `trf`, `effortf`, `accessf`) to the
   chip values that are on; a group that is absent is left as it is, every
   chip on. `bikeFriendly` is the stays Bike-friendly chip (`#labelf`), `true`
@@ -136,6 +139,16 @@ profile.
   with their icons; the key's surface and route rows; the season and bike
   chips; the facet chips; and the Stays for cyclists chip. Save and
   Cancel. An off switch is not faded: the switch says it.
+- Every chip row follows one rule: a chip that is on is used on the map, one
+  that is off is not. Best of season and bike chips, the key's rows and the
+  facets alike. A row with no chip on uses nothing, so the editor dims it
+  (`.mp-none`, `dimEmptyRows()`): the season, bike, surface and route rows
+  as a whole field, each facet as its own line. "Use this preset for" and
+  the Stays chip are never dimmed: none on is an ordinary state there. A
+  card names a row with every chip on once, as "All seasons" or "All
+  bikes". Example: a preset with every bike on and
+  "Very steep" off shows Best of routes for every bike and no very steep
+  climb; with no bike on it shows no Best of route.
 - A "Use this preset for" chip fills the name: switched on, its label goes
   into an empty name, or into a name a chip put there; switched off while the
   name is its label, the name becomes the first tool still on, else empty. A

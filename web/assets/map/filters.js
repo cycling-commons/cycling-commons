@@ -56,6 +56,16 @@ export function readPrefBikes(stored, riderBikes, allBikes){
   }catch(e){ return mine.slice(); }
 }
 
+/* A Best of chip row as the /map/best-of query reads it (docs/specs/map-and-search.md §4.0): a chip that is on is
+   used, one that is off is not, as in every chip row. null when none is on: no Best of route can show, so nothing is
+   asked. '' when every chip is on: the server reads an empty list as the whole vocabulary. Else the CSV of the ones on.
+   Example: seasons on ['summer'] of four → 'summer'; all four → ''; none → null. */
+export function bestOfParam(on, all){
+  const picked = (all || []).filter(v => (on || []).includes(v));
+  if(!picked.length) return null;
+  return picked.length === all.length ? '' : picked.join(',');
+}
+
 /** A chip group narrows the map exactly when something in it is deselected. */
 export function narrowed(activeSet, allSet){
   return !!(activeSet && allSet) && activeSet.size < allSet.size;

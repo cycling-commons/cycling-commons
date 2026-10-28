@@ -370,7 +370,7 @@
       <div class="field"><label>{{ 'map.route_network'|trans }}</label><div class="mp-pchips" id="mpRoutes"></div></div>
       <div class="field"><label>{{ 'map.best_season'|trans }}</label><div class="mp-pchips" id="mpSeasons"></div></div>
       <div class="field"><label>{{ 'map.best_bike'|trans }}</label><div class="mp-pchips" id="mpBikes"></div></div>
-      <div class="field"><label>{{ 'settings.presets_facets'|trans }}</label><div id="mpFacets"></div><p class="help">{{ 'settings.presets_facets_help'|trans }}</p></div>
+      <div class="field"><label>{{ 'settings.presets_facets'|trans }}</label><div id="mpFacets"></div></div>
       <div class="field"><label>{{ 'map.stay_for_cyclists'|trans }}</label><div class="mp-pchips" id="mpBikeFriendly"></div></div>
       <div class="help" id="mpStatus" hidden></div>
       <div class="submit-row mp-actions"><button type="button" class="btn ghost" id="mpCancel">{{ 'settings.presets_cancel'|trans }}</button><button type="button" class="btn" id="mpSave">{{ 'settings.presets_save'|trans }}</button></div>
@@ -547,6 +547,7 @@
     token: csrf_token('map-preset'),
     strings: {
       none: 'settings.presets_none'|trans, count: 'settings.presets_count'|trans,
+      allSeasons: 'map.all_seasons'|trans, allBikes: 'map.all_bikes'|trans,
       edit: 'settings.presets_edit'|trans, makeDefault: 'settings.presets_make_default'|trans, 'delete': 'settings.presets_delete'|trans,
       deleteConfirm: 'settings.presets_delete_confirm'|trans, failed: 'map.presets_failed'|trans, full: 'map.presets_full'|trans,
       uses: {map: 'settings.presets_use_map'|trans, plan: 'settings.presets_use_plan'|trans, ride: 'settings.presets_use_ride'|trans, scout: 'settings.presets_use_scout'|trans}

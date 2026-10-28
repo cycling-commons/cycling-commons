@@ -18,7 +18,7 @@ import { refilterClusters, updateConfMarkers } from './osm-pools.js';
 import { trafficLayerAvailable, setTrafficLayer, trafficLayerVisible } from './traffic-layer.js';
 import { roadSafetyLayerAvailable, setRoadSafetyLayer, roadSafetyLayerVisible, roadSafetyKeyShown } from './road-safety.js';
 import { curScope, inScope } from './scope-ui.js';
-import { modeToShow } from './filters.js';
+import { modeToShow, bestOfParam } from './filters.js';
 import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible,
          toggleSurfaceClass, setStudyMode, studyModeOn,
          setGapsGrid, gapsGridOn, CLASSIFIED_MIN_ZOOM, GAPS_MAX_ZOOM } from './surface-tiles.js';
@@ -28,16 +28,17 @@ import { setFilterDot } from './shell.js';
 import { newestStamp } from './tile-sources.js';
 
 // `app` is assigned by initRailChrome(), so it cannot stay a const inside it.
-// Best-of facets are multi-select chip rows read from the DOM. Empty = wide.
+// Best-of facets are multi-select chip rows read from the DOM: a chip that is on is used, as in every chip row.
 let app;
 let _bestOfReq=0;
-const facet = id => {
+const facet = (id, sel) => {
   const el=document.getElementById(id);
   if(!el) return [];
-  return [...el.querySelectorAll('.chip.on')].map(c=>c.dataset.v);
+  return [...el.querySelectorAll(sel)].map(c=>c.dataset.v);
 };
-const boSeasons = () => facet('boSeason');
-const boBikes = () => facet('boBike');
+const boSeasons = () => facet('boSeason', '.chip.on');
+const boBikes = () => facet('boBike', '.chip.on');
+const boParam = id => bestOfParam(facet(id, '.chip.on'), facet(id, '.chip'));
 
 export function initLayerList(){
   // Categories in reading order (catalog.js): utilities, then votable.
@@ -288,7 +289,7 @@ export function initFilterPill(){
     if(prefFilterEnabled()) setPrefFilter(false);
     syncFacetChips();
     applyStaysAccessFilter();
-    // Best-of facets are f-optin too — the only reset the server must hear.
+    // Best-of facets are f-match too, all chips back on: the only reset the server must hear.
     updateSubtitle();
     refreshBestOf();
     render();
@@ -380,12 +381,12 @@ function updateSubtitle(){
   if(mode()==='all'){ sub.textContent=I18N.subEverything||'Everything · full catalog'; return; }
   // Confirmed is its own rung, not Best of with the season and bike facets.
   if(mode()==='confirmed'){ sub.textContent=I18N.subConfirmed||'Confirmed · places somebody checked'; return; }
-  // Empty facet = whole vocabulary.
-  const seasons=boSeasons(), bikes=boBikes();
-  const sTxt = seasons.length ? seasons.map(v=>CC_SEASON_LABEL[v]||v).join(', ')
-    : (I18N.allSeasons||'All seasons');
-  const bTxt = bikes.length ? bikes.map(v=>CC_BIKE_LABEL[v]||v).join(', ')
-    : (I18N.allBikes||'All bikes');
+  // Every chip on = the whole vocabulary; none on = none, and Best of shows nothing.
+  const seasons=boSeasons(), bikes=boBikes(), sP=boParam('boSeason'), bP=boParam('boBike');
+  const sTxt = null===sP ? (I18N.noSeason||'No season') : ''===sP ? (I18N.allSeasons||'All seasons')
+    : seasons.map(v=>CC_SEASON_LABEL[v]||v).join(', ');
+  const bTxt = null===bP ? (I18N.noBike||'No bike') : ''===bP ? (I18N.allBikes||'All bikes')
+    : bikes.map(v=>CC_BIKE_LABEL[v]||v).join(', ');
   sub.textContent=`${I18N.curated||'Best of'} · ${sTxt} · ${bTxt}`;
 }
 
@@ -401,10 +402,12 @@ export function refreshBestOf(){
   const req=++_bestOfReq;
   if(mode()!=='curated'){ render(); return; }
   // Named region: &region=<id>. My area: derived rid CSV (docs/specs/map-and-search.md §4.5).
-  // Country/Everywhere: no region. Empty facet CSV = narrow by nothing.
+  // Country/Everywhere: no region. A row with every chip on sends '' (narrow by nothing); a row with none on asks nothing.
+  const season=boParam('boSeason'), bike=boParam('boBike');
+  if(null===season || null===bike){ applyBestOf([]); return; }
   const regionIds = window.CCScope && window.CCScope.bestOfRegionIds();
   const regionQ = (regionIds && regionIds.length) ? `&region=${encodeURIComponent(regionIds.join(','))}` : '';
-  fetch(`/map/best-of?season=${encodeURIComponent(boSeasons().join(','))}&bike=${encodeURIComponent(boBikes().join(','))}${regionQ}`,
+  fetch(`/map/best-of?season=${encodeURIComponent(season)}&bike=${encodeURIComponent(bike)}${regionQ}`,
     {credentials:'same-origin', headers:{'Accept':'application/json'}})
     .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
     .then(d=>{ if(req===_bestOfReq) applyBestOf(d.ids); })
@@ -481,8 +484,7 @@ export function liftModeFor(layer, f, {also}={}){
 }
 
 export function initChips(){
-  /* Opening best-of facets: season = today; bike = every bike on the profile
-     (empty = server ranks all bikes). */
+  /* Opening best-of facets: season = today; bike = every bike on the profile, every bike when it holds none. */
   (function openFacets(){
     const season=document.getElementById('boSeason');
     if(season){
@@ -490,8 +492,8 @@ export function initChips(){
       season.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on', c.dataset.v===now));
     }
     const bike=document.getElementById('boBike');
-    if(bike && PREFS.bikes.length){
-      bike.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on', PREFS.bikes.includes(c.dataset.v)));
+    if(bike){
+      bike.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on', !PREFS.bikes.length || PREFS.bikes.includes(c.dataset.v)));
     }
   })();
 

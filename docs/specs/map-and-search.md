@@ -314,13 +314,19 @@ map module opens `#drawer` behind its back.
 
     Both are **multi-select chip rows**, not single-value dropdowns (owner
     2026-08-20: "no multiple select option as in my profile"). They open on
-    the season we are in today and on EVERY bike the rider's profile carries,
-    and both are `.f-optin`: a ticked chip narrows, so their widest state is
-    EMPTY and the server reads an empty list as the whole vocabulary
-    (route-domain.md §8.1). Marking them `.f-match` would make the pill's Show
-    all tick every season and every bike, the opposite of widest, which is why
-    the class is pinned by a test. Show all is also the one reset in this block
-    that must reach the SERVER, because the ranking is computed there.
+    the season we are in today and on EVERY bike the rider's profile carries
+    (every bike when it carries none). They follow the rule of every chip row:
+    a chip that is on is used, one that is off is not. Both are `.f-match`, so
+    their widest state is every chip on and the pill's Show all ticks them all.
+    `bestOfParam()` (`filters.js`) turns a row into the query: every chip on
+    sends an empty list, which the server reads as the whole vocabulary
+    (route-domain.md §8.1); some on send those; none on asks nothing and Best
+    of shows no route. Example: seasons Summer only and every bike on asks
+    `season=summer&bike=`; with no bike on, the subtitle reads "Best of ·
+    Summer · No bike" and no route is drawn. The class and the rule are pinned
+    by `rail-shell.test.cjs` and `best-of-chips.test.mjs`. Show all is also the
+    one reset in this block that must reach the SERVER, because the ranking is
+    computed there.
 
     **A filter only appears when its layer can be filtered** (owner 2026-08-20:
     "still find the filter too crowded"). Climb surface, traffic and effort
@@ -638,8 +644,9 @@ to 4.4 saved under a name, [map-presets.md](map-presets.md).
   until a ranked-list UI consumes it. Facet switches are race-guarded (`_bestOfReq`
   token); on fetch failure Curated shows no picks rather than a stale set.
 - The facets open on today's season and on every bike the rider's profile
-  carries (`CC_PREFS.bikes`); with none, the bike row is empty and the server
-  ranks all bikes (§4.0).
+  carries (`CC_PREFS.bikes`); with none, every bike chip is on and the server
+  ranks all bikes (§4.0). A row with no chip on asks nothing: Best of shows
+  no route.
 
 **NAMING: the mode is called "Best of" to riders, `curated` to the code.**
 Riders never see the word *Curated* as a mode name in any locale: it is

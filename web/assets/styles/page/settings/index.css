@@ -182,6 +182,8 @@ input.is-invalid{border-bottom-color:var(--clay)}
 .mp-pchip{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;padding:.28rem .6rem;border:1px solid rgba(20,22,14,.3);border-radius:30px;cursor:pointer;background:transparent;color:var(--ink)}
 /* Full trail orange on cream glares behind small text: the map's peach fill with a deep-orange edge (map.css --chip-on-bg). */
 .mp-pchip.on{background:#F6B898;border-color:#C2410C}
+/* A chip row with no chip on uses nothing on the map (map-presets.js dimEmptyRows). */
+.mp-editor .mp-none{opacity:.45}
 .mp-facet{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;margin:.3rem 0}
 .mp-flbl{font-size:.8rem;color:#5a5d4d;margin-right:.2rem}
 .mp-default{display:flex;gap:.5rem;align-items:center;font-size:.88rem;cursor:pointer;margin-top:.6rem}
