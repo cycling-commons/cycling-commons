@@ -5,6 +5,17 @@
 // labels and icons, the endpoints and the token as window.CC_PRESETS_PAGE.
 (function () {
   'use strict';
+  /* The name a "Use this preset for" chip puts in the name field. A name the rider typed stays; an empty name, or
+     one a chip put there (any tool's label), follows the chip: switched on, its label; switched off while the name
+     is its label, the first tool still on, else empty. Example: Check my ride on → "Check my ride". */
+  function suggestName(name, label, on, onLabels, useLabels) {
+    const cur = String(name == null ? '' : name).trim();
+    if (cur !== '' && !useLabels.includes(cur)) return name;
+    if (on) return label;
+    return cur === label ? (onLabels[0] || '') : name;
+  }
+  if (typeof module !== 'undefined' && module.exports) module.exports = { suggestName };
+  if (typeof document === 'undefined') return;
   const CFG = window.CC_PRESETS_PAGE || {};
   const CAT = window.CC_PRESET_CATALOG || {};
   const T = CFG.strings || {};
@@ -92,6 +103,11 @@
   $('mpMode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $('mpMode').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); });
   ['mpLayers', 'mpOverlays'].forEach(id => $(id).addEventListener('click', e => { const t = e.target.closest('.mp-tog'); if (!t) return; const row = t.closest('.mp-row'), on = t.getAttribute('aria-checked') !== 'true'; t.setAttribute('aria-checked', String(on)); row.classList.toggle('off', !on); }));
   ['mpSeasons', 'mpBikes', 'mpFacets', 'mpBikeFriendly', 'mpUse', 'mpSurfaces', 'mpRoutes'].forEach(id => $(id).addEventListener('click', e => { const c = e.target.closest('.mp-pchip'); if (c) c.classList.toggle('on'); }));
+  $('mpUse').addEventListener('click', e => {
+    const c = e.target.closest('.mp-pchip'); if (!c) return;
+    const on = [...$('mpUse').querySelectorAll('.mp-pchip.on')].map(x => useLabel(x.dataset.v));
+    $('mpName').value = suggestName($('mpName').value, useLabel(c.dataset.v), c.classList.contains('on'), on, CTX.map(useLabel));
+  });
   $('mpSave').addEventListener('click', async () => {
     const body = readEditor();
     if (!body.name) { $('mpName').focus(); return; }

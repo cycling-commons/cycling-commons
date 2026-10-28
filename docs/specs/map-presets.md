@@ -136,6 +136,13 @@ profile.
   with their icons; the key's surface and route rows; the season and bike
   chips; the facet chips; and the Stays for cyclists chip. Save and
   Cancel. An off switch is not faded: the switch says it.
+- A "Use this preset for" chip fills the name: switched on, its label goes
+  into an empty name, or into a name a chip put there; switched off while the
+  name is its label, the name becomes the first tool still on, else empty. A
+  name the rider typed stays. Example: on a new preset, Check my ride on puts
+  "Check my ride" in the name; the rider can change it there.
+  `suggestName()` in `map-presets.js`, pinned by
+  `preset-name-from-use.test.cjs`.
 - The page works without the script in one sense only: it shows the list;
   editing needs it, as the public-profile toggle does.
 
