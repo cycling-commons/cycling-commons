@@ -66,6 +66,18 @@ repos:
         pass_filenames: false
         always_run: true
 
+      # The deploy's `composer audit` on web/composer.lock, dev packages
+      # included (the staging image installs them). A new advisory needs no
+      # change of ours, so it runs on every push; a second or two, before the
+      # minutes of the app gate below.
+      - id: composer-audit-prepush
+        name: composer audit (the advisories the deploy fails on)
+        entry: tools/composer-audit-prepush.sh
+        language: script
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
+
       # The whole `make app-test` gate before code leaves the machine: the
       # test suite, both analyzers, php-cs-fixer and the four shell gates.
       # ci-app.yml runs the same set, but staging pushes deploy

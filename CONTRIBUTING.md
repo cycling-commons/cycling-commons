@@ -191,6 +191,12 @@ stage a `web/translations/messages.*.yaml` file, it verifies every key exists in
 all five locales (en/fr/nl/de/es). It needs PHP + `composer install` in `web/` and
 skips with a notice otherwise. CI (`make app-test`) enforces it regardless.
 
+**Pushing checks the security advisories.** Every push runs
+`tools/composer-audit-prepush.sh`, the same `composer audit` the deploy runs
+while it builds the image. A locked package with an advisory stops the push;
+update it with `composer update <package> --with-dependencies` and commit
+`web/composer.lock`.
+
 **Pushing runs the whole test gate.** Any outgoing change under `web/` triggers
 `tools/app-gate-prepush.sh`, which runs everything `make app-test` runs:
 php-cs-fixer, the SPDX/licence/translation gates, the Node tests, PHPStan, Psalm,

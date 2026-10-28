@@ -493,6 +493,13 @@ REDIS_URL=redis://host.docker.internal:6379
   `make map-refs`. `make preflight` runs every gate CI runs, one after the
   other: `app-test`, `pipeline-test`, `tools-test`, `credits-check`,
   `wiki-check` and `licenses-check`.
+- **The push runs the deploy's audit.** `tools/composer-audit-prepush.sh`
+  runs `composer audit --locked --abandoned=ignore` over `web/composer.lock`
+  on every push, dev packages included, as `Dockerfile.worker` does while the
+  deploy builds the image. An advisory published today fails the next deploy
+  with no change of ours, so the hook does not wait for a change under `web/`.
+  The fix is `composer update <package> --with-dependencies` in the app
+  container and a commit of the lock file.
 - **The push runs the app gate.** `tools/app-gate-prepush.sh`
   is a pre-push hook fired by any outgoing change under `web/`, and it runs
   every `make app-test` command, cheapest first, so a formatting slip fails in
