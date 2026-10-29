@@ -65,10 +65,12 @@ final class ReleaseNotes
             'date' => '2026-10-29',
             'sections' => [
                 'public' => [
+                    'changelog.v0914_road_safety_zoom',
                     'changelog.v0914_street_photo',
                 ],
             ],
             'kinds' => [
+                'changelog.v0914_road_safety_zoom' => 'improved',
                 'changelog.v0914_street_photo' => 'fixed',
             ],
         ],

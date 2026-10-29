@@ -5540,6 +5540,7 @@ changelog:
   v0913_curator_roads: "<b>Roads on the review map.</b> Before and After show a road as the map will draw it, an approved road stays on the map at once, and a road on its OpenStreetMap way adds to that way instead of replacing it."
   v0913_curator_fixes: "<b>Among smaller fixes:</b> a second road on the same stretch adds what it brings to the first when you approve it, and a card no longer lists a value that did not change."
   v0914_street_photo: "<b>The whole street-level photo.</b> The height of the viewer panel now sets the size of the photo, so its top and bottom are no longer cut off."
+  v0914_road_safety_zoom: "<b>Road safety says Zoom in.</b> Zoomed out too far to see the road types, their row says Zoom in, as Surfaces does."
   v0911_region_links: "<b>Sources in the geography text.</b> A region's geography text can link its sources now, as its history, nature and culture text does."
   v0911_region_editor: "<b>Save and go on.</b> Saving a step of the region editor opens the next one."
   v0911_translations: "<b>Simpler translations.</b> A translation keeps the Wikipedia credit of its original, so the form no longer asks where it comes from."
