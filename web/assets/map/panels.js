@@ -16,7 +16,7 @@ import { mapToast, clearRevealPin } from './drawer.js';
 import { layerGlyph } from './icons.js';
 import { refilterClusters, updateConfMarkers } from './osm-pools.js';
 import { trafficLayerAvailable, setTrafficLayer, trafficLayerVisible } from './traffic-layer.js';
-import { roadSafetyLayerAvailable, setRoadSafetyLayer, roadSafetyLayerVisible, roadSafetyKeyShown } from './road-safety.js';
+import { roadSafetyLayerAvailable, setRoadSafetyLayer, roadSafetyLayerVisible, roadSafetyKeyShown, roadSafetyWaiting } from './road-safety.js';
 import { curScope, inScope } from './scope-ui.js';
 import { modeToShow, bestOfParam } from './filters.js';
 import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible,
@@ -95,8 +95,9 @@ export function initLayerList(){
     btn.setAttribute('aria-pressed', on?'true':'false');
     const ct=btn.querySelector('.ct');
     if(!ct) return;
-    /* Surface on but zoomed out past CLASSIFIED_MIN_ZOOM → "Zoom in". */
-    const waiting = on && btn.id==='ovSurface' && map.getZoom() < CLASSIFIED_MIN_ZOOM;
+    /* Surface on but zoomed out past CLASSIFIED_MIN_ZOOM, or Road safety on under the zoom its tiles draw from → "Zoom in". */
+    const waiting = on && ((btn.id==='ovSurface' && map.getZoom() < CLASSIFIED_MIN_ZOOM)
+      || (btn.id==='ovRoadSafety' && roadSafetyWaiting()));
     ct.classList.toggle('ct-wait', waiting);
     ct.textContent = waiting ? (I18N.overlayZoomIn||'Zoom in')
       : on ? (I18N.overlayOn||'On') : (I18N.overlayOff||'Off');
@@ -160,7 +161,12 @@ export function initLayerList(){
   const roadSafetyBtn=document.getElementById('ovRoadSafety');
   if(roadSafetyBtn && roadSafetyLayerAvailable()){
     roadSafetyBtn.hidden=false;
-    roadSafetyBtn.onclick=()=>paintOverlay(roadSafetyBtn, setRoadSafetyLayer(!roadSafetyLayerVisible()));
+    roadSafetyBtn.onclick=()=>{
+      const on=setRoadSafetyLayer(!roadSafetyLayerVisible());
+      paintOverlay(roadSafetyBtn, on);
+      if(on && roadSafetyWaiting()) mapToast(I18N.zoomForRoadSafety||'Zoom in to see the road types.');
+    };
+    document.addEventListener('cc:road-safety-zoom', ()=>paintOverlay(roadSafetyBtn, roadSafetyLayerVisible()));
   }
 
   // Roads a bike may not ride, faded (map-init.js), the rider's switch, kept in this browser.

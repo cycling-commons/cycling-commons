@@ -19,7 +19,7 @@ test('Road safety is its own map overlay, for everyone, once the road pieces are
   const before = twig.slice(0, twig.indexOf('id="ovRoadSafety"'));
   assert.ok(!/\{% if (pending_is_curator|is_granted)[^%]*%\}(?![\s\S]*\{% endif %\})/.test(before.slice(before.lastIndexOf('<h3>'))), 'not behind a sign-in or a curator check');
   assert.match(panels, /if\(roadSafetyBtn && roadSafetyLayerAvailable\(\)\)\{\n    roadSafetyBtn\.hidden=false;/);
-  assert.match(panels, /roadSafetyBtn\.onclick=\(\)=>paintOverlay\(roadSafetyBtn, setRoadSafetyLayer\(!roadSafetyLayerVisible\(\)\)\);/);
+  assert.match(panels, /const on=setRoadSafetyLayer\(!roadSafetyLayerVisible\(\)\);\n      paintOverlay\(roadSafetyBtn, on\);/);
 });
 
 test('the legend explains the three colours while the overlay or the mode draws them, in the map\'s own colours', () => {
@@ -42,6 +42,15 @@ test('the road types draw from zoom 12, and picking a road still waits for zoom 
   assert.match(rs, /eachSourceInView\(map, 'roadpieces', 'roadpieces', VIEW_ZOOM,/);
   assert.match(rs, /if \(!ids\.length \|\| map\.getZoom\(\) < PIECE_ZOOM\) return;/, 'a click picks a road only from zoom 14');
   assert.match(twig, /id="roadSafetyKeyZoom" hidden>\{\{ 'map\.legend_rs_zoom'\|trans \}\}/);
+});
+
+test('under the zoom the road types draw from, the overlay row says Zoom in, as Road surfaces does', () => {
+  assert.match(rs, /export const roadSafetyWaiting = \(\) => shown\(\) && map\.getZoom\(\) < roadSafetyZoomFrom\(\);/);
+  assert.match(rs, /if \(note\) note\.hidden = !roadSafetyWaiting\(\);\n  document\.dispatchEvent\(new Event\('cc:road-safety-zoom'\)\);/);
+  assert.match(rs, /e\.sourceDataType === 'metadata'/, 'a source that learns its minzoom after the move tells the row again');
+  assert.match(panels, /\|\| \(btn\.id==='ovRoadSafety' && roadSafetyWaiting\(\)\)\);/);
+  assert.match(panels, /document\.addEventListener\('cc:road-safety-zoom', \(\)=>paintOverlay\(roadSafetyBtn, roadSafetyLayerVisible\(\)\)\);/);
+  assert.match(panels, /if\(on && roadSafetyWaiting\(\)\) mapToast\(I18N\.zoomForRoadSafety/, 'switched on zoomed out: a toast, as Road surfaces gives');
 });
 
 test('each key row switches its road type, and the overlay keeps drawing when the mode ends', () => {

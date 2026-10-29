@@ -855,6 +855,7 @@ final class MapController extends AbstractController
             'overlayOn' => $t->trans('map.overlay_on'),
             'overlayOff' => $t->trans('map.overlay_off'),
             'zoomForSurfaces' => $t->trans('map.zoom_for_surfaces'),
+            'zoomForRoadSafety' => $t->trans('map.legend_rs_zoom'),
             'overlayZoomIn' => $t->trans('map.overlay_zoom_in'),
             'pendingReview' => $t->trans('map.pending_review'),
             'unseen' => $t->trans('room.unread'),

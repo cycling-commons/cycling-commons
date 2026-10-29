@@ -33,9 +33,7 @@ const t = (k, fallback) => (D && D[k]) || fallback;
 const HIT_PX = 8;
 const NONE = ['==', ['id'], -1];
 /* The road types show from this zoom: the road-piece tiles hold zoom 12 to 14, simplified below 14 (tiles built
-   before 2026-10-26 hold 14 only, and draw from 14). Zoom 12 by the owner's choice (2026-10-26): about 350 KB of
-   road lines a phone screen on the Dutch data, where zoom 11 was about 1.2 MB. Picking a road still waits for
-   PIECE_ZOOM, full detail. */
+   before 2026-10-26 hold 14 only, and draw from 14). Picking a road still waits for PIECE_ZOOM, full detail. */
 export const VIEW_ZOOM = 12;
 
 let cfg = null;          // window.CC_ROAD_SAFETY: {url, token}
@@ -84,14 +82,23 @@ function mount() {
   eachSourceInView(map, 'roadpieces', 'roadpieces', VIEW_ZOOM, (key, sourceId) => paint(sourceId, 'roadpieces_' + key));
 }
 
-/* The key's note "Zoom in to see the road types" while the lines are on but the zoom is under what the tiles hold
-   (a source says its own minzoom once loaded). */
-function keyNote() {
-  const note = el('roadSafetyKeyZoom');
-  if (!note) return;
+/** The zoom the road types draw from: VIEW_ZOOM, or higher where the tiles in view start higher (a source says its
+    own minzoom once loaded; until then PIECE_ZOOM). */
+export function roadSafetyZoomFrom() {
   const ids = layers.map(l => l.line).filter(id => map.getLayer(id));
   const from = ids.length ? Math.min(...ids.map(id => { const s = map.getSource(map.getLayer(id).source); return s && Number.isFinite(s.minzoom) && s.minzoom > 0 ? s.minzoom : PIECE_ZOOM; })) : VIEW_ZOOM;
-  note.hidden = !shown() || map.getZoom() >= Math.max(VIEW_ZOOM, from);
+  return Math.max(VIEW_ZOOM, from);
+}
+
+/** Whether the road types are on but the zoom is under what they draw from. */
+export const roadSafetyWaiting = () => shown() && map.getZoom() < roadSafetyZoomFrom();
+
+/* The key's note "Zoom in to see the road types" while waiting; cc:road-safety-zoom tells the overlay row
+   (panels.js), which says "Zoom in" too. */
+function keyNote() {
+  const note = el('roadSafetyKeyZoom');
+  if (note) note.hidden = !roadSafetyWaiting();
+  document.dispatchEvent(new Event('cc:road-safety-zoom'));
 }
 
 /* The legend shows the key while the lines are on (panels.js syncLegend()). */
@@ -388,6 +395,8 @@ export async function markWay(way, lngLat) {
 export function initRoadSafety() {
   // The overlay draws for everyone, also where the mode is not offered (the ride review, a guest).
   map.on('moveend', onMove);
+  // A road-piece source learns its minzoom when its header loads, after the move that added it.
+  map.on('sourcedata', e => { if (shown() && e.sourceDataType === 'metadata' && layers.some(l => map.getLayer(l.line)?.source === e.sourceId)) keyNote(); });
   document.querySelectorAll('.skey-row[data-rs-label]').forEach(b => {
     b.addEventListener('click', () => b.setAttribute('aria-pressed', toggleRoadType(b.dataset.rsLabel) ? 'true' : 'false'));
   });

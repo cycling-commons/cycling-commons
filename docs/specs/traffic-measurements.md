@@ -638,8 +638,9 @@ as the surface and route rows do (`toggleRoadType()`, an advisory lane its own
 type `a` there), and the eye on its heading switches all four. A picked
 advisory lane is named "Advisory lane" on the card, and its mark is sent as an
 `l` road. Below
-the zoom the tiles hold, the key says "Zoom in to see the road types."
-(`#roadSafetyKeyZoom`). Leaving the mode leaves the lines on while the
+the zoom the tiles hold (`roadSafetyZoomFrom()`), the key says "Zoom in to see the road types."
+(`#roadSafetyKeyZoom`), the overlay row says "Zoom in" in its state column, as
+Surfaces does, and switching the overlay on there raises the same line as a toast. Leaving the mode leaves the lines on while the
 overlay is on. The Key rail panel lists the same four rows, read only
 (`#mk-road-safety`). A
 Ctrl+click (Cmd+click on a Mac) adds another road, or takes a picked one away

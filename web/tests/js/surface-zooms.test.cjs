@@ -96,7 +96,7 @@ test('the classified skin has a zoom floor, and the map says so below it', () =>
      that"). Two channels now, both at the control: the row's own state column
      carries the standing reason, and the press itself raises a toast. */
   const panels = fs.readFileSync(path.join(__dirname, '..', '..', 'assets/map/panels.js'), 'utf8');
-  assert.match(panels, /const waiting = on && btn\.id==='ovSurface' && map\.getZoom\(\) < CLASSIFIED_MIN_ZOOM;/,
+  assert.match(panels, /const waiting = on && \(\(btn\.id==='ovSurface' && map\.getZoom\(\) < CLASSIFIED_MIN_ZOOM\)/,
     'the overlay row has no below-the-floor state');
   assert.match(panels, /mapToast\(I18N\.zoomForSurfaces/, 'the press raises no toast');
   // The floor is a zoom condition, so the row follows the zoom too, not only
