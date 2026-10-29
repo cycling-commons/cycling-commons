@@ -5521,6 +5521,7 @@ changelog:
   v0913_curator_review: "<b>Verbeteren voor je goedkeurt.</b> Je kunt de nieuwe plek van een fietser verbeteren of bevestigen voor je haar goedkeurt, en je bevestiging telt zodra je dat doet."
   v0913_curator_roads: "<b>Wegen op de beoordelingskaart.</b> Voor en Na tonen een weg zoals de kaart hem zal tekenen, een goedgekeurde weg blijft meteen op de kaart staan, en een weg op zijn OpenStreetMap-weg vult die weg aan in plaats van hem te vervangen."
   v0913_curator_fixes: "<b>Onder de kleinere verbeteringen:</b> een tweede weg op hetzelfde stuk voegt wat hij meebrengt toe aan de eerste als je hem goedkeurt, en een kaart toont geen waarde meer die niet veranderd is."
+  v0914_street_photo: "<b>De hele straatbeeldfoto.</b> De hoogte van het viewerpaneel bepaalt nu de grootte van de foto, dus de boven- en onderkant vallen niet meer weg."
   v0911_region_links: "<b>Bronnen in de aardrijkskundetekst.</b> De aardrijkskundetekst van een regio kan nu zijn bronnen linken, net als de tekst over geschiedenis, natuur en cultuur."
   v0911_region_editor: "<b>Opslaan en doorgaan.</b> Een stap van de regio-editor opslaan opent de volgende."
   v0911_translations: "<b>Eenvoudiger vertalen.</b> Een vertaling houdt de Wikipedia-vermelding van het origineel, dus het formulier vraagt niet meer waar de tekst vandaan komt."
