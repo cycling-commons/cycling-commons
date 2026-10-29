@@ -3744,7 +3744,10 @@ requirement).
 - **Viewer:** official mapillary-js in a bottom dock, **lazy-injected on first
   open** from our own vendored copy (`assets/lib/mapillary-js-4.1.2.js` and
   `.css`, digested URLs in `window.CC_VENDOR`; double-injection guard) so the
-  map never pays for it. Dock slides up immediately with a loading state; ⤢ toggles
+  map never pays for it. The viewer runs in `RenderMode.Letterbox`: the dock
+  height sets the scale, the whole photo shows, and black bars fill the spare
+  width. The cover before play does the same (`background-size: contain` on
+  `.mapillary-cover-background`). Dock slides up immediately with a loading state; ⤢ toggles
   fullscreen; ✕ closes and removes the marker. The dock owns the bottom edge on
   mobile (hides the filters peek).
 - **The last click wins:** the dock remembers the image asked for last

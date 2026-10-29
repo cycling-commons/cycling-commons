@@ -112,7 +112,9 @@ function loadMapillaryJs(){
 /* A new viewer on the image: the one before it, if any, goes. */
 function mountViewer(imageId){
   if(mlyViewer){ try{ mlyViewer.remove(); }catch(_){} }
-  mlyViewer=new mapillary.Viewer({accessToken:MAPILLARY_TOKEN,container:'mlyView',imageId});
+  // Letterbox: the dock height sets the scale and the whole photo shows; Fill crops top and bottom in a wide dock.
+  mlyViewer=new mapillary.Viewer({accessToken:MAPILLARY_TOKEN,container:'mlyView',imageId,
+    renderMode:mapillary.RenderMode.Letterbox});
   mlyViewer.on('image',ev=>{
     // Only the image asked for last ends the wait: a viewer still busy with an earlier one says nothing.
     if(!ev.image || String(ev.image.id)!==mlyWanted) return;
