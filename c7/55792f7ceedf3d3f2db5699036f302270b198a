@@ -1,0 +1,25 @@
+web/src/Media/Command/ListStorageKeysCommand.php
+  s_b1298454ce3e55::t_d81bc591398615 53
+  s_b1298454ce3e55::t_277442cbe72597 140
+  s_b1298454ce3e55::t_7d8e11b5037758 1-52,54-139,141-152
+web/tests/Media/ListStorageKeysCommandTest.php
+  s_b1298454ce3e55::t_2d3b3db678e340 1-337
+web/src/Media/MediaStorage.php
+  s_b1298454ce3e55::t_e8f9707a07f018 30,69-74
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c755792f7ceedf3d3f2db5699036f302270b198a",
+  "prompts": {},
+  "sessions": {
+    "s_b1298454ce3e55": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e3ce60f2-9a80-4365-9cea-dfb4b5523d0c",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
