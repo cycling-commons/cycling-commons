@@ -27,7 +27,7 @@ final class MediaStorage
     private const string QUARANTINE_PREFIX = 'quarantine/';
 
     /** A photo under legal hold leaves the public bucket for this prefix. @see docs/specs/photo-uploads.md §6d */
-    private const string HELD_PREFIX = 'held/';
+    public const string HELD_PREFIX = 'held/';
 
     /** @var array<string, FilesystemOperator> bucket name => filesystem, built on demand */
     private array $filesystems;
@@ -64,6 +64,12 @@ final class MediaStorage
         self::assertSegmentable($bucket);
 
         return $bucket;
+    }
+
+    /** The private bucket's full name: quarantine and held photos. */
+    public function privateBucket(): string
+    {
+        return $this->privateBucket;
     }
 
     /** @param resource|string $bytes */
