@@ -19,7 +19,7 @@
     {% include 'pages/_legal_upcoming.html.twig' with {page: 'terms'} %}
 
     <h2><span class="n">1</span>{% trans %}terms.h1_accepting{% endtrans %}</h2>
-    <p>{% trans %}terms.accepting_p1_pre{% endtrans %} <a href="{{ path('privacy') }}">{% trans %}terms.accepting_p1_privacy{% endtrans %}</a>{% trans %}terms.accepting_p1_mid{% endtrans %} <b>{% trans %}terms.accepting_p1_bikecoders{% endtrans %}</b> (<a href="https://bikecoders.life">bikecoders.life</a>){% trans %}terms.accepting_p1_mid2{% endtrans %} <a href="https://wiki.cyclingcommons.org/governance/">{% trans %}terms.accepting_p1_governance{% endtrans %}</a>{% trans %}terms.accepting_p1_post{% endtrans %}</p>
+    <p>{% trans %}terms.accepting_p1_pre{% endtrans %} <a href="{{ path('privacy') }}">{% trans %}terms.accepting_p1_privacy{% endtrans %}</a>{% trans %}terms.accepting_p1_mid{% endtrans %} <b>{% trans %}terms.accepting_p1_bikecoders{% endtrans %}</b> (<a href="https://bikecoders.life">bikecoders.life</a>){% trans %}terms.accepting_p1_mid2{% endtrans %} <a href="{{ wiki_url }}/governance/">{% trans %}terms.accepting_p1_governance{% endtrans %}</a>{% trans %}terms.accepting_p1_post{% endtrans %}</p>
 
     <h2><span class="n">2</span>{% trans %}terms.h2_who{% endtrans %}</h2>
     <p>{{ 'terms.who_body'|trans|rich }}</p>
@@ -36,7 +36,7 @@
     <ul>
       <li>{% trans %}terms.using_no_illegal{% endtrans %}</li>
       <li>{{ 'terms.using_no_personal'|trans|rich }}</li>
-      <li>{% trans %}terms.using_no_reidentify_pre{% endtrans %} <a href="https://wiki.cyclingcommons.org/governance/#the-sensing-boundary-how-activity-becomes-a-place-fact">{% trans %}terms.using_no_reidentify_link{% endtrans %}</a>{% trans %}terms.using_no_reidentify_post{% endtrans %}</li>
+      <li>{% trans %}terms.using_no_reidentify_pre{% endtrans %} <a href="{{ wiki_url }}/governance/#the-sensing-boundary-how-activity-becomes-a-place-fact">{% trans %}terms.using_no_reidentify_link{% endtrans %}</a>{% trans %}terms.using_no_reidentify_post{% endtrans %}</li>
       <li>{% trans %}terms.using_no_scrape_pre{% endtrans %} <a href="{{ path('developers') }}">{% trans %}terms.using_no_scrape_link{% endtrans %}</a>{% trans %}terms.using_no_scrape_post{% endtrans %} <a href="{{ path('data_export') }}">{% trans %}terms.using_no_scrape_export_link{% endtrans %}</a>{% trans %}terms.using_no_scrape_mid{% endtrans %} <a href="{{ path('contact') }}">{% trans %}terms.using_no_scrape_contact_link{% endtrans %}</a>{% trans %}terms.using_no_scrape_end{% endtrans %}</li>
       {# Kept as its own rule: disruption was bundled into the scraping line, and
          the blunter scraping wording must not quietly drop a separate prohibition. #}

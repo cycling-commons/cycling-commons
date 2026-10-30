@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -17,7 +18,11 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 final class GovernanceRedirectController
 {
-    public const string WIKI_GOVERNANCE = 'https://wiki.cyclingcommons.org/governance/';
+    public function __construct(
+        #[Autowire('%env(WIKI_URL)%')]
+        private readonly string $wikiUrl,
+    ) {
+    }
 
     #[Route([
         'en' => '/governance',
@@ -28,6 +33,6 @@ final class GovernanceRedirectController
     ], name: 'governance', methods: ['GET', 'HEAD'])]
     public function __invoke(): RedirectResponse
     {
-        return new RedirectResponse(self::WIKI_GOVERNANCE, 301);
+        return new RedirectResponse($this->wikiUrl.'/governance/', 301);
     }
 }

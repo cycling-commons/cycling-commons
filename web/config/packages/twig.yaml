@@ -10,6 +10,9 @@ twig:
         esri_api_key: '%env(ESRI_API_KEY)%'
         # The 3D relief switch, only where nginx proxies the relief tiles (RELIEF_TILES).
         relief_tiles: '%env(bool:RELIEF_TILES)%'
+        # The wiki's base URL, no trailing slash: production, staging or the dev
+        # stack's own wiki service.
+        wiki_url: '%env(WIKI_URL)%'
         # The road-surface tile URLs are NOT globals: they come from
         # MapController via App\Coverage\SurfaceManifest, which resolves the
         # published build (or an operator's pin). A global reading the env

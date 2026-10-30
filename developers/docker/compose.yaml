@@ -74,6 +74,8 @@ services:
       MAILER_DSN: "${MAILER_DSN:-smtp://mailpit:1025}"
       # Links in emails point at this dev site, not the public one (.env).
       APP_SITE_URL: "${APP_SITE_URL:-http://localhost:8001}"
+      # Wiki links point at the stack's own wiki service, on its port.
+      WIKI_URL: "${WIKI_URL:-http://localhost:${WIKI_PORT:-8000}}"
       # Coverage tiles (coverage-provider.md §8): opt-in via
       # developers/docker/.env once `make coverage-refresh` published to MinIO.
       COVERAGE_TILES: "${COVERAGE_TILES:-1}"
@@ -205,6 +207,8 @@ services:
       MAILER_DSN: "${MAILER_DSN:-smtp://mailpit:1025}"
       # Links in emails point at this dev site, not the public one (.env).
       APP_SITE_URL: "${APP_SITE_URL:-http://localhost:8001}"
+      # Wiki links point at the stack's own wiki service, on its port.
+      WIKI_URL: "${WIKI_URL:-http://localhost:${WIKI_PORT:-8000}}"
       CLAMAV_TCP_ADDR: "${CLAMAV_TCP_ADDR:-clamav:3310}"
       MEDIA_S3_ENDPOINT: "${MEDIA_S3_ENDPOINT:-http://minio:9000}"
       MEDIA_S3_REGION: "${MEDIA_S3_REGION:-us-east-1}"

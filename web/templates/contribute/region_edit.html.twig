@@ -141,7 +141,7 @@
           {# The wiki guide first, then how to fill it in: beside the fields
              on a wide screen, under them on a narrow one (place-text.css). #}
           <aside class="pt-howto pt-guide">
-            {{ _self.guide('https://wiki.cyclingcommons.org/region-texts/#the-regions-figures') }}
+            {{ _self.guide(wiki_url ~ '/region-texts/#the-regions-figures') }}
             <p class="pt-howto-h">{{ 'region_edit.guide_figures_h'|trans }}</p>
             <ul>
               <li>{{ 'region_edit.guide_figures_area'|trans }}</li>
@@ -188,7 +188,7 @@
             rows: 10, howto: false, hint: 'region_edit.field_geography_hint',
           }) }}
           <aside class="pt-howto pt-guide">
-            {{ _self.guide('https://wiki.cyclingcommons.org/region-texts/#the-geography-text') }}
+            {{ _self.guide(wiki_url ~ '/region-texts/#the-geography-text') }}
             <p class="pt-howto-h">{{ 'place_text.howto_h'|trans }}</p>
             <ol>
               <li>{{ 'region_edit.guide_geo_whole'|trans({'%max%': max|number_format(0, '.', ',')}) }}</li>
@@ -230,7 +230,7 @@
             max: story_max, raw_max: story_raw_max, generic_anchors: generic_anchors, error: error,
             links_asked: error == 'place_text.error.links_unconfirmed' and step == 'story',
             link_check_csrf_id: link_check_csrf_id, count_id: 'pt-story-count', hint_id: 'pt-story-hint',
-            guide_href: 'https://wiki.cyclingcommons.org/region-texts/#the-history-nature-and-culture-text',
+            guide_href: wiki_url ~ '/region-texts/#the-history-nature-and-culture-text',
           }) }}
         </section>
         </div>

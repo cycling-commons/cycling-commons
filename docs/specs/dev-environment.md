@@ -106,6 +106,14 @@ Named volumes: `cc_pgdata`, `cc_api_vendor`, `cc_minio`, `cc_pipeline_data`.
   its two nginx fronts (`media-proxy`, `tiles-proxy`) are in the default `up`:
   the map's coverage layer and every rider photo read through them, so a stack
   without them looks broken in ways that read as product bugs.
+- **Wiki links follow the deployment.** Every link the site makes to the wiki
+  (footer, governance redirect, `humans.txt`, legal pages, the Scout manual)
+  starts with `WIKI_URL`, the Twig global `wiki_url`. `web/.env` sets the
+  production wiki, `web/.env.staging` the staging wiki
+  (`https://staging-wiki.cyclingcommons.org`), and compose gives `app` and
+  `worker` the stack's own `wiki` service, `http://localhost:${WIKI_PORT}`.
+  As a real environment variable in the containers it beats `.env.test`, so a
+  phpunit run inside `app` passes `-e WIKI_URL=https://wiki.cyclingcommons.org`.
 - PHP upload ceilings for the dev container live in `web/Dockerfile`
   (`cc-uploads.ini`: `upload_max_filesize = 16M`, `post_max_size = 20M`) and
   in the nginx vhost (`client_max_body_size 16m`,

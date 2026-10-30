@@ -13,6 +13,7 @@ use App\Catalog\RegionRegistryProvider;
 use App\Routing\ActiveLocales;
 use App\Service\BuildVersion;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -96,6 +97,8 @@ final class SitemapController extends AbstractController
         private readonly BlogRepository $blog,
         private readonly BuildVersion $build,
         private readonly CyclingHistorySwitch $cyclingHistory,
+        #[Autowire('%env(WIKI_URL)%')]
+        private readonly string $wikiUrl,
     ) {
     }
 
@@ -173,7 +176,7 @@ final class SitemapController extends AbstractController
             '  Maintained by: BikeCoders - https://bikecoders.life',
             '  Contact: development [at] cyclingcommons.org',
             '  The Commons is stewarded openly, on a path to an independent foundation.',
-            '  See: https://wiki.cyclingcommons.org/governance/',
+            '  See: '.$this->wikiUrl.'/governance/',
             '',
             '/* THANKS */',
             '  OpenStreetMap and its contributors - the ground we build on',
@@ -198,7 +201,7 @@ final class SitemapController extends AbstractController
 
         $lines = [...$lines,
             '  Components: MapLibre GL, PMTiles, OpenFreeMap',
-            '  Wiki: MkDocs Material - https://wiki.cyclingcommons.org',
+            '  Wiki: MkDocs Material - '.$this->wikiUrl,
             '  Source: '.$build['url'],
             '',
             '                  .',

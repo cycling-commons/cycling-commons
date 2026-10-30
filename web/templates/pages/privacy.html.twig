@@ -34,7 +34,7 @@
     {% include 'pages/_legal_upcoming.html.twig' with {page: 'privacy'} %}
 
     <h2>{% trans %}privacy.h_responsible{% endtrans %}</h2>
-    <p>{% trans %}privacy.responsible_p1_pre{% endtrans %} <b>{% trans %}privacy.responsible_p1_bikecoders{% endtrans %}</b> (<a href="https://bikecoders.life">bikecoders.life</a>){% trans %}privacy.responsible_p1_mid{% endtrans %} <a href="https://wiki.cyclingcommons.org/governance/">{% trans %}privacy.responsible_p1_governance{% endtrans %}</a>{{ 'privacy.responsible_p1_post'|trans|rich }}</p>
+    <p>{% trans %}privacy.responsible_p1_pre{% endtrans %} <b>{% trans %}privacy.responsible_p1_bikecoders{% endtrans %}</b> (<a href="https://bikecoders.life">bikecoders.life</a>){% trans %}privacy.responsible_p1_mid{% endtrans %} <a href="{{ wiki_url }}/governance/">{% trans %}privacy.responsible_p1_governance{% endtrans %}</a>{{ 'privacy.responsible_p1_post'|trans|rich }}</p>
     <p>{% trans %}privacy.responsible_p2_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a> ({{ 'support.legal.or_form'|trans({}, 'messages') }} <a href="{{ path('contact') }}?topic=privacy">{{ 'support.contact.title_short'|trans({}, 'messages') }}</a>){% trans %}privacy.responsible_p2_mid{% endtrans %} <a href="https://autoriteitpersoonsgegevens.nl/">{% trans %}privacy.responsible_p2_ap{% endtrans %}</a>{% trans %}privacy.responsible_p2_post{% endtrans %}</p>
     {# GDPR Art. 37 does not oblige us to appoint a DPO, but a notice that says
        nothing leaves the reader guessing. Saying "no, and here is the address
