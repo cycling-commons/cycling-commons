@@ -1,0 +1,50 @@
+web/assets/styles/scout-devices.css
+  s_c5be469318ab47::t_fc521eb25da57a 12-16
+  s_c5be469318ab47::t_82b315181017fa 54-55,57
+  s_c5be469318ab47::t_ab61d28e178dbc 19-22
+  s_c5be469318ab47::t_082bc9353a68c6 56
+docs/specs/moderation-and-contribution.md
+  s_c5be469318ab47::t_82b315181017fa 4253-4254
+  s_c5be469318ab47::t_9f3381bf9ce6c8 4240-4241
+  s_c5be469318ab47::t_645170c602fc1f 4258-4259
+  s_c5be469318ab47::t_59291408c6b146 4242-4243
+  s_c5be469318ab47::t_8180dfd6af51b8 4250-4252,4255
+  s_c5be469318ab47::t_c42a01be74c642 4244-4246
+web/templates/partials/_scout_platforms.html.twig
+  s_c5be469318ab47::t_82b315181017fa 18
+  s_c5be469318ab47::t_10ac58cfdb0e30 10
+  s_c5be469318ab47::t_13a2c77f8f4e93 7,15
+web/assets/scout/karoo-screen.svg
+  s_c5be469318ab47::t_e805e07cfdec3f 1-30
+web/templates/partials/_scout_devices.html.twig
+  s_c5be469318ab47::t_10ac58cfdb0e30 98-99
+  s_c5be469318ab47::t_13a2c77f8f4e93 30,96
+  s_c5be469318ab47::t_9f3381bf9ce6c8 10-11
+  s_c5be469318ab47::t_e805e07cfdec3f 74
+  s_c5be469318ab47::t_fc521eb25da57a 37-41,91
+web/tests/Controller/ScoutPageTest.php
+  s_c5be469318ab47::t_ded31d1a185cd8 56
+  s_c5be469318ab47::t_f6e9c03b38df56 61-70
+  s_c5be469318ab47::t_645170c602fc1f 14-15,37-48,51,71
+  s_c5be469318ab47::t_13302d45fe91ec 78-79,100
+  s_c5be469318ab47::t_ecacc9d45ff69b 72
+web/templates/partials/_scout_links.html.twig
+  s_c5be469318ab47::t_dbb5e003e19c33 1-5,9-10
+  s_c5be469318ab47::t_10ac58cfdb0e30 6-8,11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "12d8a9bbceb4bca79b84e7286e3fdcf5318af7cb",
+  "prompts": {},
+  "sessions": {
+    "s_c5be469318ab47": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b16c0684-a44e-4b29-ace0-815afbd63fcf",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
