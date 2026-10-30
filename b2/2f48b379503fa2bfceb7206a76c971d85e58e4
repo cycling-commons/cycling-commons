@@ -1,0 +1,47 @@
+wiki/assets/scout-karoo/2-tap-other.svg
+  s_c5be469318ab47::t_f34d0b6b73d971 2,6-23
+  s_c5be469318ab47::t_4df75c50a26d7e 4-5,24
+  s_c5be469318ab47::t_76d085502eddd1 1,3
+wiki/assets/scout-karoo/1-ride-started.svg
+  s_c5be469318ab47::t_4df75c50a26d7e 4-5,23
+  s_c5be469318ab47::t_76d085502eddd1 1,3
+  s_c5be469318ab47::t_f34d0b6b73d971 2,6-22
+mkdocs.yml
+  s_c5be469318ab47::t_42b360fccf0840 88
+  s_c5be469318ab47::t_fca88bcbdee59a 74
+wiki/assets/scout-karoo/3-pick-gravel.svg
+  s_c5be469318ab47::t_76d085502eddd1 1,3
+  s_c5be469318ab47::t_f34d0b6b73d971 2,6-32
+  s_c5be469318ab47::t_4df75c50a26d7e 4-5,33
+wiki/stylesheets/extra.css
+  s_c5be469318ab47::t_fca88bcbdee59a 899-900
+  s_c5be469318ab47::t_35fa7ac28453bd 882-898
+wiki/scout-karoo.md
+  s_c5be469318ab47::t_72908d0688d7ba 101-119
+  s_c5be469318ab47::t_a85ddf9c4a1143 1-12,19-22,27-30,32,48,51,53,57-100,120-204,209-210
+  s_c5be469318ab47::t_61c0763a00dd1f 13,15-17,23-26,35,41,45,205-208,211-268
+  s_c5be469318ab47::t_2f373e2bab0ae6 31,33-34,36-40,42-44,46-47,49-50,52,54-56
+  s_c5be469318ab47::t_92bdc9373201cf 14,18
+wiki/assets/scout-karoo/4-gravel-open.svg
+  s_c5be469318ab47::t_f34d0b6b73d971 2,6-22
+  s_c5be469318ab47::t_76d085502eddd1 1,3
+  s_c5be469318ab47::t_4df75c50a26d7e 4-5,23
+wiki/scout.md
+  s_c5be469318ab47::t_42b360fccf0840 127
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b22f48b379503fa2bfceb7206a76c971d85e58e4",
+  "prompts": {},
+  "sessions": {
+    "s_c5be469318ab47": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b16c0684-a44e-4b29-ace0-815afbd63fcf",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
