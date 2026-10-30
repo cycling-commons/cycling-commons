@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 236 389" width="236" height="389" role="img" aria-label="Scout page: gravel stretch open">
+<title>Scout page: gravel stretch open</title>
+<rect width="236" height="389" rx="22" fill="#17191c"/>
+<rect x="12" y="12" width="212" height="353" rx="4" fill="#f0f0f0"/>
+<path d="M12 27.9V16a4 4 0 0 1 4 -4H220a4 4 0 0 1 4 4V27.9Z" fill="#d9dcdf"/>
+<text font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="8.5" font-weight="600" fill="#2a2d31" text-anchor="end" dominant-baseline="central"><tspan x="217.0" y="19.9">85%   11:42</tspan></text>
+<text font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="10.6" font-weight="700" fill="#d1421f" text-anchor="start" dominant-baseline="central"><tspan x="18.0" y="38.4">Scout</tspan></text>
+<text font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="8" font-weight="700" fill="#666" text-anchor="end" dominant-baseline="central"><tspan x="218.0" y="38.4">2 tags  RECORDING</tspan></text>
+<rect x="17.0" y="47.9" width="99.0" height="94.0" fill="#c1d7e5"/>
+<text font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="10.6" font-weight="700" fill="#1a1a1a" text-anchor="middle" dominant-baseline="central"><tspan x="66.5" y="94.9">RESUPPLY</tspan></text>
+<rect x="120.0" y="47.9" width="99.0" height="94.0" fill="#dacae1"/>
+<text font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="10.6" font-weight="700" fill="#1a1a1a" text-anchor="middle" dominant-baseline="central"><tspan x="169.5" y="94.9">CLOSURE</tspan></text>
+<rect x="17.0" y="145.9" width="99.0" height="94.0" fill="#8e5a2b"/>
+<text font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="10.6" font-weight="700" fill="#ffffff" text-anchor="middle" dominant-baseline="central"><tspan x="66.5" y="180.2">SURFACE</tspan><tspan x="66.5" y="192.9">GRAVEL</tspan><tspan x="66.5" y="205.7">1</tspan></text>
+<rect x="120.0" y="145.9" width="99.0" height="94.0" fill="#e9c9c2"/>
+<text font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="10.6" font-weight="700" fill="#1a1a1a" text-anchor="middle" dominant-baseline="central"><tspan x="169.5" y="192.9">NOTICE</tspan></text>
+<rect x="17.0" y="244.0" width="99.0" height="94.0" fill="#c5d9ce"/>
+<text font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="10.6" font-weight="700" fill="#1a1a1a" text-anchor="middle" dominant-baseline="central"><tspan x="66.5" y="291.0">SCENERY</tspan></text>
+<rect x="120.0" y="244.0" width="99.0" height="94.0" fill="#e3d9bb"/>
+<text font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="10.6" font-weight="700" fill="#1a1a1a" text-anchor="middle" dominant-baseline="central"><tspan x="169.5" y="284.6">OTHER</tspan><tspan x="169.5" y="297.3">1</tspan></text>
+<rect x="17.0" y="342.0" width="202.0" height="18" fill="#d1421f"/>
+<text font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="9" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central"><tspan x="118.0" y="351.0">Surface open: GRAVEL  END</tspan></text>
+</svg>

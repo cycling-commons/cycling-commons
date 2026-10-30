@@ -124,7 +124,7 @@ Nothing else leaves your device.
 |---|---|
 | Garmin Edge | Available now |
 | Android | Coming soon |
-| Hammerhead Karoo | Planned |
+| Hammerhead Karoo | Beta for testers: see the [Scout for Karoo manual](scout-karoo.md) |
 
 ## What it cannot do yet
 

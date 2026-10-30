@@ -879,3 +879,22 @@ pre.cc-diagram[data-diagram-error]::after {
   .md-typeset .cc-view { display: block; }
   .md-typeset .cc-views-tabs { display: none; }
 }
+
+/* ---- Device screen mockups (wiki/scout-karoo.md) ------------------------
+   A row of drawn screens, each with its caption under it. They wrap to two
+   or one per row on narrow screens. */
+.md-typeset .cc-screens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem 1rem;
+  margin: 1em 0;
+}
+.md-typeset .cc-screens figure {
+  margin: 0;
+  width: 11.8rem;
+  max-width: 100%;
+}
+.md-typeset .cc-screens img { width: 100%; height: auto; }
+.md-typeset .cc-screens figcaption { margin: .5em 0 0; max-width: none; text-align: left; }
+/* A long URL in inline code wraps instead of pushing past a phone screen. */
+.md-typeset code.cc-url { word-break: break-all; }

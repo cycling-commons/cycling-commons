@@ -71,7 +71,7 @@ extra_css:
   # extra_css, so a browser holds the previous copy after an edit and shows a
   # stale sidebar or stale code styling — which reads as "the fix didn't work"
   # rather than "you have an old file". Bump this when extra.css changes.
-  - stylesheets/extra.css?v=24
+  - stylesheets/extra.css?v=26
 
 # Ordered to match the "Start here" list on the wiki home page.
 nav:
@@ -85,6 +85,7 @@ nav:
   - Writing region texts: region-texts.md
   - Translating the site: translating.md
   - Scout — tag while you ride: scout.md
+  - Scout for Karoo manual: scout-karoo.md
   - Location & privacy: location-privacy.md
   - Governance: governance.md
   - Country onboarding: country-onboarding.md
