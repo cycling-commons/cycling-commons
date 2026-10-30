@@ -5550,6 +5550,7 @@ changelog:
   v0913_curator_fixes: "<b>Entre las correcciones menores:</b> una segunda carretera sobre el mismo tramo añade lo que aporta a la primera cuando la apruebas, y una tarjeta ya no muestra un valor que no cambió."
   v0914_street_photo: "<b>La foto a pie de calle entera.</b> La altura del panel del visor fija ahora el tamaño de la foto, así que la parte de arriba y la de abajo ya no se cortan."
   v0914_road_safety_zoom: "<b>Seguridad vial dice Acerca.</b> Demasiado lejos para ver los tipos de vía, su fila dice Acerca, como Firmes."
+  v0914_karoo_manual: "<b>Un manual para Scout en el Karoo.</b> La wiki tiene un manual de Scout para Karoo con los pasos de instalación y salidas de prueba, y el Karoo de la página de Scout lleva allí."
   v0911_region_links: "<b>Fuentes en el texto de geografía.</b> El texto de geografía de una región ya puede enlazar sus fuentes, como su texto de historia, naturaleza y cultura."
   v0911_region_editor: "<b>Guardar y seguir.</b> Al guardar un paso del editor de la región se abre el siguiente."
   v0911_translations: "<b>Traducir es más fácil.</b> Una traducción conserva el crédito de Wikipedia de su original, así que el formulario ya no pregunta de dónde viene."

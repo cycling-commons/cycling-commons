@@ -5523,6 +5523,7 @@ changelog:
   v0913_curator_fixes: "<b>Unter den kleineren Korrekturen:</b> Eine zweite Straße auf demselben Abschnitt ergänzt die erste um das, was sie mitbringt, wenn du sie freigibst, und eine Karte zeigt keinen Wert mehr, der sich nicht geändert hat."
   v0914_street_photo: "<b>Das ganze Straßenfoto.</b> Die Höhe des Ansichtsfensters bestimmt jetzt die Größe des Fotos, oben und unten wird nichts mehr abgeschnitten."
   v0914_road_safety_zoom: "<b>Verkehrssicherheit sagt Zoom hinein.</b> Zu weit draußen für die Straßenarten zeigt ihre Zeile Zoom hinein, wie bei Beläge."
+  v0914_karoo_manual: "<b>Eine Anleitung für Scout auf dem Karoo.</b> Das Wiki hat eine Anleitung zu Scout für Karoo mit den Installationsschritten und Testfahrten, und der Karoo auf der Scout-Seite führt dorthin."
   v0911_region_links: "<b>Quellen im Geografietext.</b> Der Geografietext einer Region kann jetzt seine Quellen verlinken, wie sein Text zu Geschichte, Natur und Kultur."
   v0911_region_editor: "<b>Speichern und weiter.</b> Wer einen Schritt des Regionseditors speichert, kommt zum nächsten."
   v0911_translations: "<b>Einfacher übersetzen.</b> Eine Übersetzung behält die Wikipedia-Nennung ihres Originals, darum fragt das Formular nicht mehr, woher sie stammt."
