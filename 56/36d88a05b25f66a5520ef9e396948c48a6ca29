@@ -1,0 +1,50 @@
+web/templates/pages/roles.html.twig
+  s_c5be469318ab47::t_10ac58cfdb0e30 79
+docs/specs/dev-environment.md
+  s_c5be469318ab47::t_d00459f73fd9da 109-116
+web/config/packages/twig.yaml
+  s_c5be469318ab47::t_10ac58cfdb0e30 13-15
+web/templates/pages/developers_export.html.twig
+  s_c5be469318ab47::t_10ac58cfdb0e30 88
+web/.env
+  s_c5be469318ab47::t_3b7b8c5ce2082c 67-69
+developers/docker/compose.yaml
+  s_c5be469318ab47::t_b11b58e1aa11b1 77,210
+  s_c5be469318ab47::t_10ac58cfdb0e30 78,211
+web/.env.staging
+  s_c5be469318ab47::t_3b7b8c5ce2082c 50
+web/templates/pages/pages.html.twig
+  s_c5be469318ab47::t_10ac58cfdb0e30 41
+web/templates/pages/privacy.html.twig
+  s_c5be469318ab47::t_10ac58cfdb0e30 37
+web/src/Controller/SitemapController.php
+  s_c5be469318ab47::t_b11b58e1aa11b1 16,100-101,179,204
+web/templates/partials/_footer.html.twig
+  s_c5be469318ab47::t_10ac58cfdb0e30 33-34
+web/templates/pages/about.html.twig
+  s_c5be469318ab47::t_10ac58cfdb0e30 35
+web/templates/pages/terms.html.twig
+  s_c5be469318ab47::t_10ac58cfdb0e30 22,39
+web/templates/contribute/region_edit.html.twig
+  s_c5be469318ab47::t_10ac58cfdb0e30 144,191,233
+web/src/Controller/GovernanceRedirectController.php
+  s_c5be469318ab47::t_b11b58e1aa11b1 9,21-25,36
+web/templates/pages/developers_api.html.twig
+  s_c5be469318ab47::t_10ac58cfdb0e30 26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5636d88a05b25f66a5520ef9e396948c48a6ca29",
+  "prompts": {},
+  "sessions": {
+    "s_c5be469318ab47": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b16c0684-a44e-4b29-ace0-815afbd63fcf",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
