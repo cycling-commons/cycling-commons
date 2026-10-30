@@ -4237,17 +4237,26 @@ outstanding, in order. It reads **Send all** until the first tag has gone
   Under the three steps sit **four drawn devices** (`_scout_devices.html.twig`,
   inline SVG, no maker's wordmark): Garmin Edge (the real app screen, cut
   from the Connect IQ store screenshot, `assets/scout/garmin-screen.webp`),
-  Hammerhead Karoo, Android and iPhone, each captioned with its status. Those
+  Hammerhead Karoo (the "gravel stretch open" screen from the Scout for Karoo
+  manual, `assets/scout/karoo-screen.svg`), Android and iPhone, each
+  captioned with its status: "Available now" in green (`#256B2A`), the Karoo's
+  "Join as tester" in orange (`#A34F00`), both clearing 4.5:1 on the paper.
+  The Garmin and Karoo drawings link where their chips do (the store page and
+  the Karoo manual); on the homepage, where the badge under each drawing
+  carries the link, the drawing's link stays out of the tab order. Those
   not out yet (Android, iPhone) are greyed; their captions keep full
   contrast. The hero's platform chips list the same four. The Karoo app is a
   beta for testers (owner 2026-10-12): its chip reads "Join as tester" and
-  links the GitHub releases (`github.com/cycling-commons/scout/releases`),
-  where the release holds the app and a `Scout-Karoo-<version>.zip` with the
-  install steps. A line under the chips on `/scout` tells testers the steps
-  are in that zip. Brand marks follow each owner's rules
+  links the Scout for Karoo manual on the wiki (`wiki/scout-karoo.md`,
+  `partials/_scout_links.html.twig`), never GitHub directly: the manual holds
+  the Companion install links (stable and beta), which always reach the
+  newest release. The chip is filled like the primary button (`--trail`
+  background, ink text).
+  Brand marks follow each owner's rules
   (owner 2026-09-18): Garmin's own "Available on the Connect IQ Store" badge
   (unaltered, `LicenseRef-Garmin-Connect-IQ-Badge`) replaces the Garmin chip
-  and links the live store page; the Android robot (Google, CC BY 3.0,
+  and links the live store page in the page's language (`en-US`,
+  `fr-FR`, `nl-NL`, `de-DE` or `es-ES`); the Android robot (Google, CC BY 3.0,
   credited on `/credits`) sits in its chip; Hammerhead and Apple marks need
   their owners' permission, so those chips stay text. A store badge appears
   only once the app is live in that store. The homepage keeps two, small and

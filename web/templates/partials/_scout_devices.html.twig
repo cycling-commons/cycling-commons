@@ -7,7 +7,8 @@
    it is, and the marks are not ours to draw.
 
    Screens live in assets/scout/. The Garmin one is the real app, cut from the
-   Connect IQ store screenshot; the others are drawn stand-ins until real
+   Connect IQ store screenshot; the Karoo one is the drawn screen from the
+   Scout for Karoo manual; the phones are drawn stand-ins until real
    screenshots exist. To swap one, overwrite the file and change nothing else:
    the screen is cropped to the display (`slice`), so only the rough aspect
    ratio matters.
@@ -26,12 +27,18 @@
 {% set devices = devices|default(['garmin', 'karoo', 'android', 'iphone']) %}
 {% set uid = uid|default('d') %}
 {% set chips = chips|default(false) %}
+{% import 'partials/_scout_links.html.twig' as scout_links %}
 {% set decorative = chips ? false : decorative %}
 {% set status = {garmin: 'scout.plat_available', android: 'scout.plat_soon', karoo: 'scout.plat_beta', iphone: 'scout.plat_planned'} %}
 {% set name = {garmin: 'scout.plat_garmin', android: 'scout.plat_android', karoo: 'scout.plat_karoo', iphone: 'scout.plat_iphone'} %}
 <div class="scout-devices{{ compact ? ' compact' : '' }}{{ chips ? ' with-badges' : '' }}" aria-hidden="{{ decorative ? 'true' : 'false' }}">
 {% for d in devices %}
   <figure class="dev dev-{{ d }}">
+  {# Garmin and the Karoo are out, so their drawings link where the chips do.
+     Under the chips the badge carries the link, so the drawing's copy stays
+     out of the tab order and the screen reader. #}
+  {% set href = d == 'garmin' ? scout_links.garmin_store() : (d == 'karoo' ? scout_links.karoo_manual() : '') %}
+  {% if href and not decorative %}<a class="dev-link" href="{{ href }}" rel="noopener"{% if chips %} tabindex="-1" aria-hidden="true"{% endif %}>{% endif %}
   {% if d == 'garmin' %}
     {# Edge 1040 class: light shell, black face, red side key, dark bumper. #}
     <svg viewBox="0 0 160 272" role="img" aria-label="{{ decorative ? '' : 'scout.shot_garmin_alt'|trans }}">
@@ -64,7 +71,7 @@
       <rect x="162" y="104" width="7" height="30" rx="3" fill="#3B3D41"/>
       <rect x="6" y="4" width="158" height="274" rx="30" fill="#17181B" stroke="#3A3C40" stroke-width="1.5"/>
       <rect x="14" y="12" width="142" height="258" rx="24" fill="none" stroke="#26282C" stroke-width="2"/>
-      <image href="{{ asset('scout/garmin-screen.svg') }}" x="21" y="22" width="128" height="196" preserveAspectRatio="xMidYMid slice" clip-path="url(#scr-k-{{ uid }})"/>
+      <image href="{{ asset('scout/karoo-screen.svg') }}" x="21" y="22" width="128" height="196" preserveAspectRatio="xMidYMid slice" clip-path="url(#scr-k-{{ uid }})"/>
       <rect x="38" y="236" width="38" height="16" rx="8" fill="#2A2C30" stroke="#44474C"/>
       <rect x="94" y="236" width="38" height="16" rx="8" fill="#2A2C30" stroke="#44474C"/>
     </svg>
@@ -81,14 +88,15 @@
       <rect x="57" y="19" width="46" height="14" rx="7" fill="#000"/>
     </svg>
   {% endif %}
+  {% if href and not decorative %}</a>{% endif %}
   {% if chips %}
     <figcaption class="dev-badge">
     {% if d == 'garmin' %}
       {# Garmin's own store badge, unaltered (Connect IQ brand guidelines). #}
-      <a class="plat-badge" href="https://apps.garmin.com/apps/7849af70-3769-4143-bea7-8c1ea5e5f847" rel="noopener"><img src="{{ asset('scout/connect-iq-badge-black.png') }}" width="278" height="95" alt="{{ 'scout.plat_garmin_badge'|trans }}"></a>
+      <a class="plat-badge" href="{{ scout_links.garmin_store() }}" rel="noopener"><img src="{{ asset('scout/connect-iq-badge-black.png') }}" width="278" height="95" alt="{{ 'scout.plat_garmin_badge'|trans }}"></a>
     {% elseif d == 'karoo' %}
-      {# The beta for testers: its GitHub releases hold the app and the install steps. #}
-      <a class="plat live" href="https://github.com/cycling-commons/scout/releases" rel="noopener"><span class="nm">{{ name[d]|trans }} <span class="st">{{ status[d]|trans }}</span></span></a>
+      {# The beta for testers: the manual on the wiki holds the install links. #}
+      <a class="plat live" href="{{ scout_links.karoo_manual() }}" rel="noopener"><span class="nm">{{ name[d]|trans }} <span class="st">{{ status[d]|trans }}</span></span></a>
     {% else %}
       <span class="plat {{ d == 'android' ? 'soon' : 'planned' }}">{% if d == 'android' %}<img class="plat-logo" src="{{ asset('scout/android-robot.svg') }}" alt="" width="17" height="20">{% endif %}<span class="nm">{{ name[d]|trans }} <span class="st">{{ status[d]|trans }}</span></span></span>
     {% endif %}

@@ -1,0 +1,11 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+   Where the Scout chips lead, in one place for every page that draws them.
+
+   garmin_store: the Connect IQ store listing in the page's language.
+   karoo_manual: the Scout for Karoo manual on the wiki. Every Karoo link
+     leads there: it holds the install links, which always reach the newest
+     release.
+#}
+{% macro garmin_store() %}https://apps.garmin.com/{{ {fr: 'fr-FR', nl: 'nl-NL', de: 'de-DE', es: 'es-ES'}[app.request.locale] ?? 'en-US' }}/apps/7849af70-3769-4143-bea7-8c1ea5e5f847{% endmacro %}
+{% macro karoo_manual() %}{{ wiki_url }}/scout-karoo/{% endmacro %}
