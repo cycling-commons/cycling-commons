@@ -5,6 +5,7 @@
 namespace App\Repository;
 
 use App\Entity\ResetPasswordRequest;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use SymfonyCasts\Bundle\ResetPassword\Model\ResetPasswordRequestInterface;
@@ -13,6 +14,8 @@ use SymfonyCasts\Bundle\ResetPassword\Persistence\ResetPasswordRequestRepository
 
 /**
  * @extends ServiceEntityRepository<ResetPasswordRequest>
+ *
+ * @implements ResetPasswordRequestRepositoryInterface<User>
  *
  * @api
  */
@@ -25,6 +28,11 @@ class ResetPasswordRequestRepository extends ServiceEntityRepository implements 
         parent::__construct($registry, ResetPasswordRequest::class);
     }
 
+    /**
+     * @param User $user
+     *
+     * @return ResetPasswordRequestInterface<User>
+     */
     public function createResetPasswordRequest(
         object $user,
         \DateTimeInterface $expiresAt,

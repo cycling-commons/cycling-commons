@@ -7,7 +7,6 @@ declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Entity\ResetPasswordRequest;
-use App\Entity\User;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
@@ -60,7 +59,7 @@ final class ResetPasswordRequestCrudController extends AbstractCrudController
         // The row's primary key, on every admin list (owner 2026-10-04).
         yield IdField::new('id', 'ID')->hideOnForm();
         yield AssociationField::new('user', 'Account')->formatValue(
-            static fn (mixed $v, ResetPasswordRequest $r): string => $r->getUser() instanceof User ? $r->getUser()->getEmail() : '—'
+            static fn (mixed $v, ResetPasswordRequest $r): string => $r->getUser()->getEmail()
         );
         yield $this->riderDateTime('requestedAt', 'Requested');
         yield $this->riderDateTime('expiresAt', 'Expires');
