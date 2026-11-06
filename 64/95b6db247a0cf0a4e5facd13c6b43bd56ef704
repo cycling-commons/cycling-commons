@@ -1,0 +1,25 @@
+pipeline/onboarding/plan.py
+  s_904c757bb87e01::t_82859607f5194f 63-66,83-85,145,159-160,340-342,379-380
+pipeline/tests/test_onboarding_plan.py
+  s_904c757bb87e01::t_82859607f5194f 141-156
+wiki/developers/data-ops/onboarding-a-country.md
+  s_904c757bb87e01::t_bc7443ea93a098 72-74
+docs/specs/coverage-provider.md
+  s_904c757bb87e01::t_579157ab6b3d81 61-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6495b6db247a0cf0a4e5facd13c6b43bd56ef704",
+  "prompts": {},
+  "sessions": {
+    "s_904c757bb87e01": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2f111388-92fe-4a16-a264-f6b50b0d9e6e",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
