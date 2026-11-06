@@ -1,0 +1,38 @@
+docs/specs/catalog-data-model.md
+  s_904c757bb87e01::t_579157ab6b3d81 172-173,175-176
+  s_904c757bb87e01::t_9fe29af13287a3 174
+wiki/developers/data-ops/onboarding-a-country.md
+  s_904c757bb87e01::t_7148f2aa773b8d 87-88,90-92,94-97,100-102,124-127
+  s_904c757bb87e01::t_9fe29af13287a3 89,93
+  s_904c757bb87e01::t_5336fb004b4366 98-99
+Makefile
+  s_904c757bb87e01::t_5336fb004b4366 344
+  s_904c757bb87e01::t_9fe29af13287a3 23,342-343
+  s_904c757bb87e01::t_c7779cfe22e4bf 345
+tools/onboard-countries.sh
+  s_904c757bb87e01::t_5336fb004b4366 17-20,31,35,37,70
+  s_904c757bb87e01::t_9fe29af13287a3 8
+  s_904c757bb87e01::t_90c86fdb7ac27b 1-7,9-16,21-30,32-34,36,38-69,71-99
+pipeline/tests/test_onboarding_repair.py
+  s_904c757bb87e01::t_4617d03dee0a1b 144-193
+pipeline/onboarding/repair.py
+  s_904c757bb87e01::t_b1086f7b741a3c 78,109
+  s_904c757bb87e01::t_4617d03dee0a1b 96-98,101
+  s_904c757bb87e01::t_64d0579d736ad8 2-6,73-74,76-77,82-83,85-95,99-100,102-103,105-106,108,121
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "899c4d27cd09971516838ff853addb659c3fc072",
+  "prompts": {},
+  "sessions": {
+    "s_904c757bb87e01": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2f111388-92fe-4a16-a264-f6b50b0d9e6e",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
