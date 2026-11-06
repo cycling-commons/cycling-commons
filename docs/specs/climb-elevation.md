@@ -254,8 +254,13 @@ Three properties make this safe to get wrong:
 - **The boxes are tile sets, not continents.** They are tested in a fixed
   order and the first match wins. `europe` is first because the Europe tile set
   covers Sicily and southern Spain, which the Africa box would otherwise claim.
-  The `europe` box is a copy of `fetch-glo30.sh`'s `EUROPE` box; the two are
-  widened together.
+  The `europe` boxes are a copy of `fetch-glo30.sh`'s `EUROPE` preset; the two
+  are widened together. A tile set may hold several boxes: `europe` is the
+  mainland (11°W to 32°E, 35°N to 72°N), the Azores (32°W to 24°W, 36°N to
+  40°N), and Madeira with the Canary Islands (19°W to 13°W, 27°N to 34°N), which
+  the Africa box would otherwise claim. One box over all three would take in
+  North Africa. `ATLANTIC` fetches the two island boxes alone, for a host that
+  already holds the mainland.
 - **A continent with no configured instance falls back to the default**, never
   to the next box, and an unrecognised key in `ELEVATION_URLS` is dropped
   rather than trusted.

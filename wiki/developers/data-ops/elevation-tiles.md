@@ -345,6 +345,16 @@ onboarded ground rather than the continent: `AUSTRALIA` stops at 44°S, `EUROPE`
 stops at 32°E short of the Urals. Widen a box when a country is onboarded, not
 in anticipation.
 
+`EUROPE` holds two more boxes for the Atlantic islands of Portugal and Spain: the
+Azores, and Madeira with the Canary Islands. One box from the Azores to the Urals
+would take in North Africa. A host that already holds the mainland fetches only
+the islands with `ATLANTIC`:
+
+<!-- CODE-ILLUSTRATIVE fetch the Atlantic islands for the europe instance -->
+```bash
+tools/elevation/fetch-glo30.sh ATLANTIC
+```
+
 Cells over open sea simply 404 and are skipped, so a slightly generous bbox
 costs nothing but a few wasted requests.
 

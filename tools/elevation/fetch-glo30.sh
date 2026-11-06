@@ -11,7 +11,7 @@
 #     ./fetch-glo30.sh BENELUX
 #     ./fetch-glo30.sh 49,2,54,8 ./data/dem/glo30
 #
-# bbox is min_lat,min_lon,max_lat,max_lon in degrees.
+# bbox is min_lat,min_lon,max_lat,max_lon in degrees; several, separated by spaces, in one quoted argument.
 #
 # Tiles are 1x1 degree, named for their south-west corner. Downloads are
 # skipped when the file already exists, so re-running after an interruption
@@ -32,8 +32,12 @@ case "${1:-}" in
   # Mediterranean. Deliberately NOT the full EU-DEM extent: this stops at 32E,
   # short of the Urals and the Caucasus, because nothing east of it is onboarded
   # and each degree cell costs ~25 MB of .hgt whether or not a climb is in it.
-  # Widen the bbox when a country there is onboarded, not before.
-  EUROPE)  BBOX="35,-11,72,32" ;;
+  # Widen the bbox when a country there is onboarded, not before. The Azores
+  # (Portugal) and Madeira with the Canary Islands (Portugal, Spain) are two
+  # boxes of their own, ATLANTIC: one box over all of it would take in North
+  # Africa. App\Elevation\ElevationEndpoints::BOXES holds the same three boxes.
+  EUROPE)  BBOX="35,-11,72,32 36,-32,40,-24 27,-19,34,-13" ;;
+  ATLANTIC) BBOX="36,-32,40,-24 27,-19,34,-13" ;;
   # The 2026-08-06 rollout's continents. Each is the onboarded ground, not the
   # continent: AUSTRALIA stops at 44S (Tasmania) and leaves out Macquarie
   # Island, and USWEST is California only (USROCKY, USARIZONA and USOREGON
@@ -74,34 +78,37 @@ case "${1:-}" in
   NEWZEALAND) BBOX="-48,166,-34,179" ;;
   CANADAWEST) BBOX="48,-140,61,-113" ;;  # British Columbia
   CANADAEAST) BBOX="44,-80,63,-56" ;;    # Québec
-  "")      echo "usage: $0 <BE|NL|LU|BENELUX|EUROPE|AUSTRALIA|JAPAN|USWEST|USROCKY|USARIZONA|USOREGON|SLOVENIA|RWANDA|SOUTHAFRICA|COLOMBIA|CHILE|NEWZEALAND|CANADAWEST|CANADAEAST|min_lat,min_lon,max_lat,max_lon> [out_dir]" >&2; exit 2 ;;
+  "")      echo "usage: $0 <BE|NL|LU|BENELUX|EUROPE|ATLANTIC|AUSTRALIA|JAPAN|USWEST|USROCKY|USARIZONA|USOREGON|SLOVENIA|RWANDA|SOUTHAFRICA|COLOMBIA|CHILE|NEWZEALAND|CANADAWEST|CANADAEAST|min_lat,min_lon,max_lat,max_lon> [out_dir]" >&2; exit 2 ;;
   *)       BBOX="$1" ;;
 esac
 
-IFS=, read -r LAT0 LON0 LAT1 LON1 <<<"$BBOX"
 mkdir -p "$OUT"
-
-echo "GLO-30: lat $LAT0..$LAT1, lon $LON0..$LON1 -> $OUT"
 have=0; got=0; missing=0
 
-for lat in $(seq "$LAT0" $((LAT1 - 1))); do
-  for lon in $(seq "$LON0" $((LON1 - 1))); do
-    # N50E005 style: always zero-padded, hemisphere letters from the sign.
-    if [ "$lat" -ge 0 ]; then NS=N; alat=$lat; else NS=S; alat=$((-lat)); fi
-    if [ "$lon" -ge 0 ]; then EW=E; alon=$lon; else EW=W; alon=$((-lon)); fi
-    name=$(printf '%s%02d_00_%s%03d_00' "$NS" "$alat" "$EW" "$alon")
-    tile="Copernicus_DSM_COG_10_${name}_DEM"
-    dest="$OUT/${tile}.tif"
+# A preset may hold several boxes, separated by spaces.
+for box in $BBOX; do
+  IFS=, read -r LAT0 LON0 LAT1 LON1 <<<"$box"
+  echo "GLO-30: lat $LAT0..$LAT1, lon $LON0..$LON1 -> $OUT"
 
-    if [ -s "$dest" ]; then have=$((have + 1)); continue; fi
+  for lat in $(seq "$LAT0" $((LAT1 - 1))); do
+    for lon in $(seq "$LON0" $((LON1 - 1))); do
+      # N50E005 style: always zero-padded, hemisphere letters from the sign.
+      if [ "$lat" -ge 0 ]; then NS=N; alat=$lat; else NS=S; alat=$((-lat)); fi
+      if [ "$lon" -ge 0 ]; then EW=E; alon=$lon; else EW=W; alon=$((-lon)); fi
+      name=$(printf '%s%02d_00_%s%03d_00' "$NS" "$alat" "$EW" "$alon")
+      tile="Copernicus_DSM_COG_10_${name}_DEM"
+      dest="$OUT/${tile}.tif"
 
-    code=$(curl -sS -w '%{http_code}' -o "$dest.part" "$BUCKET/$tile/$tile.tif" || echo 000)
-    if [ "$code" = "200" ]; then
-      mv "$dest.part" "$dest"; got=$((got + 1))
-      printf '  %s  %s\n' "$tile" "$(du -h "$dest" | cut -f1)"
-    else
-      rm -f "$dest.part"; missing=$((missing + 1))   # sea, or withheld by GLO-30 Public
-    fi
+      if [ -s "$dest" ]; then have=$((have + 1)); continue; fi
+
+      code=$(curl -sS -w '%{http_code}' -o "$dest.part" "$BUCKET/$tile/$tile.tif" || echo 000)
+      if [ "$code" = "200" ]; then
+        mv "$dest.part" "$dest"; got=$((got + 1))
+        printf '  %s  %s\n' "$tile" "$(du -h "$dest" | cut -f1)"
+      else
+        rm -f "$dest.part"; missing=$((missing + 1))   # sea, or withheld by GLO-30 Public
+      fi
+    done
   done
 done
 

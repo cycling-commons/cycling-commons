@@ -15,17 +15,19 @@ namespace App\Elevation;
 final class ElevationEndpoints
 {
     /**
-     * continent key => [lonMin, latMin, lonMax, latMax], FIRST MATCH WINS.
+     * continent key => its tile set's boxes, each [lonMin, latMin, lonMax, latMax]; FIRST MATCH WINS.
+     * The europe boxes are fetch-glo30.sh's EUROPE preset: the mainland, then the Azores, then Madeira
+     * with the Canary Islands, which the Africa box would otherwise claim.
      *
-     * @var array<string, array{float, float, float, float}>
+     * @var array<string, list<array{float, float, float, float}>>
      */
     private const array BOXES = [
-        'europe' => [-11.0, 35.0, 32.0, 72.0],
-        'north-america' => [-170.0, 15.0, -50.0, 75.0],
-        'south-america' => [-82.0, -56.0, -34.0, 13.0],
-        'africa' => [-20.0, -35.0, 52.0, 38.0],
-        'asia' => [32.0, 0.0, 180.0, 82.0],
-        'oceania' => [110.0, -50.0, 180.0, 0.0],
+        'europe' => [[-11.0, 35.0, 32.0, 72.0], [-32.0, 36.0, -24.0, 40.0], [-19.0, 27.0, -13.0, 34.0]],
+        'north-america' => [[-170.0, 15.0, -50.0, 75.0]],
+        'south-america' => [[-82.0, -56.0, -34.0, 13.0]],
+        'africa' => [[-20.0, -35.0, 52.0, 38.0]],
+        'asia' => [[32.0, 0.0, 180.0, 82.0]],
+        'oceania' => [[110.0, -50.0, 180.0, 0.0]],
     ];
 
     /** @var array<string, string> continent key => base URL */
@@ -75,10 +77,12 @@ final class ElevationEndpoints
     /** The instance whose tile set covers this point, or the default. */
     public function forPoint(float $lat, float $lon): string
     {
-        foreach (self::BOXES as $key => [$lonMin, $latMin, $lonMax, $latMax]) {
-            if ($lon >= $lonMin && $lon <= $lonMax && $lat >= $latMin && $lat <= $latMax) {
-                // First match wins; a matched box with no URL uses the default, never the next box.
-                return $this->urls[$key] ?? $this->defaultUrl;
+        foreach (self::BOXES as $key => $boxes) {
+            foreach ($boxes as [$lonMin, $latMin, $lonMax, $latMax]) {
+                if ($lon >= $lonMin && $lon <= $lonMax && $lat >= $latMin && $lat <= $latMax) {
+                    // First match wins; a matched box with no URL uses the default, never the next box.
+                    return $this->urls[$key] ?? $this->defaultUrl;
+                }
             }
         }
 

@@ -64,6 +64,20 @@ final class ElevationEndpointsTest extends TestCase
         self::assertSame('http://africa.test', $e->forPoint(31.06, -7.92));  // Tizi n'Test, MA
     }
 
+    public function testTheAtlanticIslandsOfPortugalAndSpainAskTheEuropeInstance(): void
+    {
+        // Their tiles are in the EUROPE set, though Madeira and the Canaries lie
+        // inside the Africa box and the Azores in no continent's box at all.
+        $e = $this->endpoints('africa=http://africa.test,north-america=http://na.test');
+
+        self::assertSame('http://europe.test', $e->forPoint(32.76, -16.94));  // Pico do Arieiro, Madeira
+        self::assertSame('http://europe.test', $e->forPoint(28.27, -16.64));  // El Teide road, Tenerife
+        self::assertSame('http://europe.test', $e->forPoint(28.95, -13.60));  // Lanzarote
+        self::assertSame('http://europe.test', $e->forPoint(38.47, -28.40));  // Pico, Azores
+        self::assertSame('http://europe.test', $e->forPoint(39.45, -31.20));  // Flores, Azores
+        self::assertSame('http://africa.test', $e->forPoint(27.94, -12.92));  // Tarfaya, MA: Africa still
+    }
+
     public function testAContinentWithNoConfiguredInstanceFallsBackRatherThanBlackHoling(): void
     {
         // south-america has no entry in MAP, so a Chilean climb goes to the
