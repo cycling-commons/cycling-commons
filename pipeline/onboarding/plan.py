@@ -63,7 +63,7 @@ class Plan:
     # Geofabrik's index lists this country in the extract, or the operator says
     # the extract carries it (--shared), so it may share an extract another
     # country already holds: europe/ireland-and-northern-ireland for Ireland,
-    # europe/italy for San Marino, whose index entry lists Italy only.
+    # Italy's extract for San Marino, whose index entry lists Italy only.
     extract_listed: bool = False
     # The other countries that hold the extract, filled by write_plan.
     shared_with: list[str] = field(default_factory=list)
@@ -339,7 +339,7 @@ def main(argv=None, *, source=None, connect=psycopg.connect, index_loader=load_i
                     help="Geofabrik extract, overriding the index rule, e.g. europe/denmark; with --add, ISO=slug per region")
     ap.add_argument("--shared", action="store_true",
                     help="the --extract carries this country though Geofabrik's index does not list it "
-                         "(San Marino in europe/italy); it is shared with the countries that hold it")
+                         "(San Marino inside Italy's extract); it is shared with the countries that hold it")
     ap.add_argument("--add", action="append", default=[], metavar="ISO",
                     help="plan this ISO 3166-2 region for a live country, e.g. --add US-AZ (repeatable)")
     ap.add_argument("--release", default=config.OVERTURE_RELEASE, help="Overture release")
