@@ -31,6 +31,28 @@ must never appear.
 | 2026-08-14 | CL | L4 regiones | 16 | three official long forms shortened |
 | 2026-08-14 | NZ | L4 regions | 17 | straddles the antimeridian |
 | 2026-08-14 | CA | L4, `--only` | 2 | British Columbia + Québec |
+| 2026-11-06 | **PT** | L4 distritos + regiões autónomas | **20** | 18 districts, the Azores and Madeira; see below |
+| 2026-11-06 | AD / MC / LI / MT / SM / VA | **L2 country** | 1 each | SM and VA share `europe/italy`; see below |
+
+**The 2026-11-06 rollout (7 countries, `make country-onboard`, Overture 2026-10-21.0).**
+
+**Portugal** seeds at Overture's `region` subtype: the 18 distritos plus the two
+regiões autónomas, PT-20 Açores and PT-30 Madeira, each with its ISO 3166-2 code.
+Overture's Dutch, German and Spanish names carry "District van", "Distrikt" and
+"Distrito de"; the labels drop them, so every language says `Porto` or `Braga`
+(Spanish keeps its exonyms `Oporto` and `Coímbra`). The islands lie outside the
+mainland `EUROPE` DEM box; `fetch-glo30.sh` holds them as two extra boxes
+(`ATLANTIC`), and `ElevationEndpoints` sends them to the Europe instance.
+
+**San Marino and Vatican City have no Geofabrik extract of their own.** Both lie
+inside `europe/italy`, whose polygon carries them but whose index entry lists IT
+only, so the planner's listing rule would refuse them. They are planned with
+`--extract europe/italy --shared` and share the extract with Italy, as Ireland
+shares the all-Ireland extract with Great Britain. Vatican City is 0.49 km²: one
+region, still a country.
+
+Andorra's French and Spanish labels drop Overture's long forms ("Principauté
+d'Andorre", "Principado de Andorra"), and Vatican City's German one drops "Staat".
 
 **The 2026-08-14 rollout (7 countries, 83 operating rows, three new
 continents).** Five judgment calls worth not re-deriving:
