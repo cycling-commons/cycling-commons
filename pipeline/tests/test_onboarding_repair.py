@@ -141,3 +141,53 @@ def test_a_live_country_without_added_regions_is_refused(catalog, capsys):
                      clock=lambda: 0.0)
     assert rc == 1
     assert "or a live one with added regions" in capsys.readouterr().err
+
+
+def _batch(conn, *codes):
+    return repair.main(list(codes), connect=lambda dsn: contextlib.nullcontext(conn), runner=lambda step: _ran.append(step) or 0,
+                       clock=lambda: 0.0)
+
+
+_ran = []
+
+
+def test_several_countries_repair_in_one_pass_and_a_shared_neighbour_is_harvested_once(catalog, capsys):
+    _ran.clear()
+    add_country(catalog, "FR", "live", ["europe/france"])
+    add_country(catalog, "AD", "seeded", ["europe/andorra"])
+    add_country(catalog, "MC", "seeded", ["europe/monaco"])
+    add_region(catalog, 1, "FR", 4, "POLYGON((1 42,8 42,8 44,1 44,1 42))", slug="occitanie")
+    add_region(catalog, 2, "AD", 2, "POLYGON((1.4 42.42,1.8 42.42,1.8 42.4,1.4 42.4,1.4 42.42))", slug="andorra")
+    add_region(catalog, 3, "MC", 2, "POLYGON((7.4 43.72,7.44 43.72,7.44 43.75,7.4 43.75,7.4 43.72))", slug="monaco")
+    assert _batch(catalog, "AD", "mc", "AD") == 0
+    assert [(s.argv[3:], s.env) for s in _ran] == [
+        (("--load-only", "--regions", "europe/andorra,europe/monaco"), {}),
+        (("--load-only", "--regions", "europe/france"), {"COVERAGE_FULL_MEMBERSHIP": "1"}),
+        (("--tiles-only",), {}),
+        (("--routes", "--regions", "europe/andorra,europe/monaco,europe/france"), {"COVERAGE_FORCE_EXTRACT": "1"}),
+        (("--surface", "--regions", "europe/andorra,europe/monaco,europe/france"), {"COVERAGE_FORCE_EXTRACT": "1"}),
+    ]
+    out = capsys.readouterr().out
+    assert "[repair] AD,MC: extracts europe/andorra,europe/monaco; neighbours FR" in out
+    assert "[repair] AD,MC: done" in out
+
+
+def test_two_countries_of_one_pass_that_touch_take_the_full_membership_pass(catalog):
+    _ran.clear()
+    add_country(catalog, "AT", "seeded", ["europe/austria"])
+    add_country(catalog, "LI", "seeded", ["europe/liechtenstein"])
+    add_region(catalog, 1, "AT", 4, "POLYGON((9.5 47,10 47,10 47.5,9.5 47.5,9.5 47))", slug="vorarlberg")
+    add_region(catalog, 2, "LI", 2, "POLYGON((9.45 47.05,9.55 47.05,9.55 47.2,9.45 47.2,9.45 47.05))", slug="liechtenstein")
+    assert _batch(catalog, "AT", "LI") == 0
+    assert [(s.argv[3:], s.env) for s in _ran][:1] == [
+        (("--load-only", "--regions", "europe/austria,europe/liechtenstein"), {"COVERAGE_FULL_MEMBERSHIP": "1"}),
+    ]
+
+
+def test_one_country_of_a_pass_that_is_not_seeded_stops_it(catalog, capsys):
+    _ran.clear()
+    add_country(catalog, "AD", "seeded", ["europe/andorra"])
+    add_country(catalog, "MC", "planned", ["europe/monaco"])
+    assert _batch(catalog, "AD", "MC") == 1
+    assert _ran == []
+    assert "MC is planned" in capsys.readouterr().err

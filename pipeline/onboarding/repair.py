@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-"""python -m onboarding.repair <CC>: harvest a seeded country and repair its neighbours' border data.
+"""python -m onboarding.repair <CC> [<CC> ...]: harvest seeded countries and repair their neighbours' border data.
+
+Several countries onboarded together are repaired in one pass: each extract is
+harvested once, so a neighbour two of them share (France for Andorra and
+Monaco) is re-harvested once, not once per country.
 
 For a live country with added regions (region.pending), every extract of the
 country is re-harvested with full membership: the rows its older regions own
@@ -66,33 +70,43 @@ def main(argv=None, *, connect=psycopg.connect, runner=run_step, clock=time.mono
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(line_buffering=True)
-    ap = argparse.ArgumentParser(description="Harvest a seeded country and repair its neighbours")
-    ap.add_argument("country", help="ISO 3166-1 alpha-2, e.g. DK")
+    ap = argparse.ArgumentParser(description="Harvest seeded countries and repair their neighbours")
+    ap.add_argument("countries", nargs="+", metavar="country", help="ISO 3166-1 alpha-2, e.g. DK; several repair together")
     args = ap.parse_args(argv)
-    cc = args.country.strip().upper()
-    if not re.fullmatch(r"[A-Z]{2}", cc):
-        print(f"{args.country!r} is not an ISO 3166-1 alpha-2 code", file=sys.stderr)
+    codes = list(dict.fromkeys(c.strip().upper() for c in args.countries))
+    if bad := [c for c in codes if not re.fullmatch(r"[A-Z]{2}", c)]:
+        print(f"{', '.join(map(repr, bad))} is not an ISO 3166-1 alpha-2 code", file=sys.stderr)
         return 1
 
     dsn = os.environ.get("DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons")
+    added: dict[str, list[str]] = {}
+    nbs: list[str] = []
     with connect(dsn) as conn:
-        status = country_status(conn, cc)
-        added = [slug for (slug,) in conn.execute(
-            "SELECT slug FROM region WHERE country_code = %s AND pending ORDER BY slug", (cc,))]
-        adding = status == "live" and bool(added)
-        if status != "seeded" and not adding:
-            print(f"{cc} is {status or 'not planned'}; repair needs a seeded country (app:country:apply {cc} first), "
-                  f"or a live one with added regions.", file=sys.stderr)
+        for cc in codes:
+            status = country_status(conn, cc)
+            pending = [slug for (slug,) in conn.execute(
+                "SELECT slug FROM region WHERE country_code = %s AND pending ORDER BY slug", (cc,))]
+            if status == "live" and pending:
+                added[cc] = pending
+            elif status != "seeded":
+                print(f"{cc} is {status or 'not planned'}; repair needs a seeded country (app:country:apply {cc} first), "
+                      f"or a live one with added regions.", file=sys.stderr)
+                return 1
+            nbs += neighbours(conn, cc, source="pending" if cc in added else "region")
+        # Two countries of this pass that border each other (seeded rows count as neighbours) each hold the
+        # other's border rows in their extracts, so those extracts take the full membership pass too.
+        touching = sorted(set(nbs) & set(codes))
+        nbs = sorted(set(nbs) - set(codes))
+        own = extracts_of(conn, codes)
+        nb_extracts = sorted(set(extracts_of(conn, nbs)) | set(extracts_of(conn, touching)))
+        if missing := [cc for cc in codes if not extracts_of(conn, [cc])]:
+            print(f"{', '.join(missing)} has no country_extract row; nothing to harvest.", file=sys.stderr)
             return 1
-        nbs = neighbours(conn, cc, source="pending" if adding else "region")
-        own = extracts_of(conn, [cc])
-        nb_extracts = extracts_of(conn, nbs)
-    if not own:
-        print(f"{cc} has no country_extract row; nothing to harvest.", file=sys.stderr)
-        return 1
+    adding = bool(added)
+    label = ",".join(codes)
 
-    print(f"[repair] {cc}: extracts {','.join(own)}; neighbours {','.join(nbs) or 'none'}"
-          + (f"; adding {','.join(added)}" if adding else ""))
+    print(f"[repair] {label}: extracts {','.join(own)}; neighbours {','.join(nbs) or 'none'}"
+          + (f"; adding {','.join(slug for slugs in added.values() for slug in slugs)}" if added else ""))
     for step in plan_steps(own, nb_extracts, adding):
         print(f"[repair] {step.name}: starting")
         started = clock()
@@ -104,7 +118,7 @@ def main(argv=None, *, connect=psycopg.connect, runner=run_step, clock=time.mono
             return rc
         if rc != 0:
             return rc
-    print(f"[repair] {cc}: done")
+    print(f"[repair] {label}: done")
     return 0
 
 

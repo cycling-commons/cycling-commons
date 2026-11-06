@@ -169,7 +169,11 @@ voting/rankings, and the per-region route cap all anchor to `region.id`
 (`python -m onboarding.plan <CC>`, then `app:country:apply <CC>`;
 `wiki/developers/data-ops/onboarding-a-country.md`): one operating level per
 country, chosen by the planner's fixed rules from Overture's divisions
-(data-source-register.md, Region boundaries). A live country gains regions
+(data-source-register.md, Region boundaries). `python -m onboarding.repair`
+takes several countries onboarded together and harvests each extract once;
+on the dev stack `make country-onboard c="AD MC PT"` runs all five steps for them. A
+country inside another country's extract that Geofabrik does not list there
+(San Marino in `europe/italy`) is planned with `--shared`. A live country gains regions
 at its own level with `python -m onboarding.plan <CC> --add <ISO 3166-2>`:
 the new rows carry `region.pending` from `app:country:apply` until
 `app:country:mark-live`, and the region registry leaves a pending row out,

@@ -84,6 +84,22 @@ NEIGHBOUR_DEG = 0.11
 runs the planner against your local database (it needs the network for Overture and Geofabrik); pass
 flags with `args="--level county"`. It writes the plan and nothing else.
 
+## On the dev stack: one command
+
+`make country-onboard` runs all five steps for every country code it is given:
+
+<!-- CODE-ILLUSTRATIVE onboard Andorra, Monaco and Portugal on the dev stack -->
+```bash
+make country-onboard c="AD MC PT"
+```
+
+It plans each country, prints the plans, asks one confirmation (`yes=1` skips it), applies each,
+repairs them all in one pass, then checks elevation and marks each live. `release=2026-10-21.0`
+passes an Overture release to the planner, and `args="..."` passes more planner flags to every
+country it plans. A seeded country skips plan and apply and a live one is
+left alone, so a run that stopped (a held lock, a failed elevation check) is finished by running the
+same command again. `tools/onboard-countries.sh` does the work.
+
 ## What each step does
 
 **Apply** turns the plan into `region` rows in one transaction, with the same upsert, provenance
@@ -105,7 +121,10 @@ applies when a rider submits.
 
 **Repair** harvests the new country's extracts, re-harvests every neighbour's extracts with full
 membership (their border rows must be re-owned now that new regions sit next to them), rebuilds the
-point tiles, then the route and surface tiles of the new country and its neighbours. Each is one
+point tiles, then the route and surface tiles of the new country and its neighbours. Several
+countries onboarded together repair in one call, `python -m onboarding.repair AD MC`: France borders
+both and is re-harvested once. Two countries of one call that border each other take the full
+membership pass too. Each is one
 call of the documented `coverage.run` command. When the nightly harvest holds the coverage, routes or
 surface lock, repair exits with code 2 and says to start it again later. An extract the new country
 shares with a neighbour is harvested once, in the neighbours' step: one harvest gives each point to
