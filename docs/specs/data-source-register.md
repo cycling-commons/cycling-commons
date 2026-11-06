@@ -267,8 +267,11 @@ is this.
 Provenance is recorded per row: `region.source` is `osm` or `overture`
 (catalog-data-model.md §2.4). Today every seeded row is `overture`. Both
 exporters read the release pinned in `pipeline/divisions/config.py:OVERTURE_RELEASE`
-(`2026-08-19.0` today); bumping it is a versioned re-import, not a refresh, so
-the `/credits` notice moves with it.
+(`2026-10-21.0` today); bumping it is a versioned re-import, not a refresh, so
+the `/credits` notice moves with it. The bucket keeps only the latest few
+releases, so a pin older than about two months is gone: the planner then stops
+with "No files found" and the pin moves to a release the bucket lists. Countries
+already onboarded keep the release they were planned from (`country.overture_release`).
 The onboarding playbook is `wiki/developers/data-ops/onboarding-a-country.md`.
 
 ### Imagery and elevation (not a letter, but sourced the same way)
