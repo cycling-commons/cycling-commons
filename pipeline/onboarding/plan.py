@@ -60,8 +60,10 @@ class Plan:
     regions: list[PlanRegion]
     skipped: list[str] = field(default_factory=list)
     neighbours: list[str] = field(default_factory=list)
-    # Geofabrik's index lists this country in the extract, so it may share
-    # an extract another country already holds (europe/ireland-and-northern-ireland).
+    # Geofabrik's index lists this country in the extract, or the operator says
+    # the extract carries it (--shared), so it may share an extract another
+    # country already holds: europe/ireland-and-northern-ireland for Ireland,
+    # europe/italy for San Marino, whose index entry lists Italy only.
     extract_listed: bool = False
     # The other countries that hold the extract, filled by write_plan.
     shared_with: list[str] = field(default_factory=list)
@@ -78,7 +80,9 @@ def _key(d: Division, subtype: str, cc: str) -> str | None:
 def build_plan(cc: str, release: str, level_rows: dict[str, list[Division]], outline: Division,
                taken: set[str], index: dict, *, level: str | None = None,
                slug_overrides: dict[str, str] | None = None, extract: str | None = None,
-               extract_check: bool = True) -> Plan:
+               extract_check: bool = True, shared: bool = False) -> Plan:
+    if shared and not extract:
+        raise PlanError("--shared names the extract that carries the country: add --extract <slug>")
     medians = {st: (statistics.median(d.area_km2 for d in rows) if (rows := level_rows.get(st)) else None)
                for st in LEVEL_PROBE_ORDER}
     subtype = choose_level(outline.area_km2, medians, level)
@@ -138,7 +142,7 @@ def build_plan(cc: str, release: str, level_rows: dict[str, list[Division]], out
         extract=chosen_extract,
         regions=regions,
         skipped=skipped,
-        extract_listed=lists_country(index, chosen_extract, cc),
+        extract_listed=shared or lists_country(index, chosen_extract, cc),
     )
 
 
@@ -152,7 +156,8 @@ def write_plan(conn, plan: Plan) -> None:
             (plan.extract, plan.cc))]
         if holders and not plan.extract_listed:
             raise PlanError(f"{plan.extract} already belongs to {', '.join(holders)}, and Geofabrik does not list "
-                            f"{plan.cc} in it; rerun with --extract <slug>")
+                            f"{plan.cc} in it; rerun with --extract <slug>, or add --shared when that extract carries "
+                            f"{plan.cc}")
         plan.shared_with = holders
         conn.execute(
             """INSERT INTO country (code, name, subtype, bbox, labels, status, overture_release, planned_at)
@@ -332,6 +337,9 @@ def main(argv=None, *, source=None, connect=psycopg.connect, index_loader=load_i
     ap.add_argument("--slug", action="append", default=[], help="KEY=slug override (KEY: ISO code, or native name for counties)")
     ap.add_argument("--extract", action="append", default=[],
                     help="Geofabrik extract, overriding the index rule, e.g. europe/denmark; with --add, ISO=slug per region")
+    ap.add_argument("--shared", action="store_true",
+                    help="the --extract carries this country though Geofabrik's index does not list it "
+                         "(San Marino in europe/italy); it is shared with the countries that hold it")
     ap.add_argument("--add", action="append", default=[], metavar="ISO",
                     help="plan this ISO 3166-2 region for a live country, e.g. --add US-AZ (repeatable)")
     ap.add_argument("--release", default=config.OVERTURE_RELEASE, help="Overture release")
@@ -368,7 +376,8 @@ def main(argv=None, *, source=None, connect=psycopg.connect, index_loader=load_i
                 level_rows[args.level] = overture.divisions(cc, args.level, box)
             taken = {slug for (slug,) in conn.execute("SELECT slug FROM region WHERE slug IS NOT NULL")}
             plan = build_plan(cc, args.release, level_rows, outline_rows[0], taken, _index(index_loader, args.index),
-                              level=args.level, slug_overrides=overrides, extract=args.extract[0] if args.extract else None)
+                              level=args.level, slug_overrides=overrides, extract=args.extract[0] if args.extract else None,
+                              shared=args.shared)
             write_plan(conn, plan)
             plan.neighbours = neighbours(conn, cc, source="plan")
         except (PlanError, NoLevelFits, ExtractUndecided, SlugError, OvertureError) as exc:

@@ -69,6 +69,9 @@ rule has an override flag for the case where it cannot decide.
   `europe/ireland-and-northern-ireland` lists Ireland and also carries Northern Ireland, so Ireland
   shares it with Great Britain, and the plan prints `(shared with GB)`. An extract that does not list
   the country stops the plan, so a mistyped `--extract` never takes another country's extract.
+  `--shared` says the extract carries the country though the index does not list it: San Marino
+  and Vatican City lie inside `europe/italy`, whose entry lists Italy only, so they are planned
+  with `--extract europe/italy --shared`.
 - **Neighbours.** Seeded or live countries whose regions lie within this distance of the new
   country, just over the 0.1026° buffer Geofabrik cuts its extracts with:
 

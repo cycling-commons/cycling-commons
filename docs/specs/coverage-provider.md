@@ -58,7 +58,9 @@ loads the stalest first). The onboarded extracts are
   region hard-fails rather than silently disabling ownership. One extract may
   serve several countries (a `country_extract` row each, key `(slug,
   country_code)`): Geofabrik ships the Republic of Ireland only together with
-  Northern Ireland, so `europe/ireland-and-northern-ireland` serves GB and IE.
+  Northern Ireland, so `europe/ireland-and-northern-ireland` serves GB and IE,
+  and `europe/italy` serves IT, SM and VA (San Marino and Vatican City lie inside
+  it and have no extract of their own).
   `coverage.regions.onboarded_map` maps each extract to the tuple of its
   seeded or live countries; a shared extract is harvested once. *Border caveat:* Geofabrik
   extracts overlap in a border buffer, so one OSM entity can arrive staged in

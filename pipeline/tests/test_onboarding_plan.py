@@ -138,6 +138,22 @@ def test_ireland_shares_the_all_ireland_extract_with_great_britain(catalog):
     assert catalog.execute("SELECT count(*) FROM country_extract WHERE country_code = 'GB'").fetchone()[0] == 2
 
 
+def test_shared_lets_a_country_take_an_extract_that_carries_it_though_geofabrik_lists_only_its_holder(catalog):
+    """San Marino lies inside europe/italy, whose index entry lists IT only."""
+    add_country(catalog, "GB", "live", ["europe/great-britain"])
+    plan = planner.build_plan("DK", "2026-08-19.0", {"region": REGIONS}, OUTLINE, set(), INDEX,
+                              extract="europe/great-britain", shared=True)
+    assert plan.extract_listed is True
+    planner.write_plan(catalog, plan)
+    assert plan.shared_with == ["GB"]
+    assert "(shared with GB)" in planner.render_table(plan)
+
+
+def test_shared_without_an_extract_is_refused():
+    with pytest.raises(planner.PlanError, match="--shared names the extract that carries the country"):
+        planner.build_plan("DK", "2026-08-19.0", {"region": REGIONS}, OUTLINE, set(), INDEX, shared=True)
+
+
 def test_the_plan_knows_whether_geofabrik_lists_the_country_in_its_extract():
     plan = planner.build_plan("DK", "2026-08-19.0", {"region": REGIONS}, OUTLINE, set(), INDEX)
     assert plan.extract_listed is True
