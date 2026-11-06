@@ -65,12 +65,16 @@ final class ReleaseNotes
             'date' => '2026-10-29',
             'sections' => [
                 'public' => [
+                    'changelog.v0914_countries',
+                    'changelog.v0914_plan_name',
                     'changelog.v0914_karoo_manual',
                     'changelog.v0914_road_safety_zoom',
                     'changelog.v0914_street_photo',
                 ],
             ],
             'kinds' => [
+                'changelog.v0914_countries' => 'new',
+                'changelog.v0914_plan_name' => 'improved',
                 'changelog.v0914_karoo_manual' => 'new',
                 'changelog.v0914_road_safety_zoom' => 'improved',
                 'changelog.v0914_street_photo' => 'fixed',

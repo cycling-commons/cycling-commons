@@ -5523,6 +5523,8 @@ changelog:
   v0914_street_photo: "<b>De hele straatbeeldfoto.</b> De hoogte van het viewerpaneel bepaalt nu de grootte van de foto, dus de boven- en onderkant vallen niet meer weg."
   v0914_road_safety_zoom: "<b>Verkeersveiligheid zegt Zoom in.</b> Te ver uitgezoomd om de soorten wegen te zien, zegt hun rij Zoom in, net als Ondergrond."
   v0914_karoo_manual: "<b>Een handleiding voor Scout op de Karoo.</b> De wiki heeft een handleiding van Scout voor Karoo met de installatiestappen en testritten, en de Karoo op de Scout-pagina leidt ernaartoe."
+  v0914_countries: "<b>Portugal, Andorra, Monaco, Liechtenstein, Malta, San Marino en Vaticaanstad.</b> Zeven landen komen binnen een dag na deze release op de kaart."
+  v0914_plan_name: "<b>Eerst plannen, later een naam.</b> Een geplande rit krijgt zijn eerste punt zonder naam. De planner vraagt de naam als je de GPX downloadt."
   v0911_region_links: "<b>Bronnen in de aardrijkskundetekst.</b> De aardrijkskundetekst van een regio kan nu zijn bronnen linken, net als de tekst over geschiedenis, natuur en cultuur."
   v0911_region_editor: "<b>Opslaan en doorgaan.</b> Een stap van de regio-editor opslaan opent de volgende."
   v0911_translations: "<b>Eenvoudiger vertalen.</b> Een vertaling houdt de Wikipedia-vermelding van het origineel, dus het formulier vraagt niet meer waar de tekst vandaan komt."

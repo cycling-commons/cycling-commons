@@ -5541,6 +5541,8 @@ changelog:
   v0914_street_photo: "<b>The whole street-level photo.</b> The height of the viewer panel now sets the size of the photo, so its top and bottom are no longer cut off."
   v0914_road_safety_zoom: "<b>Road safety says Zoom in.</b> Zoomed out too far to see the road types, their row says Zoom in, as Surfaces does."
   v0914_karoo_manual: "<b>A manual for Scout on the Karoo.</b> The wiki has a Scout for Karoo manual with the install steps and test rides, and the Karoo on the Scout page leads there."
+  v0914_countries: "<b>Portugal, Andorra, Monaco, Liechtenstein, Malta, San Marino and Vatican City.</b> Seven more countries join the map within a day of this release."
+  v0914_plan_name: "<b>Plan first, name later.</b> A planned ride takes its first checkpoint without a name. The planner asks for the name when you download the GPX."
   v0911_region_links: "<b>Sources in the geography text.</b> A region's geography text can link its sources now, as its history, nature and culture text does."
   v0911_region_editor: "<b>Save and go on.</b> Saving a step of the region editor opens the next one."
   v0911_translations: "<b>Simpler translations.</b> A translation keeps the Wikipedia credit of its original, so the form no longer asks where it comes from."
