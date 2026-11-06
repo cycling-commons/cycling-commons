@@ -158,11 +158,16 @@ test('the panel no longer draws its own height profile: the strip at the foot of
   assert.ok(twig.includes('id="planStrip"'), 'the strip is gone too');
 });
 
-test('a new ride starts with its name, then a town or street to start from, then the first click (owner 2026-10-15)', () => {
+test('a new ride starts with its name and a town or street to start from; only the GPX download needs the name', () => {
   const panel = twig.slice(twig.indexOf('id="p-plan"'), twig.indexOf('id="planBikes"'));
   assert.ok(panel.includes('id="planRideName"'), 'the name is not the first thing in the panel');
   assert.ok(panel.includes('id="planStartSearch"') && panel.includes('id="planStartResults"'), 'no start search above the bikes');
-  assert.match(plan, /if\(!ride\.stops\.length && !\(ride\.name \|\| ''\)\.trim\(\)\)\{ askName\(\); return false; \}/, 'the first stop does not wait for a name');
+  assert.ok(panel.includes('<div class="grp cc-plan" id="planSearchGrp">'), 'the start search waits for something');
+  const addStop = plan.slice(plan.indexOf('function addStop('), plan.indexOf('function removeStop('));
+  assert.ok(!addStop.includes('askName'), 'the first stop still waits for a name');
+  const gpx = plan.slice(plan.indexOf('function downloadGpx('), plan.indexOf('const text', plan.indexOf('function downloadGpx(')));
+  assert.match(gpx, /if\(!\(ride\.name \|\| ''\)\.trim\(\)\)\{/, 'the GPX downloads without a name');
+  assert.match(gpx, /if\(dlg && dlg\.open\) dlg\.close\(\);\s*askName\(\); return;/, 'the GPX does not ask for the name');
   assert.match(plan, /photon\.komoot\.io\/api\/\?limit=6&layer=city&layer=district&layer=locality&layer=street/, 'the start search does not take towns and streets');
   assert.match(plan, /map\.flyTo\(\{ center: \[r\.lng, r\.lat\], zoom: r\.street \? 16 : 13 \}\)/, 'a picked place does not take the map there');
 });
@@ -204,7 +209,7 @@ test('the batch of 2026-10-15 afternoon: road kind on hover, fit on open, stops 
   assert.match(plan, /if\(key === 'plan' && ride\.stops\.length >= 2\) fitRide\(\);/, 'opening the planner does not take the map to the ride');
   assert.match(twig, /id="planStopsToggle" aria-expanded="false"/, 'the stops are not folded by default');
   assert.ok(!twig.includes('id="planSaveRow"') && !twig.includes('id="planName"'), 'the second save button and its name field are still there');
-  assert.match(plan, /a\.download = \(ride\.name \|\| 'Ride'\) \+ '\.gpx';/, 'the file is not named after the name at the top');
+  assert.match(plan, /a\.download = ride\.name\.trim\(\) \+ '\.gpx';/, 'the file is not named after the name at the top');
   assert.match(twig, /id="planDayUnit"/, 'no time or distance switch for the bars');
   const css = read('assets/styles/map.css');
   assert.match(css, /\.cc-plan-daylegend\{[^}]*font-size:\.74rem/, 'the bar legend is still SVG text too small to read');
@@ -888,7 +893,8 @@ test('a step of the guide frames what it speaks of, and the place search stays (
   for (let n = 1; n <= 9; n++) assert.match(twig, new RegExp(`<li data-guide="${n}" tabindex="0">`));
   assert.match(plan, /const GUIDE_TARGETS = \{ 1: \['#planRideName', '#planOpen'\], 2: \['#planWhen'\], 3: \['#planStartBox'\], 4: \['\.cc-plan-bike'\], 5: \['#map'\], 6: \['\.cc-plan-mk'\], 7: \['#map'\], 8: \['spots'\]/);
   assert.match(plan, /if\(!show\) guideGlow\(null\);/, 'a frame outlives the guide');
-  assert.match(plan, /box\.hidden = !\(ride\.name \|\| ''\)\.trim\(\);/, 'the search still hides once the ride has checkpoints');
+  const sync = plan.slice(plan.indexOf('function syncStart('), plan.indexOf('async function searchStart('));
+  assert.ok(!sync.includes('.hidden'), 'the search hides again');
   for (const l of ['en', 'fr', 'nl', 'de', 'es']) assert.match(read(`translations/messages.${l}.yaml`), /^ {2}plan_goto_h: "/m);
 });
 
@@ -896,7 +902,6 @@ test('the place search is the third card, after the name and the day (owner 2026
   const at = id => twig.indexOf(`id="${id}"`);
   assert.ok(at('planStart') < at('planWhen') && at('planWhen') < at('planSearchGrp') && at('planSearchGrp') < twig.indexOf('cc-plan-bike'), 'the cards are out of order');
   assert.ok(twig.slice(at('planSearchGrp'), twig.indexOf('cc-plan-bike')).includes('id="planStartBox"'), 'the search is not in its card');
-  assert.match(plan, /const grp = \$\('planSearchGrp'\); if\(grp\) grp\.hidden = box\.hidden;/);
 });
 
 test('a map point moves onto the road a bike would take before it becomes a checkpoint (owner 2026-10-18)', () => {

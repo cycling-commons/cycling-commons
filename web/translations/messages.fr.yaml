@@ -1377,7 +1377,7 @@ map:
   plan_start_h: "D’où partez-vous ?"
   plan_goto_h: "Aller à un lieu"
   plan_start_ph: "Une ville ou une rue"
-  plan_name_first: "Donnez d’abord un nom à votre sortie."
+  plan_name_gpx: "Nommez votre sortie pour télécharger son GPX."
   plan_start_none: "Rien trouvé. Essayez une localité voisine."
   plan_start_click: "Cliquez sur la carte là où vous partez."
   plan_line_hide: "Masquer la ligne de la sortie"

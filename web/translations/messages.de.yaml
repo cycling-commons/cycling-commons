@@ -1382,7 +1382,7 @@ map:
   plan_start_h: "Wo startest du?"
   plan_goto_h: "Zu einem Ort"
   plan_start_ph: "Ein Ort oder eine Straße"
-  plan_name_first: "Gib deiner Fahrt zuerst einen Namen."
+  plan_name_gpx: "Gib deiner Fahrt einen Namen, um die GPX-Datei herunterzuladen."
   plan_start_none: "Nichts gefunden. Versuch einen Ort in der Nähe."
   plan_start_click: "Klick auf der Karte, wo du startest."
   plan_line_hide: "Linie der Fahrt ausblenden"

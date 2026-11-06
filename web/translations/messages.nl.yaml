@@ -1379,7 +1379,7 @@ map:
   plan_start_h: "Waar start je?"
   plan_goto_h: "Naar een plek"
   plan_start_ph: "Een plaats of een straat"
-  plan_name_first: "Geef je rit eerst een naam."
+  plan_name_gpx: "Geef je rit een naam om de GPX te downloaden."
   plan_start_none: "Niets gevonden. Probeer een plaats in de buurt."
   plan_start_click: "Klik op de kaart waar je start."
   plan_line_hide: "Verberg de lijn van de rit"

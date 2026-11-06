@@ -407,20 +407,20 @@ numbers must be smaller in a zoomed out window"): 24 px from zoom 11.5,
   key with a click for a right-click and in place of Ctrl.
 - **Clear** empties the ride after a confirmation, and undo brings it back.
 
-**A new ride starts with its name** (owner 2026-10-15: "first step a user
-must add to a new ride plan is give it a name; then they can search for a
-start town and we pan/zoom to that location; there the user sets the first
-location"). The first block of the panel (`#planStart`):
+**A new ride starts with its name and its start.** The first block of the
+panel (`#planStart`):
 
 1. **Name your ride** (`#planRideName`, up to 80 characters, kept with the
-   draft and written into the GPX). The map takes no first stop without
-   it: a click, or Add to ride on a drawer, opens the panel on the name with
-   "Give your ride a name first." Its label, the place search's ("Where
+   draft and written into the GPX). It is optional while planning: the first
+   click sets the start with or without a name. Download GPX needs it, in the
+   panel and in the question before a file replaces the ride: without a name
+   it closes that question, opens the panel on the name and says "Give your
+   ride a name to download its GPX." The file is named after it. Its label, the place search's ("Where
    do you start?", then "Go to a place") and the day's "Start" are headings
    like "Your bike": bold mono capitals, 0.74rem, in the heading colour
    (`.cc-plan-field span`; Start on the line of its fields).
-2. **Where do you start?** (`#planStartSearch`), shown once the ride has a
-   name and until it has a stop: a town or a street, through Photon in the
+2. **Where do you start?** (`#planStartSearch`), always shown; once the ride
+   has a stop its label reads "Go to a place": a town or a street, through Photon in the
    browser as the map search is (map-and-search.md section 7.2), with
    `layer=city|district|locality|street` instead of the map search's towns
    only, biased to the map's centre rounded to 0.1° (about 10 km; the privacy

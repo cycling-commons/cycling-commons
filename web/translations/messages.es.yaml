@@ -1990,7 +1990,7 @@ map:
   plan_start_h: "¿Dónde empiezas?"
   plan_goto_h: "Ir a un lugar"
   plan_start_ph: "Un pueblo o una calle"
-  plan_name_first: "Primero ponle nombre a tu salida."
+  plan_name_gpx: "Ponle nombre a tu salida para descargar su GPX."
   plan_start_none: "No se ha encontrado nada. Prueba con un pueblo cercano."
   plan_start_click: "Haz clic en el mapa donde empiezas."
   plan_line_hide: "Ocultar la línea de la salida"

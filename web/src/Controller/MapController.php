@@ -735,7 +735,7 @@ final class MapController extends AbstractController
                 'end' => $t->trans('map.plan_end'),
                 'mapPoint' => $t->trans('map.plan_map_point'),
                 'bikeAll' => $t->trans('map.plan_bike_all'), 'bikeFewer' => $t->trans('map.plan_bike_fewer'),
-                'nameFirst' => $t->trans('map.plan_name_first'), 'startNone' => $t->trans('map.plan_start_none'), 'startClick' => $t->trans('map.plan_start_click'),
+                'nameGpx' => $t->trans('map.plan_name_gpx'), 'startNone' => $t->trans('map.plan_start_none'), 'startClick' => $t->trans('map.plan_start_click'),
                 'lineHide' => $t->trans('map.plan_line_hide'), 'lineShow' => $t->trans('map.plan_line_show'),
                 'up' => $t->trans('map.plan_up'),
                 'down' => $t->trans('map.plan_down'),

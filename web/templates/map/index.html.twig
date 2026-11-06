@@ -534,9 +534,9 @@
       {# The planner's guide (route-planner.md section 3.1, owner 2026-10-15): shown in the middle
          of the map when the planner opens, until the rider unticks it; the choice is kept on the
          account and in the browser. How it works opens it at any time. plan.js drives it. #}
-      {# A new ride starts with its name, then where it starts (owner 2026-10-15,
-         route-planner.md section 4.1): the map takes no stop before a name, and
-         the start search takes the map to a town or a street. plan.js fills it. #}
+      {# A new ride starts with its name and where it starts (route-planner.md section 4.1):
+         the name is asked only when the GPX is downloaded, and the start search takes
+         the map to a town or a street. plan.js fills it. #}
       <div class="grp cc-plan" id="planStart">
         <label class="cc-plan-field" for="planRideName"><span>{{ 'map.plan_name_h'|trans }}</span>
           <input type="text" id="planRideName" maxlength="80" autocomplete="off" placeholder="{{ 'map.plan_name_ph_start'|trans }}"></label>
@@ -560,7 +560,7 @@
       </div>
       {# The place search, a card of its own after the day (owner 2026-10-18): where the ride starts while it has no
          checkpoint, then a way to any place on the map ("Go to a place"). Shown once the ride has a name. #}
-      <div class="grp cc-plan" id="planSearchGrp" hidden>
+      <div class="grp cc-plan" id="planSearchGrp">
         <div class="cc-plan-startsearch" id="planStartBox" >
           <label class="cc-plan-field" for="planStartSearch"><span id="planStartLbl" data-start="{{ 'map.plan_start_h'|trans }}" data-goto="{{ 'map.plan_goto_h'|trans }}">{{ 'map.plan_start_h'|trans }}</span>
             <input type="search" id="planStartSearch" autocomplete="off" placeholder="{{ 'map.plan_start_ph'|trans }}"></label>

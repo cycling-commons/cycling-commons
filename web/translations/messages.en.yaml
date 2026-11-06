@@ -1983,7 +1983,7 @@ map:
   plan_start_h: "Where do you start?"
   plan_goto_h: "Go to a place"
   plan_start_ph: "A town or a street"
-  plan_name_first: "Give your ride a name first."
+  plan_name_gpx: "Give your ride a name to download its GPX."
   plan_start_none: "Nothing found. Try a nearby town."
   plan_start_click: "Click the map where you start."
   plan_line_hide: "Hide the ride line"

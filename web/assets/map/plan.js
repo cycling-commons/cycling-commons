@@ -247,11 +247,10 @@ function sleepRide(){
   showStrip(false);
   restoreRideScope();
 }
-/* The name comes first (owner 2026-10-15): no first stop without it. */
-function askName(){ openPanel(); const n = $('planRideName'); if(n) n.focus(); setStatus(P().nameFirst || 'Give your ride a name first.'); }
+/* The GPX carries the ride's name: the download asks for one, nothing before it does (route-planner.md section 4.1). */
+function askName(){ openPanel(); const n = $('planRideName'); if(n) n.focus(); setStatus(P().nameGpx || 'Give your ride a name to download its GPX.'); }
 /* A stop into the ride at `at`, or at the end; true when it went in. */
 function addStop(stop, at){
-  if(!ride.stops.length && !(ride.name || '').trim()){ askName(); return false; }
   if(ride.stops.length >= MAX_STOPS){ setStatus(tpl(P().maxStops || 'A ride holds at most {n} checkpoints.', { n: MAX_STOPS })); return false; }
   if(stop.item && ride.stops.some(s => s.item === stop.item)){ setStatus(P().already || 'That place is already in your ride.'); return false; }
   if(at == null || at < 0 || at > ride.stops.length) at = ride.stops.length;
@@ -289,8 +288,6 @@ let startTimer = null, startCtl = null;
 function syncStart(){
   const n = $('planRideName'), box = $('planStartBox'); if(!n || !box) return;
   if(document.activeElement !== n) n.value = ride.name || '';
-  box.hidden = !(ride.name || '').trim();
-  const grp = $('planSearchGrp'); if(grp) grp.hidden = box.hidden;   // the card goes with its search
   // With checkpoints it is a way to a place on the map, no longer the start (owner 2026-10-18: "the search field is missing").
   const lbl = $('planStartLbl'); if(lbl) lbl.textContent = ride.stops.length ? lbl.dataset.goto : lbl.dataset.start;
 }
@@ -1751,10 +1748,15 @@ function loadHistory(){
   } catch(e){ return null; }
 }
 function downloadGpx(){
+  if(!(ride.name || '').trim()){
+    // The question over a file keeps the ride when it closes; the name field lies under it.
+    const dlg = $('planReplace'); if(dlg && dlg.open) dlg.close();
+    askName(); return;
+  }
   const text = gpxText({ name: ride.name, bike: ride.bike, stops: ride.stops, legs: ride.legs }, { itemUrl: item => item.startsWith('osm:') ? null : (location.origin + (CC_PLAN.item || '/map?item=') + item) });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([text], { type: 'application/gpx+xml' }));
-  a.download = (ride.name || 'Ride') + '.gpx';
+  a.download = ride.name.trim() + '.gpx';
   document.body.appendChild(a); a.click(); a.remove();
 }
 /* Open a GPX (route-planner.md section 6.1): the planner's own ride file or another app's, read in this browser; only
