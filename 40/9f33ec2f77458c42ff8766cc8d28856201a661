@@ -1,0 +1,21 @@
+.github/workflows/ci-pipeline.yml
+  s_f6a8e20011288b::t_abc50c8f24a5d9 102,111
+.github/workflows/secret-scan.yml
+  s_f6a8e20011288b::t_abc50c8f24a5d9 31-35,41-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "409f33ec2f77458c42ff8766cc8d28856201a661",
+  "prompts": {},
+  "sessions": {
+    "s_f6a8e20011288b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ea64770b-59de-43e4-b5ab-8d035b86b75e",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
