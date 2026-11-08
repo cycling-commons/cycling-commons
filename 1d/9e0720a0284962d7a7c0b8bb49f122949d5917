@@ -1,0 +1,23 @@
+Dockerfile.worker
+  s_f6a8e20011288b::t_4782bf0a9451b4 22-27,33-40
+docs/specs/dev-environment.md
+  s_f6a8e20011288b::t_8c509d142fd91c 485-492
+web/Dockerfile
+  s_f6a8e20011288b::t_4782bf0a9451b4 23-28,34-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1d9e0720a0284962d7a7c0b8bb49f122949d5917",
+  "prompts": {},
+  "sessions": {
+    "s_f6a8e20011288b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ea64770b-59de-43e4-b5ab-8d035b86b75e",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
