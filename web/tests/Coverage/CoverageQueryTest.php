@@ -699,6 +699,9 @@ final class CoverageQueryTest extends WebTestCase
         $retryAfter = $client->getResponse()->headers->get('Retry-After');
         self::assertNotNull($retryAfter);
         self::assertGreaterThanOrEqual(0, (int) $retryAfter);
-        self::assertLessThanOrEqual(60, (int) $retryAfter);   // sliding window is 1 minute
+        // The sliding window is 1 minute. The limiter rounds the reset time up
+        // to a whole second and time() rounds now down, so a 429 in the same
+        // second the window opened reads 61.
+        self::assertLessThanOrEqual(61, (int) $retryAfter);
     }
 }

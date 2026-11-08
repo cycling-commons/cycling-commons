@@ -541,6 +541,10 @@ final class PlaceTextProposalTest extends WebTestCase
         self::assertSame('There is no text in this language yet.', $crawler->filter('#pt-current-none')->text());
 
         // A refused send keeps the rider's words in the box and counts them.
+        // Sent from the Dutch page: the English one has no article, so its
+        // source question is a disabled fieldset and sends no answer.
+        $crawler = $client->request('GET', '/town/'.self::TOWN.'/text?lang=nl&name=Testdorp');
+        self::assertNull($crawler->filter('fieldset#pt-source')->attr('disabled'));
         $client->submit($crawler->filter('#place-text-form')->form(['lang' => 'nl', 'text' => 'Testdorp is een dorp.', 'derived' => 'own']));
         self::assertResponseStatusCodeSame(422);
         $crawler = $client->getCrawler();
