@@ -460,7 +460,7 @@ Both halves of the chain run on the server, against our own Valhalla:
 
 | | where it runs | endpoint |
 |---|---|---|
-| geometry | the server (`RouteSnapper::follow()`, via `POST /contribute/route`) | our Valhalla `/locate` and `/route`, `bicycle` costing with no bike rule (`FOLLOW_COSTING`), per continent (`ElevationEndpoints`) |
+| geometry | the server (`RouteSnapper::follow()`, via `POST /contribute/route`) | our Valhalla `/locate`, `/route` and `/trace_attributes`, `bicycle` costing with no bike rule (`FOLLOW_COSTING`), per continent (`ElevationEndpoints`) |
 | elevation | the server (`ElevationClient`) | our Valhalla `/height`, per continent (`ELEVATION_URLS`) |
 | validation | the server (`ClimbGeometry`) | - |
 
@@ -492,6 +492,19 @@ Measured on the Blokdijk at the N506 (West Friesland): 1137 m along the
 street, 836 m by the cycle path beside it, which the shortest way alone took.
 Pinned by `RouteSnapperTest::testFollowKeepsTheLineOnTheTappedStreet` and its
 three siblings.
+
+**No steps while a way to ride exists.** Ignoring access also lets the engine
+take a flight of steps, which a bike may not. The engine's route answer does
+not say which stretches are steps (they fold into the path beside them), so
+each line is walked back over the engine's edges (`/trace_attributes`,
+`edge_walk`), and every edge with `use: steps` is kept off (`exclude_locations`
+at its middle) and the engine asked again, in the same `FOLLOW_ROUNDS`. The
+first line without steps then goes on to the street check above. When nothing
+else joins the taps, the line keeps the steps. Measured on the
+Schellinkhouterdijk in Hoorn: a tap on the cycle path on the dyke and one on
+the street below went down the 11 m of steps between them (151 m); the line
+now rides round (854 m). Pinned by `RouteSnapperTest::testFollowKeepsOffSteps`
+and `testFollowTakesTheStepsWhenNothingElseJoinsTheTaps`.
 
 **The server never sees the road in the payload.** `ClimbGeometry` decodes and
 validates a posted line (pairs of finite numbers, within `MAX_POINTS`) and by

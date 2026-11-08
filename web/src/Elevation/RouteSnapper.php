@@ -43,6 +43,9 @@ final class RouteSnapper
     /** How far from a tap a road still counts as the one tapped. */
     private const float FOLLOW_TAP_M = 15.0;
 
+    /** The engine's word for a flight of steps (trace_attributes `edge.use`). */
+    private const string STEPS_USE = 'steps';
+
     /** The engine's bike rules for map matching: the most permissive bike, every surface it may ride at no cost. */
     private const array MATCH_COSTING = ['bicycle_type' => 'Mountain', 'avoid_bad_surfaces' => 0.0, 'use_roads' => 0.5];
 
@@ -78,7 +81,11 @@ final class RouteSnapper
      * it. And where both taps lie on one street, the line stays on that street: a stretch of the line on another road
      * is left out and the engine asked again, at most FOLLOW_ROUNDS times. The Blokdijk is 1137 m between the taps,
      * the cycle path beside it 836 m, so the shortest way alone took the cycle path. A street the engine cannot keep
-     * to gives the first line, as snap() would.
+     * to gives the first line, as snap() would. The line takes no flight of steps while a way to ride joins the taps:
+     * ignoring access lets the engine take steps a bike may not, and on the Schellinkhouterdijk in Hoorn a tap on the
+     * cycle path on the dyke and one on the street below went down the 11 m of steps between them. Steps on the line
+     * are kept off and the engine asked again, in the same FOLLOW_ROUNDS; when nothing else joins the taps, the line
+     * keeps them.
      *
      * @param array{0: float, 1: float} $a [lat, lng]
      * @param array{0: float, 1: float} $b [lat, lng]
@@ -94,6 +101,7 @@ final class RouteSnapper
         $street = $this->sharedStreet($url, $a, $b);
 
         $first = null;
+        $rideable = null;
         $avoid = [];
         for ($round = 0; $round <= self::FOLLOW_ROUNDS; ++$round) {
             $trip = $this->followRequest($url, $a, $b, $avoid);
@@ -101,6 +109,12 @@ final class RouteSnapper
                 break;
             }
             $first ??= $trip['line'];
+            $steps = $this->stepsOn($url, $trip['shape']);
+            if ([] !== $steps) {
+                $avoid = array_merge($avoid, $steps);
+                continue;
+            }
+            $rideable ??= $trip['line'];
             if ([] === $street) {
                 return $trip['line'];
             }
@@ -111,7 +125,51 @@ final class RouteSnapper
             $avoid = array_merge($avoid, $off);
         }
 
-        return $first;
+        return $rideable ?? $first;
+    }
+
+    /**
+     * A point in the middle of every flight of steps on the line, [lat, lng]: the steps to keep off next round. The
+     * engine's route answer does not say which of its stretches are steps (they fold into the path beside them), so
+     * the line is walked back over the engine's edges, which do. An engine that cannot answer gives none.
+     *
+     * @param list<array{0: float, 1: float}> $shape [lng, lat]
+     *
+     * @return list<array{0: float, 1: float}>
+     */
+    private function stepsOn(string $url, array $shape): array
+    {
+        try {
+            $data = $this->http->request('POST', rtrim($url, '/').'/trace_attributes', [
+                'json' => [
+                    'shape' => array_map(static fn (array $p): array => ['lat' => $p[1], 'lon' => $p[0]], $shape),
+                    'costing' => 'bicycle',
+                    'costing_options' => ['bicycle' => self::FOLLOW_COSTING],
+                    'shape_match' => 'edge_walk',
+                    'filters' => ['attributes' => ['edge.use', 'edge.begin_shape_index', 'edge.end_shape_index', 'shape'], 'action' => 'include'],
+                ],
+                'timeout' => 8,
+            ])->toArray(false);
+        } catch (\Throwable $e) {
+            $this->logger->warning('route follow: trace failed', ['error' => $e->getMessage()]);
+
+            return [];
+        }
+        $edges = \is_array($data['edges'] ?? null) ? $data['edges'] : [];
+        $traced = \is_string($data['shape'] ?? null) ? self::decodePolyline6($data['shape']) : [];
+        $steps = [];
+        foreach ($edges as $edge) {
+            if (!\is_array($edge) || self::STEPS_USE !== ($edge['use'] ?? null)) {
+                continue;
+            }
+            $from = $traced[(int) ($edge['begin_shape_index'] ?? -1)] ?? null;
+            $to = $traced[(int) ($edge['end_shape_index'] ?? -1)] ?? null;
+            if (null !== $from && null !== $to) {
+                $steps[] = [($from[1] + $to[1]) / 2, ($from[0] + $to[0]) / 2];   // the shape is [lng, lat]
+            }
+        }
+
+        return $steps;
     }
 
     /**
