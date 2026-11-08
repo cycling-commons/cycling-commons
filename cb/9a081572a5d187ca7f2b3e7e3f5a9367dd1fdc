@@ -1,0 +1,21 @@
+web/tests/Moderation/PlaceTextProposalTest.php
+  s_f6a8e20011288b::t_4247d2968511a5 544-547
+web/tests/Coverage/CoverageQueryTest.php
+  s_f6a8e20011288b::t_3396e64d6b579a 702-705
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cb9a081572a5d187ca7f2b3e7e3f5a9367dd1fdc",
+  "prompts": {},
+  "sessions": {
+    "s_f6a8e20011288b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ea64770b-59de-43e4-b5ab-8d035b86b75e",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
