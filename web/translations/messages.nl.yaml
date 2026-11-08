@@ -5520,6 +5520,8 @@ changelog:
   v0913_curator_review: "<b>Verbeteren voor je goedkeurt.</b> Je kunt de nieuwe plek van een fietser verbeteren of bevestigen voor je haar goedkeurt, en je bevestiging telt zodra je dat doet."
   v0913_curator_roads: "<b>Wegen op de beoordelingskaart.</b> Voor en Na tonen een weg zoals de kaart hem zal tekenen, een goedgekeurde weg blijft meteen op de kaart staan, en een weg op zijn OpenStreetMap-weg vult die weg aan in plaats van hem te vervangen."
   v0913_curator_fixes: "<b>Onder de kleinere verbeteringen:</b> een tweede weg op hetzelfde stuk voegt wat hij meebrengt toe aan de eerste als je hem goedkeurt, en een kaart toont geen waarde meer die niet veranderd is."
+  v0915_road_names: "<b>Straatnamen die je kunt lezen.</b> Straatnamen staan nu boven de gekleurde lijnen op de kaart, ook boven de lijn die je voor een weg tekent, met een witte rand zodat ze leesbaar blijven."
+  v0915_no_steps: "<b>Geen trappen in een getekende weg.</b> De lijn tussen je twee tikken gaat geen trap meer op of af waar je kunt omrijden."
   v0914_street_photo: "<b>De hele straatbeeldfoto.</b> De hoogte van het viewerpaneel bepaalt nu de grootte van de foto, dus de boven- en onderkant vallen niet meer weg."
   v0914_road_safety_zoom: "<b>Verkeersveiligheid zegt Zoom in.</b> Te ver uitgezoomd om de soorten wegen te zien, zegt hun rij Zoom in, net als Ondergrond."
   v0914_karoo_manual: "<b>Een handleiding voor Scout op de Karoo.</b> De wiki heeft een handleiding van Scout voor Karoo met de installatiestappen en testritten, en de Karoo op de Scout-pagina leidt ernaartoe."

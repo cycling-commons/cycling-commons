@@ -5548,6 +5548,8 @@ changelog:
   v0913_curator_review: "<b>Corregir antes de aprobar.</b> Puedes corregir o confirmar el nuevo lugar de un ciclista antes de aprobarlo, y tu confirmación cuenta cuando lo haces."
   v0913_curator_roads: "<b>Carreteras en el mapa de revisión.</b> Antes y Después muestran una carretera como la dibujará el mapa, una carretera aprobada se queda en el mapa al momento, y una carretera sobre su vía de OpenStreetMap completa esa vía en lugar de sustituirla."
   v0913_curator_fixes: "<b>Entre las correcciones menores:</b> una segunda carretera sobre el mismo tramo añade lo que aporta a la primera cuando la apruebas, y una tarjeta ya no muestra un valor que no cambió."
+  v0915_road_names: "<b>Nombres de calle que se leen.</b> Los nombres de calle quedan ahora por encima de las líneas de color del mapa, también de la línea que dibujas para una carretera, con un borde blanco para que se lean bien."
+  v0915_no_steps: "<b>Sin escaleras en una carretera dibujada.</b> La línea entre tus dos toques ya no sube ni baja escaleras donde puedes dar la vuelta en bici."
   v0914_street_photo: "<b>La foto a pie de calle entera.</b> La altura del panel del visor fija ahora el tamaño de la foto, así que la parte de arriba y la de abajo ya no se cortan."
   v0914_road_safety_zoom: "<b>Seguridad vial dice Acerca.</b> Demasiado lejos para ver los tipos de vía, su fila dice Acerca, como Firmes."
   v0914_karoo_manual: "<b>Un manual para Scout en el Karoo.</b> La wiki tiene un manual de Scout para Karoo con los pasos de instalación y salidas de prueba, y el Karoo de la página de Scout lleva allí."

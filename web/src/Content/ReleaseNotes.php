@@ -61,6 +61,20 @@ final class ReleaseNotes
      */
     public const array RELEASES = [
         [
+            'version' => '0.9.15-beta',
+            'date' => '2026-11-08',
+            'sections' => [
+                'public' => [
+                    'changelog.v0915_road_names',
+                    'changelog.v0915_no_steps',
+                ],
+            ],
+            'kinds' => [
+                'changelog.v0915_road_names' => 'improved',
+                'changelog.v0915_no_steps' => 'fixed',
+            ],
+        ],
+        [
             'version' => '0.9.14-beta',
             'date' => '2026-11-08',
             'sections' => [
