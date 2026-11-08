@@ -1,0 +1,26 @@
+docs/specs/climb-elevation.md
+  s_8e7f1337db9fb7::t_bdc5e368072507 463,496-507
+  s_8e7f1337db9fb7::t_01bf32fe3931b6 508
+web/src/Elevation/RouteSnapper.php
+  s_8e7f1337db9fb7::t_4bed813c5fa42c 46-48,84-88,104,112-117,128-172
+web/tests/Elevation/RouteSnapperTest.php
+  s_8e7f1337db9fb7::t_2c1a32277faac5 431-432
+  s_8e7f1337db9fb7::t_7a417953be4fe6 254-256,307-309,337-338
+  s_8e7f1337db9fb7::t_fc7af9c3c3f878 339,355-430
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ef2b812c13dbc1f97f9c090ba644e070c1b6d6db",
+  "prompts": {},
+  "sessions": {
+    "s_8e7f1337db9fb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d22bfc7-18c3-4711-b6fd-32923b219615",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
