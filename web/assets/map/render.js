@@ -17,6 +17,7 @@ import { NO_VALIDATE } from './tile-sources.js';
 import { attrMatch, bikeFriendlyMatch, routeBikeMatch, readRouteBikes, startBikes, narrowingCount, climbChipsMatch, modeShows, placeKey, createShownAnyway } from './filters.js';
 import { fanPin, fanOffsetOf, scheduleFanOut } from './pin-fan.js';
 import { plannerTakesLineClick } from './plan-state.js';
+import { moveLinesUnderNamesOn } from './names-order.js';
 
 export const PREFS = window.CC_PREFS || {bikes: [], styles: []};
 
@@ -175,7 +176,17 @@ export function liftInfoLayersAboveRoutes(){
   // The coverage icons over every line (owner 2026-10-08), the selected icon on top of them.
   coverageIconLayerIds(map.getStyle().layers.map(l=>l.id)).forEach(id=>map.moveLayer(id));
   if(map.getLayer('cov-sel-icon')) map.moveLayer('cov-sel-icon');
+  keepLinesUnderNames();
 }
+/* The basemap's names over our lines (names-order.js), so the order above stands among the lines. Also once a frame
+   after any style change: a layer added later (a road type, a route network mounted as the map moves) lands on top. */
+export function keepLinesUnderNames(){ return moveLinesUnderNamesOn(map); }
+let namesQueued = false;
+map.on('styledata', () => {
+  if(namesQueued) return;
+  namesQueued = true;
+  requestAnimationFrame(() => { namesQueued = false; keepLinesUnderNames(); });
+});
 /* The coverage icon layers (`<key>-<cc>-cov`) among style layer ids; Mapillary's
    `mly-cov` is a line layer and stays under them. */
 export function coverageIconLayerIds(ids){

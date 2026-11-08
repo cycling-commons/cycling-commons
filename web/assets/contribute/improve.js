@@ -327,8 +327,12 @@
     endDragOffMap(wmap);
     wmap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     wmap.addControl(new maplibregl.AttributionControl({ customAttribution: '© OpenStreetMap contributors · ODbL' }), 'bottom-right');
-    // The main map's greens and land tone (map/basemap-tone.js), again after any style change; a repeat sets nothing.
-    var tone = function () { if (window.CcToneBasemap) window.CcToneBasemap(wmap); };
+    // The main map's greens and land tone (map/basemap-tone.js), and the names over the drawn line and the other lines
+    // (map/names-order.js), again after any style change; a repeat changes nothing.
+    var tone = function () {
+      if (window.CcToneBasemap) window.CcToneBasemap(wmap);
+      if (window.CcLinesUnderNames) window.CcLinesUnderNames(wmap);
+    };
     wmap.on('styledata', tone);
     wmap.on('load', function () {
       tone();

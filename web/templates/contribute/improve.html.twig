@@ -650,6 +650,9 @@
   {# The main map's moss greens and land tone on this map too (map/basemap-tone.js, map-and-search.md section 4.1). #}
   import { toneBasemap } from "{{ asset('map/basemap-tone.js') }}";
   window.CcToneBasemap = toneBasemap;
+  {# The basemap's names over the editor's lines, as on the main map (map/names-order.js, map-and-search.md section 4.1). #}
+  import { moveLinesUnderNamesOn } from "{{ asset('map/names-order.js') }}";
+  window.CcLinesUnderNames = moveLinesUnderNamesOn;
 </script>
 {# climb-elevation.js + climb-editor.js must load before improve.js (the
    climb edit path calls window.Cc.mountClimbEditor / window.Cc.profileFromRoute).

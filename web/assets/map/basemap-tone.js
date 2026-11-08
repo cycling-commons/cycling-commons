@@ -94,7 +94,16 @@ export const LABEL_LAYOUT = {
     'text-size': ['interpolate', ['exponential', 1.2], ['zoom'], 7, 11, 9, 11.5, 11, 13.5],
   },
 };
-export const LABEL_PAINT = { label_village: { 'text-color': '#333' } };
+/* Road names readable over our lines, which sit under them (names-order.js): liberty sets them in mid grey with no
+   halo colour, so its halo is see-through, and grey text on a purple, blue or green line could not be read. Dark text
+   with a solid white halo; a path's name keeps liberty's warm hue, darker. */
+const ROAD_NAME = { 'text-color': '#333', 'text-halo-color': '#ffffff', 'text-halo-width': 1.6, 'text-halo-blur': 0.4 };
+export const LABEL_PAINT = {
+  label_village: { 'text-color': '#333' },
+  'highway-name-path': { ...ROAD_NAME, 'text-color': 'hsl(30,20%,32%)' },
+  'highway-name-minor': ROAD_NAME,
+  'highway-name-major': ROAD_NAME,
+};
 
 /** Set each layout property of `table` on `m` where it differs; the number set. */
 export function setLayoutsOn(m, table){

@@ -39,7 +39,8 @@ test('a disc pin of an OpenStreetMap place waits for its category icon zoom', ()
 test('the coverage icons are lifted above every line, the selected icon on top', () => {
   const lift = (render.match(/export function liftInfoLayersAboveRoutes\(\)\{[\s\S]*?\n\}/) || [''])[0];
   assert.match(lift, /coverageIconLayerIds\(map\.getStyle\(\)\.layers\.map\(l=>l\.id\)\)\.forEach\(id=>map\.moveLayer\(id\)\)/);
-  assert.match(lift, /if\(map\.getLayer\('cov-sel-icon'\)\) map\.moveLayer\('cov-sel-icon'\);\s*\n\}$/);
+  // The last move to the top; keepLinesUnderNames() after it only moves lines down, under the basemap's names.
+  assert.match(lift, /if\(map\.getLayer\('cov-sel-icon'\)\) map\.moveLayer\('cov-sel-icon'\);\s*\n\s*keepLinesUnderNames\(\);\s*\n\}$/);
 });
 
 test('the summit chip shows from z11', () => {

@@ -584,6 +584,23 @@ to 4.4 saved under a name, [map-presets.md](map-presets.md).
   at draw time**: this function runs at the end of every render *and* after
   every selection move, so a `moveLayer` in `drawClimbLine` is silently
   overridden a moment later.
+- **The basemap's names sit over our lines.** A road surface, route or road-type
+  line drawn over a road name made the name unreadable. `keepLinesUnderNames()`
+  (render.js, rule in `names-order.js`) moves every line layer of ours that sits
+  above the basemap's first name layer to just under it, in its own order, so the
+  order above stands among the lines. The name layer is the basemap's first
+  symbol after its last drawn layer (`waterway_line_label` in liberty); the
+  one-way arrows among its roads do not count. Five kinds of line stay over the
+  names: the planned ride (`plan-*`), the ride check's line (`ridecheck*`), the
+  ride a curator reviews (`cc-scout-*`, which scout-review.js keeps on top), the
+  region outline (`region-*`) and a lit stretch (`*-hl`, `*-sel`). Icons and
+  fills are never moved, so every icon stays over the names. It runs at the end
+  of `liftInfoLayersAboveRoutes()` and once a frame after any style change, as a
+  layer mounted later lands on top; it moves a layer only when it is out of
+  place, so the style change it causes finds nothing to move. The road
+  editor's map (the contribute wizard) runs the same rule
+  (`moveLinesUnderNamesOn()`, `window.CcLinesUnderNames`) after every style
+  change, so its drawn line sits under the names too.
 - **The ride heatmap (no letter) is deliberately NOT a catalog entry:** the generated layer
   list holds the lettered types only; the heatmap is a sub-header inside the FILTERS block with its own
   On/Off toggle and season chips (§11).
@@ -1972,6 +1989,13 @@ not take.
   padding of 1 (`LABEL_LAYOUT`, `LABEL_PAINT`, set by `setLayoutsOn()`);
   town names a touch smaller zoomed out (11.5 px at zoom 9), still above
   the villages.
+- Road names readable over our lines, which sit under them (section 4.1):
+  liberty sets them in mid grey and gives no halo colour, so its halo is
+  see-through and grey text on a purple, blue or green line could not be
+  read. The three road-name layers (`highway-name-path`, `-minor`, `-major`)
+  are dark `#333`, a path's name a darker warm brown `hsl(30,20%,32%)`, with
+  a solid white halo 1.6 px wide (`LABEL_PAINT`). The road editor's map gets
+  the same through `toneBasemap()`.
 
 - Zoomed out the tiles carry no road smaller than a secondary one: tertiary
   roads arrive at zoom 11, small roads at 12, ditches and streams at 12
