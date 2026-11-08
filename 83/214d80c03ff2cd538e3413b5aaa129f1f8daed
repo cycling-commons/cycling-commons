@@ -1,0 +1,19 @@
+web/src/Content/ReleaseNotes.php
+  s_f6a8e20011288b::t_6c68475f6e304e 65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "83214d80c03ff2cd538e3413b5aaa129f1f8daed",
+  "prompts": {},
+  "sessions": {
+    "s_f6a8e20011288b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ea64770b-59de-43e4-b5ab-8d035b86b75e",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
