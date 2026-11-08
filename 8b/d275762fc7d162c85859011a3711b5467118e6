@@ -1,0 +1,44 @@
+web/templates/contribute/improve.html.twig
+  s_8e7f1337db9fb7::t_423a96fb1f5e51 653-655
+docs/specs/map-and-search.md
+  s_8e7f1337db9fb7::t_a823538ef2091a 600-603,1992-1998
+  s_8e7f1337db9fb7::t_84fd8a2c5a86ec 587-599
+web/tests/js/names-order.test.mjs
+  s_8e7f1337db9fb7::t_50706636f0c9bd 29
+  s_8e7f1337db9fb7::t_1dbe3ead892400 1-2,4-28,30-31,33-49
+  s_8e7f1337db9fb7::t_0295c526738d16 32
+  s_8e7f1337db9fb7::t_84fd8a2c5a86ec 3
+  s_8e7f1337db9fb7::t_5f93d3b315f4ed 50-84
+web/assets/contribute/improve.js
+  s_8e7f1337db9fb7::t_423a96fb1f5e51 330-335
+web/assets/map/names-order.js
+  s_8e7f1337db9fb7::t_84fd8a2c5a86ec 2
+  s_8e7f1337db9fb7::t_23f27116c12f45 1,5,10-25,36
+  s_8e7f1337db9fb7::t_d6ab0b40253973 6-9
+  s_8e7f1337db9fb7::t_423a96fb1f5e51 3-4,26-35
+web/assets/map/render.js
+  s_8e7f1337db9fb7::t_a8dd71ddae7f4a 179,184-189
+  s_8e7f1337db9fb7::t_423a96fb1f5e51 20,181-183
+web/tests/js/map-zoom-styles.test.cjs
+  s_8e7f1337db9fb7::t_c6a8a29b714b53 42-43
+web/assets/map/basemap-tone.js
+  s_8e7f1337db9fb7::t_423a96fb1f5e51 97-106
+wiki/developers/numbers.md
+  s_8e7f1337db9fb7::t_2ad5dc18d0dca0 28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8bd275762fc7d162c85859011a3711b5467118e6",
+  "prompts": {},
+  "sessions": {
+    "s_8e7f1337db9fb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d22bfc7-18c3-4711-b6fd-32923b219615",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
