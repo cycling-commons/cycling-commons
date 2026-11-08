@@ -20,13 +20,25 @@ FROM php:8.4-fpm
 # Acquire::Retries is not decoration: deb.debian.org's index for trixie is a
 # 13 MB file and a flaky link drops the connection part-way, which fails the
 # whole build with a bare "Some index files failed to download".
+#
+# imagick is built from its unpacked source with its _arginfo.h headers
+# touched. They ship with the same timestamp as their .stub.php files, so when
+# the unpack crosses a second make regenerates one with gen_stub.php, which
+# downloads PHP-Parser from GitHub mid-build; a GitHub outage then fails the
+# deploy. The shipped headers are the release's own, so none is regenerated.
 RUN apt-get -o Acquire::Retries=15 update \
     && apt-get install -y --no-install-recommends \
         libpq-dev libicu-dev git unzip \
         libmagickwand-dev libwebp-dev libheif-dev libzip-dev \
     && docker-php-ext-install pdo_pgsql gettext intl zip pcntl \
-    && pecl install imagick redis \
-    && docker-php-ext-enable imagick redis \
+    && cd /tmp && pecl download imagick \
+    && mkdir /tmp/imagick \
+    && tar -xzf /tmp/imagick-*.tgz -C /tmp/imagick --strip-components=1 --wildcards 'imagick-*/*' \
+    && touch /tmp/imagick/*_arginfo.h \
+    && docker-php-ext-install /tmp/imagick \
+    && rm -rf /tmp/imagick /tmp/imagick-*.tgz \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
     && rm -rf /var/lib/apt/lists/*
 
 # ImageMagick's security policy for this image (docs/specs/photo-uploads.md §7).

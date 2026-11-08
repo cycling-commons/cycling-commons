@@ -19,13 +19,25 @@ FROM php:8.4-cli AS worker
 # export (zip). opcache also for the CLI: the consumer lives for an hour.
 # pcntl: the consumer runs as PID 1, which ignores SIGTERM without a handler;
 # with it messenger:consume finishes the current message and exits on stop.
+#
+# imagick is built from its unpacked source with its _arginfo.h headers
+# touched. They ship with the same timestamp as their .stub.php files, so when
+# the unpack crosses a second make regenerates one with gen_stub.php, which
+# downloads PHP-Parser from GitHub mid-build; a GitHub outage then fails the
+# deploy. The shipped headers are the release's own, so none is regenerated.
 RUN apt-get -o Acquire::Retries=15 update \
     && apt-get install -y --no-install-recommends \
         libpq-dev libicu-dev git unzip \
         libmagickwand-dev libwebp-dev libheif-dev libzip-dev \
     && docker-php-ext-install pdo_pgsql gettext intl zip opcache pcntl \
-    && pecl install imagick redis \
-    && docker-php-ext-enable imagick redis \
+    && cd /tmp && pecl download imagick \
+    && mkdir /tmp/imagick \
+    && tar -xzf /tmp/imagick-*.tgz -C /tmp/imagick --strip-components=1 --wildcards 'imagick-*/*' \
+    && touch /tmp/imagick/*_arginfo.h \
+    && docker-php-ext-install /tmp/imagick \
+    && rm -rf /tmp/imagick /tmp/imagick-*.tgz \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
     && rm -rf /var/lib/apt/lists/*
 
 # ImageMagick's security policy, proven at build time by the same probe the

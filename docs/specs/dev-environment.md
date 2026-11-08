@@ -482,6 +482,14 @@ All of it goes through Redis, addressed by a single `REDIS_URL`:
 **a production host without it fails closed on the first request**, so it belongs
 on the deploy checklist next to `ext-zip`.
 
+**`ext-imagick` builds without GitHub.** `web/Dockerfile` and
+`Dockerfile.worker` unpack the imagick release, touch its shipped
+`*_arginfo.h` headers and build it with `docker-php-ext-install` from that
+folder. The headers carry the same timestamp as their `.stub.php` files, so a
+plain `pecl install imagick` regenerates one whenever the unpack crosses a
+second, and PHP's `gen_stub.php` then downloads PHP-Parser from GitHub
+mid-build: a GitHub outage fails the deploy.
+
 The dev stack ships its own `redis` service, deliberately **not** published to a
 host port so it cannot collide with a Redis you already run for something else.
 If you have one, point at it instead in `developers/docker/.env`:
