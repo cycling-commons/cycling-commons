@@ -2793,7 +2793,10 @@ a section holding 25 of 40 is a lie about how much work is waiting.
 Admin pages take `templates/admin/_pager.html.twig` instead of the shared
 partial — same arithmetic, same parameters, Bootstrap's pagination classes,
 because EasyAdmin pages never load the account shell's CSS that styles the
-other one.
+other one. Its box (`.cc-admin-pager`) is styled in
+`assets/styles/admin/admin.css`, which every admin page loads; the fill and
+line are mixed from the text colour, so the box reads in the light and the
+dark theme.
 
 ### 7.6 The FK exception — M10
 

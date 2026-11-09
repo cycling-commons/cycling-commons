@@ -637,6 +637,15 @@ and lists no moderator surface for anyone, curator included. Pinned by
 EasyAdmin 5; every surface is double-gated (`^/admin` firewall rule **and**
 `#[IsGranted('ROLE_ADMIN')]` on each controller).
 
+**Every row reads on its own.** Every admin page loads
+`assets/styles/admin/admin.css` (`DashboardController::configureAssets`): each
+hand-built admin table (`table.table`) shades every second row with a 4 % mix
+of the text colour, through Bootstrap's `--bs-table-bg-type`, so a row state
+such as `table-danger` keeps its colour. EasyAdmin's own lists
+(`table.datagrid`: users, activity, reset requests, releases, blog) get the
+same shade as a cell background, except on a hovered or selected row. The
+curator applications rows are framed and shaded the same way.
+
 **Every list shows the row's key (owner 2026-10-04).** Each admin list has an
 "ID" column with the row's primary key, so a row on screen can be found in the
 database: the five EasyAdmin lists (users, activity, reset requests, releases,

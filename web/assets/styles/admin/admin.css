@@ -1,0 +1,31 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* Loaded on every admin page (DashboardController::configureAssets). Tones
+   are mixed from the inherited text colour, so they read in EasyAdmin's light
+   and dark themes alike. */
+.content-body{
+  --cc-admin-stripe:color-mix(in srgb,currentColor 4%,transparent);
+  --cc-admin-hover:color-mix(in srgb,currentColor 7%,transparent);
+  --cc-admin-line:color-mix(in srgb,currentColor 16%,transparent);
+}
+
+/* Zebra rows on every hand-built admin table: each row reads on its own. The
+   stripe goes through Bootstrap's own layer, so a row state (table-danger)
+   keeps its colour under it. */
+.content-body table.table > tbody > tr:nth-of-type(even) > *{
+  --bs-table-bg-type:var(--cc-admin-stripe);
+}
+
+/* EasyAdmin's own lists (table.datagrid: users, activity, releases, blog)
+   draw their cell lines with box-shadow, which hides the layer above, so the
+   stripe is a background there. Hovered and selected rows keep EasyAdmin's
+   colour; placeholder rows stay bare. */
+.content-body table.datagrid > tbody > tr:nth-of-type(even):not(:hover,.selected-row,.empty-row,.no-results,.datagrid-row-empty) > td{
+  background-color:var(--cc-admin-stripe);
+}
+
+/* The admin pager (admin/_pager.html.twig). */
+.cc-admin-pager{
+  background:var(--cc-admin-stripe);
+  border:1px solid var(--cc-admin-line);
+  border-radius:.375rem;
+}

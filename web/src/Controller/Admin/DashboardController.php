@@ -109,6 +109,7 @@ final class DashboardController extends AbstractDashboardController
     public function configureAssets(): Assets
     {
         return Assets::new()
+            ->addCssFile('styles/admin/admin.css')
             ->addAssetMapperEntry('admin_confirm')
             ->addAssetMapperEntry('form_autosubmit');
     }

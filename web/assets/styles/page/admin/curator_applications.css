@@ -1,20 +1,29 @@
 /* SPDX-License-Identifier: AGPL-3.0-only */
-.cur-row{border:1px solid rgba(0,0,0,.125);border-radius:.375rem;margin-bottom:.5rem;background:var(--bs-body-bg,#fff)}
+/* Lines and fills are mixed from the inherited text colour, so each row
+   stands apart in EasyAdmin's light and dark themes alike; every second row
+   is a shade darker. */
+.cur-row{
+  --cur-line:color-mix(in srgb,currentColor 16%,transparent);
+  --cur-stripe:color-mix(in srgb,currentColor 4%,transparent);
+  --cur-hover:color-mix(in srgb,currentColor 7%,transparent);
+  border:1px solid var(--cur-line);border-radius:.375rem;margin-bottom:.5rem;overflow:hidden
+}
+.cur-row:nth-of-type(even){background:var(--cur-stripe)}
 .cur-row > summary{cursor:pointer;padding:.7rem .9rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem;list-style:none}
 .cur-row > summary::-webkit-details-marker{display:none}
 /* The twisty, drawn rather than left to the platform so it can sit where
    the row reads from and turn on open. */
 .cur-row > summary::before{content:"▸";display:inline-block;transition:transform .12s;opacity:.55}
 .cur-row[open] > summary::before{transform:rotate(90deg)}
-.cur-row > summary:hover{background:rgba(0,0,0,.03)}
+.cur-row > summary:hover{background:var(--cur-hover)}
 .cur-id{font-family:var(--bs-font-monospace,monospace);opacity:.6;font-size:.85rem}
 .cur-name{font-weight:600;font-size:1.02rem}
 .cur-meta{opacity:.7;font-size:.90rem}
-.cur-body{padding:0 .9rem .9rem;border-top:1px solid rgba(0,0,0,.08)}
+.cur-body{padding:0 .9rem .9rem;border-top:1px solid var(--cur-line)}
 .cur-tpl{display:flex;flex-wrap:wrap;gap:.4rem;margin:.6rem 0 .4rem}
 /* Open is the one that wants the eye; the settled two are quiet. */
 .cur-st-pending{background:#0d6efd}
 .cur-st-approved{background:#198754}
 .cur-st-declined{background:#6c757d}
 .cur-st-withdrawn{background:#adb5bd;color:#212529}
-.cur-decided{border-left:3px solid rgba(0,0,0,.15);padding-left:.7rem;margin-top:.4rem}
+.cur-decided{border-left:3px solid var(--cur-line);padding-left:.7rem;margin-top:.4rem}

@@ -18,7 +18,7 @@
 #}
 {% set key = key|default('page') %}
 {% if pager.total > 0 %}
-<nav aria-label="{{ 'pager.label'|trans }}" class="d-flex flex-wrap align-items-center gap-3 mt-4 mb-5 p-3 border rounded bg-light">
+<nav aria-label="{{ 'pager.label'|trans }}" class="cc-admin-pager d-flex flex-wrap align-items-center gap-3 mt-4 mb-5 p-3">
   {% if pager.pages > 1 %}
     <ul class="pagination mb-0">
       <li class="page-item{{ pager.prev ? '' : ' disabled' }}">
