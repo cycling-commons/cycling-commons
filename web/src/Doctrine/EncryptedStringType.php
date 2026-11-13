@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Doctrine;
 
+use App\Security\EncryptionSecret;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\Type;
 
@@ -124,18 +125,6 @@ final class EncryptedStringType extends Type
      */
     private static function key(): string
     {
-        $secret = self::env('ENCRYPTION_SECRET') ?? self::env('APP_SECRET');
-        if (null === $secret) {
-            throw new \LogicException('ENCRYPTION_SECRET or APP_SECRET must be set to derive the at-rest encryption key.');
-        }
-
-        return hash_hkdf('sha256', $secret, 32, 'cc-totp-secret-v1');
-    }
-
-    private static function env(string $name): ?string
-    {
-        $value = $_SERVER[$name] ?? $_ENV[$name] ?? getenv($name);
-
-        return \is_string($value) && '' !== $value ? $value : null;
+        return hash_hkdf('sha256', EncryptionSecret::value(), 32, 'cc-totp-secret-v1');
     }
 }

@@ -460,9 +460,10 @@ Invariant for fixtures and seeded elevated accounts: set **both**
   from **`ENCRYPTION_SECRET`, falling back to `APP_SECRET`**, stored as
   `base64(iv || tag || ciphertext)`. A database-only leak does not expose
   authenticator seeds.
-- Backup codes are stored as `HMAC-SHA256(code, HKDF(APP_SECRET))`
-  (`User::hashBackupCode()`): a DB-only leak cannot even compute candidate
-  hashes.
+- Backup codes are stored as `HMAC-SHA256(code, HKDF(key))`
+  (`User::hashBackupCode()`), with the same input key as the seed: a DB-only
+  leak cannot even compute candidate hashes.
+- Both read that key through `App\Security\EncryptionSecret`.
 - Shared trade-off: rotating the key invalidates stored TOTP secrets and backup
   codes (affected users re-enrol).
 
@@ -478,6 +479,8 @@ the logs.
 Unset, the fallback to `APP_SECRET` keeps a deployment working with no change.
 To separate them: set `ENCRYPTION_SECRET` to the **current** value of
 `APP_SECRET`, deploy, confirm, and only then is `APP_SECRET` free to rotate.
+The backup codes followed the seed onto `ENCRYPTION_SECRET` on 2026-11-12; a
+copy of the current `APP_SECRET` keeps the stored codes valid as well.
 
 `bin/console app:security:encryption-audit` (`App\Command\EncryptionAuditCommand`)
 reports how many stored secrets the running key can actually read and lists the

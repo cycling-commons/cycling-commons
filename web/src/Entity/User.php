@@ -21,6 +21,7 @@ use App\Form\CatalogFieldConstraints;
 use App\Map\MapHint;
 use App\Moderation\StatementGround;
 use App\Repository\UserRepository;
+use App\Security\EncryptionSecret;
 use App\Validator\MailableEmail;
 use App\Validator\PlainDisplayName;
 use App\World\Entity\Country;
@@ -198,7 +199,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'boolean')]
     private bool $twoFaEnabled = false;
 
-    // Encrypted at rest (AES-256-GCM, APP_SECRET); a DB leak does not expose the seed.
+    // Encrypted at rest (AES-256-GCM, EncryptionSecret); a DB leak does not expose the seed.
     #[ORM\Column(type: 'encrypted_string', nullable: true)]
     private ?string $totpSecret = null;
 
@@ -389,18 +390,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     }
 
     /**
-     * Peppered HMAC of a backup code (APP_SECRET). Rotating the secret invalidates stored codes.
+     * Peppered HMAC of a backup code ({@see EncryptionSecret}). Changing that key invalidates stored codes.
      *
      * @api
      */
     public static function hashBackupCode(string $code): string
     {
-        $secret = $_SERVER['APP_SECRET'] ?? $_ENV['APP_SECRET'] ?? getenv('APP_SECRET');
-        if (!\is_string($secret) || '' === $secret) {
-            throw new \LogicException('APP_SECRET must be set to hash backup codes.');
-        }
-
-        return hash_hmac('sha256', $code, hash_hkdf('sha256', $secret, 32, 'cc-backup-code-v1'));
+        return hash_hmac('sha256', $code, hash_hkdf('sha256', EncryptionSecret::value(), 32, 'cc-backup-code-v1'));
     }
 
     public function isLocked(): bool
