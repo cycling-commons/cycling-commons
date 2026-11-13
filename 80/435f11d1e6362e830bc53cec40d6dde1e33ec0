@@ -1,0 +1,32 @@
+web/src/Security/EncryptionSecret.php
+  s_d0059c15007325::t_36874d24b89346 1-36
+web/tests/Security/EncryptionSecretTest.php
+  s_d0059c15007325::t_d3e1104084d75b 1-107
+docs/specs/account-and-auth.md
+  s_d0059c15007325::t_09d0114c31855d 463-466,482-483
+web/src/Doctrine/EncryptedStringType.php
+  s_d0059c15007325::t_7befbe23a3a7fe 9,128
+web/src/Entity/User.php
+  s_d0059c15007325::t_0d4bcb82b63360 24,202,393,399
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "80435f11d1e6362e830bc53cec40d6dde1e33ec0",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_d0059c15007325": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "44d8f62e-1ce5-4687-94ce-7f6d25ce1fe2",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
