@@ -48,7 +48,11 @@
 
   {# No echo of what they wrote. See the header of this file: it would make
      this mail a spam reflector. #}
+  {# Only when the mail carries a Reply-To. The From is a no-reply sender, so
+     without one this line would send the reply nowhere. #}
+  {% if can_reply|default(false) %}
   <p style="margin:22px 0 0;font-size:13px;color:#5a5d4d;line-height:1.55">
     {{ 'support.email.ack_no_reply'|trans([], null, locale) }}
   </p>
+  {% endif %}
 {% endblock %}

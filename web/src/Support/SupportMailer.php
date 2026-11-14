@@ -59,6 +59,11 @@ final readonly class SupportMailer
         private string $fromEmail,
         #[Autowire('%cc.organisation.name%')]
         private string $organisationName,
+        // The acknowledgement tells the sender they can reply, and the From
+        // is a no-reply sender, so replies go to the address the contact page
+        // publishes. Empty means the mail does not offer a reply.
+        #[Autowire('%cc.support.public_email%')]
+        private string $replyTo,
     ) {
     }
 
@@ -80,29 +85,32 @@ final readonly class SupportMailer
     {
         $locale = $message->getLocale() ?? $this->defaultLocale;
         $reference = $this->contactReference($message);
+        $replyTo = trim($this->replyTo);
 
-        $this->send(
-            (new TemplatedEmail())
-                ->from(new Address($this->fromEmail, $this->fromName()))
-                // The address alone: the name is the sender's own typing,
-                // and a To display name is text we would deliver to whoever
-                // owns that address.
-                ->to(new Address($message->getEmail()))
-                ->subject($this->trans('support.email.ack_subject', ['%reference%' => $reference], $locale))
-                ->htmlTemplate('emails/support_contact_ack.html.twig')
-                ->context([
-                    'locale' => $locale,
-                    'reference' => $reference,
-                    'topic_label' => $this->trans('support.topic.'.$message->getTopic()->value, [], $locale),
-                    // Neither the body nor the deadline is passed. The body
-                    // would make this mail a spam reflector; the deadline is
-                    // ours to meet and belongs on the desk notification, where
-                    // somebody can act on it.
-                    'site_url' => rtrim($this->siteUrl, '/'),
-                ]),
-            'contact acknowledgement',
-            ['contact_message_id' => $message->getId()],
-        );
+        $email = (new TemplatedEmail())
+            ->from(new Address($this->fromEmail, $this->fromName()))
+            // The address alone: the name is the sender's own typing,
+            // and a To display name is text we would deliver to whoever
+            // owns that address.
+            ->to(new Address($message->getEmail()))
+            ->subject($this->trans('support.email.ack_subject', ['%reference%' => $reference], $locale))
+            ->htmlTemplate('emails/support_contact_ack.html.twig')
+            ->context([
+                'locale' => $locale,
+                'reference' => $reference,
+                'topic_label' => $this->trans('support.topic.'.$message->getTopic()->value, [], $locale),
+                // Neither the body nor the deadline is passed. The body
+                // would make this mail a spam reflector; the deadline is
+                // ours to meet and belongs on the desk notification, where
+                // somebody can act on it.
+                'site_url' => rtrim($this->siteUrl, '/'),
+                'can_reply' => '' !== $replyTo,
+            ]);
+        if ('' !== $replyTo) {
+            $email->replyTo(new Address($replyTo));
+        }
+
+        $this->send($email, 'contact acknowledgement', ['contact_message_id' => $message->getId()]);
     }
 
     /** Tell whoever is on duty that something arrived. */

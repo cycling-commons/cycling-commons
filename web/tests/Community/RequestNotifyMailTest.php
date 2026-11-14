@@ -121,6 +121,7 @@ final class RequestNotifyMailTest extends WebTestCase
             'en',
             (string) $c->getParameter('cc.support.from_email'),
             'Cycling Commons',
+            (string) $c->getParameter('cc.support.public_email'),
         ));
     }
 

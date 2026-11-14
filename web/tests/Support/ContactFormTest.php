@@ -427,6 +427,40 @@ final class ContactFormTest extends WebTestCase
     }
 
     /**
+     * The acknowledgement says "you can reply to this email", and it is sent
+     * from the no-reply sender. Without a Reply-To that reply lands in a
+     * mailbox nobody reads (owner 2026-11-14, CC-M-000036). So the reply goes
+     * to the address the contact page publishes, the same one the report
+     * mails use.
+     */
+    public function testAReplyToTheAcknowledgementReachesTheTeam(): void
+    {
+        $client = $this->client();
+        $this->submit($client);
+
+        $publicEmail = static::getContainer()->getParameter('cc.support.public_email');
+        self::assertIsString($publicEmail);
+        self::assertNotSame('', $publicEmail);
+
+        $sawAck = false;
+        for ($i = 0;; ++$i) {
+            $mail = self::getMailerMessage($i);
+            if (null === $mail) {
+                break;
+            }
+            if (!str_contains($mail->getSubject() ?? '', 'CC-M-')) {
+                continue;
+            }
+            $sawAck = true;
+            $replyTo = array_map(static fn ($a): string => $a->getAddress(), $mail->getReplyTo());
+            self::assertSame([$publicEmail], $replyTo, 'a reply must reach the published support address');
+            self::assertStringContainsString('reply to this email', strtolower((string) $mail->getHtmlBody()));
+        }
+
+        self::assertTrue($sawAck, 'the sender must be acknowledged');
+    }
+
+    /**
      * The row is committed BEFORE any mail is attempted, so a dead transport
      * cannot lose a message that starts a legal clock.
      */
