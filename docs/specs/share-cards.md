@@ -1,4 +1,4 @@
-# Share cards (link previews)
+# Share cards and site icons
 
 A link to a Cycling Commons page, pasted into a chat app or a social post,
 shows a 1200 x 630 picture: the share card. Each card tells a rider what the
@@ -79,7 +79,24 @@ The template loads its fonts and both logos from `web/assets/`, so a render
 needs no network. A new card is one entry in `CARDS` in the script and one
 line in `_og_cards` in the head partial.
 
-## 4. Tests
+## 4. Site icons
+
+The browser tab, home screen and app icons are the spot on an ink square.
+`brand-src/gen_site_icons.py` makes all of them from
+`web/assets/brand/logo-spot-transp.webp`:
+
+| File | Use |
+|---|---|
+| `web/assets/brand/logo-favicon.svg` | browser tab (the spot redrawn as vector) |
+| `web/public/favicon.ico` | browser tab, 16, 32 and 48 px |
+| `web/public/apple-touch-icon.png` | iPhone home screen, 180 px |
+| `web/public/brand/icon-192.png`, `icon-512.png` | `site.webmanifest`, maskable: the spot fills 70% of the height, inside the launcher's crop circle |
+
+```
+python3 brand-src/gen_site_icons.py
+```
+
+## 5. Tests
 
 `web/tests/Smoke/ShareImageTest.php` checks that every share image URL is
 absolute and served as `image/jpeg`, and that each page in share-cards.md §2
