@@ -21,14 +21,14 @@
 <meta property="og:title" content="Cycling Commons — Map" />
 <meta property="og:description" content="Explore the Commons on one open map — climbs, water, viewpoints, bike-friendly stays and road conditions. Filter by surface, traffic and what matters to your ride." />
 <meta property="og:url" content="https://cyclingcommons.org/map" />
-<meta property="og:image" content="https://cyclingcommons.org/brand/og/map.jpg" />
+<meta property="og:image" content="{{ absolute_url(asset('brand/og/map.jpg')) }}" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="Cycling Commons — Map" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Cycling Commons — Map" />
 <meta name="twitter:description" content="Explore the Commons on one open map — climbs, water, viewpoints, bike-friendly stays and road conditions. Filter by surface, traffic and what matters to your ride." />
-<meta name="twitter:image" content="https://cyclingcommons.org/brand/og/map.jpg" />
+<meta name="twitter:image" content="{{ absolute_url(asset('brand/og/map.jpg')) }}" />
 
 {% if not is_granted('ROLE_USER') %}
 <script nonce="{{ csp_nonce() }}">
