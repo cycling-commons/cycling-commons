@@ -6,8 +6,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Smoke;
 
+use App\Entity\User;
+use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
  * The link-preview picture (og:image, twitter:image) must be a URL the site serves.
@@ -41,5 +44,51 @@ final class ShareImageTest extends WebTestCase
             self::assertResponseIsSuccessful(sprintf('%s on %s', $url, $page));
             self::assertResponseHeaderSame('Content-Type', 'image/jpeg');
         }
+    }
+
+    /** @return iterable<string, array{0: string, 1: string, 2?: bool}> */
+    public static function cards(): iterable
+    {
+        yield 'home' => ['/', 'index'];
+        yield 'map' => ['/map', 'map'];
+        yield 'about' => ['/about', 'about'];
+        yield 'contributors' => ['/contributors', 'contributors'];
+        yield 'coverage' => ['/coverage', 'coverage'];
+        yield 'developers' => ['/developers', 'developers'];
+        yield 'licenses' => ['/licenses', 'licenses'];
+        yield 'pages' => ['/pages', 'pages'];
+        yield 'regions' => ['/regions', 'region'];
+        yield 'improve (signed in)' => ['/improve', 'improve', true];
+        yield 'add a climb (signed in)' => ['/improve?type=climbs&mode=add', 'add-climb', true];
+        yield 'login' => ['/login', 'login'];
+        yield 'best of the season' => ['/best', 'best-of'];
+        yield 'scout' => ['/scout', 'scout'];
+        yield 'get involved' => ['/join', 'join'];
+        yield 'contribute' => ['/contribute', 'contribute'];
+        yield 'blog' => ['/blog', 'blog'];
+        yield 'roadmap' => ['/roadmap', 'roadmap'];
+        yield 'a page with no card shares the home card' => ['/contact', 'index'];
+    }
+
+    /** Each page shares the card that says what it does, with that text as its alt. */
+    #[DataProvider('cards')]
+    public function testEachPageSharesItsOwnCard(string $page, string $card, bool $signedIn = false): void
+    {
+        $client = static::createClient();
+        if ($signedIn) {
+            $em = static::getContainer()->get(EntityManagerInterface::class);
+            $u = (new User())->setEmail(sprintf('og-%s@test.test', $card))->setDisplayName('og-'.$card);
+            $u->setEmailVerified(true)->setEmailVerifiedAt(new \DateTimeImmutable())->setRoles([]);
+            $u->setPassword(static::getContainer()->get(UserPasswordHasherInterface::class)->hashPassword($u, 'password1234'));
+            $em->persist($u);
+            $em->flush();
+            $client->loginUser($u);
+        }
+        $crawler = $client->request('GET', $page);
+        self::assertResponseIsSuccessful();
+
+        $url = $crawler->filter('meta[property="og:image"]')->attr('content');
+        self::assertMatchesRegularExpression(sprintf('#/brand/og/%s-[^/]+\.jpg$#', preg_quote($card, '#')), (string) $url);
+        self::assertNotSame('', trim((string) $crawler->filter('meta[property="og:image:alt"]')->attr('content')));
     }
 }

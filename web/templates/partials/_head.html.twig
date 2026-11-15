@@ -18,8 +18,41 @@
 <meta property="og:type" content="website" />
 <meta property="og:title" content="{{ page_title|default('Cycling Commons')|trans }}" />
 <meta property="og:description" content="{{ page_description|default('Cycling Commons is an open, community-built map of the world\'s best riding.')|trans }}" />
-{# page_og_image is an AssetMapper path under assets/, e.g. 'brand/og/map.jpg'. #}
-<meta property="og:image" content="{{ absolute_url(asset(page_og_image|default('brand/og/index.jpg'))) }}" />
+{# The link-preview card per page, rendered by brand-src/gen_og_cards.py
+   (stem => the card's text, which is also its alt). A page with no card of
+   its own shares the home card; page_og_image (an AssetMapper path under
+   assets/, e.g. 'brand/og/map.jpg') overrides the pick. #}
+{% set _og_cards = {
+  home: ['index', 'Find the best riding, wherever you go. Climbs, drinking water, stays and road surface on one free map.'],
+  about: ['about', 'Cycling data that stays free for every rider.'],
+  contributors: ['contributors', 'Meet the riders who built this map.'],
+  coverage: ['coverage', 'See how complete the map is where you ride.'],
+  developers: ['developers', 'Open cycling data, free to build on. An open API with no key, and a full download every week.'],
+  improve: ['improve', 'Fix what you know, so the next rider knows it too.'],
+  licenses: ['licenses', 'Use the data freely. Keep it open.'],
+  login: ['login', 'Sign in to add what you know.'],
+  moderate_dashboard: ['moderate', 'Check new edits and keep the map right.'],
+  pages: ['pages', 'Every part of the Commons on one page.'],
+  regions: ['region', 'The best riding in a region, checked by locals.'],
+  region_detail: ['region', 'The best riding in a region, checked by locals.'],
+  vote: ['vote', 'Pick your region\'s best this season.'],
+  best_of: ['best-of', 'Where riders say the best riding is.'],
+  scout: ['scout', 'Tag the road while you ride, with one tap.'],
+  join: ['join', 'Help build the open map of riding.'],
+  contribute: ['contribute', 'Add what you know about the roads you ride.'],
+  blog: ['blog', 'What is new on the map.'],
+  blog_post: ['blog', 'What is new on the map.'],
+  roadmap: ['roadmap', 'See what we build next.'],
+} %}
+{% set _route = app.request.attributes.get('_canonical_route') ?? app.request.attributes.get('_route') %}
+{% set _og = _og_cards[_route] ?? _og_cards.home %}
+{% if _route == 'improve' and app.request.query.get('type') == 'climbs' and app.request.query.get('mode') == 'add' %}
+  {% set _og = ['add-climb', 'Know a climb? Put it on the map.'] %}
+{% endif %}
+<meta property="og:image" content="{{ absolute_url(asset(page_og_image|default('brand/og/' ~ _og[0] ~ '.jpg'))) }}" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="{{ page_og_image is defined ? page_title|default('Cycling Commons')|trans : _og[1] }}" />
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="{{ asset('brand/logo-favicon.svg') }}" />

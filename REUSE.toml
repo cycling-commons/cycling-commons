@@ -272,6 +272,7 @@ path = [
   "brand-src/icon.html",
   "brand-src/logo-preview.html",
   "brand-src/og-card.html",
+  "brand-src/gen_og_cards.py",
 ]
 precedence = "override"
 SPDX-FileCopyrightText = "© BikeCoders"

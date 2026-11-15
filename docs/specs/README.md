@@ -106,6 +106,8 @@ Revisit when there is a separate infrastructure repository to hold it.
   and the measured contrast of the three error surfaces.
 - `site-directory.md`: `/pages` drawn as a touring map with a list toggle; one
   data structure feeds both drawings; the road vocabulary.
+- `share-cards.md`: the link-preview picture each page shares, what its text
+  says, which route gets which card, and the script that renders them.
 - `privacy-notice.md`: where every claim on `/privacy` is true, the two "who
   sees my data" tables and the CSP list that keeps the second one complete, the
   cookie table, and why account deletion is immediate.
