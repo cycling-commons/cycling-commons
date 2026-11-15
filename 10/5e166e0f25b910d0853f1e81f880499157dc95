@@ -1,0 +1,34 @@
+REUSE.toml
+  s_7e810029aa9e47::t_2b41ccc460d2d5 276
+brand-src/gen_site_icons.py
+  s_7e810029aa9e47::t_c8c7838c9c5494 1-100
+docs/specs/share-cards.md
+  s_7e810029aa9e47::t_2b41ccc460d2d5 87-99
+  s_7e810029aa9e47::t_4668c51794e538 1,82-86
+web/assets/brand/logo-favicon.svg
+  s_7e810029aa9e47::t_17bd1323b562e8 1
+docs/specs/README.md
+  s_7e810029aa9e47::t_2b41ccc460d2d5 111
+  s_7e810029aa9e47::t_6699c17498745f 110
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "105e166e0f25b910d0853f1e81f880499157dc95",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_7e810029aa9e47": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59227d72-8b83-4ed4-a8e1-99a93c328b10",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
