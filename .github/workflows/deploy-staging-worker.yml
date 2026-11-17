@@ -5,6 +5,12 @@ name: Deploy — staging worker
 # and the coverage pipeline image, all on the dedicated worker host, deployed
 # by that host's deploy-worker.sh from the same branch the web tier runs.
 #
+# It starts after a green "Deploy — staging" run for a push to staging: only
+# the web deploy runs the migrations, so the worker never runs new code against
+# the old schema. That run already passed the CI gate for the same commit.
+# workflow_run reads this file from the default branch: push main and staging
+# together.
+#
 # Required secrets (shared with deploy-staging.yaml unless noted):
 #   DEPLOY_SSH_KEY      private key of the deploy user, same key as the web hosts
 #   DEPLOY_KNOWN_HOSTS  pinned host keys; must ALSO carry the worker host
@@ -15,7 +21,9 @@ name: Deploy — staging worker
 # host clones it anonymously and Composer pulls nothing private.
 
 on:
-  push:
+  workflow_run:
+    workflows: [Deploy — staging]
+    types: [completed]
     branches: [staging]
   workflow_dispatch:
     inputs:
@@ -50,10 +58,11 @@ jobs:
       actions: read
     steps:
       - uses: actions/checkout@v5
+      # after the web deploy, CI was already gated there for this commit
       - uses: ./.github/actions/require-green-ci
         if: >-
-          github.event_name != 'workflow_dispatch'
-          || inputs.skip_ci_gate != true
+          github.event_name == 'workflow_dispatch'
+          && inputs.skip_ci_gate != true
         with:
           workflows: ${{ env.GATING_WORKFLOWS }}
           sha: ${{ github.sha }}
@@ -62,6 +71,11 @@ jobs:
 
   deploy:
     needs: gate
+    # only after a successful web deploy of a push, never after a failed or manual one
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
     name: worker → cyclingcommons-staging
     runs-on: ubuntu-latest
     environment: staging
@@ -95,7 +109,7 @@ jobs:
         env:
           PORT: ${{ secrets.DEPLOY_PORT }}
           HOST: ${{ secrets.WORKER_HOST }}
-          BRANCH: ${{ github.event.inputs.branch || github.ref_name }}
+          BRANCH: ${{ github.event.inputs.branch || github.event.workflow_run.head_branch }}
         run: |
           set -euo pipefail
           ssh -i ~/.ssh/deploy_key -p "$PORT" "deploy@$HOST" \
