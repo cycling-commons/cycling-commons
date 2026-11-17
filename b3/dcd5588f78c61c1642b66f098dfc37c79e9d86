@@ -1,0 +1,28 @@
+.github/workflows/deploy-staging-worker.yml
+  s_46bf36e8fe4c54::t_0a659064b81164 8-13
+  s_46bf36e8fe4c54::t_1f6bcae6660c5b 74-78
+  s_46bf36e8fe4c54::t_3283664030aac7 24-26
+  s_46bf36e8fe4c54::t_41125c127d2a3b 112
+  s_46bf36e8fe4c54::t_78b1d8f5e06aca 61,64-65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b3dcd5588f78c61c1642b66f098dfc37c79e9d86",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_46bf36e8fe4c54": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6e358e12-2962-4ce1-bbca-3fac0eae57ff",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
