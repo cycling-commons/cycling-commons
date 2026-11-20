@@ -1,0 +1,24 @@
+tools/app-gate-prepush.sh
+  s_4e1ff7eaaa384c::t_09473ac7cf0486 21-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7bafa47bfe40786fd3dff2c93cf94ce4fd54322f",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_4e1ff7eaaa384c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1688db01-0c0e-45d4-9854-ca25697bf764",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
