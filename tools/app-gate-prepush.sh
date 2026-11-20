@@ -18,6 +18,15 @@ set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)/web"
 
+# pre-commit runs every pre-push hook, also after one fails. A locked package
+# with an advisory refuses the push in composer-audit-prepush already, and
+# the fix (composer update) changes vendor/, so the minutes of this gate
+# would prove nothing. The same audit, quiet, stops it in a second or two.
+if ! command -v composer >/dev/null 2>&1 || ! composer audit --locked --abandoned=ignore >/dev/null 2>&1; then
+    echo "pre-push: app gate skipped, the composer audit above refuses this push." >&2
+    exit 1
+fi
+
 for bin in phpstan psalm php-cs-fixer; do
     if [ ! -x "vendor/bin/${bin}" ]; then
         echo "pre-push: web/vendor is missing or incomplete (vendor/bin/${bin})." >&2
