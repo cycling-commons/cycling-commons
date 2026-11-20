@@ -24,7 +24,6 @@ use App\Entity\User;
 use App\Legal\LegalPageView;
 use App\Legal\PrivacyNoticeVersions;
 use App\Legal\TermsVersions;
-use App\Onboarding\Countries as OnboardedCountries;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
@@ -69,22 +68,19 @@ final class PageController extends AbstractController
     }
 
     /**
-     * What shipped, newest first, under what is live already and waits for
-     * the next release: the countries that went live since the last one.
+     * What shipped, newest first: the page opens on the newest release and
+     * its notes. A country that goes live is named in a release's notes.
      *
      * @see docs/specs/roadmap-and-changelog.md §6b
      */
     #[Route(LocalizedPath::CHANGELOG, name: 'changelog')]
-    public function changelog(OnboardedCountries $onboarded, CyclingHistorySwitch $cyclingHistory): Response
+    public function changelog(CyclingHistorySwitch $cyclingHistory): Response
     {
-        $upcoming = $onboarded->liveAfter(ReleaseNotes::latestRelease()['date']);
-
         return $this->render('pages/changelog.html.twig', [
             'page_title' => 'meta.changelog_title',
             'page_description' => 'meta.changelog_description',
             'nav_active' => '',
             'releases' => ReleaseNotes::releases($cyclingHistory->isLive() ? [] : ReleaseNotes::CYCLING_HISTORY_NOTES),
-            'upcoming_countries' => $upcoming,
         ]);
     }
 

@@ -186,8 +186,7 @@ catches the symptom whatever causes it next time.
    under `sections` (see below), and set `APP_BUILD_VERSION` in `web/.env`
    to the same version with its leading `v`.
 2. Add its keys to `messages.en.yaml`, then the other four. Name each country
-   in the "Next release" block (§6b): it leaves that block when this release
-   is dated.
+   that went live since the last release (§6b).
 3. `app:translations:sync`.
 4. Mark anything it finished as shipped on the roadmap desk (§8.4), if that
    was not done the day it shipped.
@@ -233,16 +232,12 @@ short, because a list nobody reads to the end is not a roadmap.
 
 ## 6b. Countries live since the last release
 
-A country that went live after the newest release's `date`
-(`Countries::liveAfter()`, from `country.live_at`) is listed at the top of
-"What's new" in a **Next release** block (`#next`, "Already live"), under the
-public heading, as "Denmark is on the map." (`changelog.country_live`, the
-name in the page's language). Nothing is written to `RELEASES` for it: the
-block is read from the database, so it appears the moment `app:country:mark-live`
-runs, on staging and production alike. Cutting the next release moves its date
-past those countries and the block empties, so that release's notes must name
-them (§6 step 2). The feed does not carry the block: it lists releases only.
-Owner 2026-10-11.
+"What's new" always opens on the newest release and its notes. A country that
+goes live is named in a release's own notes, as 0.9.14-beta names its seven
+countries (`changelog.v0914_countries`). Nothing sits above the newest
+release, so a country is never listed apart from the release that names it.
+`CountryLiveNoticeTest` holds the page to it: with a country live after the
+newest release, the first block is still that release.
 
 ## 7. Deliberately not built
 

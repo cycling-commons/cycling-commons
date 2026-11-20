@@ -188,24 +188,17 @@ final class CountryLiveNoticeTest extends WebTestCase
         self::assertSame('country-requests', DashboardController::COUNTRY_REQUESTS_CSRF_TOKEN_ID);
     }
 
-    public function testTheChangelogListsACountryLiveSinceTheLastRelease(): void
+    public function testTheChangelogOpensOnTheNewestReleaseEvenWithACountryLiveSinceIt(): void
     {
         $client = static::createClient();
-        // The day after the newest release, so the test holds on any release date.
+        // Live the day after the newest release, so the test holds on any release date.
         $this->country('DK', "TIMESTAMPTZ '".ReleaseNotes::latestRelease()['date']." 12:00:00+00' + INTERVAL '1 day'");
-        // Live before the last release: that release's own notes cover it.
-        $this->country('SE', "TIMESTAMPTZ '2026-01-01 12:00:00+00'");
 
         $crawler = $client->request('GET', '/whats-new');
 
         self::assertResponseIsSuccessful();
-        $next = $crawler->filter('#next');
-        self::assertCount(1, $next);
-        self::assertStringContainsString('Denmark is on the map.', $next->text());
-        self::assertStringNotContainsString('Sweden', $next->text());
-
-        $crawler = $client->request('GET', '/nl/wat-is-er-nieuw');
-        self::assertResponseIsSuccessful();
-        self::assertStringContainsString('Denemarken staat op de kaart.', $crawler->filter('#next')->text());
+        // A country is named in a release's own notes, never in a block of its own above them.
+        self::assertSame('v'.ReleaseNotes::latestRelease()['version'], $crawler->filter('.crel')->first()->attr('id'));
+        self::assertCount(0, $crawler->filter('#next'));
     }
 }
