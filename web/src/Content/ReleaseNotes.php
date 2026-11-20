@@ -61,6 +61,22 @@ final class ReleaseNotes
      */
     public const array RELEASES = [
         [
+            'version' => '0.9.16-beta',
+            'date' => '2026-11-20',
+            'sections' => [
+                'public' => [
+                    'changelog.v0916_share_cards',
+                    'changelog.v0916_icon',
+                    'changelog.v0916_whats_new',
+                ],
+            ],
+            'kinds' => [
+                'changelog.v0916_share_cards' => 'new',
+                'changelog.v0916_icon' => 'improved',
+                'changelog.v0916_whats_new' => 'fixed',
+            ],
+        ],
+        [
             'version' => '0.9.15-beta',
             'date' => '2026-11-08',
             'sections' => [
