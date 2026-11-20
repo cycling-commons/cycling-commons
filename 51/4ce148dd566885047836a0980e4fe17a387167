@@ -1,0 +1,29 @@
+web/src/Controller/PageController.php
+  s_4e1ff7eaaa384c::t_8193ffeddee139 71-72,77
+web/tests/Community/CountryLiveNoticeTest.php
+  s_4e1ff7eaaa384c::t_866e8763d9f870 191,194,200-202
+docs/specs/roadmap-and-changelog.md
+  s_4e1ff7eaaa384c::t_a406662e42e5c8 189,235-236,239-240
+  s_4e1ff7eaaa384c::t_97ad76d5855cba 237-238
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "514ce148dd566885047836a0980e4fe17a387167",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_4e1ff7eaaa384c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1688db01-0c0e-45d4-9854-ca25697bf764",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
