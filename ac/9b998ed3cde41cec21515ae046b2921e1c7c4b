@@ -1,0 +1,24 @@
+web/composer.lock
+  s_1725fbad7628af::t_6b23a7dc9f16d0 9393,9397,9401-9402,9413,9451,9463-9464,9468,9472,9476-9477,9487,9520,9532-9533,9537,9541,9545-9546,9601,9613-9614,15300
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ac9b998ed3cde41cec21515ae046b2921e1c7c4b",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_1725fbad7628af": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "08e01735-2c1a-4ecc-a5b5-e1b677a5f109",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
